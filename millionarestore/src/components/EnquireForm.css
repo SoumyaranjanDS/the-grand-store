@@ -1,0 +1,169 @@
+.enquire-section {
+  position: relative;
+  min-height: 560px;
+  padding: clamp(72px, 7vw, 102px) 0;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(122, 38, 60, 0.05) 1px, transparent 1px) 0 0 / 10vw 100%,
+    var(--paper);
+}
+
+.enquire-layout {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(450px, 1.2fr);
+  align-items: center;
+  gap: clamp(45px, 6vw, 85px);
+}
+
+.enquire-copy {
+  max-width: 550px;
+}
+
+.enquire-copy > p:not(.eyebrow) {
+  margin: 19px 0 0;
+  color: var(--muted);
+  font-size: 21px;
+  line-height: 1.5;
+}
+
+.enquire-edition {
+  display: flex;
+  align-items: center;
+  margin-top: 25px;
+  gap: 17px;
+}
+
+.enquire-edition > span {
+  display: grid;
+  width: 62px;
+  height: 62px;
+  place-items: center;
+  border: 1px solid var(--wine);
+  border-radius: 50%;
+  color: var(--wine);
+  font-family: var(--serif);
+  font-size: 18px;
+}
+
+.enquire-edition p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  line-height: 1.7;
+  text-transform: uppercase;
+}
+
+.enquire-form-card {
+  padding: clamp(29px, 3.4vw, 47px);
+  border: 1px solid rgba(43, 55, 54, 0.18);
+  background: rgba(255, 250, 240, 0.83);
+  box-shadow: 0 26px 70px rgba(73, 54, 37, 0.12);
+  backdrop-filter: blur(9px);
+}
+
+.enquire-form-card form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 19px 20px;
+}
+
+.enquire-form-card label {
+  display: grid;
+  min-width: 0;
+  gap: 7px;
+}
+
+.enquire-form-card label > span {
+  color: var(--wine);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.enquire-form-card input {
+  width: 100%;
+  min-width: 0;
+  height: 45px;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid rgba(43, 55, 54, 0.28);
+  outline: 0;
+  color: var(--navy);
+  background: transparent;
+  font-family: var(--serif);
+  font-size: 22px;
+}
+
+.enquire-form-card input:focus {
+  border-color: var(--wine);
+}
+
+.enquire-form-card button {
+  grid-column: 1 / -1;
+  display: flex;
+  min-height: 49px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 7px;
+  padding: 0 19px;
+  border: 1px solid var(--wine);
+  color: var(--cream);
+  background: var(--wine);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.enquire-success {
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--wine);
+}
+
+.enquire-success h3 {
+  margin: 17px 0 8px;
+  font-family: var(--serif);
+  font-size: 31px;
+  font-weight: 400;
+}
+
+.enquire-success p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.enquire-bottle {
+  position: absolute;
+  z-index: 1;
+  right: -3vw;
+  bottom: -21%;
+  width: min(440px, 29vw);
+  opacity: 0.14;
+  transform: rotate(-16deg);
+}
+
+@media (max-width: 900px) {
+  .enquire-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .enquire-form-card form {
+    grid-template-columns: 1fr;
+  }
+
+  .enquire-form-card button {
+    grid-column: auto;
+  }
+}

@@ -1,0 +1,23 @@
+.search-page__main {
+  padding: 180px 5% 100px;
+  background-color: #f2efe9; /* Light background for contrast */
+  min-height: calc(100vh - 300px);
+}
+
+.search-page__header {
+  margin-bottom: 60px;
+}
+
+.search-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 40px;
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .search-page__main {
+    padding-top: 140px;
+  }
+}

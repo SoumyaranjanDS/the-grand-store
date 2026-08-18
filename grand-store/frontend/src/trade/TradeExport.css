@@ -1,0 +1,124 @@
+.trade-export-container {
+  display: flex;
+  gap: 80px;
+  align-items: center;
+}
+
+.trade-export-content {
+  flex: 1.2;
+}
+
+.trade-export-text .lead-paragraph {
+  font-size: 20px;
+  color: var(--gold);
+  line-height: 1.6;
+  margin-bottom: 30px;
+  font-family: var(--serif);
+}
+
+.trade-export-text p {
+  color: var(--ivory-muted);
+  font-size: 16px;
+  line-height: 1.8;
+  margin-bottom: 24px;
+}
+
+.trade-divider-gold {
+  height: 1px;
+  width: 100px;
+  background: linear-gradient(90deg, var(--gold), transparent);
+  margin: 40px 0;
+}
+
+.trade-section-heading {
+  font-family: var(--serif);
+  font-size: 28px;
+  font-weight: 400;
+  color: #fff;
+  margin-bottom: 20px;
+}
+
+.trade-export-visuals {
+  flex: 1;
+}
+
+.export-image-stack {
+  position: relative;
+  min-height: 600px;
+}
+
+.export-img-wrapper {
+  position: absolute;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+  border: 1px solid rgba(218, 185, 116, 0.2);
+}
+
+.export-img-wrapper.main-img {
+  top: 0;
+  right: 0;
+  width: 90%;
+  height: 500px;
+  z-index: 1;
+}
+
+.export-img-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.export-img-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(10,9,7,0.8), transparent);
+}
+
+.export-stats-card {
+  position: absolute;
+  background: rgba(10, 9, 7, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--gold);
+  padding: 30px;
+  border-radius: 8px;
+  z-index: 2;
+  top: 60px;
+  left: 0;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+  min-width: 220px;
+}
+
+.export-stats-card.bottom-card {
+  top: auto;
+  bottom: 40px;
+  left: 40px;
+  border-color: var(--white-line);
+}
+
+.stat-number {
+  display: block;
+  font-family: var(--serif);
+  font-size: 42px;
+  color: var(--gold);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  display: block;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ivory);
+}
+
+@media (max-width: 992px) {
+  .trade-export-container {
+    flex-direction: column;
+  }
+  .export-image-stack {
+    min-height: 400px;
+    width: 100%;
+  }
+}

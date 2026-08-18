@@ -1,0 +1,5 @@
+.site-shell {
+  width: 100%;
+  overflow: clip;
+  background: var(--ink);
+}

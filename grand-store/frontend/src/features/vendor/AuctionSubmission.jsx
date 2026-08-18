@@ -1,0 +1,318 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { Building2, Package, CheckCircle2, AlertCircle, PlusCircle, User, Gavel } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { storeCategories } from '../../data';
+
+export default function AuctionSubmission({ onNotify }) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  const [formData, setFormData] = useState({
+    title: '',
+    category: '', // Empty for floating label
+    description: '',
+    startingBid: '',
+    reservePrice: '',
+    condition: '',
+    provenance: ''
+  });
+  const [imageUrl, setImageUrl] = useState('');
+  
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  if (!user || (user.role !== 'vendor_active' && user.role !== 'admin')) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
+        <div className="p-8 border border-red-500/20 bg-red-950/10 text-[var(--color-ivory)] max-w-md w-full flex items-center gap-4">
+          <AlertCircle size={32} className="text-red-400 shrink-0" />
+          <p className="font-light leading-relaxed">Only approved vendors can submit lots for auction.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError('');
+    setSuccess(false);
+    
+    try {
+      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+      const token = userInfo?.token || user?.token;
+
+      const payload = {
+        title: formData.title,
+        description: formData.description,
+        startingBid: Number(formData.startingBid),
+        reservePrice: Number(formData.reservePrice),
+        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        images: [imageUrl],
+        category: formData.category || 'Whisky',
+        condition: formData.condition,
+        provenance: formData.provenance
+      };
+
+      await axios.post('http://localhost:5000/api/auction', payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setSuccess(true);
+      if (onNotify) onNotify('Auction lot submitted successfully for review!');
+      
+      setTimeout(() => {
+        navigate('/vendor/dashboard');
+      }, 2000);
+      
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.message || err.message || 'Failed to submit auction lot');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-8 w-full max-w-7xl mx-auto">
+      <div className="max-w-4xl w-full">
+        {/* Welcome Section */}
+        <section className="mb-4">
+          <h1 className="text-[var(--color-ivory)] font-serif text-5xl mb-4">
+            Submit <span className="font-script text-6xl text-[var(--color-gold)] font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Auction Lot</span>
+          </h1>
+          <p className="text-[var(--color-ivory-muted)] text-lg max-w-2xl font-light">
+            Submit your rare and collectible items for review by our expert curators.
+          </p>
+        </section>
+
+        {error && (
+          <div className="bg-red-950/20 backdrop-blur-md border border-red-500/20 text-red-400 p-4 rounded-xl shadow-lg mb-8">
+            {error}
+          </div>
+        )}
+
+        {success ? (
+          <div className="bg-green-950/10 border border-green-500/20 text-green-400 p-8 mt-8 flex flex-col items-center justify-center text-center">
+            <CheckCircle2 size={48} className="mb-4" />
+            <h3 className="text-2xl font-serif mb-2 text-[var(--color-ivory)]">Submission Successful</h3>
+            <p className="font-light">Your lot has been submitted for curation. Redirecting to dashboard...</p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="w-full mt-12 space-y-16">
+            
+            {/* General Information */}
+            <div className="space-y-10">
+              <h2 className="text-[var(--color-ivory)] font-serif text-3xl flex items-center gap-4 border-b border-white/[0.05] pb-4">
+                <Gavel size={24} className="text-[var(--color-gold)]" />
+                Lot Information
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                <div className="relative z-0 w-full group">
+                  <input 
+                    type="text" 
+                    name="title" 
+                    id="title"
+                    value={formData.title} 
+                    onChange={e => setFormData({...formData, title: e.target.value})} 
+                    className="block py-3 px-0 w-full text-base text-[var(--color-ivory)] bg-transparent border-0 border-b border-white/20 appearance-none focus:outline-none focus:ring-0 focus:border-[var(--color-gold)] peer" 
+                    placeholder=" " 
+                    required 
+                  />
+                  <label 
+                    htmlFor="title" 
+                    className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[var(--color-gold)] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                  >
+                    Lot Title *
+                  </label>
+                </div>
+                
+                <div className="w-full group">
+                  <label 
+                    htmlFor="category" 
+                    className="block text-sm uppercase tracking-widest text-[var(--color-ivory-muted)] font-medium mb-3"
+                  >
+                    Category *
+                  </label>
+                  <select 
+                    name="category" 
+                    id="category"
+                    value={formData.category} 
+                    onChange={e => setFormData({...formData, category: e.target.value})} 
+                    required
+                    className="block w-full px-4 py-3 text-base text-[var(--color-ivory)] bg-black/20 border border-[var(--color-gold)]/50 rounded-lg appearance-none focus:outline-none focus:border-[var(--color-gold)] focus:bg-black/40 transition-colors"
+                  >
+                    <option value="" disabled hidden>Select Category</option>
+                    {storeCategories.map(cat => (
+                      <option key={cat} className="bg-[#1a1a1a]" value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="relative z-0 w-full group mt-8">
+                <div className="flex flex-col md:flex-row items-start gap-6">
+                  {imageUrl && (
+                    <div className="w-24 h-24 rounded-2xl overflow-hidden border border-[var(--color-gold)]/30 shrink-0 bg-black/40">
+                      <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" onError={(e) => e.target.style.display = 'none'} onLoad={(e) => e.target.style.display = 'block'} />
+                    </div>
+                  )}
+                  <div className="flex-1 w-full relative pt-4">
+                    <input 
+                      type="url" 
+                      name="imageUrl" 
+                      id="imageUrl"
+                      value={imageUrl} 
+                      onChange={e => setImageUrl(e.target.value)} 
+                      className="block py-3 px-0 w-full text-base text-[var(--color-ivory)] bg-transparent border-0 border-b border-white/20 appearance-none focus:outline-none focus:ring-0 focus:border-[var(--color-gold)] peer" 
+                      placeholder=" " 
+                      required 
+                    />
+                    <label 
+                      htmlFor="imageUrl" 
+                      className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[var(--color-gold)] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                    >
+                      Image URL *
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-full group mt-8">
+                <label 
+                  htmlFor="description" 
+                  className="block text-sm uppercase tracking-widest text-[var(--color-ivory-muted)] font-medium mb-3"
+                >
+                  Detailed Description & Notes *
+                </label>
+                <textarea 
+                  name="description" 
+                  id="description"
+                  value={formData.description} 
+                  onChange={e => setFormData({...formData, description: e.target.value})} 
+                  rows="4"
+                  className="block w-full px-4 py-3 text-base text-[var(--color-ivory)] bg-black/20 border border-[var(--color-gold)]/50 rounded-lg focus:outline-none focus:border-[var(--color-gold)] focus:bg-black/40 transition-colors resize-none" 
+                  placeholder="Enter detailed description..." 
+                  required 
+                />
+              </div>
+            </div>
+
+            {/* Authentication */}
+            <div className="space-y-10 pt-6">
+              <h2 className="text-[var(--color-ivory)] font-serif text-3xl flex items-center gap-4 border-b border-white/[0.05] pb-4">
+                <CheckCircle2 size={24} className="text-[var(--color-gold)]" />
+                Authentication Details
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                <div className="relative z-0 w-full group">
+                  <input 
+                    type="text" 
+                    name="condition" 
+                    id="condition"
+                    value={formData.condition} 
+                    onChange={e => setFormData({...formData, condition: e.target.value})} 
+                    className="block py-3 px-0 w-full text-base text-[var(--color-ivory)] bg-transparent border-0 border-b border-white/20 appearance-none focus:outline-none focus:ring-0 focus:border-[var(--color-gold)] peer" 
+                    placeholder=" " 
+                    required 
+                  />
+                  <label 
+                    htmlFor="condition" 
+                    className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[var(--color-gold)] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                  >
+                    Condition Report *
+                  </label>
+                </div>
+
+                <div className="relative z-0 w-full group">
+                  <input 
+                    type="text" 
+                    name="provenance" 
+                    id="provenance"
+                    value={formData.provenance} 
+                    onChange={e => setFormData({...formData, provenance: e.target.value})} 
+                    className="block py-3 px-0 w-full text-base text-[var(--color-ivory)] bg-transparent border-0 border-b border-white/20 appearance-none focus:outline-none focus:ring-0 focus:border-[var(--color-gold)] peer" 
+                    placeholder=" " 
+                    required 
+                  />
+                  <label 
+                    htmlFor="provenance" 
+                    className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[var(--color-gold)] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                  >
+                    Provenance *
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Financials */}
+            <div className="space-y-10 pt-6">
+              <h2 className="text-[var(--color-ivory)] font-serif text-3xl flex items-center gap-4 border-b border-white/[0.05] pb-4">
+                <Package size={24} className="text-[var(--color-gold)]" />
+                Financials
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                <div className="relative z-0 w-full group">
+                  <input 
+                    type="number" 
+                    name="startingBid" 
+                    id="startingBid"
+                    value={formData.startingBid} 
+                    onChange={e => setFormData({...formData, startingBid: e.target.value})} 
+                    min="0"
+                    className="block py-3 px-0 w-full text-base text-[var(--color-ivory)] bg-transparent border-0 border-b border-white/20 appearance-none focus:outline-none focus:ring-0 focus:border-[var(--color-gold)] peer" 
+                    placeholder=" " 
+                    required 
+                  />
+                  <label 
+                    htmlFor="startingBid" 
+                    className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[var(--color-gold)] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                  >
+                    Starting Bid (ZAR) *
+                  </label>
+                </div>
+
+                <div className="relative z-0 w-full group">
+                  <input 
+                    type="number" 
+                    name="reservePrice" 
+                    id="reservePrice"
+                    value={formData.reservePrice} 
+                    onChange={e => setFormData({...formData, reservePrice: e.target.value})} 
+                    min="0"
+                    className="block py-3 px-0 w-full text-base text-[var(--color-ivory)] bg-transparent border-0 border-b border-white/20 appearance-none focus:outline-none focus:ring-0 focus:border-[var(--color-gold)] peer" 
+                    placeholder=" " 
+                    required 
+                  />
+                  <label 
+                    htmlFor="reservePrice" 
+                    className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[var(--color-gold)] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                  >
+                    Reserve Price (ZAR) *
+                  </label>
+                  <p className="text-[10px] tracking-widest uppercase text-[var(--color-gold)]/70 mt-3 font-light absolute -bottom-6">Lot will not be sold below this price.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-8">
+              <button 
+                type="submit" 
+                disabled={submitting} 
+                className="bg-[var(--color-gold)] text-black font-bold uppercase tracking-widest text-sm px-10 py-4 rounded-full hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] transition-all disabled:opacity-50 inline-flex items-center justify-center gap-3"
+              >
+                {submitting ? 'Submitting...' : <><CheckCircle2 size={20} /> Submit to Admin for Review</>}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,122 @@
+.collection-section {
+  padding: clamp(72px, 7vw, 102px) 0;
+  background:
+    linear-gradient(90deg, rgba(122, 38, 60, 0.055) 1px, transparent 1px) 0 0 / 11vw 100%,
+    var(--paper);
+}
+
+.collection-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  align-items: end;
+  margin-bottom: 38px;
+  gap: 70px;
+}
+
+.collection-heading > p {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 21px;
+  line-height: 1.5;
+}
+
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.collection-card {
+  position: relative;
+  min-height: 460px;
+  overflow: hidden;
+  color: var(--cream);
+}
+
+.collection-card:nth-child(2) {
+  margin-top: 25px;
+}
+
+.collection-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 700ms cubic-bezier(0.2, 0.75, 0.25, 1);
+}
+
+.collection-card-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(16, 45, 68, 0.88), transparent 61%);
+}
+
+.collection-card > span {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid rgba(255, 250, 240, 0.55);
+  border-radius: 50%;
+  font-family: var(--serif);
+  font-size: 13px;
+}
+
+.collection-card > div:last-child {
+  position: absolute;
+  right: 28px;
+  bottom: 28px;
+  left: 28px;
+}
+
+.collection-card p {
+  margin: 0 0 8px;
+  color: var(--gold-bright);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.collection-card h3 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: clamp(44px, 4vw, 65px);
+  font-weight: 400;
+  line-height: 0.9;
+}
+
+.collection-card:hover img {
+  transform: scale(1.045);
+}
+
+@media (max-width: 900px) {
+  .collection-heading {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+
+  .collection-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .collection-card:last-child {
+    grid-column: 1 / -1;
+    min-height: 440px;
+  }
+}
+
+@media (max-width: 620px) {
+  .collection-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .collection-card,
+  .collection-card:last-child {
+    grid-column: auto;
+    min-height: 470px;
+    margin-top: 0;
+  }
+}

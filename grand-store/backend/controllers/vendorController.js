@@ -1,0 +1,208 @@
+const Vendor = require('../models/Vendor');
+const User = require('../models/User');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: '30d',
+  });
+};
+
+exports.registerFullVendor = async (req, res) => {
+  try {
+    const { accountInfo, businessInfo, kycInfo, taxInfo, licenceInfo, customsInfo, bankingInfo, productCategories, deliveryInfo, agreements } = req.body;
+
+    let user;
+
+    // Check if token is provided
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      try {
+        const token = req.headers.authorization.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        user = await User.findById(decoded.id);
+      } catch (err) {
+        // Token invalid or expired, continue as unauthenticated
+      }
+    }
+
+    if (!user) {
+      if (!accountInfo || !accountInfo.email) {
+        return res.status(400).json({ message: 'Account information is required' });
+      }
+
+      user = await User.findOne({ email: accountInfo.email });
+
+      if (!user) {
+        if (!accountInfo.password) {
+          return res.status(400).json({ message: 'Password is required for new accounts' });
+        }
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(accountInfo.password, salt);
+
+        // Create new user if they don't exist
+        user = await User.create({
+          name: accountInfo.name,
+          email: accountInfo.email,
+          password: hashedPassword,
+          role: 'vendor_pending'
+        });
+      } else {
+        // If user exists, verify password before giving access to update their account
+        if (!accountInfo.password) {
+          return res.status(401).json({ message: 'Account exists. Please provide your password to proceed.' });
+        }
+        const isMatch = await bcrypt.compare(accountInfo.password, user.password);
+        if (!isMatch) {
+          return res.status(401).json({ message: 'Account already exists. Invalid password provided.' });
+        }
+
+        // If password matches, update their role
+        user.role = 'vendor_pending';
+        await user.save();
+      }
+    } else {
+      // User was authenticated via token, just update their role
+      user.role = 'vendor_pending';
+      await user.save();
+    }
+
+    // Check if vendor application already exists for this user
+    let vendor = await Vendor.findOne({ userId: user._id });
+    if (vendor) {
+      // Overwrite existing application
+      vendor.businessInfo = businessInfo || {};
+      vendor.kycInfo = kycInfo || {};
+      vendor.taxInfo = taxInfo || {};
+      vendor.licenceInfo = licenceInfo || {};
+      vendor.customsInfo = customsInfo || {};
+      vendor.bankingInfo = bankingInfo || {};
+      vendor.productCategories = productCategories || [];
+      vendor.deliveryInfo = deliveryInfo || {};
+      vendor.agreements = { ...agreements, acceptedAt: Date.now() };
+      vendor.status = 'pending_approval';
+      vendor.onboardingStep = 10;
+      await vendor.save();
+    } else {
+      // Create new vendor application
+      vendor = await Vendor.create({
+        userId: user._id,
+        businessInfo: businessInfo || {},
+        kycInfo: kycInfo || {},
+        taxInfo: taxInfo || {},
+        licenceInfo: licenceInfo || {},
+        customsInfo: customsInfo || {},
+        bankingInfo: bankingInfo || {},
+        productCategories: productCategories || [],
+        deliveryInfo: deliveryInfo || {},
+        agreements: { ...agreements, acceptedAt: Date.now() },
+        status: 'pending_approval',
+        onboardingStep: 10
+      });
+    }
+
+    res.status(201).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      token: generateToken(user._id),
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+exports.getOnboardingProgress = async (req, res) => {
+  try {
+    let vendor = await Vendor.findOne({ userId: req.user._id });
+    if (!vendor) {
+      // Create initial draft if not exists
+      vendor = await Vendor.create({ userId: req.user._id, status: 'draft' });
+    }
+    res.json(vendor);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+exports.saveOnboardingProgress = async (req, res) => {
+  try {
+    const { step, data } = req.body;
+    let vendor = await Vendor.findOne({ userId: req.user._id });
+    
+    if (!vendor) {
+      vendor = new Vendor({ userId: req.user._id });
+    }
+
+    // Determine which nested object to update based on the step
+    switch (step) {
+      case 2:
+        vendor.businessInfo = { ...vendor.businessInfo, ...data };
+        break;
+      case 3:
+        vendor.kycInfo = { ...vendor.kycInfo, ...data };
+        break;
+      case 4:
+        vendor.taxInfo = { ...vendor.taxInfo, ...data };
+        break;
+      case 5:
+        vendor.licenceInfo = { ...vendor.licenceInfo, ...data };
+        break;
+      case 6:
+        vendor.customsInfo = { ...vendor.customsInfo, ...data };
+        break;
+      case 7:
+        vendor.bankingInfo = { ...vendor.bankingInfo, ...data };
+        break;
+      case 8:
+        vendor.productCategories = data.categories || [];
+        break;
+      case 9:
+        vendor.deliveryInfo = { ...vendor.deliveryInfo, ...data };
+        break;
+      case 10:
+        vendor.agreements = { ...vendor.agreements, ...data, acceptedAt: Date.now() };
+        break;
+    }
+
+    vendor.onboardingStep = Math.max(vendor.onboardingStep, step + 1);
+    await vendor.save();
+    
+    res.json(vendor);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+exports.uploadDocument = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+    // Return the path so frontend can send it in saveOnboardingProgress
+    const fileUrl = `/uploads/${req.file.filename}`;
+    res.json({ url: fileUrl });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+exports.submitApplication = async (req, res) => {
+  try {
+    const vendor = await Vendor.findOne({ userId: req.user._id });
+    if (!vendor) {
+      return res.status(404).json({ message: 'Vendor application not found' });
+    }
+
+    vendor.status = 'pending_approval';
+    await vendor.save();
+
+    // Update the user's role to indicate they are pending
+    await User.findByIdAndUpdate(req.user._id, { role: 'vendor_pending' });
+
+    res.json({ message: 'Application submitted successfully', vendor });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};

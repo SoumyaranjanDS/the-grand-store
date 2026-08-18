@@ -1,0 +1,29 @@
+{
+  "name": "grand-store-luxury-concept",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-react": "latest",
+    "axios": "^1.19.0",
+    "dotenv": "^17.4.2",
+    "framer-motion": "^13.1.0",
+    "gsap": "latest",
+    "lucide-react": "latest",
+    "mongoose": "^9.9.2",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-router-dom": "^7.18.2",
+    "tailwindcss": "^4.3.3",
+    "vite": "latest"
+  },
+  "devDependencies": {
+    "agentation": "^3.0.2"
+  }
+}

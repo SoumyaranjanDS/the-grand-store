@@ -1,0 +1,98 @@
+.vendor-split {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border-top: 2px solid var(--color-primary);
+  background: var(--color-bg); /* #1c1c1c or similar dark from the app */
+}
+
+@media (min-width: 992px) {
+  .vendor-split {
+    flex-direction: row;
+    min-height: 60vh;
+  }
+}
+
+.vendor-split__content {
+  flex: 1;
+  padding: 60px 5%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg);
+  color: var(--color-text); /* #f2efe9 */
+}
+
+/* If it's a light block like the second half of block 1, we handle it by passing a light theme class or just let it be handled by a wrapper. Let's add a modifier class if needed, or better, we can just apply a class to the wrapper in the parent component. */
+.vendor-split--light .vendor-split__content {
+  background: #fff;
+  color: #212223;
+}
+.vendor-split--light .vendor-split__text p {
+  color: #212223;
+}
+
+.vendor-split__content-inner {
+  max-width: 600px;
+}
+
+.vendor-split__title {
+  font-family: var(--font-heading);
+  font-size: 32px;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.vendor-split__subtitle {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  color: var(--color-primary);
+  margin-bottom: 25px;
+  font-weight: 400;
+}
+
+.vendor-split__text p {
+  margin-bottom: 20px;
+  line-height: 1.6;
+  font-size: 16px;
+  color: var(--color-text-muted);
+}
+
+.vendor-split__btn {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 12px 30px;
+  background: var(--color-primary);
+  color: #000;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid var(--color-primary);
+  transition: all 0.3s ease;
+}
+
+.vendor-split__btn:hover {
+  background: transparent;
+  color: var(--color-primary);
+}
+
+.vendor-split__image-side {
+  flex: 1;
+  min-height: 400px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.vendor-split__glass-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(242, 195, 0, 0.05); /* very faint gold */
+  backdrop-filter: blur(2px);
+}

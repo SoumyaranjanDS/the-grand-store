@@ -1,0 +1,127 @@
+.saved-page {
+  color: #1d1813;
+  background: #eee8dd;
+}
+
+.saved-page__main {
+  min-height: 72vh;
+  padding-top: var(--nav-height);
+}
+
+.saved-page__hero {
+  min-height: 390px;
+  padding: 72px 7vw 66px;
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 50px;
+  color: var(--paper);
+  background: radial-gradient(circle at 80% 30%, rgba(184, 138, 73, 0.18), transparent 30%), linear-gradient(118deg, #080807, #14110d);
+  border-bottom: 1px solid rgba(213, 181, 125, 0.34);
+}
+
+.saved-page__hero > div:first-child > p,
+.saved-page__toolbar > div > p {
+  margin: 0 0 12px;
+  color: var(--brass-light);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.saved-page__hero h1 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: clamp(68px, 7.5vw, 116px);
+  font-weight: 400;
+  letter-spacing: -0.055em;
+  line-height: 0.72;
+}
+
+.saved-page__hero h1 em,
+.saved-page__empty h2 em { color: var(--brass-light); font-weight: 400; }
+
+.saved-page__count {
+  min-width: 210px;
+  padding: 22px 0 5px 24px;
+  border-left: 1px solid rgba(213, 181, 125, 0.42);
+}
+
+.saved-page__count span { color: var(--brass-light); font-family: var(--serif); font-size: 58px; line-height: 0.8; }
+.saved-page__count p { margin: 12px 0 0; color: #928a80; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; }
+
+.saved-page__collection {
+  width: min(calc(100% - 80px), 1420px);
+  margin-inline: auto;
+  padding: 65px 0 82px;
+}
+
+.saved-page__toolbar {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 24px;
+  border-bottom: 1px solid rgba(61, 43, 25, 0.19);
+}
+
+.saved-page__toolbar > div > p { color: #986a30; }
+.saved-page__toolbar h2 { margin: 0; font-family: var(--serif); font-size: clamp(42px, 4vw, 62px); font-weight: 500; line-height: 0.9; }
+
+.saved-page__toolbar button {
+  padding: 11px 14px;
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  color: #726455;
+  border: 1px solid rgba(73, 50, 28, 0.28);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: color 220ms ease, border-color 220ms ease, background 220ms ease;
+}
+
+.saved-page__toolbar button:hover { color: #f2e8d8; background: #241b14; border-color: #241b14; }
+.saved-page__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+
+.saved-page__empty {
+  min-height: 520px;
+  padding: 75px 24px 90px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.saved-page__empty-mark { width: 76px; height: 76px; margin-bottom: 24px; display: grid; place-items: center; color: #9d6f35; border: 1px solid rgba(157, 111, 53, 0.45); border-radius: 50%; }
+.saved-page__empty > p { margin: 0 0 9px; color: #9d6f35; font-size: 12px; font-weight: 600; letter-spacing: 0.21em; text-transform: uppercase; }
+.saved-page__empty h2 { margin: 0; font-family: var(--serif); font-size: clamp(48px, 5vw, 72px); font-weight: 500; letter-spacing: -0.035em; line-height: 0.92; }
+.saved-page__empty > span { max-width: 560px; margin-top: 24px; color: #6d6257; font-family: var(--serif); font-size: 20px; line-height: 1.55; }
+
+.saved-page__empty > a {
+  margin-top: 28px;
+  padding: 14px 18px;
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  color: #f4eadb;
+  background: #17130f;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 1050px) { .saved-page__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+@media (max-width: 650px) {
+  .saved-page__hero { min-height: 360px; padding: 56px 24px 48px; display: grid; }
+  .saved-page__count { min-width: 0; }
+  .saved-page__collection { width: calc(100% - 40px); padding-block: 50px 64px; }
+  .saved-page__toolbar { align-items: start; flex-direction: column; }
+  .saved-page__grid { grid-template-columns: 1fr; }
+}

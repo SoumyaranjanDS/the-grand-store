@@ -1,0 +1,232 @@
+.winemaker-section {
+  position: relative;
+  min-height: 600px;
+  padding: clamp(72px, 7vw, 102px) 0;
+  overflow: hidden;
+  background: #f8f3ea;
+}
+
+.winemaker-art {
+  position: absolute;
+  inset: 0;
+  opacity: 0.9;
+  background: url('/assets/winemaker-bg.png') left center / cover no-repeat;
+}
+
+.winemaker-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  align-items: start;
+  gap: clamp(45px, 6vw, 90px);
+}
+
+.winemaker-grid header {
+  padding-top: 20px;
+}
+
+.winemaker-grid .section-title {
+  max-width: 630px;
+}
+
+.winemaker-update {
+  margin: 16px 0 0;
+  color: var(--navy-soft);
+  font-family: var(--serif);
+  font-size: 30px;
+}
+
+.winemaker-stat {
+  display: grid;
+  width: min(260px, 100%);
+  margin-top: 32px;
+  padding: 17px 0 0;
+  gap: 5px;
+  border-top: 1px solid rgba(122, 38, 60, 0.38);
+}
+
+.winemaker-stat strong {
+  color: var(--wine);
+  font-family: var(--serif);
+  font-size: 47px;
+  font-weight: 400;
+}
+
+.winemaker-stat span {
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.winemaker-copy {
+  max-width: 610px;
+  padding: 28px 34px;
+  border: 1px solid rgba(43, 55, 54, 0.14);
+  background: rgba(255, 250, 240, 0.78);
+  backdrop-filter: blur(8px);
+}
+
+.winemaker-copy > p {
+  margin: 0 0 18px;
+  color: #525d59;
+  font-family: var(--serif);
+  font-size: clamp(25px, 1.85vw, 30px);
+  line-height: 1.42;
+}
+
+.winemaker-link {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 8px;
+  padding-bottom: 8px;
+  gap: 9px;
+  border-bottom: 1px solid var(--wine);
+  color: var(--wine);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.manifesto-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1.22fr) minmax(420px, 0.78fr);
+  min-height: 520px;
+  background: var(--navy);
+}
+
+.manifesto-image {
+  position: relative;
+  min-height: 480px;
+  overflow: hidden;
+}
+
+.manifesto-image::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 60%, rgba(16, 45, 68, 0.72));
+  content: '';
+}
+
+.manifesto-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.82) contrast(1.03);
+}
+
+.manifesto-image > span {
+  position: absolute;
+  z-index: 2;
+  bottom: 31px;
+  left: 35px;
+  padding: 11px 15px;
+  color: var(--navy);
+  background: var(--paper);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.manifesto-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(48px, 5.7vw, 88px);
+  color: var(--cream);
+}
+
+.manifesto-copy .eyebrow {
+  color: var(--gold-bright);
+}
+
+.manifesto-copy h2 {
+  margin: 0 0 28px;
+  font-family: var(--serif);
+  font-size: clamp(45px, 4.6vw, 73px);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+}
+
+.manifesto-copy h2 em {
+  color: var(--gold-bright);
+  font-weight: 400;
+}
+
+.manifesto-copy > p:not(.eyebrow) {
+  max-width: 560px;
+  margin: 0;
+  color: rgba(255, 250, 240, 0.7);
+  font-size: 21px;
+  line-height: 1.55;
+}
+
+.manifesto-signature {
+  display: flex;
+  align-items: center;
+  margin-top: 27px;
+  gap: 19px;
+}
+
+.manifesto-signature > span {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border: 1px solid var(--gold-bright);
+  color: var(--gold-bright);
+  font-family: var(--serif);
+  font-size: 36px;
+}
+
+.manifesto-signature p {
+  margin: 0;
+  color: rgba(255, 250, 240, 0.58);
+  font-size: 13px;
+  letter-spacing: 0.15em;
+  line-height: 1.7;
+  text-transform: uppercase;
+}
+
+@media (max-width: 980px) {
+  .winemaker-grid,
+  .manifesto-section {
+    grid-template-columns: 1fr;
+  }
+
+  .winemaker-copy {
+    margin-left: auto;
+  }
+
+  .manifesto-copy {
+    padding: 70px 40px;
+  }
+}
+
+@media (max-width: 620px) {
+  .winemaker-section {
+    min-height: 0;
+    padding-block: 75px;
+  }
+
+  .winemaker-grid {
+    gap: 42px;
+  }
+
+  .winemaker-copy {
+    padding: 27px 22px;
+  }
+
+  .manifesto-image {
+    min-height: 350px;
+  }
+
+  .manifesto-copy {
+    padding: 55px 23px;
+  }
+}
