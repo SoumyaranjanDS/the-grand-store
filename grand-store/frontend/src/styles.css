@@ -12,7 +12,7 @@
   --color-gold-dark: #B8860B;
   --font-serif: 'Playfair Display', Georgia, serif;
   --font-sans: 'Inter', Arial, sans-serif;
-  --font-script: 'Pinyon Script', cursive;
+  --font-script: 'Dancing Script', cursive;
 }
 
 :root {
@@ -29,7 +29,7 @@
   --white-line: rgba(255, 255, 255, 0.1);
   --serif: 'Playfair Display', Georgia, serif;
   --sans: 'Inter', Arial, sans-serif;
-  --script: 'Pinyon Script', cursive;
+  --script: 'Dancing Script', cursive;
   color: var(--color-ivory);
   font-family: var(--sans);
   font-synthesis: none;
@@ -9746,4 +9746,15 @@ video {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(181, 139, 56, 0.5);
+}
+
+@utility text-gold-gradient {
+  background-image: linear-gradient(to right, #b58b38, #e6c97a, #b58b38);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility bg-gold-gradient {
+  background-image: linear-gradient(to right, #b58b38, #e6c97a, #b58b38);
 }

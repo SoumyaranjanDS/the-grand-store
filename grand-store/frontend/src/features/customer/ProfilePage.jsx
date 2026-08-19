@@ -74,7 +74,7 @@ export default function ProfilePage() {
       case 'rejected':
         return { color: 'text-red-400', bg: 'bg-red-400/10', border: 'border-red-400/20', icon: <AlertCircle size={16} />, text: 'Requires Revision' };
       default:
-        return { color: 'text-[var(--color-gold)]', bg: 'bg-[var(--color-gold)]/10', border: 'border-[var(--color-gold)]/20', icon: <FileText size={16} />, text: 'Draft Application' };
+        return { color: 'text-gold-gradient', bg: 'bg-[var(--color-gold)]/10', border: 'border-[var(--color-gold)]/20', icon: <FileText size={16} />, text: 'Draft Application' };
     }
   };
 
@@ -88,7 +88,7 @@ export default function ProfilePage() {
             The Grand Store
           </div>
           <div className="h-4 w-px bg-white/20 mx-2"></div>
-          <div className="text-sm tracking-widest text-[var(--color-gold)] font-medium uppercase">
+          <div className="text-sm tracking-widest text-gold-gradient font-medium uppercase">
             Client Portal
           </div>
         </div>
@@ -99,11 +99,11 @@ export default function ProfilePage() {
           <div className="flex items-center gap-3">
             <div className="text-right hidden md:block">
               <div className="text-sm font-serif">{user.name}</div>
-              <div className="text-xs text-[var(--color-gold)] tracking-widest uppercase">Private Client</div>
+              <div className="text-xs text-gold-gradient tracking-widest uppercase">Private Client</div>
             </div>
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--color-gold)] to-yellow-700 p-[1px]">
               <div className="w-full h-full bg-[#0a0a0a] rounded-full flex items-center justify-center">
-                <User size={18} className="text-[var(--color-gold)]" />
+                <User size={18} className="text-gold-gradient" />
               </div>
             </div>
           </div>
@@ -120,7 +120,7 @@ export default function ProfilePage() {
         {/* Glassmorphic Sidebar */}
         <aside className="w-64 bg-white/[0.02] backdrop-blur-xl border-r border-white/[0.02] flex flex-col fixed top-20 bottom-0 left-0 z-10 overflow-y-auto">
           <nav className="flex flex-col flex-1 p-6 gap-2 mt-4">
-            <button className="flex items-center gap-4 px-4 py-3 rounded-xl bg-white/[0.05] text-[var(--color-gold)] shadow-[0_0_15px_rgba(212,175,55,0.05)] transition-all text-left text-xs uppercase tracking-widest font-semibold border border-white/[0.05]">
+            <button className="flex items-center gap-4 px-4 py-3 rounded-xl bg-white/[0.05] text-gold-gradient shadow-[0_0_15px_rgba(212,175,55,0.05)] transition-all text-left text-xs uppercase tracking-widest font-semibold border border-white/[0.05]">
               <User size={16} /> My Profile
             </button>
             <button onClick={() => navigate('/customer/orders')} className="flex items-center gap-4 px-4 py-3 rounded-xl text-[var(--color-ivory-muted)] hover:bg-white/[0.03] hover:text-[var(--color-ivory)] transition-all text-left text-xs uppercase tracking-widest border border-transparent">
@@ -135,7 +135,7 @@ export default function ProfilePage() {
             
             {user.role === 'vendor_active' && (
               <div className="mt-8 pt-8 border-t border-white/[0.05]">
-                <button onClick={() => navigate('/vendor/dashboard')} className="flex items-center gap-4 px-4 py-3 rounded-xl w-full text-[var(--color-ivory-muted)] hover:bg-[var(--color-gold)]/10 hover:text-[var(--color-gold)] transition-all text-left text-xs uppercase tracking-widest border border-transparent hover:border-[var(--color-gold)]/20">
+                <button onClick={() => navigate('/vendor/dashboard')} className="flex items-center gap-4 px-4 py-3 rounded-xl w-full text-[var(--color-ivory-muted)] hover:bg-[var(--color-gold)]/10 hover:text-gold-gradient transition-all text-left text-xs uppercase tracking-widest border border-transparent hover:border-[var(--color-gold)]/20">
                   <Building2 size={16} /> Vendor Dashboard
                 </button>
               </div>
@@ -143,7 +143,7 @@ export default function ProfilePage() {
             
             {user.role !== 'vendor_active' && (
               <div className="mt-8 pt-8 border-t border-white/[0.05]">
-                <button onClick={() => navigate('/vendor/onboarding')} className="flex items-center gap-4 px-4 py-3 rounded-xl w-full text-[var(--color-ivory-muted)] hover:bg-[var(--color-gold)]/10 hover:text-[var(--color-gold)] transition-all text-left text-xs uppercase tracking-widest border border-transparent hover:border-[var(--color-gold)]/20">
+                <button onClick={() => navigate('/vendor/onboarding')} className="flex items-center gap-4 px-4 py-3 rounded-xl w-full text-[var(--color-ivory-muted)] hover:bg-[var(--color-gold)]/10 hover:text-gold-gradient transition-all text-left text-xs uppercase tracking-widest border border-transparent hover:border-[var(--color-gold)]/20">
                   <Building2 size={16} /> Become Vendor
                 </button>
               </div>
@@ -163,7 +163,7 @@ export default function ProfilePage() {
           {/* Welcome Section */}
           <section className="mb-4">
             <h1 className="text-[var(--color-ivory)] font-serif text-5xl mb-4">
-              Welcome, <span className="font-script text-6xl text-[var(--color-gold)] font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">{user.name.split(' ')[0]}</span>
+              Welcome, <span className="font-script text-6xl text-gold-gradient font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">{user.name.split(' ')[0]}</span>
             </h1>
             <p className="text-[var(--color-ivory-muted)] text-lg max-w-2xl font-light">
               Manage your private cellar, track your active bids, and review your order history from your personal suite.
@@ -176,7 +176,7 @@ export default function ProfilePage() {
             {/* Account Details - Glass Panel */}
             <section className="bg-white/[0.02] backdrop-blur-2xl rounded-3xl p-10 border border-white/[0.05] shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
               <h3 className="text-[var(--color-ivory)] font-serif text-3xl mb-8 flex items-center gap-4 border-b border-white/[0.05] pb-6">
-                <div className="p-2 rounded-lg bg-[var(--color-gold)]/10 text-[var(--color-gold)]">
+                <div className="p-2 rounded-lg bg-[var(--color-gold)]/10 text-gold-gradient">
                   <User size={24} />
                 </div>
                 Account Details
@@ -192,7 +192,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)]/70 mb-2 font-semibold">Membership Status</label>
-                  <div className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-gold)]/10 text-[var(--color-gold)] text-sm uppercase tracking-widest font-semibold border border-[var(--color-gold)]/20 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
+                  <div className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-gold)]/10 text-gold-gradient text-sm uppercase tracking-widest font-semibold border border-[var(--color-gold)]/20 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
                     Private Client
                   </div>
                 </div>
@@ -204,7 +204,7 @@ export default function ProfilePage() {
               <section className="bg-white/[0.02] backdrop-blur-2xl rounded-3xl p-10 border border-white/[0.05] shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
                 <h3 className="text-[var(--color-ivory)] font-serif text-3xl mb-8 flex items-center justify-between border-b border-white/[0.05] pb-6">
                   <div className="flex items-center gap-4">
-                    <div className="p-2 rounded-lg bg-[var(--color-gold)]/10 text-[var(--color-gold)]">
+                    <div className="p-2 rounded-lg bg-[var(--color-gold)]/10 text-gold-gradient">
                       <Building2 size={24} />
                     </div>
                     Vendor Application
@@ -243,7 +243,7 @@ export default function ProfilePage() {
                   <div className="pt-6 mt-6 border-t border-white/[0.05]">
                     <button 
                       onClick={() => navigate('/vendor/onboarding')}
-                      className="w-full bg-[var(--color-gold)]/10 hover:bg-[var(--color-gold)]/20 text-[var(--color-gold)] border border-[var(--color-gold)]/30 transition-all px-6 py-3 rounded-xl uppercase tracking-widest text-xs font-bold shadow-[0_0_20px_rgba(212,175,55,0.05)] hover:shadow-[0_0_20px_rgba(212,175,55,0.15)] flex items-center justify-center gap-2"
+                      className="w-full bg-[var(--color-gold)]/10 hover:bg-[var(--color-gold)]/20 text-gold-gradient border border-[var(--color-gold)]/30 transition-all px-6 py-3 rounded-xl uppercase tracking-widest text-xs font-bold shadow-[0_0_20px_rgba(212,175,55,0.05)] hover:shadow-[0_0_20px_rgba(212,175,55,0.15)] flex items-center justify-center gap-2"
                     >
                       <FileText size={16} /> Update Application Documents
                     </button>

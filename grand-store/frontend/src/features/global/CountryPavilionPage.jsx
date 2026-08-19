@@ -53,7 +53,7 @@ export default function CountryPavilionPage({ onAdd, onWish, onCompare, compareI
 
       {/* Hero */}
       <div 
-        className="relative h-[65vh] flex items-center justify-center pt-20"
+        className="relative h-[65vh] flex items-center justify-center pt-8"
       >
         <div 
           className="absolute inset-0 bg-cover bg-center"
@@ -66,7 +66,7 @@ export default function CountryPavilionPage({ onAdd, onWish, onCompare, compareI
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#c9a35b]/10 via-transparent to-transparent opacity-80 mix-blend-screen" />
 
         <div className="relative z-10 text-center max-w-4xl mx-auto px-4 mt-12">
-          <Link to="/global-wines" className="inline-flex items-center gap-2 text-[#c9a35b] hover:text-[#e1bd70] transition-colors mb-8 text-sm font-bold uppercase tracking-widest drop-shadow-[0_0_8px_rgba(201,163,91,0.5)]">
+          <Link to="/global-wines" className="inline-flex items-center gap-2 text-gold-gradient hover:text-[#e1bd70] transition-colors mb-8 text-sm font-bold uppercase tracking-widest drop-shadow-[0_0_8px_rgba(201,163,91,0.5)]">
             <ArrowLeft size={16} /> Back to Global Wines
           </Link>
           <motion.div
@@ -74,7 +74,7 @@ export default function CountryPavilionPage({ onAdd, onWish, onCompare, compareI
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <span className="text-[#c9a35b] text-sm md:text-base font-bold tracking-[0.4em] uppercase mb-4 block drop-shadow-[0_0_10px_rgba(201,163,91,0.5)]">Wines of</span>
+            <span className="text-gold-gradient text-sm md:text-base font-bold tracking-[0.4em] uppercase mb-4 block drop-shadow-[0_0_10px_rgba(201,163,91,0.5)]">Wines of</span>
             <h1 className="text-5xl sm:text-7xl md:text-8xl font-serif text-[#eee8dd] mb-6 md:mb-8 tracking-wide drop-shadow-2xl">{details.name}</h1>
             <p className="text-white/80 text-lg sm:text-xl md:text-2xl max-w-3xl mx-auto font-light tracking-wide px-2">
               {details.desc}
@@ -88,13 +88,13 @@ export default function CountryPavilionPage({ onAdd, onWish, onCompare, compareI
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 border-b border-[#c9a35b]/20 pb-4 shadow-[0_4px_20px_-10px_rgba(201,163,91,0.2)]">
           <div>
             <h2 className="text-3xl font-serif text-[#eee8dd] tracking-wider">Featured Collection</h2>
-            <p className="text-[#c9a35b] text-sm mt-2 tracking-widest uppercase font-bold">{pavilionWines.length} {pavilionWines.length === 1 ? 'wine' : 'wines'} available</p>
+            <p className="text-gold-gradient text-sm mt-2 tracking-widest uppercase font-bold">{pavilionWines.length} {pavilionWines.length === 1 ? 'wine' : 'wines'} available</p>
           </div>
           <div className="flex gap-6 mt-4 md:mt-0">
-            <button className="flex items-center gap-2 text-sm text-[#eee8dd] hover:text-[#c9a35b] transition-all font-bold uppercase tracking-widest">
+            <button className="flex items-center gap-2 text-sm text-[#eee8dd] hover:text-gold-gradient transition-all font-bold uppercase tracking-widest">
               <Filter size={16} /> Filter
             </button>
-            <button className="flex items-center gap-2 text-sm text-[#eee8dd] hover:text-[#c9a35b] transition-all font-bold uppercase tracking-widest">
+            <button className="flex items-center gap-2 text-sm text-[#eee8dd] hover:text-gold-gradient transition-all font-bold uppercase tracking-widest">
               <Search size={16} /> Search
             </button>
           </div>

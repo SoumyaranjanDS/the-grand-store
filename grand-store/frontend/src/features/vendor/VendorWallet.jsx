@@ -32,7 +32,7 @@ export default function VendorWallet() {
   }, [user]);
 
   const goldTextClass = "bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(230,201,122,0.6)]";
-  const scriptFont = { fontFamily: "'Pinyon Script', cursive" };
+  const scriptFont = { fontFamily: "'Dancing Script', cursive" };
 
   const transactions = sales.map(sale => {
     const commission = sale.vendorTotal * 0.15;
@@ -56,7 +56,7 @@ export default function VendorWallet() {
       {/* Header */}
       <section>
         <h1 className="text-[var(--color-ivory)] font-serif text-5xl mb-4 leading-tight">
-          Vendor <span className="text-[var(--color-gold)]" style={scriptFont}>Wallet</span>
+          Vendor <span className={goldTextClass} style={scriptFont}>Wallet</span>
         </h1>
         <p className="text-[var(--color-ivory-muted)] text-lg max-w-2xl font-light leading-relaxed">
           Full financial transparency. Track your earnings, commissions, and upcoming payouts.
@@ -68,7 +68,7 @@ export default function VendorWallet() {
         <div className="p-8 border-t border-[var(--color-gold)]/20 relative overflow-hidden group">
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-[var(--color-gold)]/10 rounded-full blur-3xl group-hover:bg-[var(--color-gold)]/20 transition-all"></div>
           <div className="flex items-center gap-3 mb-4 text-[var(--color-ivory-muted)] uppercase tracking-widest text-xs font-semibold">
-            <Wallet size={16} className="text-[var(--color-gold)]" />
+            <Wallet size={16} className="text-gold-gradient" />
             Available Balance
           </div>
           <div className={`text-5xl font-serif ${goldTextClass}`}>
@@ -76,7 +76,7 @@ export default function VendorWallet() {
           </div>
           <div className="mt-6 flex justify-between items-center text-sm">
             <span className="text-[var(--color-ivory-muted)]">Next payout: 1st Sep</span>
-            <button className="text-black bg-[var(--color-gold)] px-4 py-2 rounded-full font-bold uppercase tracking-widest text-[10px] hover:shadow-[0_0_15px_rgba(212,175,55,0.4)] transition-all">
+            <button className="text-black bg-gold-gradient px-4 py-2 rounded-full font-bold uppercase tracking-widest text-[10px] hover:shadow-[0_0_15px_rgba(212,175,55,0.4)] transition-all">
               Withdraw
             </button>
           </div>
@@ -121,7 +121,7 @@ export default function VendorWallet() {
                 <th className="p-4 md:p-5 text-xs font-bold text-[var(--color-ivory-muted)] uppercase tracking-widest">Order ID / Date</th>
                 <th className="p-4 md:p-5 text-xs font-bold text-[var(--color-ivory-muted)] uppercase tracking-widest">Order Value</th>
                 <th className="p-4 md:p-5 text-xs font-bold text-red-400/80 uppercase tracking-widest">Commission (15%)</th>
-                <th className="p-4 md:p-5 text-xs font-bold text-[var(--color-gold)] uppercase tracking-widest">Net Payout</th>
+                <th className="p-4 md:p-5 text-xs font-bold text-gold-gradient uppercase tracking-widest">Net Payout</th>
                 <th className="p-4 md:p-5 text-xs font-bold text-[var(--color-ivory-muted)] uppercase tracking-widest text-right">Status</th>
               </tr>
             </thead>
@@ -134,7 +134,7 @@ export default function VendorWallet() {
                   </td>
                   <td className="p-5 text-[var(--color-ivory)] font-medium">R {tx.value.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</td>
                   <td className="p-5 text-red-400/80 font-medium">-R {tx.commission.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</td>
-                  <td className="p-5 text-[var(--color-gold)] font-bold">R {tx.net.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</td>
+                  <td className="p-5 text-gold-gradient font-bold">R {tx.net.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</td>
                   <td className="p-5 text-right">
                     {tx.status === 'Completed' ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-green-500/10 text-green-500 border border-green-500/20">

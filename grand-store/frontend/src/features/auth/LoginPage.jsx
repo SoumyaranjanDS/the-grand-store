@@ -85,7 +85,7 @@ export default function LoginPage() {
                 <label className="block text-[var(--color-ivory-muted)] text-[10px] font-bold uppercase tracking-widest">
                   Password
                 </label>
-                <a href="#" className="text-[10px] uppercase tracking-widest text-[var(--color-gold)] hover:text-white transition-colors font-bold">
+                <a href="#" className="text-[10px] uppercase tracking-widest text-gold-gradient hover:text-white transition-colors font-bold">
                   Forgot?
                 </a>
               </div>
@@ -123,7 +123,7 @@ export default function LoginPage() {
           <div className="mt-8 text-center pt-6">
             <p className="text-sm text-[var(--color-ivory-muted)]">
               Not a member yet?{' '}
-              <Link to={`/register${searchParams.get('redirect') ? `?redirect=${searchParams.get('redirect')}` : ''}`} className="font-bold text-[var(--color-gold)] hover:text-white transition-colors inline-flex items-center gap-1">
+              <Link to={`/register${searchParams.get('redirect') ? `?redirect=${searchParams.get('redirect')}` : ''}`} className="font-bold text-gold-gradient hover:text-white transition-colors inline-flex items-center gap-1">
                 Request an invitation <ArrowRight size={14} />
               </Link>
             </p>

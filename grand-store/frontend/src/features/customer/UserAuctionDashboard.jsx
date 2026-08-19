@@ -18,7 +18,7 @@ export default function UserAuctionDashboard() {
   if (loading) return <div className="min-h-screen flex items-center justify-center text-[#e1bd70]">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-[#0a0907] pt-32 pb-20 px-4">
+    <div className="min-h-screen bg-[#0a0907] pt-10 pb-20 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <button onClick={() => navigate('/customer/profile')} className="inline-flex items-center gap-2 text-[#918a7f] hover:text-white transition-colors">
@@ -39,7 +39,7 @@ export default function UserAuctionDashboard() {
           {/* Active Bids */}
           <div className="bg-[#11100d] border border-white/5 rounded-xl p-6">
             <h2 className="text-[#eee8dd] text-lg font-medium mb-6 flex items-center gap-2 border-b border-white/10 pb-4">
-              <Gavel size={18} className="text-[#c9a35b]" /> Active Bids
+              <Gavel size={18} className="text-gold-gradient" /> Active Bids
             </h2>
             {bids.length > 0 ? (
               <div className="space-y-4">
@@ -48,7 +48,7 @@ export default function UserAuctionDashboard() {
             ) : (
               <div className="text-center py-8 text-[#918a7f]">
                 <p className="mb-4">You have no active bids.</p>
-                <Link to="/auction" className="text-[#c9a35b] hover:text-white underline text-sm">Explore live auctions</Link>
+                <Link to="/auction" className="text-gold-gradient hover:text-white underline text-sm">Explore live auctions</Link>
               </div>
             )}
           </div>

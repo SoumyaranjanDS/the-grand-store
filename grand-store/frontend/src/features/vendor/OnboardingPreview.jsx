@@ -29,7 +29,7 @@ export default function OnboardingPreview({ onNext, onBack }) {
       {/* Left Side: Input Form Sidebar */}
       <div className="w-full lg:w-[420px] flex flex-col bg-[#0a0a0a]/80 backdrop-blur-xl border-r border-white/5 p-8 overflow-y-auto shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.8)] z-10 relative">
         <div className="mb-12">
-          <p className="text-[#c9a35b] text-xs uppercase tracking-[0.2em] font-bold mb-3">Partnership Journey</p>
+          <p className="text-gold-gradient text-xs uppercase tracking-[0.2em] font-bold mb-3">Partnership Journey</p>
           <h1 className="text-4xl font-serif text-white mb-4 leading-tight">Design Your<br/>Grand Store</h1>
           <p className="text-neutral-400 text-sm leading-relaxed">Enter your estate details below to instantly generate a live mock-up of your premium storefront.</p>
         </div>
@@ -53,19 +53,19 @@ export default function OnboardingPreview({ onNext, onBack }) {
               {previewData.logoUrl ? (
                 <div className="flex flex-col items-center">
                   <img src={previewData.logoUrl} alt="Logo preview" className="h-16 object-contain mb-3" />
-                  <span className="text-xs text-[#c9a35b] uppercase tracking-widest font-bold">Replace Logo</span>
+                  <span className="text-xs text-gold-gradient uppercase tracking-widest font-bold">Replace Logo</span>
                 </div>
               ) : (
                 <div className="flex flex-col items-center">
-                  <UploadCloud className="text-neutral-500 mb-3 group-hover:text-[#c9a35b] transition-colors" size={28} />
-                  <span className="text-xs text-neutral-400 uppercase tracking-widest group-hover:text-[#c9a35b] transition-colors">Upload Emblem</span>
+                  <UploadCloud className="text-neutral-500 mb-3 group-hover:text-gold-gradient transition-colors" size={28} />
+                  <span className="text-xs text-neutral-400 uppercase tracking-widest group-hover:text-gold-gradient transition-colors">Upload Emblem</span>
                 </div>
               )}
             </div>
           </div>
 
           <div className="pt-8 border-t border-white/5">
-            <h3 className="text-[#c9a35b] text-xs uppercase tracking-widest font-bold mb-6">Showcase a Product</h3>
+            <h3 className="text-gold-gradient text-xs uppercase tracking-widest font-bold mb-6">Showcase a Product</h3>
             <div className="space-y-6">
               <div>
                 <label className="block text-xs uppercase tracking-widest text-neutral-500 mb-2">Cuvee / Product Name</label>
@@ -115,7 +115,7 @@ export default function OnboardingPreview({ onNext, onBack }) {
               <div className="w-2.5 h-2.5 rounded-full bg-white/10"></div>
             </div>
             <div className="bg-white/5 rounded text-[10px] text-neutral-500 px-32 py-1.5 font-mono tracking-widest flex items-center gap-2 border border-white/5">
-              <Globe size={10} className="text-[#c9a35b]"/>
+              <Globe size={10} className="text-gold-gradient"/>
               grandstore.co.za/boutique/{previewData.businessName ? previewData.businessName.toLowerCase().replace(/\s+/g, '-') : 'estate'}
             </div>
             <div className="w-8"></div>
@@ -149,7 +149,7 @@ export default function OnboardingPreview({ onNext, onBack }) {
                       {previewData.logoUrl ? (
                         <img src={previewData.logoUrl} alt="Logo" className="w-full h-full object-contain bg-white" />
                       ) : (
-                        <span className="text-6xl text-[#c9a35b] font-serif font-light">{previewData.businessName ? previewData.businessName.charAt(0).toUpperCase() : 'A'}</span>
+                        <span className="text-6xl text-gold-gradient font-serif font-light">{previewData.businessName ? previewData.businessName.charAt(0).toUpperCase() : 'A'}</span>
                       )}
                     </div>
                     
@@ -157,7 +157,7 @@ export default function OnboardingPreview({ onNext, onBack }) {
                     
                     <div className="flex items-center gap-3 justify-center">
                       <span className="h-[1px] w-12 bg-gradient-to-r from-transparent to-[#c9a35b]/50"></span>
-                      <span className="text-[#c9a35b] text-[10px] uppercase tracking-[0.3em] font-bold flex items-center gap-2">
+                      <span className="text-gold-gradient text-[10px] uppercase tracking-[0.3em] font-bold flex items-center gap-2">
                         <CheckCircle2 size={12} /> Grand Store Exclusive Partner
                       </span>
                       <span className="h-[1px] w-12 bg-gradient-to-l from-transparent to-[#c9a35b]/50"></span>
@@ -166,7 +166,7 @@ export default function OnboardingPreview({ onNext, onBack }) {
 
                   {/* Navigation Mock */}
                   <div className="flex justify-center gap-12 border-b border-white/5 mb-16">
-                    <div className="text-[#c9a35b] border-b border-[#c9a35b] pb-4 text-xs uppercase tracking-[0.2em] font-bold">The Collection</div>
+                    <div className="text-gold-gradient border-b border-[#c9a35b] pb-4 text-xs uppercase tracking-[0.2em] font-bold">The Collection</div>
                     <div className="text-neutral-500 hover:text-white pb-4 text-xs uppercase tracking-[0.2em] font-medium transition-colors cursor-pointer">Heritage</div>
                     <div className="text-neutral-500 hover:text-white pb-4 text-xs uppercase tracking-[0.2em] font-medium transition-colors cursor-pointer">Terroir</div>
                   </div>
@@ -200,8 +200,8 @@ export default function OnboardingPreview({ onNext, onBack }) {
 
                       <div className="p-8 text-center bg-black/40 backdrop-blur-md border-t border-white/5">
                         <p className="text-[10px] text-neutral-500 uppercase tracking-[0.3em] mb-3">{previewData.businessName || 'Estate'}</p>
-                        <h3 className="text-white text-lg font-serif mb-4 group-hover:text-[#c9a35b] transition-colors">{previewData.productName || 'Signature Collection'}</h3>
-                        <p className="text-[#c9a35b] font-mono text-lg tracking-wider">R {previewData.productPrice || '1,250'}</p>
+                        <h3 className="text-white text-lg font-serif mb-4 group-hover:text-gold-gradient transition-colors">{previewData.productName || 'Signature Collection'}</h3>
+                        <p className="text-gold-gradient font-mono text-lg tracking-wider">R {previewData.productPrice || '1,250'}</p>
                       </div>
                     </div>
 

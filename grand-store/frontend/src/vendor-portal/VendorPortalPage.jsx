@@ -87,7 +87,7 @@ export default function VendorPortalPage() {
     "How long does it take for my vendor account to be approved?",
   ];
 
-  const scriptFont = { fontFamily: "'Pinyon Script', cursive" };
+  const scriptFont = { fontFamily: "'Dancing Script', cursive" };
 
   // Reusable Gold Text with Glow
   const goldTextClass =
@@ -218,7 +218,7 @@ export default function VendorPortalPage() {
               <div key={i} className="text-center">
                 <div className="w-20 h-20 mx-auto bg-white rounded-full shadow-sm flex items-center justify-center mb-6">
                   <f.icon
-                    className="text-[#c9a35b]"
+                    className="text-gold-gradient"
                     strokeWidth={1}
                     size={36}
                   />
@@ -297,7 +297,7 @@ export default function VendorPortalPage() {
                 <label className="block text-xs text-gray-500 uppercase tracking-widest font-semibold mb-2">
                   Product Image (Optional)
                 </label>
-                <label className="flex items-center justify-center gap-3 w-full border-2 border-dashed border-gray-300 bg-gray-50 p-6 text-gray-500 hover:text-[#c9a35b] hover:border-[#c9a35b] cursor-pointer text-sm">
+                <label className="flex items-center justify-center gap-3 w-full border-2 border-dashed border-gray-300 bg-gray-50 p-6 text-gray-500 hover:text-gold-gradient hover:border-[#c9a35b] cursor-pointer text-sm">
                   <ImageIcon size={18} />
                   <span>Upload a mock image</span>
                   <input
@@ -313,7 +313,7 @@ export default function VendorPortalPage() {
             {/* Live Preview Card */}
             <div className="flex justify-center">
               <div className="w-full max-w-sm bg-[#0a0907] border border-[#c9a35b]/50 p-6 shadow-2xl relative">
-                <div className="absolute top-4 right-4 flex items-center gap-1 text-[9px] text-[#c9a35b] uppercase tracking-widest font-bold bg-[#c9a35b]/10 px-2 py-1 border border-[#c9a35b]/20">
+                <div className="absolute top-4 right-4 flex items-center gap-1 text-[9px] text-gold-gradient uppercase tracking-widest font-bold bg-[#c9a35b]/10 px-2 py-1 border border-[#c9a35b]/20">
                   <Star size={10} fill="currentColor" /> Verified
                 </div>
 
@@ -339,11 +339,11 @@ export default function VendorPortalPage() {
                   {mockProductName || "Your Product Name"}
                 </h3>
 
-                <p className="text-[#c9a35b] text-xl font-serif mb-6">
+                <p className="text-gold-gradient text-xl font-serif mb-6">
                   R{Number(mockPrice || 0).toFixed(2)}
                 </p>
 
-                <button className="w-full border border-[#eee8dd] text-black bg-[#eee8dd] py-3 text-[10px] uppercase tracking-widest font-bold hover:bg-[#c9a35b] hover:border-[#c9a35b] hover:text-black">
+                <button className="w-full border border-[#eee8dd] text-black bg-[#eee8dd] py-3 text-[10px] uppercase tracking-widest font-bold hover:bg-gold-gradient hover:border-[#c9a35b] hover:text-black">
                   Add to Cart
                 </button>
               </div>
@@ -431,11 +431,11 @@ export default function VendorPortalPage() {
                 <span className="text-sm uppercase tracking-widest font-semibold text-gray-700">
                   Commission per sale
                 </span>
-                <span className="font-serif font-bold text-[#c9a35b]">15%</span>
+                <span className="font-serif font-bold text-gold-gradient">15%</span>
               </div>
             </div>
             <p className="text-[11px] text-gray-400 uppercase tracking-widest leading-relaxed flex gap-2">
-              <CheckCircle2 size={16} className="text-[#c9a35b] shrink-0" />
+              <CheckCircle2 size={16} className="text-gold-gradient shrink-0" />
               Secure payment processing system.
             </p>
           </div>
@@ -459,7 +459,7 @@ export default function VendorPortalPage() {
                 <li key={idx} className="flex items-center gap-4 text-gray-300">
                   <CheckCircle2
                     size={24}
-                    className="text-[#c9a35b] shrink-0"
+                    className="text-gold-gradient shrink-0"
                     strokeWidth={1.5}
                   />
                   <span className="text-base">{item}</span>
@@ -496,7 +496,7 @@ export default function VendorPortalPage() {
               >
                 <span className="font-semibold text-black">{q}</span>
                 {openFaq === idx ? (
-                  <Minus className="text-[#c9a35b]" size={20} />
+                  <Minus className="text-gold-gradient" size={20} />
                 ) : (
                   <Plus className="text-gray-400" size={20} />
                 )}

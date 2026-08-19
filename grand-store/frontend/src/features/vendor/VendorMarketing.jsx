@@ -3,7 +3,7 @@ import { Megaphone, Star, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 export default function VendorMarketing() {
   const goldTextClass = "bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(230,201,122,0.6)]";
-  const scriptFont = { fontFamily: "'Pinyon Script', cursive" };
+  const scriptFont = { fontFamily: "'Dancing Script', cursive" };
 
   return (
     <div className="flex flex-col gap-10 w-full max-w-7xl mx-auto pb-10">
@@ -12,7 +12,7 @@ export default function VendorMarketing() {
       <section className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <h1 className="text-[var(--color-ivory)] font-serif text-5xl mb-4 leading-tight">
-            Marketing <span className="text-[var(--color-gold)]" style={scriptFont}>Centre</span>
+            Marketing <span className={goldTextClass} style={scriptFont}>Centre</span>
           </h1>
           <p className="text-[var(--color-ivory-muted)] text-lg max-w-2xl font-light leading-relaxed">
             Grow your business by participating in Grand Store campaigns, curated collections, and promotions.
@@ -21,11 +21,11 @@ export default function VendorMarketing() {
         
         {/* Vendor Level Badge */}
         <div className="border-l-2 border-[var(--color-gold)] pl-6 py-2 flex items-center gap-4">
-          <div className="p-3 bg-[var(--color-gold)] text-black rounded-full">
+          <div className="p-3 bg-gold-gradient text-black rounded-full">
             <Star size={24} className="fill-black" />
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-widest text-[var(--color-gold)] font-bold mb-1">Current Status</div>
+            <div className="text-[10px] uppercase tracking-widest text-gold-gradient font-bold mb-1">Current Status</div>
             <div className="font-serif text-xl text-white">Verified Vendor</div>
           </div>
         </div>
@@ -34,7 +34,7 @@ export default function VendorMarketing() {
       {/* Active Campaigns */}
       <section>
         <h3 className="text-2xl font-serif text-[var(--color-ivory)] mb-6 flex items-center gap-3">
-          <Megaphone className="text-[var(--color-gold)]" />
+          <Megaphone className="text-gold-gradient" />
           Active Campaigns
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -48,7 +48,7 @@ export default function VendorMarketing() {
               </div>
               <h4 className="text-3xl font-serif text-white mb-2">Women's Month Showcase</h4>
               <p className="text-[var(--color-ivory-muted)] text-sm font-light mb-6">Submit your products by 20 August. Grand Store will heavily promote selected products across the platform and our newsletter.</p>
-              <button className="flex items-center justify-center gap-2 w-full py-3 bg-[var(--color-gold)] text-black rounded-full font-bold uppercase tracking-widest text-xs hover:shadow-[0_0_15px_rgba(212,175,55,0.5)] transition-all">
+              <button className="flex items-center justify-center gap-2 w-full py-3 bg-gold-gradient text-black rounded-full font-bold uppercase tracking-widest text-xs hover:shadow-[0_0_15px_rgba(212,175,55,0.5)] transition-all">
                 Submit Products
               </button>
             </div>
@@ -62,7 +62,7 @@ export default function VendorMarketing() {
               </div>
               <h4 className="text-3xl font-serif text-white mb-2">Weekend Flash Sales</h4>
               <p className="text-[var(--color-ivory-muted)] text-sm font-light mb-6">Offer a minimum of 15% off to be featured on our homepage every Friday-Sunday. Boost volume instantly.</p>
-              <button className="flex items-center justify-center gap-2 w-full py-3 border border-[var(--color-gold)]/40 text-[var(--color-gold)] rounded-full font-bold uppercase tracking-widest text-xs hover:bg-[var(--color-gold)]/10 transition-all">
+              <button className="flex items-center justify-center gap-2 w-full py-3 border border-[var(--color-gold)]/40 text-gold-gradient rounded-full font-bold uppercase tracking-widest text-xs hover:bg-[var(--color-gold)]/10 transition-all">
                 Create Promotion
               </button>
             </div>
@@ -91,13 +91,13 @@ export default function VendorMarketing() {
               <div className="flex items-center gap-4">
                 <span className="text-2xl">{collection.icon}</span>
                 <div>
-                  <h5 className="text-[var(--color-ivory)] font-medium text-sm group-hover:text-[var(--color-gold)] transition-colors">{collection.title}</h5>
+                  <h5 className="text-[var(--color-ivory)] font-medium text-sm group-hover:text-gold-gradient transition-colors">{collection.title}</h5>
                   <span className={`text-[9px] uppercase tracking-widest font-semibold ${collection.status === 'Open' ? 'text-green-500' : 'text-yellow-500'}`}>
                     {collection.status}
                   </span>
                 </div>
               </div>
-              <ArrowRight size={16} className="text-[var(--color-ivory-muted)] group-hover:text-[var(--color-gold)] transition-colors" />
+              <ArrowRight size={16} className="text-[var(--color-ivory-muted)] group-hover:text-gold-gradient transition-colors" />
             </div>
           ))}
         </div>

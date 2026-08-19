@@ -32,7 +32,8 @@ export default function VendorOrders() {
     }
   }, [user]);
 
-  const scriptFont = { fontFamily: "'Pinyon Script', cursive" };
+  const goldTextClass = "bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(230,201,122,0.6)]";
+  const scriptFont = { fontFamily: "'Dancing Script', cursive" };
 
   const filteredSales = sales.filter(sale => 
     (sale.invoiceNumber || sale._id).toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -46,10 +47,10 @@ export default function VendorOrders() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-6">
         <div>
           <h1 className="text-[var(--color-ivory)] font-serif text-4xl mb-2 flex items-center gap-4">
-            <div className="p-3 bg-[var(--color-gold)]/10 text-[var(--color-gold)] rounded-xl border border-[var(--color-gold)]/20 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
+            <div className="p-3 bg-[var(--color-gold)]/10 text-gold-gradient rounded-xl border border-[var(--color-gold)]/20 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
               <ShoppingBag size={28} />
             </div>
-            Order <span className="text-[var(--color-gold)] ml-2" style={scriptFont}>History</span>
+            Order <span className={`${goldTextClass} ml-2`} style={scriptFont}>History</span>
           </h1>
           <p className="text-[var(--color-ivory-muted)] text-sm max-w-2xl font-light">
             Review detailed information about customer orders containing your products, including shipping addresses and quantities.
@@ -70,7 +71,7 @@ export default function VendorOrders() {
       </div>
 
       {loading ? (
-        <div className="text-[var(--color-gold)] p-10 text-center">Loading your sales history...</div>
+        <div className="text-gold-gradient p-10 text-center">Loading your sales history...</div>
       ) : filteredSales.length === 0 ? (
         <div className="text-center py-20 border border-white/5 rounded-3xl bg-white/[0.01]">
           <ShoppingBag size={48} className="mx-auto mb-4 text-[var(--color-ivory-muted)] opacity-20" />
@@ -86,7 +87,7 @@ export default function VendorOrders() {
                 <div className="flex flex-col md:flex-row gap-2 md:gap-8">
                   <div>
                     <div className="text-[10px] text-[var(--color-ivory-muted)] uppercase tracking-widest mb-1">Order ID</div>
-                    <div className="text-sm text-[var(--color-gold)] font-bold">{sale.invoiceNumber || sale._id}</div>
+                    <div className="text-sm text-gold-gradient font-bold">{sale.invoiceNumber || sale._id}</div>
                   </div>
                   <div>
                     <div className="text-[10px] text-[var(--color-ivory-muted)] uppercase tracking-widest mb-1">Date</div>
@@ -97,7 +98,7 @@ export default function VendorOrders() {
                 </div>
                 <div className="text-left md:text-right">
                   <div className="text-[10px] text-[var(--color-ivory-muted)] uppercase tracking-widest mb-1">Your Total Payout</div>
-                  <div className="text-xl font-serif text-[var(--color-gold)]">{formatCartPrice(sale.vendorTotal)}</div>
+                  <div className="text-xl font-serif text-gold-gradient">{formatCartPrice(sale.vendorTotal)}</div>
                 </div>
               </div>
 
@@ -107,7 +108,7 @@ export default function VendorOrders() {
                 {/* Customer Info */}
                 <div className="col-span-1 border-r border-white/5 pr-4">
                   <h4 className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-4 flex items-center gap-2">
-                    <MapPin size={14} className="text-[var(--color-gold)]" /> Shipping Details
+                    <MapPin size={14} className="text-gold-gradient" /> Shipping Details
                   </h4>
                   <div className="space-y-1">
                     <p className="text-sm font-bold text-[var(--color-ivory)]">{sale.user?.name || 'Guest'}</p>
@@ -128,7 +129,7 @@ export default function VendorOrders() {
                 {/* Items List */}
                 <div className="col-span-1 md:col-span-2">
                   <h4 className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-4 flex items-center gap-2">
-                    <Package size={14} className="text-[var(--color-gold)]" /> Products Purchased
+                    <Package size={14} className="text-gold-gradient" /> Products Purchased
                   </h4>
                   <div className="space-y-4">
                     {sale.items.map((item, idx) => (
@@ -144,7 +145,7 @@ export default function VendorOrders() {
                         </div>
                         <div className="text-right">
                           <div className="text-sm text-[var(--color-ivory)]">{item.quantity} × {formatCartPrice(item.price)}</div>
-                          <div className="text-xs font-bold text-[var(--color-gold)] mt-1">{formatCartPrice(item.price * item.quantity)}</div>
+                          <div className="text-xs font-bold text-gold-gradient mt-1">{formatCartPrice(item.price * item.quantity)}</div>
                         </div>
                       </div>
                     ))}

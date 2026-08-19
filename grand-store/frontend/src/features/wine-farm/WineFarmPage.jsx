@@ -152,7 +152,7 @@ export default function WineFarmPage() {
   return (
     <div className="bg-[#fbf8f1]">
       <NavBar />
-      <main className="pt-20">
+      <main className="pt-8">
         <WineFarmHero />
         <WineFarmBenefits />
         <WineFarmAbout />

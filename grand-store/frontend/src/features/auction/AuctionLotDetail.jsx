@@ -96,7 +96,7 @@ export default function AuctionLotDetail({ onNotify }) {
   };
 
   return (
-    <main className="pt-24 pb-20 min-h-screen bg-[#0a0907] text-[#eee8dd]">
+    <main className="pt-8 pb-20 min-h-screen bg-[#0a0907] text-[#eee8dd]">
       <div className="shell">
         <div className="mb-8">
           <Link to="/auction" className="inline-flex items-center gap-2 text-[#918a7f] hover:text-white transition-colors">
@@ -113,7 +113,7 @@ export default function AuctionLotDetail({ onNotify }) {
                 alt={lot.title} 
                 className="max-w-full max-h-full object-contain"
               />
-              <div className="absolute top-4 right-4 bg-[#c9a35b] text-black text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+              <div className="absolute top-4 right-4 bg-gold-gradient text-black text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                 Lot {lot.lotNumber}
               </div>
             </div>
@@ -133,7 +133,7 @@ export default function AuctionLotDetail({ onNotify }) {
           {/* Details */}
           <div>
             <div className="mb-6">
-              <p className="text-[#c9a35b] text-sm font-semibold uppercase tracking-wider mb-2">{lot.category}</p>
+              <p className="text-gold-gradient text-sm font-semibold uppercase tracking-wider mb-2">{lot.category}</p>
               <h1 className="text-4xl md:text-5xl font-serif mb-4">{lot.title}</h1>
               <p className="text-[#918a7f] text-lg leading-relaxed">{lot.description}</p>
             </div>
@@ -147,7 +147,7 @@ export default function AuctionLotDetail({ onNotify }) {
                 </div>
                 <div className="text-right">
                   <p className="text-[#918a7f] uppercase tracking-wider text-sm font-semibold mb-1 flex items-center justify-end gap-2"><Clock size={14} /> Ends In</p>
-                  <div className="text-xl font-mono text-[#c9a35b]">
+                  <div className="text-xl font-mono text-gold-gradient">
                     {hasEnded ? 'Auction Closed' : <AuctionCountdown endTime={new Date(lot.endDate).getTime()} now={now} />}
                   </div>
                 </div>
@@ -175,7 +175,7 @@ export default function AuctionLotDetail({ onNotify }) {
                   </div>
 
                   <label className="flex items-center gap-3 cursor-pointer group">
-                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isMaxBid ? 'bg-[#c9a35b] border-[#c9a35b]' : 'border-white/20 group-hover:border-white/40'}`}>
+                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isMaxBid ? 'bg-gold-gradient border-[#c9a35b]' : 'border-white/20 group-hover:border-white/40'}`}>
                       {isMaxBid && <div className="w-2.5 h-2.5 bg-black rounded-sm" />}
                     </div>
                     <input type="checkbox" className="hidden" checked={isMaxBid} onChange={(e) => setIsMaxBid(e.target.checked)} />
@@ -187,7 +187,7 @@ export default function AuctionLotDetail({ onNotify }) {
 
                   <button 
                     type="submit" 
-                    className="w-full bg-[#c9a35b] text-black font-bold uppercase tracking-wider py-4 rounded-md hover:bg-[#e1bd70] transition-colors flex items-center justify-center gap-2"
+                    className="w-full bg-gold-gradient text-black font-bold uppercase tracking-wider py-4 rounded-md hover:bg-[#e1bd70] transition-colors flex items-center justify-center gap-2"
                   >
                     Place Bid
                   </button>
@@ -203,7 +203,7 @@ export default function AuctionLotDetail({ onNotify }) {
             {/* Authentication & Provenance */}
             <div className="space-y-6">
               <div className="flex items-start gap-4">
-                <ShieldCheck className="text-[#c9a35b] shrink-0 mt-1" />
+                <ShieldCheck className="text-gold-gradient shrink-0 mt-1" />
                 <div>
                   <h4 className="font-semibold text-lg mb-1">Grand Store Verified</h4>
                   <p className="text-sm text-[#918a7f] mb-3">Product condition and provenance reviewed by specialists.</p>
@@ -223,7 +223,7 @@ export default function AuctionLotDetail({ onNotify }) {
               </div>
 
               <div className="flex items-start gap-4 pt-6 border-t border-white/10">
-                <History className="text-[#c9a35b] shrink-0 mt-1" />
+                <History className="text-gold-gradient shrink-0 mt-1" />
                 <div className="w-full">
                   <h4 className="font-semibold text-lg mb-4">Bid History</h4>
                   {bids.length > 0 ? (

@@ -56,7 +56,7 @@ export default function VendorProducts() {
       {/* Welcome Section */}
       <section className="mb-2">
         <h1 className="text-[var(--color-ivory)] font-serif text-4xl mb-4">
-          Retail <span className="font-script text-5xl text-[var(--color-gold)] font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Products</span>
+          Retail <span className="font-script text-5xl text-gold-gradient font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Products</span>
         </h1>
         <p className="text-[var(--color-ivory-muted)] text-lg font-light">
           Manage your retail products, update stock and prices, and add new items to your store.
@@ -73,12 +73,12 @@ export default function VendorProducts() {
       <section className="w-full bg-[#0a0a0a] border border-white/5 rounded-2xl p-4 md:p-8 shadow-2xl">
         <div className="pb-6 border-b border-white/[0.05] flex items-center justify-between">
           <h3 className="text-[var(--color-ivory)] font-serif text-2xl flex items-center gap-4">
-            <div className="p-2 rounded-lg bg-[var(--color-gold)]/10 text-[var(--color-gold)]">
+            <div className="p-2 rounded-lg bg-[var(--color-gold)]/10 text-gold-gradient">
               <Package size={20} />
             </div>
             My Retail Products
           </h3>
-          <button onClick={() => navigate('/vendor/product-add')} className="px-6 py-2.5 rounded-full bg-[var(--color-gold)]/10 text-[var(--color-gold)] border border-[var(--color-gold)]/30 font-semibold uppercase tracking-widest text-xs transition-all hover:bg-[var(--color-gold)] hover:text-black hover:shadow-[0_0_15px_rgba(212,175,55,0.4)]">
+          <button onClick={() => navigate('/vendor/product-add')} className="px-6 py-2.5 rounded-full bg-[var(--color-gold)]/10 text-gold-gradient border border-[var(--color-gold)]/30 font-semibold uppercase tracking-widest text-xs transition-all hover:bg-gold-gradient hover:text-black hover:shadow-[0_0_15px_rgba(212,175,55,0.4)]">
             + New Product
           </button>
         </div>
@@ -94,7 +94,7 @@ export default function VendorProducts() {
             <p className="text-[var(--color-ivory-muted)] mb-10 max-w-md mx-auto font-light">You haven't added any retail products yet. Start by adding your first item to our store.</p>
             <button
               onClick={() => navigate('/vendor/product-add')}
-              className="px-8 py-3 rounded-full bg-[var(--color-gold)] text-black font-bold uppercase tracking-widest text-sm hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all"
+              className="px-8 py-3 rounded-full bg-gold-gradient text-black font-bold uppercase tracking-widest text-sm hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all"
             >
               Add your first product
             </button>
@@ -126,12 +126,12 @@ export default function VendorProducts() {
                       </div>
                     </td>
                     <td className="py-5 px-5 text-[var(--color-ivory)] font-sans font-medium tracking-wide">R{Number(product.price).toLocaleString('en-ZA')}</td>
-                    <td className="py-5 px-5 text-[var(--color-gold)] font-sans font-semibold tracking-wide">{product.stock} units</td>
+                    <td className="py-5 px-5 text-gold-gradient font-sans font-semibold tracking-wide">{product.stock} units</td>
                     <td className="py-5 px-5">{getStatusBadge(product.approvalStatus)}</td>
                     <td className="py-5 px-5 text-right">
                       <button
                         onClick={() => navigate(`/product/${product.slug || product.id || product._id}`)}
-                        className="px-4 py-1.5 rounded-full border border-[var(--color-gold)]/30 text-[var(--color-gold)] hover:bg-[var(--color-gold)]/10 transition-all text-[10px] uppercase tracking-widest mr-2"
+                        className="px-4 py-1.5 rounded-full border border-[var(--color-gold)]/30 text-gold-gradient hover:bg-[var(--color-gold)]/10 transition-all text-[10px] uppercase tracking-widest mr-2"
                       >
                         View
                       </button>

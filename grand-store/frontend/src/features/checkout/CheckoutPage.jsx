@@ -97,15 +97,15 @@ export default function CheckoutPage({ cartItems, onClearCart, onNotify }) {
   };
 
   return (
-    <main className="min-h-screen bg-[#050505] text-[var(--color-ivory)] pt-32 pb-24">
+    <main className="min-h-screen bg-[#050505] text-[var(--color-ivory)] pt-10 pb-24">
       <div className="max-w-6xl mx-auto px-6">
         
         {/* Header */}
         <div className="mb-12">
           <div className="flex items-center gap-2 text-xs text-[var(--color-ivory-muted)] uppercase tracking-widest mb-4">
-            <Link to="/customer/cart" className="hover:text-[var(--color-gold)] transition-colors">Cart</Link>
+            <Link to="/customer/cart" className="hover:text-gold-gradient transition-colors">Cart</Link>
             <ChevronRight size={12} />
-            <span className="text-[var(--color-gold)] font-medium">Secure Checkout</span>
+            <span className="text-gold-gradient font-medium">Secure Checkout</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-serif">Checkout</h1>
         </div>
@@ -176,7 +176,7 @@ export default function CheckoutPage({ cartItems, onClearCart, onNotify }) {
                   <CreditCard size={100} />
                 </div>
                 
-                <p className="text-sm text-[var(--color-gold)] mb-6 font-medium">Credit / Debit Card</p>
+                <p className="text-sm text-gold-gradient mb-6 font-medium">Credit / Debit Card</p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
                   <div className="md:col-span-2">
@@ -227,7 +227,7 @@ export default function CheckoutPage({ cartItems, onClearCart, onNotify }) {
                 </div>
                 <div className="flex justify-between text-lg font-serif mt-4 pt-4 border-t border-white/10">
                   <span>Total</span>
-                  <span className="text-[var(--color-gold)]">{formatCartPrice(total)}</span>
+                  <span className="text-gold-gradient">{formatCartPrice(total)}</span>
                 </div>
               </div>
 

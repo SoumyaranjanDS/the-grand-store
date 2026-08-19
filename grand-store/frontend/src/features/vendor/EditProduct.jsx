@@ -173,7 +173,7 @@ export default function EditProduct({ onNotify }) {
       <div className="max-w-4xl w-full">
         <section className="mb-4">
               <h1 className="text-[var(--color-ivory)] font-serif text-5xl mb-4">
-                Edit <span className="font-script text-5xl md:text-7xl text-[var(--color-gold)] font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Retail Product</span>
+                Edit <span className="font-script text-5xl md:text-7xl text-gold-gradient font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Retail Product</span>
               </h1>
               <p className="text-[var(--color-ivory-muted)] text-lg max-w-2xl font-light leading-relaxed">
                 Update the details of your retail product. The image and fact sheet will remain unchanged unless you upload new ones.
@@ -198,7 +198,7 @@ export default function EditProduct({ onNotify }) {
               
               <div className="space-y-10">
                 <h2 className="text-[var(--color-ivory)] font-serif text-3xl flex items-center gap-4 border-b border-white/[0.05] pb-4">
-                  <Package size={24} className="text-[var(--color-gold)]" />
+                  <Package size={24} className="text-gold-gradient" />
                   General Information
                 </h2>
                 
@@ -214,7 +214,7 @@ export default function EditProduct({ onNotify }) {
                       placeholder=" " 
                       required 
                     />
-                    <label className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[var(--color-gold)] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Product Name *</label>
+                    <label className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-gold-gradient peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Product Name *</label>
                   </div>
                   
                   <div className="w-full group">
@@ -260,7 +260,7 @@ export default function EditProduct({ onNotify }) {
                       placeholder=" " 
                       required 
                     />
-                    <label className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[var(--color-gold)] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Price (ZAR) *</label>
+                    <label className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-gold-gradient peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Price (ZAR) *</label>
                   </div>
                   
                   <div className="relative z-0 w-full group">
@@ -275,7 +275,7 @@ export default function EditProduct({ onNotify }) {
                       placeholder=" " 
                       required 
                     />
-                    <label className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[var(--color-gold)] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Stock Quantity *</label>
+                    <label className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-gold-gradient peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Stock Quantity *</label>
                   </div>
                 </div>
                 
@@ -290,7 +290,7 @@ export default function EditProduct({ onNotify }) {
                       className="block py-3 px-0 w-full text-base text-[var(--color-ivory)] bg-transparent border-0 border-b border-white/20 appearance-none focus:outline-none focus:ring-0 focus:border-[var(--color-gold)] peer" 
                       placeholder=" " 
                     />
-                    <label className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[var(--color-gold)] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Tags (Comma separated)</label>
+                    <label className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-gold-gradient peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Tags (Comma separated)</label>
                   </div>
                   
                   <div className="relative z-0 w-full group">
@@ -303,7 +303,7 @@ export default function EditProduct({ onNotify }) {
                       className="block py-3 px-0 w-full text-base text-[var(--color-ivory)] bg-transparent border-0 border-b border-white/20 appearance-none focus:outline-none focus:ring-0 focus:border-[var(--color-gold)] peer" 
                       placeholder=" " 
                     />
-                    <label className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[var(--color-gold)] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Tasting Notes (Comma separated)</label>
+                    <label className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-gold-gradient peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Tasting Notes (Comma separated)</label>
                   </div>
                 </div>
               </div>
@@ -311,7 +311,7 @@ export default function EditProduct({ onNotify }) {
               {/* Advanced Channels */}
               <div className="space-y-10 pt-6">
                 <h2 className="text-[var(--color-ivory)] font-serif text-3xl flex items-center gap-4 border-b border-white/[0.05] pb-4">
-                  <Building2 size={24} className="text-[var(--color-gold)]" />
+                  <Building2 size={24} className="text-gold-gradient" />
                   Advanced Channels
                 </h2>
                 
@@ -329,7 +329,7 @@ export default function EditProduct({ onNotify }) {
                         className="block py-3 px-0 w-full text-base text-[var(--color-ivory)] bg-transparent border-0 border-b border-white/20 appearance-none focus:outline-none focus:ring-0 focus:border-[var(--color-gold)] peer" 
                         placeholder=" " 
                       />
-                      <label className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[var(--color-gold)] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Trade Price (ZAR)</label>
+                      <label className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-gold-gradient peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Trade Price (ZAR)</label>
                     </div>
                     <div className="relative z-0 w-full group">
                       <input 
@@ -342,7 +342,7 @@ export default function EditProduct({ onNotify }) {
                         className="block py-3 px-0 w-full text-base text-[var(--color-ivory)] bg-transparent border-0 border-b border-white/20 appearance-none focus:outline-none focus:ring-0 focus:border-[var(--color-gold)] peer" 
                         placeholder=" " 
                       />
-                      <label className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[var(--color-gold)] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Min. Order Quantity</label>
+                      <label className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-gold-gradient peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Min. Order Quantity</label>
                     </div>
                   </div>
                 </div>
@@ -354,19 +354,19 @@ export default function EditProduct({ onNotify }) {
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" name="exportReady" checked={formData.exportReady} onChange={handleChange} className="sr-only peer" />
-                    <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-gold)]"></div>
+                    <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold-gradient"></div>
                   </label>
                 </div>
               </div>
               
               <div className="space-y-10 pt-6">
                 <h2 className="text-[var(--color-ivory)] font-serif text-3xl flex items-center gap-4 border-b border-white/[0.05] pb-4">
-                  <UploadCloud size={24} className="text-[var(--color-gold)]" />
+                  <UploadCloud size={24} className="text-gold-gradient" />
                   Media & Documents
                 </h2>
                 
                 <div>
-                  <label className="block text-[10px] uppercase tracking-widest text-[var(--color-gold)] mb-2 font-bold">Product Images (Up to 5) (Optional to Update)</label>
+                  <label className="block text-[10px] uppercase tracking-widest text-gold-gradient mb-2 font-bold">Product Images (Up to 5) (Optional to Update)</label>
                   <p className="text-sm text-[var(--color-ivory-muted)] mb-6 font-light">Upload new high-quality images if you want to replace the current ones. The first will be the main image.</p>
                   <div className="flex flex-col md:flex-row items-start gap-6">
                     <div className="flex flex-wrap gap-4">
@@ -381,7 +381,7 @@ export default function EditProduct({ onNotify }) {
                       accept="image/*"
                       onChange={handleImageChange}
                       multiple
-                      className="w-full text-sm text-[var(--color-ivory-muted)] file:mr-6 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-[10px] file:uppercase file:tracking-widest file:font-bold file:bg-[var(--color-gold)]/10 file:text-[var(--color-gold)] hover:file:bg-[var(--color-gold)]/20 transition-all cursor-pointer mt-4"
+                      className="w-full text-sm text-[var(--color-ivory-muted)] file:mr-6 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-[10px] file:uppercase file:tracking-widest file:font-bold file:bg-[var(--color-gold)]/10 file:text-gold-gradient hover:file:bg-[var(--color-gold)]/20 transition-all cursor-pointer mt-4"
                     />
                   </div>
                 </div>
@@ -389,7 +389,7 @@ export default function EditProduct({ onNotify }) {
                 {formData.type.toLowerCase() === 'wine' && (
                   <div className="border border-[var(--color-gold)]/20 p-8 relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--color-gold)]/10 via-[var(--color-gold)]/50 to-[var(--color-gold)]/10"></div>
-                    <label className="block text-[10px] uppercase tracking-widest text-[var(--color-gold)] mb-2 font-bold">Fact Sheet PDF (Required for Wine) *</label>
+                    <label className="block text-[10px] uppercase tracking-widest text-gold-gradient mb-2 font-bold">Fact Sheet PDF (Required for Wine) *</label>
                     <p className="text-sm text-[var(--color-ivory-muted)] mb-6 font-light">Please upload a new official vineyard fact sheet or authentication document.</p>
                     <input 
                       type="file" 
@@ -405,7 +405,7 @@ export default function EditProduct({ onNotify }) {
                 <button 
                   type="submit" 
                   disabled={submitting}
-                  className="bg-[var(--color-gold)] text-black font-bold uppercase tracking-widest text-sm px-10 py-4 rounded-full hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] transition-all disabled:opacity-50 inline-flex items-center justify-center gap-3"
+                  className="bg-gold-gradient text-black font-bold uppercase tracking-widest text-sm px-10 py-4 rounded-full hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] transition-all disabled:opacity-50 inline-flex items-center justify-center gap-3"
                 >
                   {submitting ? 'Updating Product...' : <><CheckCircle2 size={20} /> Update Product</>}
                 </button>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Building2, Package, PlusCircle, User, LayoutDashboard, Wallet, Megaphone, GraduationCap, Menu, X, ShoppingBag } from 'lucide-react';
+import { Building2, Package, PlusCircle, User, LayoutDashboard, Wallet, Megaphone, GraduationCap, Menu, X, ShoppingBag, Calendar } from 'lucide-react';
 
 export default function VendorLayout() {
   const { user } = useAuth();
@@ -37,7 +37,7 @@ export default function VendorLayout() {
       {/* Standalone Dashboard Header */}
       <header className="h-20 bg-black/60 backdrop-blur-xl border-b border-white/[0.05] flex items-center justify-between px-8 sticky top-0 z-50">
         <div className="flex items-center gap-4">
-          <button className="md:hidden text-[var(--color-ivory)] hover:text-[var(--color-gold)] transition-colors" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          <button className="md:hidden text-[var(--color-ivory)] hover:text-gold-gradient transition-colors" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate('/')}>
@@ -45,7 +45,7 @@ export default function VendorLayout() {
               The Grand Store
             </div>
             <div className="hidden md:block h-4 w-px bg-white/20 mx-2"></div>
-            <div className="hidden md:block text-sm tracking-widest text-[var(--color-gold)] font-medium uppercase drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]">
+            <div className="hidden md:block text-sm tracking-widest text-gold-gradient font-medium uppercase drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]">
               Business Partner
             </div>
           </div>
@@ -54,11 +54,11 @@ export default function VendorLayout() {
           <div className="flex items-center gap-3">
             <div className="text-right hidden md:block">
               <div className="text-sm font-serif">{user.name}</div>
-              <div className="text-xs text-[var(--color-gold)] tracking-widest uppercase">Level 1 - New Vendor</div>
+              <div className="text-xs text-gold-gradient tracking-widest uppercase">Level 1 - New Vendor</div>
             </div>
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--color-gold)] to-yellow-700 p-[1px]">
               <div className="w-full h-full bg-[#0a0a0a] rounded-full flex items-center justify-center">
-                <Building2 size={18} className="text-[var(--color-gold)]" />
+                <Building2 size={18} className="text-gold-gradient" />
               </div>
             </div>
           </div>
@@ -102,6 +102,9 @@ export default function VendorLayout() {
             <button onClick={() => handleNavigate('/vendor/auction-submit')} className={navItemClass('/vendor/auction-submit')}>
               <PlusCircle size={16} /> Add Auction Lot
             </button>
+            <button onClick={() => handleNavigate('/vendor/events')} className={navItemClass('/vendor/events')}>
+              <Calendar size={16} /> Events
+            </button>
             
             <div className="text-[10px] text-[var(--color-ivory-muted)] uppercase tracking-widest mb-2 mt-4 pl-2">Growth & Support</div>
             <button onClick={() => handleNavigate('/vendor/marketing')} className={navItemClass('/vendor/marketing')}>
@@ -112,7 +115,7 @@ export default function VendorLayout() {
             </button>
 
             <div className="mt-6 pt-6 border-t border-white/[0.05]">
-              <button onClick={() => handleNavigate('/vendor/profile')} className="flex items-center gap-4 px-4 py-3 rounded-xl w-full text-[var(--color-ivory-muted)] hover:bg-[var(--color-gold)]/10 hover:text-[var(--color-gold)] transition-all text-left text-xs uppercase tracking-widest border border-transparent hover:border-[var(--color-gold)]/20">
+              <button onClick={() => handleNavigate('/vendor/profile')} className="flex items-center gap-4 px-4 py-3 rounded-xl w-full text-[var(--color-ivory-muted)] hover:bg-[var(--color-gold)]/10 hover:text-gold-gradient transition-all text-left text-xs uppercase tracking-widest border border-transparent hover:border-[var(--color-gold)]/20">
                 <User size={16} /> {user?.role === 'admin' ? 'Admin Profile' : 'Vendor Profile'}
               </button>
             </div>

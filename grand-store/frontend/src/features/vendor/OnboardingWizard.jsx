@@ -235,7 +235,7 @@ export default function OnboardingWizard() {
     </div>
   );
 
-  if (loading) return <div className="min-h-screen bg-[#0a0907] flex items-center justify-center text-[#c9a35b]">Loading...</div>;
+  if (loading) return <div className="min-h-screen bg-[#0a0907] flex items-center justify-center text-gold-gradient">Loading...</div>;
 
   if (funnelStage === 'landing') {
     return <OnboardingLanding onNext={() => setFunnelStage('preview')} />;
@@ -267,7 +267,7 @@ export default function OnboardingWizard() {
               <div key={step.id} className="flex items-center min-w-max">
                 <div 
                   onClick={() => setCurrentStep(step.id)}
-                  className={`flex flex-col items-center gap-2 transition-all cursor-pointer hover:scale-105 ${isActive ? 'text-[#c9a35b]' : isComplete ? 'text-green-500' : 'text-[#4a4740]'}`}
+                  className={`flex flex-col items-center gap-2 transition-all cursor-pointer hover:scale-105 ${isActive ? 'text-gold-gradient' : isComplete ? 'text-green-500' : 'text-[#4a4740]'}`}
                 >
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${isActive ? 'border-[#c9a35b] bg-[#c9a35b]/10' : isComplete ? 'border-green-500 bg-green-500/10' : 'border-[#4a4740] bg-transparent'}`}>
                     {isComplete ? <CheckCircle2 size={18} /> : <Icon size={18} />}
@@ -284,7 +284,7 @@ export default function OnboardingWizard() {
 
         <div className="bg-transparent mt-4 relative">
           {!canAccessStep(currentStep) && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-[#c9a35b]/10 text-[#c9a35b] border border-[#c9a35b]/20 px-4 py-2 rounded-full text-sm font-medium z-10">
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-[#c9a35b]/10 text-gold-gradient border border-[#c9a35b]/20 px-4 py-2 rounded-full text-sm font-medium z-10">
               🔒 Please complete all previous steps to unlock this section
             </div>
           )}
@@ -385,7 +385,7 @@ export default function OnboardingWizard() {
                 
                 {productCategories.includes('Wine') && (
                   <div className="animate-in fade-in bg-white/5 p-6 rounded-lg border border-[#c9a35b]/30">
-                    <h3 className="text-lg text-[#c9a35b] mb-4">Wine Selling Requirements</h3>
+                    <h3 className="text-lg text-gold-gradient mb-4">Wine Selling Requirements</h3>
                     <p className="text-[#918a7f] mb-4 text-sm">Because you selected Wine, you are required to upload a Wholesale Liquor Authority (WLA) document.</p>
                     <FileUploadField 
                       label="WLA Document *" 

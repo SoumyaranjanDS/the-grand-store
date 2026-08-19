@@ -18,7 +18,7 @@ export default function BidConfirmationModal({ isOpen, onClose, lot, bidAmount, 
           <div className="mb-6">
             <p className="text-sm text-[#918a7f] mb-1">You are bidding on:</p>
             <p className="font-semibold text-[#eee8dd]">{lot.title}</p>
-            <p className="text-xs text-[#c9a35b]">Lot {lot.lotNumber}</p>
+            <p className="text-xs text-gold-gradient">Lot {lot.lotNumber}</p>
           </div>
 
           <div className="bg-[#0a0907] p-4 rounded-lg border border-white/5 mb-6 text-center">
@@ -26,7 +26,7 @@ export default function BidConfirmationModal({ isOpen, onClose, lot, bidAmount, 
             <p className="text-3xl font-bold text-[#eee8dd]">R{bidAmount.toLocaleString('en-ZA')}</p>
           </div>
 
-          <div className="flex items-start gap-3 bg-[#c9a35b]/10 text-[#c9a35b] p-4 rounded-lg text-sm mb-6">
+          <div className="flex items-start gap-3 bg-[#c9a35b]/10 text-gold-gradient p-4 rounded-lg text-sm mb-6">
             <ShieldCheck size={20} className="shrink-0 mt-0.5" />
             <p>
               By confirming, you agree to purchase this lot if you are the successful bidder. 
@@ -47,7 +47,7 @@ export default function BidConfirmationModal({ isOpen, onClose, lot, bidAmount, 
             <button 
               onClick={onConfirm} 
               disabled={loading}
-              className="flex-1 py-3 bg-[#c9a35b] text-black rounded-md hover:bg-[#e1bd70] font-semibold transition-colors disabled:opacity-50"
+              className="flex-1 py-3 bg-gold-gradient text-black rounded-md hover:bg-[#e1bd70] font-semibold transition-colors disabled:opacity-50"
             >
               {loading ? 'Processing...' : 'Confirm Bid'}
             </button>
