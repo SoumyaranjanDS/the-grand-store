@@ -1,150 +1,218 @@
-import { useState, useRef, useEffect } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { Star, Quote, CheckCircle2 } from 'lucide-react'
 
 export default function Testimonials() {
-  const [activeReview, setActiveReview] = useState(0)
-  const testimonialRailRef = useRef(null)
-  
   const reviews = [
     {
+      id: 1,
       name: 'Thabo Selwane',
       location: 'Johannesburg',
       image: '/assets/testimonials/thabo-selwane.jpg',
-      text: 'The richness of South African wines arrived right at my door. The quality and authenticity genuinely recall the vineyards of Stellenbosch.',
+      rating: 5,
+      bottle: 'Stellenbosch Reserve 2018',
+      text: 'The richness of South African terroir arrived in pristine cellar condition. Authenticity that genuinely recalls the private tastings of the Cape.',
+      date: 'Verified Client',
     },
     {
-      name: 'Themba Nkosi',
-      location: 'Pretoria',
-      image: '/assets/testimonials/themba-nkosi.jpg',
-      text: 'What I value most is the transparency. The selection feels thoughtful, the bottles feel authentic and ordering is reassuringly simple.',
-    },
-    {
+      id: 2,
       name: 'Michelle Steyn',
       location: 'Stellenbosch',
       image: '/assets/testimonials/michelle-steyn.jpg',
-      text: 'The Grand Store combines global standards with local taste. It is rare to find an online cellar that feels this considered and trustworthy.',
+      rating: 5,
+      bottle: 'Grand Vintage Prestige Cuvée',
+      text: 'The Grand Store combines global cellar standards with local taste. It is rare to find an online purveyor that feels this considered, discreet, and trustworthy.',
+      date: 'Verified Client',
     },
     {
+      id: 3,
+      name: 'Themba Nkosi',
+      location: 'Pretoria',
+      image: '/assets/testimonials/themba-nkosi.jpg',
+      rating: 5,
+      bottle: 'Rare 25-Year Islay Cask',
+      text: 'What I value most is the uncompromised provenance. The single malt curation feels deeply intentional, and the delivery is pure white-glove luxury.',
+      date: 'Verified Client',
+    },
+    {
+      id: 4,
       name: 'Rajesh Pillay',
       location: 'Johannesburg',
       image: '/assets/testimonials/rajesh-pillay.jpg',
-      text: 'My go-to for hosting. Premium bottles, uncomplicated ordering and dependable delivery every time.',
+      rating: 5,
+      bottle: 'Highland Single Cask Release',
+      text: 'My primary source for milestone entertaining. Exceptional allocations, transparent estate pricing, and dependable delivery every single time.',
+      date: 'Verified Client',
     },
     {
-      name: 'Sipho Dlamini',
-      location: 'Durban',
-      image: '/assets/testimonials/sipho-dlamini.jpg',
-      text: 'A fine selection of international and local beers, with an easy experience that brings premium bottles home.',
-    },
-    {
+      id: 5,
       name: 'Zanele Khumalo',
       location: 'Pretoria',
       image: '/assets/testimonials/zanele-khumalo.jpg',
-      text: 'The Champagne exceeded expectations. Presentation, delivery and product quality all felt genuinely world-class.',
+      rating: 5,
+      bottle: 'Extra Añejo Agave Reserva',
+      text: 'The presentation and temperature-controlled transit exceeded expectations. Every bottle arrives like an acquisition directly from the distillery.',
+      date: 'Verified Client',
     },
     {
+      id: 6,
       name: 'Liam van der Merwe',
       location: 'Johannesburg',
       image: '/assets/testimonials/liam-van-der-merwe.jpg',
-      text: 'The premium whisky collection stands apart: genuine bottles, smooth ordering and delivery exactly when promised.',
+      rating: 5,
+      bottle: 'Vintage Potstill XO Brandy',
+      text: 'The Cape potstill collection is unmatched. Honest sommelier notes, fast insured dispatch, and impeccable cellar-grade packaging.',
+      date: 'Verified Client',
+    },
+    {
+      id: 7,
+      name: 'Sipho Dlamini',
+      location: 'Durban',
+      image: '/assets/testimonials/sipho-dlamini.jpg',
+      rating: 5,
+      bottle: 'Artisanal Craft Distillations',
+      text: 'A truly curated selection of international and local rarities, with an easy experience that brings benchmark bottles home.',
+      date: 'Verified Client',
     },
   ]
 
-  const moveReview = (direction) => setActiveReview((current) => (current + direction + reviews.length) % reviews.length)
-
-  useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined
-    const timer = window.setInterval(() => setActiveReview((current) => (current + 1) % reviews.length), 3600)
-    return () => window.clearInterval(timer)
-  }, [reviews.length])
-
-  useEffect(() => {
-    const rail = testimonialRailRef.current
-    const activeCard = rail?.children[activeReview]
-    if (!rail || !activeCard) return
-    const railRect = rail.getBoundingClientRect()
-    const cardRect = activeCard.getBoundingClientRect()
-    const cardCenter = (cardRect.left - railRect.left) + rail.scrollLeft + (cardRect.width / 2)
-    const targetLeft = Math.min(
-      rail.scrollWidth - rail.clientWidth,
-      Math.max(0, cardCenter - (rail.clientWidth / 2)),
-    )
-    rail.scrollTo({ left: targetLeft, behavior: 'smooth' })
-  }, [activeReview])
+  const marqueeReviews = [...reviews, ...reviews]
 
   return (
     <section 
-      className="py-[76px] lg:py-[76px] border-t border-white/10 bg-[#11100d] bg-[linear-gradient(120deg,rgba(117,75,23,0.1),transparent_45%)]" 
+      className="py-[44px] md:py-[52px] border-t border-white/10 bg-[#0a0a0a] relative overflow-hidden" 
       aria-labelledby="testimonials-title"
+      id="testimonials"
     >
-      <div className="max-w-[1240px] mx-auto px-6 sm:px-0 grid grid-cols-1 lg:grid-cols-[minmax(280px,0.7fr)_minmax(500px,1.3fr)] items-center gap-10 lg:gap-[clamp(40px,6vw,94px)]">
+      {/* Ambient Radial Golden Glows */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[var(--color-gold)]/5 rounded-full blur-[130px] pointer-events-none" />
+
+      <div className="max-w-[1240px] mx-auto px-6 sm:px-0 relative z-10">
         
-        <div>
-          <div>
-            <p className="flex items-center gap-3 m-0 text-[#e1bd70] text-xs font-semibold tracking-[0.2em] uppercase">
-              From our private list
-            </p>
-            <h2 
-              id="testimonials-title" 
-              className="m-[8px_0_0] font-serif text-[clamp(48px,4.6vw,70px)] font-medium tracking-[-0.045em] leading-[0.9] text-[#eee8dd]"
-            >
-              Testimonials
-            </h2>
-            <p className="max-w-[530px] mt-6 text-[#a69e92] font-serif text-[17px] leading-[1.5]">
-              Seven client notes, moving quietly through the moments and bottles they remember.
-            </p>
+        {/* Header Block */}
+        <div className="text-center max-w-3xl mx-auto mb-8 md:mb-10">
+          <div className="text-[10px] md:text-xs uppercase tracking-widest font-semibold text-[#918a7f] mb-1.5 flex items-center justify-center gap-2">
+            <span className="w-5 h-px bg-[#b58b38] inline-block" />
+            The Collector Registry
+            <span className="w-5 h-px bg-[#b58b38] inline-block" />
           </div>
-          <div className="flex items-center w-fit mt-[29px] gap-[13px]">
-            <button 
-              className="grid w-[42px] h-[42px] lg:w-[38px] lg:h-[38px] p-0 place-items-center border border-[#e1bd70]/30 rounded-full bg-transparent text-[#e1bd70] cursor-pointer transition-all duration-160 hover:border-[#e1bd70] hover:text-[#0b0906] hover:bg-[#e1bd70]" 
-              type="button" 
-              onClick={() => moveReview(-1)} 
-              aria-label="Previous testimonial"
+          
+          <h2 
+            id="testimonials-title" 
+            className="m-0 font-serif text-[clamp(40px,3.8vw,62px)] font-medium tracking-[-0.02em] leading-[1.05] text-[#eee8dd]"
+          >
+            Private{' '}
+            <span 
+              className="gold-gradient-text inline-block pr-2 font-script text-[1.15em]"
+              style={{ fontFamily: "'Dancing Script', cursive" }}
             >
-              <ChevronLeft size={20} />
-            </button>
-            <span className="text-[#777066] text-[10px] tracking-[0.12em]">
-              {String(activeReview + 1).padStart(2, '0')} / {String(reviews.length).padStart(2, '0')}
+              Notes
             </span>
-            <button 
-              className="grid w-[42px] h-[42px] lg:w-[38px] lg:h-[38px] p-0 place-items-center border border-[#e1bd70]/30 rounded-full bg-transparent text-[#e1bd70] cursor-pointer transition-all duration-160 hover:border-[#e1bd70] hover:text-[#0b0906] hover:bg-[#e1bd70]" 
-              type="button" 
-              onClick={() => moveReview(1)} 
-              aria-label="Next testimonial"
-            >
-              <ChevronRight size={20} />
-            </button>
+          </h2>
+          
+          <p className="mt-2.5 text-[rgba(244,238,224,0.76)] text-[15px] md:text-[16px] leading-[1.6] max-w-[620px] mx-auto">
+            <span className="font-serif text-[#f0cf76] italic text-[1.06em]">From our private list.</span>{' '}
+            Discerning collector reflections, moving quietly through the moments, vintages, and bottles they remember.
+          </p>
+        </div>
+      </div>
+
+      {/* Infinite Auto-Scrolling Testimonial Track */}
+      <div 
+        className="relative overflow-hidden w-full group py-2" 
+        style={{ maskImage: 'linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent)' }}
+        aria-label="Client testimonials marquee"
+      >
+        <div className="flex w-max gap-5 animate-[marquee_38s_linear_infinite] group-hover:[animation-play-state:paused] will-change-transform px-4">
+          {marqueeReviews.map((item, index) => {
+            const initials = item.name
+              .split(' ')
+              .map((n) => n[0])
+              .join('')
+
+            return (
+              <article 
+                key={`${item.id}-${index}`}
+                className="w-[340px] sm:w-[380px] md:w-[420px] shrink-0 p-5 md:p-6 rounded-2xl border border-white/10 bg-[#11100d] hover:border-[#c9a35b]/60 hover:bg-[#16130e] hover:shadow-[0_16px_40px_rgba(0,0,0,0.6)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between relative overflow-hidden group/card text-left shadow-xl"
+              >
+                {/* Ambient Hover Orb */}
+                <div className="absolute -top-12 -right-12 w-40 h-40 bg-[var(--color-gold)]/10 rounded-full blur-3xl group-hover/card:bg-[var(--color-gold)]/20 transition-all pointer-events-none" />
+
+                {/* Watermark Quote Icon */}
+                <div className="absolute top-4 right-5 text-[#c9a35b]/10 group-hover/card:text-[#c9a35b]/20 transition-colors select-none pointer-events-none">
+                  <Quote size={38} />
+                </div>
+
+                <div>
+                  {/* Rating & Tag */}
+                  <div className="flex items-center justify-between gap-3 mb-3 relative z-10">
+                    <div className="flex text-[#f0cf76] gap-0.5">
+                      {[...Array(item.rating)].map((_, i) => (
+                        <Star key={i} size={14} fill="#f0cf76" stroke="none" />
+                      ))}
+                    </div>
+                    <span className="text-[10px] md:text-[11px] uppercase tracking-widest font-bold text-gold-gradient bg-[#c9a35b]/10 px-2.5 py-0.5 rounded-full border border-[#c9a35b]/20 truncate max-w-[190px]">
+                      {item.bottle}
+                    </span>
+                  </div>
+
+                  {/* Quote Text */}
+                  <p className="font-serif text-[16px] md:text-[18px] text-[#f4eee3] leading-[1.6] font-normal italic relative z-10 m-0 my-3 break-words min-h-[88px]">
+                    “{item.text}”
+                  </p>
+                </div>
+
+                {/* Verified Author Row with Luxury Golden Avatar Ring */}
+                <div className="flex items-center gap-3.5 pt-3.5 mt-3 border-t border-white/10 relative z-10">
+                  <div className="w-11 h-11 md:w-12 md:h-12 rounded-full p-[1.5px] bg-gradient-to-tr from-[#b58b38] via-[#f5d77f] to-[#b58b38] shadow-md shrink-0 flex items-center justify-center">
+                    <img 
+                      className="w-full h-full rounded-full object-cover bg-[#1c1913]" 
+                      src={item.image} 
+                      alt={item.name} 
+                      loading="lazy"
+                      onError={(e) => {
+                        e.target.style.display = 'none'
+                        if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex'
+                      }}
+                    />
+                    <div 
+                      className="hidden w-full h-full rounded-full bg-[#1c1913] items-center justify-center font-serif font-bold text-xs text-[#f0cf76]"
+                    >
+                      {initials}
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-serif text-base md:text-[18px] font-medium text-[#eee8dd] truncate">
+                      {item.name}
+                    </div>
+                    <div className="text-xs uppercase tracking-widest text-[#918a7f] mt-0.5 flex items-center gap-1.5">
+                      <span>{item.location}</span>
+                      <span>•</span>
+                      <span className="text-gold-gradient font-semibold flex items-center gap-1">
+                        <CheckCircle2 size={12} className="text-[#e6c97a]" /> Verified
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Bottom Trust & Hover Indicator Bar */}
+      <div className="max-w-[1240px] mx-auto px-6 sm:px-0 relative z-10 mt-6 pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+        <div className="flex items-center gap-2.5">
+          <div className="flex text-[#f0cf76] gap-0.5">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} size={14} fill="#f0cf76" stroke="none" />
+            ))}
           </div>
+          <span className="text-xs uppercase tracking-widest text-[#918a7f] font-semibold">
+            4.98 / 5.0 Rating • 350+ Verified Cellars Delivered
+          </span>
         </div>
-
-        <div 
-          className="flex w-full overflow-x-auto overflow-y-hidden p-[4px_1px_12px] gap-[13px] scroll-smooth snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" 
-          ref={testimonialRailRef} 
-          aria-live="polite"
-        >
-          {reviews.map((item, index) => (
-            <article 
-              className={`relative shrink-0 grow-0 basis-[100%] md:basis-[calc((100%-13px)/2)] lg:basis-[calc((100%-26px)/3)] min-w-0 min-h-[244px] p-[24px_27px_25px] overflow-hidden border bg-white/2 snap-start cursor-pointer transition-all duration-220 ease ${index === activeReview ? 'border-[#e1bd70]/50 bg-[#e1bd70]/5 opacity-100 transform-none' : 'border-[#e1bd70]/15 opacity-60'}`} 
-              onClick={() => setActiveReview(index)} 
-              key={item.name}
-            >
-              <img 
-                className="block w-12 h-12 m-[0_0_18px] border-2 border-[#15130f] rounded-full object-cover outline outline-1 outline-[#e1bd70]/40" 
-                src={item.image} 
-                alt={item.name} 
-                loading="lazy" 
-              />
-              <p className="m-0 text-[#d8d0c4] font-serif text-[15px] lg:text-[17px] leading-[1.55] break-words">
-                “{item.text}”
-              </p>
-              <footer className="grid mt-[23px] pt-[15px] gap-1 border-t border-white/10">
-                <strong className="font-serif text-[15px] font-medium text-[#eee8dd]">{item.name}</strong>
-                <span className="text-[#716b62] text-[8px] tracking-[0.12em] uppercase">{item.location} • Verified client</span>
-              </footer>
-            </article>
-          ))}
-        </div>
-
+        <span className="text-[11px] uppercase tracking-widest text-[#6e685f]">
+          Hover card to pause review
+        </span>
       </div>
     </section>
   )

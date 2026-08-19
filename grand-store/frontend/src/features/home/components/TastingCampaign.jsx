@@ -22,17 +22,20 @@ export default function TastingCampaign() {
         to="/bookatasting" 
         aria-label="Explore and book an in-store tasting"
       >
-        <p className="flex items-center gap-3 m-0 mb-[19px] text-[#e1bd70] text-xs font-semibold tracking-[0.2em] uppercase">
-          Heritage • craft • character
-        </p>
         <h2 
           id="tasting-title" 
-          className="m-0 font-serif text-[50px] lg:text-[clamp(54px,5.2vw,84px)] font-medium tracking-[-0.04em] leading-[0.82]"
+          className="m-0 font-serif text-[42px] lg:text-[clamp(46px,4.5vw,72px)] font-medium tracking-[-0.02em] leading-[1.05] text-[#eee8dd]"
         >
-          The private<br />
-          <em className="text-[#e1bd70] font-normal not-italic">tasting room.</em>
+          The Private<br />
+          <span 
+            className="gold-gradient-text inline-block pr-2 font-script text-[1.12em]"
+            style={{ fontFamily: "'Dancing Script', cursive" }}
+          >
+            Tasting Room
+          </span>
         </h2>
-        <p className="max-w-[510px] m-[20px_0_24px] lg:m-[28px_0_30px] text-[#b8b0a4] font-serif text-[16px] lg:text-[18px] lg:leading-[1.55] 2xl:text-[19px] 2xl:leading-[1.62]">
+        <p className="max-w-[550px] mt-3 mb-5 text-[rgba(244,238,224,0.76)] text-[15px] md:text-[16px] leading-[1.65]">
+          <span className="font-serif text-[#f0cf76] italic text-[1.06em]">Heritage, craft, character.</span>{' '}
           Explore exceptional pours with expert guidance, considered pairings and stories from the makers.
         </p>
         <span className="inline-flex items-center justify-center min-h-[49px] px-6 gap-[14px] border border-white/10 text-[#eee8dd] bg-white/5 text-xs font-semibold tracking-[0.12em] uppercase transition-all duration-180 group-hover:bg-[#f0c86e] group-hover:text-black group-hover:border-[#f0c86e] group-hover:-translate-y-0.5 group-focus-visible:bg-[#f0c86e] group-focus-visible:text-black group-focus-visible:-translate-y-0.5 pointer-events-none">

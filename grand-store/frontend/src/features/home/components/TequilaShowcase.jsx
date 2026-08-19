@@ -15,22 +15,26 @@ export default function TequilaShowcase({ onAdd, onWish, onCompare, compareItems
 
   return (
     <>
-      <section className="relative py-[122px] border-t border-white/10 bg-[#0b0a08] bg-[radial-gradient(circle_at_74%_18%,rgba(151,102,31,0.14),transparent_34rem)]" id="tequila">
+      <section className="relative py-[52px] md:py-[64px] border-t border-white/10 bg-[#0b0a08] bg-[radial-gradient(circle_at_74%_18%,rgba(151,102,31,0.14),transparent_34rem)]" id="tequila">
         <div className="max-w-[1240px] mx-auto px-6 sm:px-0">
-          <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-[55px] gap-8 md:gap-[50px]">
-            <div>
-              <p className="flex items-center gap-3 m-0 mb-[19px] text-[#e1bd70] text-xs font-semibold tracking-[0.2em] uppercase">
-                From the heart of agave country
-              </p>
-              <h2 className="m-0 font-serif text-[clamp(48px,4.4vw,72px)] font-medium tracking-[-0.035em] leading-[0.98] text-[#eee8dd]">
-                Top Tequila
+          <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-7 md:mb-8 gap-4 md:gap-8">
+            <div className="text-left">
+              <h2 className="m-0 font-serif text-[clamp(40px,3.8vw,62px)] font-medium tracking-[-0.02em] leading-[1.05] text-[#eee8dd]">
+                Top{' '}
+                <span
+                  className="gold-gradient-text inline-block pr-2 font-script text-[1.12em]"
+                  style={{ fontFamily: "'Dancing Script', cursive" }}
+                >
+                  Tequila
+                </span>
               </h2>
-              <p className="max-w-[570px] m-[15px_0_0] text-[#918a7f] text-[15px] leading-[1.8]">
-                Reposado warmth, crystalline clarity and rare extra añejo—selected for the modern cabinet.
+              <p className="max-w-[600px] mt-3 text-[rgba(244,238,224,0.76)] text-[15px] md:text-[16px] leading-[1.65]">
+                <span className="font-serif text-[#f0cf76] italic text-[1.06em]">From the heart of agave country.</span>{' '}
+                Reposado warmth, crystalline clarity and rare extra añejo selected for the modern cabinet.
               </p>
             </div>
-            <Link className="inline-flex items-center gap-3 pb-[9px] border-b border-[#bd9054] text-[#e1bd70] text-[13px] font-semibold tracking-[0.13em] uppercase transition-colors hover:text-white" to="/shop?category=Tequila">
-              View all tequila <ArrowRight size={16} />
+            <Link className="inline-flex items-center gap-2.5 pb-[6px] border-b border-[#bd9054] text-[#e1bd70] text-[13px] font-semibold tracking-[0.13em] uppercase transition-colors hover:text-white shrink-0" to="/shop?category=Tequila">
+              View all tequila <ArrowRight size={15} />
             </Link>
           </div>
           
@@ -53,22 +57,39 @@ export default function TequilaShowcase({ onAdd, onWish, onCompare, compareItems
           </p>
         </div>
 
-        <div 
-          className="relative overflow-hidden w-full group mt-16" 
-          style={{ maskImage: 'linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent)' }}
-          aria-label="Featured tequila brands"
-        >
-          <div className="flex w-max animate-[marquee_20s_linear_infinite] group-hover:[animation-play-state:paused] will-change-transform">
-            {marqueeBrands.map((brand, index) => (
-              <Link 
-                className="relative flex items-center justify-center flex-[0_0_200px] md:flex-[0_0_240px] min-h-[150px] mr-3 p-[18px_22px] overflow-hidden border border-[#e1bd70]/20 text-[#e1bd70] bg-[linear-gradient(150deg,rgba(255,255,255,0.035),rgba(255,255,255,0.012))] transition-all duration-180 hover:border-[#e1bd70]/60 hover:bg-[#e1bd70]/10 hover:shadow-[0_12px_24px_rgba(0,0,0,0.4)] hover:-translate-y-1" 
-                to={`/shop?brand=${encodeURIComponent(brand.name)}`} 
-                key={`${brand.name}-${index}`} 
-                aria-label={`Shop ${brand.name}`}
+        <div className="relative mt-8 max-w-[1240px] mx-auto text-center px-6 sm:px-0">
+          <div className="mb-3.5">
+            <h2 className="m-0 font-serif text-[clamp(40px,3.8vw,62px)] font-medium tracking-[-0.02em] leading-[1.05] text-[#eee8dd]">
+              Top Tequila{' '}
+              <span
+                className="gold-gradient-text inline-block pr-2 font-script text-[1.12em]"
+                style={{ fontFamily: "'Dancing Script', cursive" }}
               >
-                <img className="max-w-[140px] max-h-[75px] object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.6)]" src={brand.image} alt="" />
-              </Link>
-            ))}
+                Brands
+              </span>
+            </h2>
+          </div>
+          <div 
+            className="relative overflow-hidden w-full group py-1" 
+            style={{ maskImage: 'linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent)' }}
+            aria-label="Featured tequila brands"
+          >
+            <div className="flex w-max animate-[marquee_24s_linear_infinite] group-hover:[animation-play-state:paused] will-change-transform items-center">
+              {marqueeBrands.map((brand, index) => (
+                <Link 
+                  className="relative flex items-center justify-center flex-[0_0_240px] sm:flex-[0_0_300px] md:flex-[0_0_360px] min-h-[140px] sm:min-h-[165px] md:min-h-[190px] mx-5 sm:mx-8 md:mx-10 transition-all duration-300 hover:scale-110 hover:-translate-y-1 group/brand select-none" 
+                  to={`/shop?brand=${encodeURIComponent(brand.name)}`} 
+                  key={`${brand.name}-${index}`} 
+                  aria-label={`Shop ${brand.name}`}
+                >
+                  <img 
+                    className="w-auto h-auto max-w-[220px] sm:max-w-[280px] md:max-w-[340px] max-h-[120px] sm:max-h-[145px] md:max-h-[170px] object-contain filter contrast-[1.08] brightness-[0.95] group-hover/brand:brightness-110 group-hover/brand:drop-shadow-[0_10px_30px_rgba(225,189,112,0.45)] transition-all duration-300" 
+                    src={brand.image} 
+                    alt={brand.name} 
+                  />
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>

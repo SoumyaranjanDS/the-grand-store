@@ -95,30 +95,34 @@ export default function Header({
         ref={headerRef}
         onMouseLeave={() => setMegaOpen(false)}
       >
-        <div className="shell header-main">
-          <button
-            className="mobile-menu-button"
-            type="button"
-            aria-label="Open menu"
-            onClick={() => setMobileOpen(true)}
-          >
-            <Menu size={23} />
-          </button>
+        <div className="shell header-main flex items-center justify-between min-h-[58px] sm:min-h-[72px] md:min-h-[108px] px-2 sm:px-6 md:px-10">
+          {/* Left: Mobile Menu + Leftified Brand Logo */}
+          <div className="flex items-center gap-1 sm:gap-3 shrink-0">
+            <button
+              className="mobile-menu-button shrink-0"
+              type="button"
+              aria-label="Open menu"
+              onClick={() => setMobileOpen(true)}
+            >
+              <Menu size={22} />
+            </button>
 
-          <Link
-            className="brand-mark mx-auto"
-            to="/"
-            aria-label="The Grand Store home"
-          >
-            <img
-              src="/logo.png"
-              alt="The Grand Store"
-              className="h-14 w-auto object-contain"
-            />
-          </Link>
+            <Link
+              className="brand-mark shrink-0 inline-flex items-center"
+              to="/"
+              aria-label="The Grand Store home"
+            >
+              <img
+                src="/logo.png"
+                alt="The Grand Store"
+                className="h-8 sm:h-11 md:h-14 w-auto max-w-[110px] sm:max-w-[160px] md:max-w-[225px] object-contain object-left"
+              />
+            </Link>
+          </div>
 
+          {/* Center: Search Field (Desktop only) */}
           <form
-            className="search-field"
+            className="search-field hidden md:grid flex-1 max-w-[560px] mx-6"
             onSubmit={(event) => event.preventDefault()}
           >
             <Search size={18} aria-hidden="true" />
@@ -129,7 +133,8 @@ export default function Header({
             <button type="submit">Search</button>
           </form>
 
-          <div className="header-actions">
+          {/* Right: Header Actions */}
+          <div className="header-actions flex items-center justify-end gap-1 sm:gap-2.5 shrink-0">
             {user ? (
               <IconButton
                 label="Profile"
@@ -143,41 +148,65 @@ export default function Header({
                   )
                 }
               >
-                <CircleUserRound size={22} className="text-gold-gradient" />
+                <CircleUserRound size={21} className="text-gold-gradient" />
               </IconButton>
             ) : (
-              <button
-                type="button"
-                onClick={() => navigate("/login")}
-                style={{
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  color: "#eee8dd",
-                  marginRight: "8px",
-                }}
-                onMouseEnter={(e) => (e.target.style.color = "#c9a35b")}
-                onMouseLeave={(e) => (e.target.style.color = "#eee8dd")}
-              >
-                Login
-              </button>
+              <>
+                <IconButton
+                  className="sm:hidden"
+                  label="Account"
+                  onClick={() => navigate("/login")}
+                >
+                  <CircleUserRound size={21} />
+                </IconButton>
+                <button
+                  type="button"
+                  className="hidden sm:inline-block"
+                  onClick={() => navigate("/login")}
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    color: "#eee8dd",
+                    marginRight: "8px",
+                  }}
+                  onMouseEnter={(e) => (e.target.style.color = "#c9a35b")}
+                  onMouseLeave={(e) => (e.target.style.color = "#eee8dd")}
+                >
+                  Login
+                </button>
+              </>
             )}
 
+            {/* Compare Button - Strictly Hidden on Mobile, Shown on Desktop */}
+            <div className="hidden sm:block">
+              <IconButton
+                label="Compare products"
+                count={compareCount}
+                onClick={onCompareClick}
+              >
+                <GitCompareArrows size={21} />
+              </IconButton>
+            </div>
+
+            {/* Wishlist / Likes - Visible on Mobile & Desktop */}
             <IconButton
               className={wishlistCount ? "wishlist-header-active" : ""}
               label={`Wishlist, ${wishlistCount} saved ${wishlistCount === 1 ? "bottle" : "bottles"}`}
               count={wishlistCount}
               onClick={onWishlistClick}
             >
-              <Heart size={22} fill={wishlistCount ? "currentColor" : "none"} />
+              <Heart size={21} fill={wishlistCount ? "currentColor" : "none"} />
             </IconButton>
+
+            {/* Cart - Visible on Mobile & Desktop */}
             <IconButton
               label="Shopping bag"
               count={cartCount}
               onClick={onBagClick}
             >
-              <ShoppingBag size={22} />
+              <ShoppingBag size={21} />
             </IconButton>
           </div>
         </div>
@@ -310,10 +339,10 @@ export default function Header({
             </button>
             <a href="/#private-collection">Offers</a>
             <Link to="/auction">Auction</Link>
-            <Link to="/events" className="font-bold text-gold-gradient hover:text-[#e1bd70]">Events</Link>
+            <Link to="/events" className="font-bold text-[#f0cf76] hover:text-white transition-colors">Events</Link>
             <Link to="/vendor-portal">Sell on The Grand Store</Link>
             <Link to="/bookatasting">Book a tasting</Link>
-            <Link to="/global-wines" className="font-bold text-gold-gradient hover:text-[#e1bd70]">🌍 GLOBAL WINES</Link>
+            <Link to="/global-wines" className="font-bold text-[#f0cf76] hover:text-white transition-colors">🌍 GLOBAL WINES</Link>
           </div>
         </nav>
       </header>
@@ -329,8 +358,14 @@ export default function Header({
           onClick={closeMenus}
         />
         <div className="drawer-panel">
-          <div className="drawer-head">
-            <img src="/assets/logo.webp" alt="The Grand Store" />
+          <div className="drawer-head flex items-center justify-between">
+            <Link to="/" onClick={closeMenus} className="inline-flex items-center">
+              <img 
+                src="/logo.png" 
+                alt="The Grand Store" 
+                className="h-10 w-auto max-w-[150px] object-contain object-left" 
+              />
+            </Link>
             <IconButton label="Close menu" onClick={closeMenus}>
               <X size={23} />
             </IconButton>
@@ -370,7 +405,7 @@ export default function Header({
             <Link to="/auction" onClick={closeMenus}>
               Auction
             </Link>
-            <Link to="/events" onClick={closeMenus} className="font-bold text-gold-gradient">
+            <Link to="/events" onClick={closeMenus} className="font-bold text-[#f0cf76]">
               Events
             </Link>
             <Link to="/vendor-portal" onClick={closeMenus}>
@@ -379,16 +414,14 @@ export default function Header({
             <Link to="/bookatasting" onClick={closeMenus}>
               Book a tasting
             </Link>
-            <Link to="/global-wines" onClick={closeMenus} className="text-gold-gradient font-bold">
+            <Link to="/global-wines" onClick={closeMenus} className="text-[#f0cf76] font-bold">
               🌍 Global Wines
             </Link>
-            <Link
-              className="mobile-wishlist-link"
-              to="/customer/wishlist"
-              onClick={closeMenus}
-            >
-              <Heart size={17} fill={wishlistCount ? "currentColor" : "none"} />{" "}
-              Wishlist <span>{wishlistCount}</span>
+            <Link to="/customer/compare" onClick={closeMenus}>
+              Compare
+            </Link>
+            <Link to="/customer/wishlist" onClick={closeMenus}>
+              Wishlist
             </Link>
           </div>
           <div
