@@ -74,16 +74,16 @@ export default function TequilaShowcase({ onAdd, onWish, onCompare, compareItems
             style={{ maskImage: 'linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent)' }}
             aria-label="Featured tequila brands"
           >
-            <div className="flex w-max animate-[marquee_24s_linear_infinite] group-hover:[animation-play-state:paused] will-change-transform items-center">
+            <div className="flex w-max animate-[marquee_20s_linear_infinite] sm:animate-[marquee_24s_linear_infinite] group-hover:[animation-play-state:paused] will-change-transform items-center">
               {marqueeBrands.map((brand, index) => (
                 <Link 
-                  className="relative flex items-center justify-center flex-[0_0_240px] sm:flex-[0_0_300px] md:flex-[0_0_360px] min-h-[140px] sm:min-h-[165px] md:min-h-[190px] mx-5 sm:mx-8 md:mx-10 transition-all duration-300 hover:scale-110 hover:-translate-y-1 group/brand select-none" 
+                  className="relative flex items-center justify-center max-sm:flex-[0_0_185px] sm:flex-[0_0_300px] md:flex-[0_0_360px] max-sm:min-h-[105px] sm:min-h-[165px] md:min-h-[190px] max-sm:mx-3 sm:mx-8 md:mx-10 transition-all duration-300 hover:scale-110 hover:-translate-y-1 group/brand select-none" 
                   to={`/shop?brand=${encodeURIComponent(brand.name)}`} 
                   key={`${brand.name}-${index}`} 
                   aria-label={`Shop ${brand.name}`}
                 >
                   <img 
-                    className="w-auto h-auto max-w-[220px] sm:max-w-[280px] md:max-w-[340px] max-h-[120px] sm:max-h-[145px] md:max-h-[170px] object-contain filter contrast-[1.08] brightness-[0.95] group-hover/brand:brightness-110 group-hover/brand:drop-shadow-[0_10px_30px_rgba(225,189,112,0.45)] transition-all duration-300" 
+                    className="w-auto h-auto max-sm:max-w-[175px] sm:max-w-[280px] md:max-w-[340px] max-sm:max-h-[85px] sm:max-h-[145px] md:max-h-[170px] object-contain filter contrast-[1.08] brightness-[0.95] group-hover/brand:brightness-110 group-hover/brand:drop-shadow-[0_10px_30px_rgba(225,189,112,0.45)] transition-all duration-300" 
                     src={brand.image} 
                     alt={brand.name} 
                   />
