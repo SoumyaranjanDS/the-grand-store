@@ -135,13 +135,13 @@ export default function RegisterPage() {
           <div className="mt-8 text-center pt-6">
             <p className="text-sm text-[var(--color-ivory-muted)]">
               Already have an account?{' '}
-              <Link to="/login" className="font-bold text-[var(--color-gold)] hover:text-white transition-colors inline-flex items-center gap-1">
+              <Link to="/login" className="font-bold text-gold-gradient hover:text-white transition-colors inline-flex items-center gap-1">
                 Sign in here <ArrowRight size={14} />
               </Link>
             </p>
             <p className="text-sm text-[var(--color-ivory-muted)] mt-4">
               Want to become a Vendor?{' '}
-              <Link to="/vendor/onboarding" className="font-bold text-[var(--color-gold)] hover:text-white transition-colors inline-flex items-center gap-1">
+              <Link to="/vendor/onboarding" className="font-bold text-gold-gradient hover:text-white transition-colors inline-flex items-center gap-1">
                 Apply here <ArrowRight size={14} />
               </Link>
             </p>

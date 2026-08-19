@@ -70,13 +70,13 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
       
       {/* Top Breadcrumbs */}
       <section className="max-w-7xl mx-auto mb-8 flex items-center text-[10px] text-[#918a7f] uppercase tracking-[0.2em] font-semibold gap-3">
-        <Link to="/" className="hover:text-[#c9a35b] transition-colors">Home</Link>
+        <Link to="/" className="hover:text-gold-gradient transition-colors">Home</Link>
         <span>/</span>
-        <Link to={`/shop?category=${encodeURIComponent(product.category || product.type || '')}`} className="hover:text-[#c9a35b] transition-colors">{product.category || product.type || 'Shop'}</Link>
+        <Link to={`/shop?category=${encodeURIComponent(product.category || product.type || '')}`} className="hover:text-gold-gradient transition-colors">{product.category || product.type || 'Shop'}</Link>
         {product.brand && (
           <>
             <span>/</span>
-            <span className="hover:text-[#c9a35b] cursor-pointer transition-colors">{product.brand}</span>
+            <span className="hover:text-gold-gradient cursor-pointer transition-colors">{product.brand}</span>
           </>
         )}
         <span>/</span>
@@ -129,7 +129,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             </span>
           </div>
 
-          <div className="text-[42px] font-serif text-[#c9a35b] mb-8">
+          <div className="text-[42px] font-serif text-gold-gradient mb-8">
             R{formattedPrice}
           </div>
 
@@ -163,7 +163,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             <div className="flex items-center border border-white/20 h-[52px]">
               <button 
                 type="button" 
-                className="w-12 h-full flex items-center justify-center text-[#918a7f] hover:text-[#c9a35b] transition-colors" 
+                className="w-12 h-full flex items-center justify-center text-[#918a7f] hover:text-gold-gradient transition-colors" 
                 onClick={() => setQuantity((value) => Math.max(1, value - 1))}
               >
                 <Minus size={14} />
@@ -171,7 +171,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
               <span className="w-8 text-center text-sm font-semibold">{quantity}</span>
               <button 
                 type="button" 
-                className="w-12 h-full flex items-center justify-center text-[#918a7f] hover:text-[#c9a35b] transition-colors" 
+                className="w-12 h-full flex items-center justify-center text-[#918a7f] hover:text-gold-gradient transition-colors" 
                 onClick={() => setQuantity((value) => value + 1)}
               >
                 <Plus size={14} />
@@ -198,7 +198,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             </button>
             
             <button
-              className={`w-[52px] h-[52px] border transition-colors flex items-center justify-center ${wishlisted ? 'border-[#c9a35b] text-[#c9a35b]' : 'border-white/20 text-[#918a7f] hover:border-white/50 hover:text-white'}`}
+              className={`w-[52px] h-[52px] border transition-colors flex items-center justify-center ${wishlisted ? 'border-[#c9a35b] text-gold-gradient' : 'border-white/20 text-[#918a7f] hover:border-white/50 hover:text-white'}`}
               type="button"
               onClick={() => onWish && onWish(product)}
             >
@@ -257,7 +257,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
               href={product.factSheetPdf} 
               target="_blank" 
               rel="noreferrer"
-              className="inline-flex items-center gap-3 px-8 py-4 border border-[#c9a35b] text-[#c9a35b] hover:bg-[#c9a35b] hover:text-black font-bold uppercase tracking-widest text-xs transition-colors rounded-full"
+              className="inline-flex items-center gap-3 px-8 py-4 border border-[#c9a35b] text-gold-gradient hover:bg-gold-gradient hover:text-black font-bold uppercase tracking-widest text-xs transition-colors rounded-full"
             >
               Download Official Fact Sheet PDF <ArrowRight size={16} />
             </a>
@@ -323,7 +323,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
         <section className="max-w-7xl mx-auto mt-16">
           <div className="flex justify-between items-end mb-8">
             <h2 className="text-2xl font-serif text-[#eee8dd]">Related Products</h2>
-            <a className="text-[10px] text-[#c9a35b] uppercase tracking-[0.2em] font-bold hover:text-[#e1bd70] transition-colors" href="/#arrivals">
+            <a className="text-[10px] text-gold-gradient uppercase tracking-[0.2em] font-bold hover:text-[#e1bd70] transition-colors" href="/#arrivals">
               View More In This Category
             </a>
           </div>

@@ -21,12 +21,14 @@ mongoose.connect(process.env.MONGO_URI)
 // Routes
 const vendorRoutes = require('./routes/vendorRoutes');
 const auctionRoutes = require('./routes/auctionRoutes');
+const eventRoutes = require('./routes/eventRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/vendor', vendorRoutes);
 app.use('/api/auction', auctionRoutes);
+app.use('/api/events', eventRoutes);
 app.use('/api/orders', orderRoutes);
 
 // Health check endpoint

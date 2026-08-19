@@ -45,7 +45,7 @@ export default function VendorProfile() {
       case 'rejected':
         return { color: 'text-red-400', bg: 'bg-red-400/10', border: 'border-red-400/20', icon: <AlertCircle size={16} />, text: 'Requires Revision' };
       default:
-        return { color: 'text-[var(--color-gold)]', bg: 'bg-[var(--color-gold)]/10', border: 'border-[var(--color-gold)]/20', icon: <FileText size={16} />, text: 'Draft Application' };
+        return { color: 'text-gold-gradient', bg: 'bg-[var(--color-gold)]/10', border: 'border-[var(--color-gold)]/20', icon: <FileText size={16} />, text: 'Draft Application' };
     }
   };
 
@@ -61,7 +61,7 @@ export default function VendorProfile() {
       {/* Welcome Section */}
       <section className="mb-4">
         <h1 className="text-[var(--color-ivory)] font-serif text-5xl mb-4">
-          Vendor <span className="font-script text-6xl text-[var(--color-gold)] font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Profile</span>
+          Vendor <span className="font-script text-6xl text-gold-gradient font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Profile</span>
         </h1>
         <p className="text-[var(--color-ivory-muted)] text-lg max-w-2xl font-light">
           View and manage your onboarding details, business documents, and verification status.
@@ -79,7 +79,7 @@ export default function VendorProfile() {
 
         <div className="max-w-2xl">
           <h2 className="text-2xl font-serif text-[var(--color-ivory)] mb-6 flex items-center gap-3">
-            <Settings className="text-[var(--color-gold)]" size={24} />
+            <Settings className="text-gold-gradient" size={24} />
             Application Overview
           </h2>
           
@@ -105,7 +105,7 @@ export default function VendorProfile() {
           <div className="flex gap-4">
             <button 
               onClick={() => navigate('/vendor/onboarding')}
-              className="bg-[var(--color-gold)] text-black font-bold uppercase tracking-widest text-sm px-8 py-3 rounded-full hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] transition-all flex items-center gap-2"
+              className="bg-gold-gradient text-black font-bold uppercase tracking-widest text-sm px-8 py-3 rounded-full hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] transition-all flex items-center gap-2"
             >
               <Edit3 size={18} />
               Re-upload / Edit Application
@@ -120,7 +120,7 @@ export default function VendorProfile() {
           {/* KYC & Identity */}
           <div className="p-8 border-t border-white/10">
             <h3 className="text-xl font-serif text-[var(--color-ivory)] mb-6 pb-4 border-b border-white/[0.05] flex items-center gap-3">
-              <User className="text-[var(--color-gold)]" size={20} />
+              <User className="text-gold-gradient" size={20} />
               KYC & Identity
             </h3>
             <div className="space-y-4">
@@ -135,7 +135,7 @@ export default function VendorProfile() {
               <div>
                 <div className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">ID Document</div>
                 {vendorData.kycInfo?.idDocumentUrl ? (
-                  <a href={vendorData.kycInfo.idDocumentUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-[var(--color-gold)] hover:underline mt-1">
+                  <a href={vendorData.kycInfo.idDocumentUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-gold-gradient hover:underline mt-1">
                     <Download size={14} /> View Document
                   </a>
                 ) : (
@@ -148,7 +148,7 @@ export default function VendorProfile() {
           {/* Banking Details */}
           <div className="p-8 border-t border-white/10">
             <h3 className="text-xl font-serif text-[var(--color-ivory)] mb-6 pb-4 border-b border-white/[0.05] flex items-center gap-3">
-              <Building2 className="text-[var(--color-gold)]" size={20} />
+              <Building2 className="text-gold-gradient" size={20} />
               Banking Details
             </h3>
             <div className="space-y-4">
@@ -165,7 +165,7 @@ export default function VendorProfile() {
               <div>
                 <div className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Bank Confirmation Letter</div>
                 {vendorData.bankingInfo?.bankConfirmationUrl ? (
-                  <a href={vendorData.bankingInfo.bankConfirmationUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-[var(--color-gold)] hover:underline mt-1">
+                  <a href={vendorData.bankingInfo.bankConfirmationUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-gold-gradient hover:underline mt-1">
                     <Download size={14} /> View Document
                   </a>
                 ) : (
@@ -178,7 +178,7 @@ export default function VendorProfile() {
           {(vendorData.productCategories?.includes('Wine')) && (
             <div className="p-8 border-t border-white/10 col-span-1 md:col-span-2">
               <h3 className="text-xl font-serif text-[var(--color-ivory)] mb-6 pb-4 border-b border-white/[0.05] flex items-center gap-3">
-                <FileText className="text-[var(--color-gold)]" size={20} />
+                <FileText className="text-gold-gradient" size={20} />
                 Category Specific Documents
               </h3>
               <div className="space-y-4">
@@ -186,7 +186,7 @@ export default function VendorProfile() {
                   <div>
                     <div className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Wholesale Liquor Authority (WLA) Document</div>
                     {vendorData.licenceInfo?.wlaDocumentUrl ? (
-                      <a href={vendorData.licenceInfo.wlaDocumentUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-[var(--color-gold)] hover:underline mt-1">
+                      <a href={vendorData.licenceInfo.wlaDocumentUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-gold-gradient hover:underline mt-1">
                         <Download size={14} /> View Document
                       </a>
                     ) : (

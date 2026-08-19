@@ -6,29 +6,29 @@ import { Globe, ShieldCheck, TrendingUp, Truck, ArrowRight, CheckCircle2 } from 
 export default function GlobalOnboardingLanding() {
   const benefits = [
     {
-      icon: <Globe size={40} className="text-[#c9a35b] drop-shadow-[0_0_15px_rgba(201,163,91,0.6)]" />,
+      icon: <Globe size={40} className="text-gold-gradient drop-shadow-[0_0_15px_rgba(201,163,91,0.6)]" />,
       title: "Global Reach, Local Curation",
       desc: "Tap into a curated audience of collectors and enthusiasts across our network. We position your winery alongside the world's most prestigious estates."
     },
     {
-      icon: <TrendingUp size={40} className="text-[#c9a35b] drop-shadow-[0_0_15px_rgba(201,163,91,0.6)]" />,
+      icon: <TrendingUp size={40} className="text-gold-gradient drop-shadow-[0_0_15px_rgba(201,163,91,0.6)]" />,
       title: "Premium Positioning",
       desc: "Our platform is designed for luxury. Your wines will never be discounted or placed alongside mass-market brands."
     },
     {
-      icon: <ShieldCheck size={40} className="text-[#c9a35b] drop-shadow-[0_0_15px_rgba(201,163,91,0.6)]" />,
+      icon: <ShieldCheck size={40} className="text-gold-gradient drop-shadow-[0_0_15px_rgba(201,163,91,0.6)]" />,
       title: "Brand Protection",
       desc: "You control your pricing, your allocations, and your brand story. We provide the platform; you provide the excellence."
     },
     {
-      icon: <Truck size={40} className="text-[#c9a35b] drop-shadow-[0_0_15px_rgba(201,163,91,0.6)]" />,
+      icon: <Truck size={40} className="text-gold-gradient drop-shadow-[0_0_15px_rgba(201,163,91,0.6)]" />,
       title: "Streamlined Logistics",
       desc: "We assist with cross-border logistics, customs documentation, and climate-controlled storage solutions."
     }
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0907] pt-24 pb-20 relative overflow-hidden">
+    <div className="min-h-screen bg-[#0a0907] pt-8 pb-20 relative overflow-hidden">
       
       {/* Background radial glow */}
       <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#c9a35b]/10 via-[#0a0907]/0 to-[#0a0907]/0 pointer-events-none rounded-full blur-3xl opacity-80 mix-blend-screen translate-x-1/4 -translate-y-1/4"></div>
@@ -157,7 +157,7 @@ export default function GlobalOnboardingLanding() {
           <div className="mt-24 text-center relative z-10">
             <Link 
               to="/vendor/onboarding" 
-              className="inline-flex items-center gap-3 text-[#c9a35b] font-bold uppercase tracking-[0.2em] text-sm hover:text-white transition-colors border-b border-[#c9a35b]/50 hover:border-white pb-2 shadow-[0_4px_15px_-4px_rgba(201,163,91,0.4)]"
+              className="inline-flex items-center gap-3 text-gold-gradient font-bold uppercase tracking-[0.2em] text-sm hover:text-white transition-colors border-b border-[#c9a35b]/50 hover:border-white pb-2 shadow-[0_4px_15px_-4px_rgba(201,163,91,0.4)]"
             >
               Start the process <ArrowRight size={18} />
             </Link>

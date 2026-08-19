@@ -30,7 +30,7 @@ export default function OnboardingLanding({ onNext }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {benefits.map((benefit, idx) => (
             <div key={idx} className="bg-neutral-900 border border-neutral-800 p-6 rounded-xl hover:border-[#c9a35b]/50 transition-colors">
-              <div className="w-12 h-12 rounded-lg bg-[#c9a35b]/10 flex items-center justify-center text-[#c9a35b] mb-4">
+              <div className="w-12 h-12 rounded-lg bg-[#c9a35b]/10 flex items-center justify-center text-gold-gradient mb-4">
                 <benefit.icon size={24} />
               </div>
               <h3 className="text-white font-medium mb-2">{benefit.title}</h3>
@@ -56,7 +56,7 @@ export default function OnboardingLanding({ onNext }) {
             <p className="text-3xl font-serif text-white">R2,500</p>
           </div>
           <div className="text-center p-6 bg-neutral-950/50 rounded-xl border border-[#c9a35b]/30">
-            <p className="text-[#c9a35b] text-sm uppercase tracking-wider mb-2">Commission</p>
+            <p className="text-gold-gradient text-sm uppercase tracking-wider mb-2">Commission</p>
             <p className="text-4xl font-serif text-white">15%</p>
             <p className="text-neutral-400 text-xs mt-2">per completed sale</p>
           </div>
@@ -69,12 +69,12 @@ export default function OnboardingLanding({ onNext }) {
         <div className="text-center relative z-10">
           <button 
             onClick={onNext}
-            className="bg-[#c9a35b] hover:bg-[#e1bd70] text-white px-10 py-4 rounded-full font-medium transition-all shadow-[0_0_20px_rgba(201,163,91,0.3)] hover:shadow-[0_0_30px_rgba(201,163,91,0.5)] flex items-center justify-center mx-auto space-x-2"
+            className="bg-gold-gradient hover:bg-[#e1bd70] text-white px-10 py-4 rounded-full font-medium transition-all shadow-[0_0_20px_rgba(201,163,91,0.3)] hover:shadow-[0_0_30px_rgba(201,163,91,0.5)] flex items-center justify-center mx-auto space-x-2"
           >
             <Presentation size={20} />
             <span>PREVIEW MY GRAND STORE</span>
           </button>
-          <p className="text-neutral-400 text-sm mt-4">Already registered? <a href="/login" className="text-[#c9a35b] hover:text-[#e1bd70] underline decoration-[#c9a35b]/30 underline-offset-4">Sign in</a></p>
+          <p className="text-neutral-400 text-sm mt-4">Already registered? <a href="/login" className="text-gold-gradient hover:text-[#e1bd70] underline decoration-[#c9a35b]/30 underline-offset-4">Sign in</a></p>
         </div>
       </div>
 

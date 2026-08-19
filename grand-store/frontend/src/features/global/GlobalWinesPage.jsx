@@ -12,12 +12,12 @@ const countries = [
 
 export default function GlobalWinesPage() {
   return (
-    <div className="min-h-screen bg-[#0a0907] pt-24 pb-20 relative overflow-hidden">
+    <div className="min-h-screen bg-[#0a0907] pt-8 md:pt-12 pb-20 relative overflow-hidden">
       {/* Massive subtle golden glow background */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#c9a35b]/10 via-[#0a0907]/0 to-[#0a0907]/0 pointer-events-none rounded-full blur-3xl opacity-60"></div>
       
       {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-4 mb-28 text-center relative z-10 pt-10">
+      <div className="max-w-7xl mx-auto px-4 mb-28 text-center relative z-10">
         <motion.div 
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -25,7 +25,7 @@ export default function GlobalWinesPage() {
           className="flex justify-center mb-8"
         >
           <div className="p-4 rounded-full bg-gradient-to-b from-[#c9a35b]/10 to-transparent shadow-[0_0_50px_rgba(201,163,91,0.15)]">
-            <Globe size={48} className="text-[#c9a35b] drop-shadow-[0_0_15px_rgba(201,163,91,0.8)]" />
+            <Globe size={48} className="text-gold-gradient drop-shadow-[0_0_15px_rgba(201,163,91,0.8)]" />
           </div>
         </motion.div>
         
@@ -80,7 +80,7 @@ export default function GlobalWinesPage() {
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#c9a35b]/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 mix-blend-screen" />
                 
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
-                  <span className="text-[#c9a35b] text-sm font-bold tracking-[0.4em] uppercase mb-4 drop-shadow-[0_0_10px_rgba(201,163,91,0.5)]">Wines of</span>
+                  <span className="text-gold-gradient text-sm font-bold tracking-[0.4em] uppercase mb-4 drop-shadow-[0_0_10px_rgba(201,163,91,0.5)]">Wines of</span>
                   <h3 className="text-4xl sm:text-6xl md:text-8xl font-serif text-white mb-4 sm:mb-6 tracking-wide drop-shadow-2xl">{country.name}</h3>
                   <p className="text-white/80 font-light text-sm sm:text-lg md:text-xl tracking-wide max-w-2xl opacity-100 md:opacity-0 md:translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-700 delay-100 mb-6 md:mb-0">
                     {country.desc}

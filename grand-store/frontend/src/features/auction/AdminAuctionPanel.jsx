@@ -78,7 +78,7 @@ export default function AdminAuctionPanel({ onNotify }) {
             The Grand Store
           </div>
           <div className="h-4 w-px bg-white/20 mx-2"></div>
-          <div className="text-sm tracking-widest text-[var(--color-gold)] font-medium uppercase">
+          <div className="text-sm tracking-widest text-gold-gradient font-medium uppercase">
             Admin Portal
           </div>
         </div>
@@ -86,7 +86,7 @@ export default function AdminAuctionPanel({ onNotify }) {
           <div className="flex items-center gap-3">
             <div className="text-right hidden md:block">
               <div className="text-sm font-serif">{user.name}</div>
-              <div className="text-xs text-[var(--color-gold)] tracking-widest uppercase">System Admin</div>
+              <div className="text-xs text-gold-gradient tracking-widest uppercase">System Admin</div>
             </div>
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-yellow-500 p-[1px]">
               <div className="w-full h-full bg-[#0a0a0a] rounded-full flex items-center justify-center">
@@ -106,7 +106,7 @@ export default function AdminAuctionPanel({ onNotify }) {
         {/* Glassmorphic Sidebar */}
         <aside className="w-64 bg-white/[0.02] backdrop-blur-xl border-r border-white/[0.02] flex flex-col fixed top-20 bottom-0 left-0 z-10">
           <nav className="flex flex-col flex-1 p-6 gap-2 mt-4">
-            <button className="flex items-center gap-4 px-4 py-3 rounded-xl bg-white/[0.05] text-[var(--color-gold)] shadow-[0_0_15px_rgba(212,175,55,0.05)] transition-all text-left text-xs uppercase tracking-widest font-semibold border border-white/[0.05]">
+            <button className="flex items-center gap-4 px-4 py-3 rounded-xl bg-white/[0.05] text-gold-gradient shadow-[0_0_15px_rgba(212,175,55,0.05)] transition-all text-left text-xs uppercase tracking-widest font-semibold border border-white/[0.05]">
               <Gavel size={16} /> Auction Approvals
             </button>
           </nav>
@@ -118,7 +118,7 @@ export default function AdminAuctionPanel({ onNotify }) {
           {/* Welcome Section */}
           <section className="mb-4">
             <h1 className="text-[var(--color-ivory)] font-serif text-5xl mb-4">
-              Auction <span className="font-script text-6xl text-[var(--color-gold)] font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Approvals</span>
+              Auction <span className="font-script text-6xl text-gold-gradient font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Approvals</span>
             </h1>
             <p className="text-[var(--color-ivory-muted)] text-lg max-w-2xl font-light">
               Review vendor submissions, assign lot numbers, and set minimum bids before lots go live.
@@ -132,7 +132,7 @@ export default function AdminAuctionPanel({ onNotify }) {
             ) : lots.length === 0 ? (
               <div className="py-24 text-center flex flex-col items-center">
                 <div className="w-24 h-24 rounded-full bg-white/[0.02] border border-white/[0.05] flex items-center justify-center mb-6 shadow-inner">
-                  <CheckCircle2 size={48} className="text-[var(--color-gold)] opacity-30" />
+                  <CheckCircle2 size={48} className="text-gold-gradient opacity-30" />
                 </div>
                 <h3 className="text-[var(--color-ivory)] font-serif text-3xl mb-3">All Caught Up</h3>
                 <p className="text-[var(--color-ivory-muted)] text-lg font-light">There are no pending auction lots requiring approval at this time.</p>
@@ -155,15 +155,15 @@ export default function AdminAuctionPanel({ onNotify }) {
                         <div className="grid grid-cols-2 gap-6 text-sm">
                           <div className="bg-white/[0.02] p-4 rounded-xl border border-white/[0.02]">
                             <span className="text-[var(--color-ivory-muted)] block text-[10px] uppercase tracking-widest mb-1 font-semibold">Requested Start Bid</span> 
-                            <span className="font-serif text-xl text-[var(--color-gold)]">R{lot.startingBid?.toLocaleString('en-ZA')}</span>
+                            <span className="font-serif text-xl text-gold-gradient">R{lot.startingBid?.toLocaleString('en-ZA')}</span>
                           </div>
                           <div className="bg-white/[0.02] p-4 rounded-xl border border-white/[0.02]">
                             <span className="text-[var(--color-ivory-muted)] block text-[10px] uppercase tracking-widest mb-1 font-semibold">Reserve Price</span> 
-                            <span className="font-serif text-xl text-[var(--color-gold)]">R{lot.reservePrice?.toLocaleString('en-ZA')}</span>
+                            <span className="font-serif text-xl text-gold-gradient">R{lot.reservePrice?.toLocaleString('en-ZA')}</span>
                           </div>
                           <div className="col-span-2 text-sm font-light">
-                            <p className="mb-2"><span className="text-[var(--color-gold)] font-medium mr-2">Condition:</span> <span className="text-[var(--color-ivory)]">{lot.condition}</span></p>
-                            <p><span className="text-[var(--color-gold)] font-medium mr-2">Provenance:</span> <span className="text-[var(--color-ivory)]">{lot.provenance}</span></p>
+                            <p className="mb-2"><span className="text-gold-gradient font-medium mr-2">Condition:</span> <span className="text-[var(--color-ivory)]">{lot.condition}</span></p>
+                            <p><span className="text-gold-gradient font-medium mr-2">Provenance:</span> <span className="text-[var(--color-ivory)]">{lot.provenance}</span></p>
                           </div>
                         </div>
                       </div>
@@ -171,7 +171,7 @@ export default function AdminAuctionPanel({ onNotify }) {
 
                     {/* Approval Controls */}
                     <div className="w-full lg:w-96 bg-black/40 border-l border-white/[0.05] p-10 flex flex-col justify-center">
-                       <h4 className="font-semibold text-xs text-[var(--color-gold)] uppercase tracking-widest border-b border-white/[0.05] pb-4 mb-6">Admin Configuration</h4>
+                       <h4 className="font-semibold text-xs text-gold-gradient uppercase tracking-widest border-b border-white/[0.05] pb-4 mb-6">Admin Configuration</h4>
                        <div className="space-y-5">
                          <div>
                            <label className="block text-[10px] text-[var(--color-ivory-muted)] mb-2 uppercase tracking-widest font-semibold">Lot Number</label>
@@ -185,7 +185,7 @@ export default function AdminAuctionPanel({ onNotify }) {
                            <label className="block text-[10px] text-[var(--color-ivory-muted)] mb-2 uppercase tracking-widest font-semibold">End Date/Time</label>
                            <input type="datetime-local" value={approvalForms[lot._id]?.endDate || ''} onChange={e => updateForm(lot._id, 'endDate', e.target.value)} className="w-full bg-white/[0.03] border border-white/[0.05] rounded-xl p-3 text-sm text-[var(--color-ivory)] focus:outline-none focus:border-[var(--color-gold)]/50 focus:bg-white/[0.05] transition-all [color-scheme:dark]" />
                          </div>
-                         <button onClick={() => handleApprove(lot._id)} className="w-full mt-8 rounded-xl bg-[var(--color-gold)] text-black font-bold uppercase tracking-widest text-xs py-4 hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all">
+                         <button onClick={() => handleApprove(lot._id)} className="w-full mt-8 rounded-xl bg-gold-gradient text-black font-bold uppercase tracking-widest text-xs py-4 hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all">
                            Approve & Publish Lot
                          </button>
                        </div>

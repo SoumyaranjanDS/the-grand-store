@@ -62,7 +62,7 @@ export default function CustomerOrdersPage() {
             The Grand Store
           </div>
           <div className="h-4 w-px bg-white/20 mx-2"></div>
-          <div className="text-sm tracking-widest text-[var(--color-gold)] font-medium uppercase">
+          <div className="text-sm tracking-widest text-gold-gradient font-medium uppercase">
             Client Portal
           </div>
         </div>
@@ -73,11 +73,11 @@ export default function CustomerOrdersPage() {
           <div className="flex items-center gap-3">
             <div className="text-right hidden md:block">
               <div className="text-sm font-serif">{user.name}</div>
-              <div className="text-xs text-[var(--color-gold)] tracking-widest uppercase">Private Client</div>
+              <div className="text-xs text-gold-gradient tracking-widest uppercase">Private Client</div>
             </div>
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--color-gold)] to-yellow-700 p-[1px]">
               <div className="w-full h-full bg-[#0a0a0a] rounded-full flex items-center justify-center">
-                <User size={18} className="text-[var(--color-gold)]" />
+                <User size={18} className="text-gold-gradient" />
               </div>
             </div>
           </div>
@@ -97,7 +97,7 @@ export default function CustomerOrdersPage() {
             <button onClick={() => navigate('/customer/profile')} className="flex items-center gap-4 px-4 py-3 rounded-xl text-[var(--color-ivory-muted)] hover:bg-white/[0.03] hover:text-[var(--color-ivory)] transition-all text-left text-xs uppercase tracking-widest border border-transparent">
               <User size={16} /> My Profile
             </button>
-            <button className="flex items-center gap-4 px-4 py-3 rounded-xl bg-white/[0.05] text-[var(--color-gold)] shadow-[0_0_15px_rgba(212,175,55,0.05)] transition-all text-left text-xs uppercase tracking-widest font-semibold border border-white/[0.05]">
+            <button className="flex items-center gap-4 px-4 py-3 rounded-xl bg-white/[0.05] text-gold-gradient shadow-[0_0_15px_rgba(212,175,55,0.05)] transition-all text-left text-xs uppercase tracking-widest font-semibold border border-white/[0.05]">
               <Package size={16} /> My Orders
             </button>
             <button onClick={() => navigate('/customer/wishlist')} className="flex items-center gap-4 px-4 py-3 rounded-xl text-[var(--color-ivory-muted)] hover:bg-white/[0.03] hover:text-[var(--color-ivory)] transition-all text-left text-xs uppercase tracking-widest border border-transparent">
@@ -109,7 +109,7 @@ export default function CustomerOrdersPage() {
             
             {user.role === 'vendor_active' && (
               <div className="mt-8 pt-8 border-t border-white/[0.05]">
-                <button onClick={() => navigate('/vendor/dashboard')} className="flex items-center gap-4 px-4 py-3 rounded-xl w-full text-[var(--color-ivory-muted)] hover:bg-[var(--color-gold)]/10 hover:text-[var(--color-gold)] transition-all text-left text-xs uppercase tracking-widest border border-transparent hover:border-[var(--color-gold)]/20">
+                <button onClick={() => navigate('/vendor/dashboard')} className="flex items-center gap-4 px-4 py-3 rounded-xl w-full text-[var(--color-ivory-muted)] hover:bg-[var(--color-gold)]/10 hover:text-gold-gradient transition-all text-left text-xs uppercase tracking-widest border border-transparent hover:border-[var(--color-gold)]/20">
                   <Building2 size={16} /> Vendor Dashboard
                 </button>
               </div>
@@ -117,7 +117,7 @@ export default function CustomerOrdersPage() {
             
             {user.role !== 'vendor_active' && (
               <div className="mt-8 pt-8 border-t border-white/[0.05]">
-                <button onClick={() => navigate('/vendor/onboarding')} className="flex items-center gap-4 px-4 py-3 rounded-xl w-full text-[var(--color-ivory-muted)] hover:bg-[var(--color-gold)]/10 hover:text-[var(--color-gold)] transition-all text-left text-xs uppercase tracking-widest border border-transparent hover:border-[var(--color-gold)]/20">
+                <button onClick={() => navigate('/vendor/onboarding')} className="flex items-center gap-4 px-4 py-3 rounded-xl w-full text-[var(--color-ivory-muted)] hover:bg-[var(--color-gold)]/10 hover:text-gold-gradient transition-all text-left text-xs uppercase tracking-widest border border-transparent hover:border-[var(--color-gold)]/20">
                   <Building2 size={16} /> Become Vendor
                 </button>
               </div>
@@ -138,10 +138,10 @@ export default function CustomerOrdersPage() {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-6 mb-10">
               <div>
                 <h1 className="text-[var(--color-ivory)] font-serif text-4xl mb-2 flex items-center gap-4">
-                  <div className="p-3 bg-[var(--color-gold)]/10 text-[var(--color-gold)] rounded-xl border border-[var(--color-gold)]/20 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
+                  <div className="p-3 bg-[var(--color-gold)]/10 text-gold-gradient rounded-xl border border-[var(--color-gold)]/20 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
                     <Package size={28} />
                   </div>
-                  Order <span className="text-[var(--color-gold)] ml-2 font-script text-5xl font-normal drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">History</span>
+                  Order <span className="text-gold-gradient ml-2 font-script text-5xl font-normal drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">History</span>
                 </h1>
                 <p className="text-[var(--color-ivory-muted)] text-sm max-w-2xl font-light mt-4">
                   Review all your past purchases and trace your private collection history.
@@ -161,7 +161,7 @@ export default function CustomerOrdersPage() {
             </div>
 
             {loading ? (
-              <div className="text-[var(--color-gold)] py-20 text-center flex flex-col items-center gap-4">
+              <div className="text-gold-gradient py-20 text-center flex flex-col items-center gap-4">
                 <Package className="animate-pulse opacity-50" size={40} />
                 <p>Retrieving your collection...</p>
               </div>
@@ -171,7 +171,7 @@ export default function CustomerOrdersPage() {
                   <Package size={32} className="text-[var(--color-ivory-muted)] opacity-30" />
                 </div>
                 <p className="text-[var(--color-ivory-muted)] mb-8 text-lg font-light">Your order history is empty.</p>
-                <button onClick={() => navigate('/shop')} className="px-8 py-3 rounded-full border border-[var(--color-gold)]/50 text-[var(--color-gold)] hover:bg-[var(--color-gold)] hover:text-black transition-all uppercase tracking-widest text-xs font-bold shadow-[0_0_20px_rgba(212,175,55,0.1)] hover:shadow-[0_0_20px_rgba(212,175,55,0.3)]">
+                <button onClick={() => navigate('/shop')} className="px-8 py-3 rounded-full border border-[var(--color-gold)]/50 text-gold-gradient hover:bg-gold-gradient hover:text-black transition-all uppercase tracking-widest text-xs font-bold shadow-[0_0_20px_rgba(212,175,55,0.1)] hover:shadow-[0_0_20px_rgba(212,175,55,0.3)]">
                   Explore the Collection
                 </button>
               </div>
@@ -181,7 +181,7 @@ export default function CustomerOrdersPage() {
                   <div key={order._id} className="bg-white/[0.02] backdrop-blur-md border border-white/[0.05] hover:border-white/10 hover:bg-white/[0.04] transition-all rounded-3xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
                     <div className="p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-white/[0.05]">
                       <div>
-                        <div className="text-[var(--color-gold)] text-sm tracking-widest uppercase mb-2 font-bold flex items-center gap-2">
+                        <div className="text-gold-gradient text-sm tracking-widest uppercase mb-2 font-bold flex items-center gap-2">
                           {order.invoiceNumber || order._id}
                         </div>
                         <div className="text-sm text-[var(--color-ivory-muted)] flex items-center gap-3">
@@ -197,7 +197,7 @@ export default function CustomerOrdersPage() {
                         </div>
                         <button 
                           onClick={() => navigate(`/customer/order/${order._id}`)}
-                          className="w-12 h-12 rounded-full bg-[var(--color-gold)]/10 text-[var(--color-gold)] flex items-center justify-center hover:bg-[var(--color-gold)] hover:text-black transition-colors"
+                          className="w-12 h-12 rounded-full bg-[var(--color-gold)]/10 text-gold-gradient flex items-center justify-center hover:bg-gold-gradient hover:text-black transition-colors"
                         >
                           <ChevronRight size={20} />
                         </button>
@@ -212,13 +212,13 @@ export default function CustomerOrdersPage() {
                               {item.image ? (
                                 <img src={item.image} alt={item.name} className="h-full object-contain" />
                               ) : (
-                                <Package size={20} className="text-[var(--color-gold)]/50" />
+                                <Package size={20} className="text-gold-gradient" />
                               )}
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="text-sm text-[var(--color-ivory)] font-medium truncate">{item.name}</div>
                               {item.option && <div className="text-xs text-[var(--color-ivory-muted)] mt-1 truncate">{item.option}</div>}
-                              <div className="text-xs text-[var(--color-gold)] mt-2 font-bold">Qty: {item.quantity}</div>
+                              <div className="text-xs text-gold-gradient mt-2 font-bold">Qty: {item.quantity}</div>
                             </div>
                           </div>
                         ))}

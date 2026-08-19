@@ -66,7 +66,7 @@ export default function Header({
   };
 
   return (
-    <>
+    <div className="sticky top-0 left-0 right-0 z-[100] bg-[#0a0a0a]">
       <div className="announcement-bar bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] text-black">
         <div className="shell announcement-inner">
           <p className="font-bold tracking-widest uppercase text-[9px]">
@@ -135,11 +135,13 @@ export default function Header({
                   navigate(
                     user.role === "admin"
                       ? "/admin/auctions"
-                      : "/customer/profile",
+                      : user.role === "vendor_active"
+                        ? "/vendor/dashboard"
+                        : "/customer/profile",
                   )
                 }
               >
-                <CircleUserRound size={22} className="text-[#c9a35b]" />
+                <CircleUserRound size={22} className="text-gold-gradient" />
               </IconButton>
             ) : (
               <button
@@ -312,9 +314,10 @@ export default function Header({
             </button>
             <a href="/#private-collection">Offers</a>
             <Link to="/auction">Auction</Link>
+            <Link to="/events" className="font-bold text-gold-gradient hover:text-[#e1bd70]">Events</Link>
             <Link to="/vendor-portal">Sell on The Grand Store</Link>
             <Link to="/bookatasting">Book a tasting</Link>
-            <Link to="/global-wines" className="font-bold text-[#c9a35b] hover:text-[#e1bd70]">🌍 GLOBAL WINES</Link>
+            <Link to="/global-wines" className="font-bold text-gold-gradient hover:text-[#e1bd70]">🌍 GLOBAL WINES</Link>
           </div>
         </nav>
       </header>
@@ -371,13 +374,16 @@ export default function Header({
             <Link to="/auction" onClick={closeMenus}>
               Auction
             </Link>
+            <Link to="/events" onClick={closeMenus} className="font-bold text-gold-gradient">
+              Events
+            </Link>
             <Link to="/vendor-portal" onClick={closeMenus}>
               Sell on The Grand Store
             </Link>
             <Link to="/bookatasting" onClick={closeMenus}>
               Book a tasting
             </Link>
-            <Link to="/global-wines" onClick={closeMenus} className="text-[#c9a35b] font-bold">
+            <Link to="/global-wines" onClick={closeMenus} className="text-gold-gradient font-bold">
               🌍 Global Wines
             </Link>
             <Link
@@ -397,14 +403,16 @@ export default function Header({
                 user
                   ? user.role === "admin"
                     ? "/admin/auctions"
-                    : "/customer/profile"
+                    : user.role === "vendor_active"
+                      ? "/vendor/dashboard"
+                      : "/customer/profile"
                   : "/login",
               );
             }}
           >
             <CircleUserRound
               size={18}
-              className={user ? "text-[#c9a35b]" : ""}
+              className={user ? "text-gold-gradient" : ""}
             />
             {user
               ? `Welcome back, ${user.name}`
@@ -412,6 +420,6 @@ export default function Header({
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

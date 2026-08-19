@@ -49,6 +49,10 @@ import AuctionSubmission from './features/vendor/AuctionSubmission'
 import VendorDashboard from './features/vendor/VendorDashboard'
 import VendorProfile from './features/vendor/VendorProfile'
 import AddProduct from './features/vendor/AddProduct'
+import EventAdd from './features/vendor/EventAdd'
+import VendorEvents from './features/vendor/VendorEvents'
+import EventsHub from './features/events/EventsHub'
+import EventDetails from './features/events/EventDetails'
 import VendorProducts from './features/vendor/VendorProducts'
 import EditProduct from './features/vendor/EditProduct'
 import VendorLayout from './features/vendor/VendorLayout'
@@ -327,6 +331,8 @@ function App() {
           <Route path="profile" element={<VendorProfile />} />
           <Route path="product-add" element={<AddProduct onNotify={showToast} />} />
           <Route path="product-edit/:id" element={<EditProduct onNotify={showToast} />} />
+          <Route path="event-add" element={<EventAdd onNotify={showToast} />} />
+          <Route path="events" element={<VendorEvents />} />
           <Route path="auction-submit" element={<AuctionSubmission onNotify={showToast} />} />
         </Route>
         
@@ -334,6 +340,8 @@ function App() {
         <Route path="/auction/:id" element={<AuctionLotDetail onNotify={showToast} />} />
         <Route path="/admin/auctions" element={<AdminAuctionPanel onNotify={showToast} />} />
         <Route path="/bookatasting" element={<TastingPage onNotify={showToast} />} />
+        <Route path="/events" element={<EventsHub />} />
+        <Route path="/events/:id" element={<EventDetails onNotify={showToast} />} />
         <Route path="/product/:slug" element={(
           <ProductPage
             onAdd={addToCart}

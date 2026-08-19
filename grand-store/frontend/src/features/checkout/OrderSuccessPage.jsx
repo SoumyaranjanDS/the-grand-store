@@ -39,7 +39,7 @@ export default function OrderSuccessPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#050505] flex items-center justify-center text-[var(--color-gold)]">
+      <main className="min-h-screen bg-[#050505] flex items-center justify-center text-gold-gradient">
         Loading receipt...
       </main>
     );
@@ -49,7 +49,7 @@ export default function OrderSuccessPage() {
     return (
       <main className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-white">
         <h2>Order not found</h2>
-        <Link to="/" className="text-[var(--color-gold)] mt-4">Return Home</Link>
+        <Link to="/" className="text-gold-gradient mt-4">Return Home</Link>
       </main>
     );
   }
@@ -59,13 +59,13 @@ export default function OrderSuccessPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#050505] text-[var(--color-ivory)] pt-32 pb-24">
+    <main className="min-h-screen bg-[#050505] text-[var(--color-ivory)] pt-10 pb-24">
       <div className="max-w-4xl mx-auto px-6">
         
         {/* Success Header (Hide on Print) */}
         <div className="text-center mb-16 print:hidden">
           <div className="w-20 h-20 bg-[var(--color-gold)]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 size={40} className="text-[var(--color-gold)]" />
+            <CheckCircle2 size={40} className="text-gold-gradient" />
           </div>
           <h1 className="text-4xl md:text-5xl font-serif mb-4">Order Placed Successfully</h1>
           <p className="text-[var(--color-ivory-muted)]">Thank you for your purchase. Your order is being processed.</p>
@@ -76,7 +76,7 @@ export default function OrderSuccessPage() {
           
           <div className="flex flex-col md:flex-row justify-between items-start border-b border-white/10 pb-8 mb-8 print:border-black/20">
             <div>
-              <div className="text-2xl font-serif text-[var(--color-gold)] tracking-widest uppercase mb-2 print:text-black">The Grand Store</div>
+              <div className="text-2xl font-serif text-gold-gradient tracking-widest uppercase mb-2 print:text-black">The Grand Store</div>
               <p className="text-sm text-[var(--color-ivory-muted)] print:text-gray-600">Luxury Wines & Spirits</p>
             </div>
             <div className="text-left md:text-right mt-6 md:mt-0">
@@ -90,12 +90,12 @@ export default function OrderSuccessPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
             <div>
-              <h3 className="text-xs uppercase tracking-widest text-[var(--color-gold)] mb-4 print:text-black font-bold">Billed To</h3>
+              <h3 className="text-xs uppercase tracking-widest text-gold-gradient mb-4 print:text-black font-bold">Billed To</h3>
               <p className="font-serif">{order.user?.name}</p>
               <p className="text-sm text-[var(--color-ivory-muted)] print:text-gray-600">{order.user?.email}</p>
             </div>
             <div>
-              <h3 className="text-xs uppercase tracking-widest text-[var(--color-gold)] mb-4 print:text-black font-bold">Shipped To</h3>
+              <h3 className="text-xs uppercase tracking-widest text-gold-gradient mb-4 print:text-black font-bold">Shipped To</h3>
               <p className="text-sm text-[var(--color-ivory-muted)] print:text-gray-600 leading-relaxed">
                 {order.shippingAddress?.address}<br />
                 {order.shippingAddress?.city}, {order.shippingAddress?.postalCode}<br />
@@ -140,7 +140,7 @@ export default function OrderSuccessPage() {
                 <span>Shipping</span>
                 <span>Complimentary</span>
               </div>
-              <div className="flex justify-between py-4 text-xl font-serif text-[var(--color-gold)] print:text-black">
+              <div className="flex justify-between py-4 text-xl font-serif text-gold-gradient print:text-black">
                 <span>Total</span>
                 <span>{formatCartPrice(order.totalPrice)}</span>
               </div>
@@ -155,7 +155,7 @@ export default function OrderSuccessPage() {
 
         {/* Actions (Hide on Print) */}
         <div className="mt-12 flex flex-col md:flex-row items-center justify-center gap-6 print:hidden">
-          <Link to="/shop" className="text-sm uppercase tracking-widest hover:text-[var(--color-gold)] transition-colors flex items-center gap-2">
+          <Link to="/shop" className="text-sm uppercase tracking-widest hover:text-gold-gradient transition-colors flex items-center gap-2">
             <ChevronLeft size={16} /> Continue Shopping
           </Link>
           <button onClick={printInvoice} className="bg-white/5 hover:bg-white/10 border border-white/10 px-6 py-3 rounded-xl text-sm uppercase tracking-widest transition-colors flex items-center gap-2">
