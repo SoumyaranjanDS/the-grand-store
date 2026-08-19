@@ -7,8 +7,14 @@ export default function BrandSection() {
     <section className="relative py-[54px] pb-[52px] bg-[#0e0d0b] bg-[radial-gradient(ellipse_at_50%_112%,rgba(143,84,24,0.17),transparent_48%),linear-gradient(120deg,rgba(103,68,25,0.12),transparent_45%)]" id="brands">
       <div className="absolute inset-0 pointer-events-none mix-blend-screen opacity-10 bg-[radial-gradient(ellipse_at_50%_50%,#e1bd70,transparent_60%)]" />
       <div className="max-w-[1240px] mx-auto px-6 sm:px-0 mb-[25px] text-center">
-        <h2 className="m-0 font-serif text-[40px] font-medium tracking-[-0.035em] leading-[0.98]">
-          Top Whisky Brands
+        <h2 className="m-0 font-serif text-[clamp(36px,3.6vw,48px)] font-medium tracking-[-0.02em] leading-[1.08] text-[#eee8dd]">
+          Top Whisky{' '}
+          <span
+            className="bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] bg-clip-text text-transparent drop-shadow-[0_0_14px_rgba(230,201,122,0.55)] inline-block pr-2"
+            style={{ fontFamily: "'Pinyon Script', cursive" }}
+          >
+            Brands
+          </span>
         </h2>
       </div>
       <div 
