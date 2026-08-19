@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Calendar, MapPin, Clock, Users, ArrowLeft, Check, ChevronRight } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, Tag, Check, ArrowLeft, ShoppingBag, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
-export default function EventDetails({ onNotify }) {
+export default function EventDetails({ onNotify, onAdd }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -16,7 +16,7 @@ export default function EventDetails({ onNotify }) {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/events/${id}`);
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/events/${id}`);
         setEvent(res.data);
         if (res.data.ticketTiers && res.data.ticketTiers.length > 0) {
           setSelectedTicket(res.data.ticketTiers[0]);
@@ -30,16 +30,59 @@ export default function EventDetails({ onNotify }) {
     fetchEvent();
   }, [id]);
 
-  const handleBooking = () => {
+  const [quantity, setQuantity] = useState(1);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [waitlistLoading, setWaitlistLoading] = useState(false);
+
+  const handleWaitlist = async () => {
+    if (!user) {
+      if (onNotify) onNotify('Please login to join the waitlist', 'error');
+      navigate('/login?redirect=/events/' + id);
+      return;
+    }
+    
+    setWaitlistLoading(true);
+    try {
+      const token = user.token;
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/events/${id}/waitlist`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (onNotify) onNotify(res.data.message || 'Successfully joined the waitlist!');
+    } catch (error) {
+      console.error('Waitlist join failed:', error);
+      if (onNotify) onNotify(error.response?.data?.message || 'Failed to join waitlist. Please try again.', 'error');
+    } finally {
+      setWaitlistLoading(false);
+    }
+  };
+
+  const handleBooking = async () => {
     if (!user) {
       if (onNotify) onNotify('Please login to book tickets', 'error');
       navigate('/login?redirect=/events/' + id);
       return;
     }
-    // Phase 4 will handle the actual checkout flow
-    // For now we will mock a simple alert and notification
-    if (onNotify) onNotify(`Initiating booking for ${selectedTicket.name} ticket...`);
-    alert(`Booking flow for ${selectedTicket.name} ticket (R${selectedTicket.price}) will be implemented in Phase 4.`);
+    
+    setBookingLoading(true);
+    try {
+      const token = user.token;
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/events/${id}/book`, {
+        ticketType: selectedTicket.name,
+        quantity,
+        totalPrice: selectedTicket.price * quantity
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (onNotify) onNotify(`Successfully booked ${quantity} ${selectedTicket.name} ticket(s)!`);
+      navigate('/customer/tickets');
+    } catch (error) {
+      console.error('Booking failed:', error);
+      if (onNotify) onNotify(error.response?.data?.message || 'Booking failed. Please try again.', 'error');
+    } finally {
+      setBookingLoading(false);
+    }
   };
 
   if (loading) {
@@ -47,7 +90,7 @@ export default function EventDetails({ onNotify }) {
   }
 
   if (!event) {
-    return <div className="min-h-screen bg-[#0a0907] pt-10 text-center text-white">Event not found.</div>;
+    return <div className="min-h-screen bg-[#0a0907] pt-0 text-center text-white">Event not found.</div>;
   }
 
   return (
@@ -55,7 +98,7 @@ export default function EventDetails({ onNotify }) {
       {/* Hero Section */}
       <div className="relative h-[60vh] w-full">
         {event.image ? (
-          <img src={`http://localhost:5000${event.image}`} alt={event.title} className="w-full h-full object-cover" />
+          <img src={`${import.meta.env.VITE_API_URL}${event.image}`} alt={event.title} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full bg-[#11100d]"></div>
         )}
@@ -89,7 +132,7 @@ export default function EventDetails({ onNotify }) {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-16 pt-12 grid grid-cols-1 lg:grid-cols-3 gap-16">
+      <div className="max-w-7xl mx-auto px-4 md:px-16 pt-0 grid grid-cols-1 lg:grid-cols-3 gap-16">
         
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-16">
@@ -106,14 +149,34 @@ export default function EventDetails({ onNotify }) {
               <div className="absolute top-0 right-0 w-64 h-64 bg-[#c9a35b]/5 rounded-full blur-[100px] pointer-events-none"></div>
               <h2 className="text-2xl font-serif text-white mb-6 relative">Your Tasting Journey</h2>
               <div className="space-y-4 relative">
-                {event.tastingJourney.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-4 border-b border-white/5 pb-4 last:border-0 last:pb-0">
-                    <div className="w-8 h-8 rounded-full bg-[#c9a35b]/10 border border-[#c9a35b]/30 flex items-center justify-center text-gold-gradient font-serif shrink-0">
-                      {idx + 1}
+                {event.tastingJourney.map((item, idx) => {
+                  const product = event.tastingProducts && event.tastingProducts[idx];
+                  
+                  return (
+                    <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4 last:border-0 last:pb-0">
+                      <div className="flex items-center gap-4">
+                        <div className="w-8 h-8 rounded-full bg-[#c9a35b]/10 border border-[#c9a35b]/30 flex items-center justify-center text-gold-gradient font-serif shrink-0">
+                          {idx + 1}
+                        </div>
+                        <div>
+                          <span className="text-lg text-[#eee8dd]">{item}</span>
+                          {product && (
+                            <p className="text-xs text-[#918a7f] mt-1 line-clamp-1">{product.category} &bull; R{product.price}</p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {product && onAdd && (
+                        <button 
+                          onClick={() => onAdd(product)}
+                          className="shrink-0 self-start sm:self-auto flex items-center gap-2 px-4 py-2 rounded-lg bg-transparent border border-[#c9a35b]/40 text-gold-gradient hover:bg-[#c9a35b]/10 transition-colors text-xs uppercase tracking-widest font-bold"
+                        >
+                          <ShoppingBag size={14} /> Add to Cart
+                        </button>
+                      )}
                     </div>
-                    <span className="text-lg text-[#eee8dd]">{item}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
           )}
@@ -190,13 +253,56 @@ export default function EventDetails({ onNotify }) {
               })}
             </div>
 
-            <button 
-              onClick={handleBooking}
-              disabled={!selectedTicket || (selectedTicket.quantity - selectedTicket.sold) === 0}
-              className="w-full bg-gold-gradient hover:bg-[#e1bd70] text-black font-bold uppercase tracking-wider py-4 rounded-xl transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(201,163,91,0.2)]"
-            >
-              {!selectedTicket ? 'Select a Ticket' : 'Book Now'}
-            </button>
+            {selectedTicket && (
+              <div className="mb-6">
+                <label className="block text-sm font-bold uppercase tracking-widest text-[#eee8dd] mb-2">Quantity</label>
+                <div className="flex items-center gap-4">
+                  <button 
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-10 h-10 rounded-lg border border-white/20 flex items-center justify-center text-white hover:border-[#c9a35b]"
+                  >-</button>
+                  <span className="text-xl font-serif text-white w-8 text-center">{quantity}</span>
+                  <button 
+                    onClick={() => setQuantity(Math.min(selectedTicket.quantity - selectedTicket.sold, quantity + 1))}
+                    className="w-10 h-10 rounded-lg border border-white/20 flex items-center justify-center text-white hover:border-[#c9a35b]"
+                  >+</button>
+                </div>
+                <div className="mt-4 flex flex-col pt-4 border-t border-white/10">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm font-bold uppercase tracking-widest text-[#918a7f]">Total</span>
+                    <span className="text-2xl font-serif text-gold-gradient">R{selectedTicket.price * quantity}</span>
+                  </div>
+                  <p className="text-[10px] text-[#918a7f] text-right italic">Service fee & VAT included</p>
+                </div>
+              </div>
+            )}
+
+            {(() => {
+              const totalAvailable = event.ticketTiers.reduce((acc, tier) => acc + (tier.quantity - tier.sold), 0);
+              
+              if (totalAvailable === 0) {
+                return (
+                  <button 
+                    onClick={handleWaitlist}
+                    disabled={waitlistLoading}
+                    className="w-full bg-transparent border border-[#c9a35b]/50 text-gold-gradient hover:bg-[#c9a35b]/10 font-bold uppercase tracking-wider py-4 rounded-xl transition-all disabled:opacity-50"
+                  >
+                    {waitlistLoading ? 'Joining Waitlist...' : 'Join Waitlist'}
+                  </button>
+                );
+              }
+
+              return (
+                <button 
+                  onClick={handleBooking}
+                  disabled={!selectedTicket || (selectedTicket.quantity - selectedTicket.sold) === 0 || bookingLoading}
+                  className="w-full bg-gold-gradient hover:bg-[#e1bd70] text-black font-bold uppercase tracking-wider py-4 rounded-xl transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(201,163,91,0.2)]"
+                >
+                  {bookingLoading ? 'Booking...' : !selectedTicket ? 'Select a Ticket' : 'Book Now'}
+                </button>
+              );
+            })()}
+
             <p className="text-center text-[10px] text-[#918a7f] mt-4 tracking-widest uppercase">
               Secure Checkout via Grand Store
             </p>

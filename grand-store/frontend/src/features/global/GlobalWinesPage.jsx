@@ -12,7 +12,7 @@ const countries = [
 
 export default function GlobalWinesPage() {
   return (
-    <div className="min-h-screen bg-[#0a0907] pt-8 md:pt-12 pb-20 relative overflow-hidden">
+    <div className="min-h-screen bg-[#0a0907] pb-20 relative overflow-hidden">
       {/* Massive subtle golden glow background */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#c9a35b]/10 via-[#0a0907]/0 to-[#0a0907]/0 pointer-events-none rounded-full blur-3xl opacity-60"></div>
       
@@ -113,7 +113,7 @@ export default function GlobalWinesPage() {
             Bring your wines to a new audience without compromising your brand. Join the Grand Store Global Wine Network.
           </p>
           <Link 
-            to="/vendor/global-onboarding" 
+            to="/vendor/onboarding" 
             className="inline-flex items-center justify-center gap-3 px-10 py-5 bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] text-black font-bold uppercase tracking-[0.2em] text-xs hover:brightness-110 transition-all rounded-sm shadow-[0_0_30px_rgba(201,163,91,0.3)] hover:shadow-[0_0_50px_rgba(201,163,91,0.5)]"
           >
             Partner With Us <ArrowRight size={16} />

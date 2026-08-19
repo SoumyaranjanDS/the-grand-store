@@ -23,19 +23,19 @@ import WhyChooseUs from './features/home/components/WhyChooseUs'
 import Testimonials from './features/home/components/Testimonials'
 import LatestBlogs from './features/home/components/LatestBlogs'
 import Footer from './components/Footer'
-import SocialRail from './components/SocialRail'
 import SiteMotion from './components/SiteMotion'
 import ProductCard from './components/ProductCard'
 import ProductQuickView from './components/ProductQuickView'
 import IconButton from './components/IconButton'
 import Header from './components/Header'
+import StoreFront from './features/shop/StoreFront'
 import ComparePage from './features/compare/ComparePage'
 import CartPage from './features/cart/CartPage'
 import ProductPage from './features/product/ProductPage'
 import ShopPage from './features/shop/ShopPage'
 import AuctionPage from './features/auction/AuctionPage'
 import AuctionLotDetail from './features/auction/AuctionLotDetail'
-import AdminAuctionPanel from './features/auction/AdminAuctionPanel'
+import AdminAuctionPanel from './features/admin/AdminAuctionPanel'
 import TastingPage from './features/tasting/TastingPage'
 import PremiumLiquorsBlogPage from './features/blog/PremiumLiquorsBlogPage'
 import BrandyBlogPage from './features/blog/BrandyBlogPage'
@@ -44,6 +44,7 @@ import RegisterPage from './features/auth/RegisterPage'
 import ProfilePage from './features/customer/ProfilePage'
 import CustomerOrdersPage from './features/customer/CustomerOrdersPage'
 import UserAuctionDashboard from './features/customer/UserAuctionDashboard'
+import CustomerLayout from './features/customer/CustomerLayout'
 import OnboardingWizard from './features/vendor/OnboardingWizard'
 import AuctionSubmission from './features/vendor/AuctionSubmission'
 import VendorDashboard from './features/vendor/VendorDashboard'
@@ -53,19 +54,28 @@ import EventAdd from './features/vendor/EventAdd'
 import VendorEvents from './features/vendor/VendorEvents'
 import EventsHub from './features/events/EventsHub'
 import EventDetails from './features/events/EventDetails'
+import MyTickets from './features/customer/MyTickets'
 import VendorProducts from './features/vendor/VendorProducts'
 import EditProduct from './features/vendor/EditProduct'
 import VendorLayout from './features/vendor/VendorLayout'
+import EventAttendees from './features/vendor/EventAttendees'
 import VendorInventory from './features/vendor/VendorInventory'
 import VendorWallet from './features/vendor/VendorWallet'
 import VendorOrders from './features/vendor/VendorOrders'
+import VendorShippingProfile from './features/vendor/VendorShippingProfile'
+import AdminLayout from './features/admin/AdminLayout'
+import AdminDashboard from './features/admin/AdminDashboard'
+import AdminUsers from './features/admin/AdminUsers'
+import AdminVendors from './features/admin/AdminVendors'
+import AdminSettings from './features/admin/AdminSettings'
+import AdminFinancials from './features/admin/AdminFinancials'
 import VendorMarketing from './features/vendor/VendorMarketing'
 import VendorAcademy from './features/vendor/VendorAcademy'
 import CheckoutPage from './features/checkout/CheckoutPage'
 import OrderSuccessPage from './features/checkout/OrderSuccessPage'
 import GlobalWinesPage from './features/global/GlobalWinesPage'
 import CountryPavilionPage from './features/global/CountryPavilionPage'
-import GlobalOnboardingLanding from './features/vendor/GlobalOnboardingLanding'
+import VendorPaymentGate from './features/vendor/VendorPaymentGate'
 
 import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
@@ -286,6 +296,7 @@ function App() {
           </main>
         )} />
         <Route path="/shop" element={<ShopPage onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />} />
+        <Route path="/store/:storeId" element={<StoreFront />} />
         <Route path="/customer/cart" element={(
           <CartPage
             cartItems={cartItems}
@@ -300,13 +311,16 @@ function App() {
         <Route path="/customer/order/:id" element={<OrderSuccessPage />} />
         <Route path="/customer/compare" element={<ComparePage compareItems={compareItems} onCompare={addToCompare} onRemove={removeFromCompare} onClear={() => { setCompareItems([]); showToast('Comparison cleared') }} onAdd={addToCart} />} />
         <Route path="/compare" element={<Navigate to="/customer/compare" replace />} />
-        <Route path="/customer/wishlist" element={<WishlistPage onAdd={addToCart} onCompare={addToCompare} compareItems={compareItems} />} />
         <Route path="/wishlist" element={<Navigate to="/customer/wishlist" replace />} />
         
         {/* Customer Profile & Related */}
-        <Route path="/customer/profile" element={<ProfilePage />} />
-        <Route path="/customer/orders" element={<CustomerOrdersPage />} />
-        <Route path="/customer/auctions" element={<UserAuctionDashboard />} />
+        <Route element={<CustomerLayout />}>
+          <Route path="/customer/profile" element={<ProfilePage />} />
+          <Route path="/customer/orders" element={<CustomerOrdersPage />} />
+          <Route path="/customer/auctions" element={<UserAuctionDashboard />} />
+          <Route path="/customer/tickets" element={<MyTickets />} />
+          <Route path="/customer/wishlist" element={<WishlistPage onAdd={addToCart} onCompare={addToCompare} compareItems={compareItems} />} />
+        </Route>
         
         {/* Auth Routes */}
         <Route path="/login" element={<LoginPage />} />
@@ -317,8 +331,8 @@ function App() {
         <Route path="/global-wines/:country" element={<CountryPavilionPage onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />} />
 
         {/* Vendor Management */}
-        <Route path="/vendor/global-onboarding" element={<GlobalOnboardingLanding />} />
         <Route path="/vendor/onboarding" element={<OnboardingWizard />} />
+        <Route path="/vendor/payment" element={<VendorPaymentGate />} />
         
         <Route path="/vendor" element={<VendorLayout />}>
           <Route path="dashboard" element={<VendorDashboard />} />
@@ -329,19 +343,29 @@ function App() {
           <Route path="academy" element={<VendorAcademy />} />
           <Route path="products" element={<VendorProducts />} />
           <Route path="profile" element={<VendorProfile />} />
+          <Route path="shipping" element={<VendorShippingProfile />} />
           <Route path="product-add" element={<AddProduct onNotify={showToast} />} />
           <Route path="product-edit/:id" element={<EditProduct onNotify={showToast} />} />
           <Route path="event-add" element={<EventAdd onNotify={showToast} />} />
           <Route path="events" element={<VendorEvents />} />
+          <Route path="events/:id/attendees" element={<EventAttendees onNotify={showToast} />} />
           <Route path="auction-submit" element={<AuctionSubmission onNotify={showToast} />} />
+        </Route>
+
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="vendors" element={<AdminVendors />} />
+          <Route path="auctions" element={<AdminAuctionPanel onNotify={showToast} />} />
+          <Route path="settings" element={<AdminSettings />} />
+          <Route path="financials" element={<AdminFinancials />} />
         </Route>
         
         <Route path="/auction" element={<AuctionPage onNotify={showToast} />} />
         <Route path="/auction/:id" element={<AuctionLotDetail onNotify={showToast} />} />
-        <Route path="/admin/auctions" element={<AdminAuctionPanel onNotify={showToast} />} />
         <Route path="/bookatasting" element={<TastingPage onNotify={showToast} />} />
         <Route path="/events" element={<EventsHub />} />
-        <Route path="/events/:id" element={<EventDetails onNotify={showToast} />} />
+        <Route path="/events/:id" element={<EventDetails onNotify={showToast} onAdd={addToCart} />} />
         <Route path="/product/:slug" element={(
           <ProductPage
             onAdd={addToCart}
@@ -360,7 +384,7 @@ function App() {
       {!isTradeRoute && !isDashboardRoute && (
         <>
           <Footer />
-          {location.pathname === '/' && <SocialRail />}
+          {/* SocialRail removed */}
           <a className="whatsapp-float" href="https://wa.me/" aria-label="Chat with The Grand Store"><MessageCircle size={22} /></a>
         </>
       )}

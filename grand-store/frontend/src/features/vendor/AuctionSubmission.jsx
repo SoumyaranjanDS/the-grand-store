@@ -57,7 +57,7 @@ export default function AuctionSubmission({ onNotify }) {
         provenance: formData.provenance
       };
 
-      await axios.post('http://localhost:5000/api/auction', payload, {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/auction`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

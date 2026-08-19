@@ -32,6 +32,8 @@ export default function BidConfirmationModal({ isOpen, onClose, lot, bidAmount, 
               By confirming, you agree to purchase this lot if you are the successful bidder. 
               {isMaxBid && " The system will automatically bid on your behalf up to your maximum amount."}
               <br /><br />
+              <span className="text-[#eee8dd] font-medium text-[12px]">Please note: A Buyer's Premium (e.g. 5%), BAR charge (e.g. 2%), flat shipping fee, and VAT (15%) will be added to the final winning bid amount at checkout.</span>
+              <br /><br />
               <strong>This is a legally binding contract.</strong>
             </p>
           </div>

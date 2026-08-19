@@ -1,33 +1,50 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
-import { CheckCircle2, ChevronRight, UploadCloud, Building2, User, FileText, BadgeCheck, FileSpreadsheet, Landmark, Package, Truck, FileSignature } from 'lucide-react';
-import OnboardingLanding from './OnboardingLanding';
-import OnboardingPreview from './OnboardingPreview';
-
-const steps = [
-  { id: 1, title: 'Account', icon: User },
-  { id: 2, title: 'Business', icon: Building2 },
-  { id: 3, title: 'KYC', icon: FileText },
-  { id: 4, title: 'Tax', icon: FileSpreadsheet },
-  { id: 5, title: 'Licence', icon: BadgeCheck },
-  { id: 6, title: 'Customs', icon: Truck },
-  { id: 7, title: 'Banking', icon: Landmark },
-  { id: 8, title: 'Products', icon: Package },
-  { id: 9, title: 'Delivery', icon: Truck },
-  { id: 10, title: 'Agreement', icon: FileSignature }
-];
+import { useGeoLocation } from '../../context/LocationContext';
+import { CheckCircle2, ChevronRight, UploadCloud, Building2, User, FileText, BadgeCheck, FileSpreadsheet, Landmark, Package, Truck, FileSignature, Globe, Image as ImageIcon } from 'lucide-react';
+import LocationInput from '../../components/LocationInput';
 
 export default function OnboardingWizard() {
   const { user } = useAuth();
+  const { country_code } = useGeoLocation();
   const navigate = useNavigate();
+  
+  const isLocal = country_code === 'ZA';
+
+  const steps = useMemo(() => {
+    if (isLocal) {
+      return [
+        { id: 1, title: 'Account', icon: User },
+        { id: 2, title: 'Business', icon: Building2 },
+        { id: 3, title: 'KYC', icon: FileText },
+        { id: 4, title: 'Tax', icon: FileSpreadsheet },
+        { id: 5, title: 'Licence', icon: BadgeCheck },
+        { id: 6, title: 'Customs', icon: Truck },
+        { id: 7, title: 'Banking', icon: Landmark },
+        { id: 8, title: 'Products', icon: Package },
+        { id: 9, title: 'Delivery', icon: Truck },
+        { id: 10, title: 'Agreement', icon: FileSignature }
+      ];
+    } else {
+      return [
+        { id: 1, title: 'Account', icon: User },
+        { id: 2, title: 'Business', icon: Building2 },
+        { id: 3, title: 'Credentials', icon: BadgeCheck },
+        { id: 4, title: 'Market', icon: Globe },
+        { id: 5, title: 'Logistics', icon: Truck },
+        { id: 6, title: 'Story', icon: ImageIcon },
+        { id: 7, title: 'Banking', icon: Landmark },
+        { id: 8, title: 'Products', icon: Package },
+        { id: 9, title: 'Agreement', icon: FileSignature }
+      ];
+    }
+  }, [isLocal]);
+
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  
-  // High-level funnel state
-  const [funnelStage, setFunnelStage] = useState('landing'); // 'landing', 'preview', 'wizard'
   
   // State for each step
   const [accountInfo, setAccountInfo] = useState({ name: '', email: '', password: '' });
@@ -40,6 +57,12 @@ export default function OnboardingWizard() {
   const [productCategories, setProductCategories] = useState([]);
   const [deliveryInfo, setDeliveryInfo] = useState({ fulfillmentMethod: '', dispatchLocation: '', dispatchDays: '', cutoffTime: '', processingTime: '' });
   const [agreements, setAgreements] = useState({ termsAccepted: false, informationAccurate: false });
+  
+  // International specific state
+  const [credentialsInfo, setCredentialsInfo] = useState({ exportLicenceNumber: '', homeCountryLicence: '', certificates: '' });
+  const [marketInfo, setMarketInfo] = useState({ targetRegions: [] });
+  const [logisticsInfo, setLogisticsInfo] = useState({ currentImporter: '', freightForwarder: '' });
+  const [storyInfo, setStoryInfo] = useState({ wineryPhotosUrl: '', winemakerBio: '', brandStory: '' });
 
   useEffect(() => {
     // If logged in, populate account info
@@ -56,7 +79,7 @@ export default function OnboardingWizard() {
           const userInfo = JSON.parse(localStorage.getItem('userInfo'));
           const token = userInfo?.token || user?.token;
           
-          const { data } = await axios.get('http://localhost:5000/api/vendor/onboarding', {
+          const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/vendor/onboarding`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           
@@ -125,33 +148,60 @@ export default function OnboardingWizard() {
   };
 
   const isStepComplete = (stepId) => {
-    switch (stepId) {
-      case 1:
-        if (!accountInfo.name || !accountInfo.email) return false;
-        if (!user && !accountInfo.password) return false;
-        return true;
-      case 2:
-        return !!(businessInfo.legalName && businessInfo.tradingName && businessInfo.registrationNumber && businessInfo.address);
-      case 3:
-        return !!(kycInfo.directorName && kycInfo.idNumber && kycInfo.contactNumber);
-      case 4:
-        return !!(taxInfo.taxNumber && taxInfo.vatNumber);
-      case 5:
-        return !!(licenceInfo.licenceNumber && licenceInfo.licenceType);
-      case 6:
-        return true; // Optional
-      case 7:
-        return !!(bankingInfo.bankName && bankingInfo.accountName && bankingInfo.accountNumber && bankingInfo.branchCode);
-      case 8:
-        if (productCategories.length === 0) return false;
-        if (productCategories.includes('Wine') && !licenceInfo.wlaDocumentUrl) return false;
-        return true;
-      case 9:
-        return !!(deliveryInfo.fulfillmentMethod && deliveryInfo.dispatchLocation && deliveryInfo.processingTime);
-      case 10:
-        return agreements.termsAccepted && agreements.informationAccurate;
-      default:
-        return false;
+    if (isLocal) {
+      switch (stepId) {
+        case 1:
+          if (!accountInfo.name || !accountInfo.email) return false;
+          if (!user && !accountInfo.password) return false;
+          return true;
+        case 2:
+          return !!(businessInfo.legalName && businessInfo.tradingName && businessInfo.registrationNumber && businessInfo.address);
+        case 3:
+          return !!(kycInfo.directorName && kycInfo.idNumber && kycInfo.contactNumber);
+        case 4:
+          return !!(taxInfo.taxNumber && taxInfo.vatNumber);
+        case 5:
+          return !!(licenceInfo.licenceNumber && licenceInfo.licenceType);
+        case 6:
+          return true; // Optional
+        case 7:
+          return !!(bankingInfo.bankName && bankingInfo.accountName && bankingInfo.accountNumber && bankingInfo.branchCode);
+        case 8:
+          if (productCategories.length === 0) return false;
+          if (productCategories.includes('Wine') && !licenceInfo.wlaDocumentUrl) return false;
+          return true;
+        case 9:
+          return !!(deliveryInfo.fulfillmentMethod && deliveryInfo.dispatchLocation && deliveryInfo.processingTime);
+        case 10:
+          return agreements.termsAccepted && agreements.informationAccurate;
+        default:
+          return false;
+      }
+    } else {
+      switch (stepId) {
+        case 1:
+          if (!accountInfo.name || !accountInfo.email) return false;
+          if (!user && !accountInfo.password) return false;
+          return true;
+        case 2:
+          return !!(businessInfo.legalName && businessInfo.address);
+        case 3:
+          return !!credentialsInfo.homeCountryLicence;
+        case 4:
+          return marketInfo.targetRegions.length > 0;
+        case 5:
+          return true; // Optional
+        case 6:
+          return !!(storyInfo.brandStory);
+        case 7:
+          return !!(bankingInfo.bankName && bankingInfo.accountNumber);
+        case 8:
+          return productCategories.length > 0;
+        case 9:
+          return agreements.termsAccepted && agreements.informationAccurate;
+        default:
+          return false;
+      }
     }
   };
 
@@ -182,7 +232,9 @@ export default function OnboardingWizard() {
     setSaving(true);
     try {
       const payload = {
-        accountInfo, businessInfo, kycInfo, taxInfo, licenceInfo, customsInfo, bankingInfo, productCategories, deliveryInfo, agreements
+        vendorType: isLocal ? 'local' : 'international',
+        accountInfo, businessInfo, bankingInfo, productCategories, agreements,
+        ...(isLocal ? { kycInfo, taxInfo, licenceInfo, customsInfo, deliveryInfo } : { credentialsInfo, marketInfo, logisticsInfo, storyInfo })
       };
       
       const headers = { 'Content-Type': 'application/json' };
@@ -237,14 +289,6 @@ export default function OnboardingWizard() {
 
   if (loading) return <div className="min-h-screen bg-[#0a0907] flex items-center justify-center text-gold-gradient">Loading...</div>;
 
-  if (funnelStage === 'landing') {
-    return <OnboardingLanding onNext={() => setFunnelStage('preview')} />;
-  }
-
-  if (funnelStage === 'preview') {
-    return <OnboardingPreview onNext={() => setFunnelStage('wizard')} onBack={() => setFunnelStage('landing')} />;
-  }
-
   return (
     <div className="min-h-screen bg-[#0a0907] pt-8 pb-20 px-4 relative overflow-hidden">
       {/* Massive subtle golden glow background */}
@@ -288,9 +332,13 @@ export default function OnboardingWizard() {
               🔒 Please complete all previous steps to unlock this section
             </div>
           )}
+          
+          {(() => {
+            const activeStep = steps.find(s => s.id === currentStep)?.title;
+            return (
           <div className={`${!canAccessStep(currentStep) ? 'opacity-50 pointer-events-none' : ''}`}>
-            {/* Step 1: Account */}
-            {currentStep === 1 && (
+            {/* Step: Account */}
+            {activeStep === 'Account' && (
               <div className="animate-in fade-in slide-in-from-bottom-4">
                 <h2 className="text-2xl text-[#eee8dd] mb-6">Account Details</h2>
                 <p className="text-[#918a7f] mb-6">Create your vendor account to manage your products and orders.</p>
@@ -302,19 +350,22 @@ export default function OnboardingWizard() {
               </div>
             )}
 
-            {/* Step 2: Business */}
-            {currentStep === 2 && (
+            {/* Step: Business */}
+            {activeStep === 'Business' && (
               <div className="animate-in fade-in slide-in-from-bottom-4">
                 <h2 className="text-2xl text-[#eee8dd] mb-6">Business Information</h2>
                 <InputField label="Legal Company Name" value={businessInfo.legalName} onChange={e => setBusinessInfo({...businessInfo, legalName: e.target.value})} />
                 <InputField label="Trading Name" value={businessInfo.tradingName} onChange={e => setBusinessInfo({...businessInfo, tradingName: e.target.value})} />
                 <InputField label="Registration Number" value={businessInfo.registrationNumber} onChange={e => setBusinessInfo({...businessInfo, registrationNumber: e.target.value})} />
-                <InputField label="Business Address" value={businessInfo.address} onChange={e => setBusinessInfo({...businessInfo, address: e.target.value})} />
+                <div className="mb-6">
+                  <label className="block text-[#bdb5a6] text-[10px] font-bold uppercase tracking-widest mb-2">Business Address</label>
+                  <LocationInput name="address" value={businessInfo.address} onChange={e => setBusinessInfo({...businessInfo, address: e.target.value})} placeholder="Start typing address..." className="block w-full py-4 border-b border-white/10 bg-transparent text-[#eee8dd] placeholder-white/20 focus:outline-none focus:border-[#c9a35b] sm:text-sm transition-colors rounded-none" />
+                </div>
               </div>
             )}
 
-            {/* Step 3: KYC */}
-            {currentStep === 3 && (
+            {/* Step: KYC (Local) */}
+            {activeStep === 'KYC' && (
               <div className="animate-in fade-in slide-in-from-bottom-4">
                 <h2 className="text-2xl text-[#eee8dd] mb-6">Director KYC</h2>
                 <InputField label="Director Full Name" value={kycInfo.directorName} onChange={e => setKycInfo({...kycInfo, directorName: e.target.value})} />
@@ -324,8 +375,8 @@ export default function OnboardingWizard() {
               </div>
             )}
 
-            {/* Step 4: Tax */}
-            {currentStep === 4 && (
+            {/* Step: Tax (Local) */}
+            {activeStep === 'Tax' && (
               <div className="animate-in fade-in slide-in-from-bottom-4">
                 <h2 className="text-2xl text-[#eee8dd] mb-6">Tax Details</h2>
                 <InputField label="Tax Number" value={taxInfo.taxNumber} onChange={e => setTaxInfo({...taxInfo, taxNumber: e.target.value})} />
@@ -334,8 +385,8 @@ export default function OnboardingWizard() {
               </div>
             )}
 
-            {/* Step 5: Licence */}
-            {currentStep === 5 && (
+            {/* Step: Licence (Local) */}
+            {activeStep === 'Licence' && (
               <div className="animate-in fade-in slide-in-from-bottom-4">
                 <h2 className="text-2xl text-[#eee8dd] mb-6">Liquor Licence</h2>
                 <InputField label="Licence Number" value={licenceInfo.licenceNumber} onChange={e => setLicenceInfo({...licenceInfo, licenceNumber: e.target.value})} />
@@ -344,8 +395,8 @@ export default function OnboardingWizard() {
               </div>
             )}
 
-            {/* Step 6: Customs */}
-            {currentStep === 6 && (
+            {/* Step: Customs (Local) */}
+            {activeStep === 'Customs' && (
               <div className="animate-in fade-in slide-in-from-bottom-4">
                 <h2 className="text-2xl text-[#eee8dd] mb-6">Customs (Optional)</h2>
                 <InputField label="Export Code" value={customsInfo.exportCode} onChange={e => setCustomsInfo({...customsInfo, exportCode: e.target.value})} />
@@ -353,8 +404,8 @@ export default function OnboardingWizard() {
               </div>
             )}
 
-            {/* Step 7: Banking */}
-            {currentStep === 7 && (
+            {/* Step: Banking */}
+            {activeStep === 'Banking' && (
               <div className="animate-in fade-in slide-in-from-bottom-4">
                 <h2 className="text-2xl text-[#eee8dd] mb-6">Banking Details</h2>
                 <InputField label="Bank Name" value={bankingInfo.bankName} onChange={e => setBankingInfo({...bankingInfo, bankName: e.target.value})} />
@@ -365,8 +416,8 @@ export default function OnboardingWizard() {
               </div>
             )}
 
-            {/* Step 8: Products */}
-            {currentStep === 8 && (
+            {/* Step: Products */}
+            {activeStep === 'Products' && (
               <div className="animate-in fade-in slide-in-from-bottom-4">
                 <h2 className="text-2xl text-[#eee8dd] mb-6">Products & Inventory</h2>
                 <p className="text-[#918a7f] mb-4">Select the categories you intend to sell:</p>
@@ -397,18 +448,70 @@ export default function OnboardingWizard() {
               </div>
             )}
 
-            {/* Step 9: Delivery */}
-            {currentStep === 9 && (
+            {/* Step: Delivery (Local) */}
+            {activeStep === 'Delivery' && (
               <div className="animate-in fade-in slide-in-from-bottom-4">
                 <h2 className="text-2xl text-[#eee8dd] mb-6">Delivery & Fulfillment</h2>
                 <InputField label="Fulfillment Method" placeholder="e.g. Vendor ships directly" value={deliveryInfo.fulfillmentMethod} onChange={e => setDeliveryInfo({...deliveryInfo, fulfillmentMethod: e.target.value})} />
-                <InputField label="Dispatch Location" value={deliveryInfo.dispatchLocation} onChange={e => setDeliveryInfo({...deliveryInfo, dispatchLocation: e.target.value})} />
+                <div className="mb-6">
+                  <label className="block text-[#bdb5a6] text-[10px] font-bold uppercase tracking-widest mb-2">Dispatch Location</label>
+                  <LocationInput name="dispatchLocation" value={deliveryInfo.dispatchLocation} onChange={e => setDeliveryInfo({...deliveryInfo, dispatchLocation: e.target.value})} placeholder="Start typing address..." className="block w-full py-4 border-b border-white/10 bg-transparent text-[#eee8dd] placeholder-white/20 focus:outline-none focus:border-[#c9a35b] sm:text-sm transition-colors rounded-none" />
+                </div>
                 <InputField label="Processing Time" placeholder="e.g. 1-2 Business Days" value={deliveryInfo.processingTime} onChange={e => setDeliveryInfo({...deliveryInfo, processingTime: e.target.value})} />
               </div>
             )}
 
-            {/* Step 10: Agreement */}
-            {currentStep === 10 && (
+            {/* Step: Credentials (International) */}
+            {activeStep === 'Credentials' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4">
+                <h2 className="text-2xl text-[#eee8dd] mb-6">Export Credentials</h2>
+                <InputField label="Export Licence Number" value={credentialsInfo.exportLicenceNumber} onChange={e => setCredentialsInfo({...credentialsInfo, exportLicenceNumber: e.target.value})} />
+                <FileUploadField label="Home Country Licence" url={credentialsInfo.homeCountryLicence} onUpload={(e) => handleFileUpload(e, (url) => setCredentialsInfo({...credentialsInfo, homeCountryLicence: url}))} />
+                <FileUploadField label="Quality/Origin Certificates (Optional)" url={credentialsInfo.certificates} onUpload={(e) => handleFileUpload(e, (url) => setCredentialsInfo({...credentialsInfo, certificates: url}))} />
+              </div>
+            )}
+
+            {/* Step: Market (International) */}
+            {activeStep === 'Market' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4">
+                <h2 className="text-2xl text-[#eee8dd] mb-6">Target Markets</h2>
+                <p className="text-[#918a7f] mb-4">Which regions are you targeting in South Africa?</p>
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                  {['Western Cape', 'Gauteng', 'KwaZulu-Natal', 'Nationwide'].map(region => (
+                    <label key={region} className="flex items-center gap-2 text-[#eee8dd] p-3 border border-white/5 rounded-md hover:border-white/20 cursor-pointer">
+                      <input type="checkbox" checked={marketInfo.targetRegions.includes(region)} 
+                             onChange={(e) => {
+                               if(e.target.checked) setMarketInfo({...marketInfo, targetRegions: [...marketInfo.targetRegions, region]});
+                               else setMarketInfo({...marketInfo, targetRegions: marketInfo.targetRegions.filter(r => r !== region)});
+                             }} />
+                      {region}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Step: Logistics (International) */}
+            {activeStep === 'Logistics' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4">
+                <h2 className="text-2xl text-[#eee8dd] mb-6">Current Importer Details</h2>
+                <InputField label="Current Importer in SA (Optional)" value={logisticsInfo.currentImporter} onChange={e => setLogisticsInfo({...logisticsInfo, currentImporter: e.target.value})} placeholder="If applicable" />
+                <InputField label="Preferred Freight Forwarder (Optional)" value={logisticsInfo.freightForwarder} onChange={e => setLogisticsInfo({...logisticsInfo, freightForwarder: e.target.value})} />
+              </div>
+            )}
+
+            {/* Step: Story (International) */}
+            {activeStep === 'Story' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4">
+                <h2 className="text-2xl text-[#eee8dd] mb-6">Brand Story</h2>
+                <InputField label="Winemaker/Master Distiller Bio" type="text" value={storyInfo.winemakerBio} onChange={e => setStoryInfo({...storyInfo, winemakerBio: e.target.value})} />
+                <InputField label="Brand Story / Heritage" type="text" value={storyInfo.brandStory} onChange={e => setStoryInfo({...storyInfo, brandStory: e.target.value})} placeholder="Tell your customers about your legacy..." />
+                <FileUploadField label="Winery/Estate Photos" url={storyInfo.wineryPhotosUrl} onUpload={(e) => handleFileUpload(e, (url) => setStoryInfo({...storyInfo, wineryPhotosUrl: url}))} />
+              </div>
+            )}
+
+            {/* Step: Agreement */}
+            {activeStep === 'Agreement' && (
               <div className="animate-in fade-in slide-in-from-bottom-4">
                 <h2 className="text-2xl text-[#eee8dd] mb-6">Final Agreement</h2>
                 <div className="space-y-4 mb-8">
@@ -424,6 +527,8 @@ export default function OnboardingWizard() {
               </div>
             )}
           </div>
+          );
+          })()}
 
           {/* Navigation Buttons */}
           <div className="flex justify-between mt-12 pt-6 border-t border-white/10">
@@ -435,7 +540,7 @@ export default function OnboardingWizard() {
               Return
             </button>
             
-            {currentStep < 10 ? (
+            {currentStep < steps.length ? (
               <button 
                 onClick={handleNext}
                 disabled={saving || !canAccessStep(currentStep)}

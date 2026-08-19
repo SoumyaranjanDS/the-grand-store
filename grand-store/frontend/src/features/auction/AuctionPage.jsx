@@ -23,7 +23,7 @@ export default function AuctionPage({ onNotify }) {
     // Polling for data
     const fetchLots = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/auction');
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auction`);
         setLots(res.data);
         setLoading(false);
       } catch (err) {

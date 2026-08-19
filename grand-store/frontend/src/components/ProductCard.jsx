@@ -51,6 +51,12 @@ export default function ProductCard({ product, onAdd, onWish, onCompare, isCompa
           {product.price}
         </strong>
 
+        {product.storeName && product.storeId && (
+          <div className="text-xs text-[var(--color-ivory-muted)] mt-1 mb-2">
+            From: <Link to={`/store/${product.storeId}`} className="text-gold-gradient hover:underline" onClick={(e) => e.stopPropagation()}>{product.storeName}</Link>
+          </div>
+        )}
+
         {/* Action Row */}
         <div className="flex items-center justify-center gap-2 mt-4 mb-3 w-full">
           <button

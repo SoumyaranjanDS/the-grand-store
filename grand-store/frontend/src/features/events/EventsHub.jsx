@@ -11,7 +11,7 @@ export default function EventsHub() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/events');
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/events`);
         setEvents(res.data);
       } catch (error) {
         console.error('Failed to load events', error);
@@ -29,7 +29,7 @@ export default function EventsHub() {
   const categories = ['All', 'Wine Tasting', 'Whisky Experience', 'Masterclass', 'Virtual'];
 
   return (
-    <div className="min-h-screen bg-[#0a0907] pt-8 md:pt-12 pb-20 px-4 text-[#eee8dd]">
+    <div className="min-h-screen bg-[#0a0907] pt-0 pb-20 px-4 text-[#eee8dd]">
       <div className="max-w-7xl mx-auto">
         
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12 relative">
@@ -77,7 +77,7 @@ export default function EventsHub() {
               <div key={event._id} className="group relative bg-[#11100d] border border-white/5 rounded-2xl overflow-hidden hover:border-[#c9a35b]/30 transition-all hover:shadow-[0_0_30px_rgba(201,163,91,0.1)] flex flex-col">
                 <div className="aspect-[4/3] overflow-hidden relative">
                   {event.image ? (
-                    <img src={`http://localhost:5000${event.image}`} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <img src={`${import.meta.env.VITE_API_URL}${event.image}`} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   ) : (
                     <div className="w-full h-full bg-[#1a1814] flex items-center justify-center">
                       <span className="text-[#918a7f] font-serif">Grand Store</span>

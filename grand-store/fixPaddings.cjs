@@ -7,6 +7,7 @@ const filesToUpdate = [
   'features/checkout/OrderSuccessPage.jsx',
   'features/customer/UserAuctionDashboard.jsx',
   'features/events/EventDetails.jsx',
+  'features/events/EventsHub.jsx',
   'features/global/CountryPavilionPage.jsx',
   'features/vendor/EventAdd.jsx',
   'features/vendor/GlobalOnboardingLanding.jsx',
@@ -21,19 +22,18 @@ for (const file of filesToUpdate) {
     let content = fs.readFileSync(fullPath, 'utf8');
     let original = content;
 
-    // Replace pt-24, pt-32, pt-20 when followed by space or quote
-    content = content.replace(/\bpt-24\b/g, 'pt-8');
-    content = content.replace(/\bpt-32\b/g, 'pt-10');
-    content = content.replace(/\bpt-20\b/g, 'pt-8');
-
-    // Also handle md:pt-32, etc.
-    content = content.replace(/\bmd:pt-32\b/g, 'md:pt-12');
-    content = content.replace(/\bmd:pt-24\b/g, 'md:pt-12');
+    // Replace all pt-8, pt-10, md:pt-12 etc with nothing or pt-0
+    content = content.replace(/\bpt-8\b/g, 'pt-0');
+    content = content.replace(/\bpt-10\b/g, 'pt-0');
+    content = content.replace(/\bpt-12\b/g, 'pt-0');
+    content = content.replace(/\bmd:pt-12\b/g, 'md:pt-0');
+    content = content.replace(/\bmd:pt-8\b/g, 'md:pt-0');
+    content = content.replace(/\bpt-0 md:pt-0\b/g, 'pt-0');
 
     if (content !== original) {
       fs.writeFileSync(fullPath, content, 'utf8');
-      console.log(`Updated spacing in ${file}`);
+      console.log(`Updated spacing to 0 in ${file}`);
     }
   }
 }
-console.log('Finished updating paddings.');
+console.log('Finished updating paddings to 0.');

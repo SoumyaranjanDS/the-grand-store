@@ -16,7 +16,7 @@ export default function VendorInventory() {
       try {
         const userInfo = JSON.parse(localStorage.getItem('userInfo'));
         const token = userInfo?.token || user?.token;
-        const res = await axios.get('http://localhost:5000/api/auction/vendor/lots', {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auction/vendor/lots`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setLots(res.data);

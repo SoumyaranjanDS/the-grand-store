@@ -1,5 +1,7 @@
 const AuctionLot = require('../models/AuctionLot');
 const Bid = require('../models/Bid');
+const PlatformSettings = require('../models/PlatformSettings');
+const { getNextSequence } = require('../utils/sequenceGenerator');
 
 // PUBLIC: Get all active auctions
 exports.getAuctionLots = async (req, res) => {
@@ -232,3 +234,85 @@ exports.getAdminPendingLots = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+// ADMIN: Close auction and calculate accounting breakdown
+exports.closeAuction = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    const lot = await AuctionLot.findById(req.params.id);
+    if (!lot) return res.status(404).json({ message: 'Lot not found' });
+
+    // Find winning bid
+    const winningBidDoc = await Bid.findOne({ lot: lot._id, isMaxBid: false }).sort({ amount: -1 }).populate('user');
+    if (!winningBidDoc) {
+      lot.status = 'unsold';
+      await lot.save();
+      return res.json({ message: 'Auction closed as unsold (no bids)', lot });
+    }
+
+    // Fetch fee settings
+    let settings = await PlatformSettings.findOne();
+    if (!settings) settings = await PlatformSettings.create({});
+
+    const winningBid = winningBidDoc.amount;
+
+    // Buyer-side charges
+    const buyerPremiumPct = settings.buyerPremiumPct || 5;
+    const buyerPremiumAmount = parseFloat(((winningBid * buyerPremiumPct) / 100).toFixed(2));
+    const barChargePct = settings.barChargePct || 2;
+    const barChargeAmount = parseFloat(((winningBid * barChargePct) / 100).toFixed(2));
+    const shippingCost = settings.shippingFee || 0;
+    const vatPct = settings.vatPct || 15;
+    const vatAmount = parseFloat(((winningBid * vatPct) / 100).toFixed(2));
+    const totalPaidByBuyer = parseFloat((winningBid + buyerPremiumAmount + barChargeAmount + shippingCost + vatAmount).toFixed(2));
+
+    // Vendor-side deductions
+    const commissionPct = settings.auctionCommissionPct || 15;
+    const commissionAmount = parseFloat(((winningBid * commissionPct) / 100).toFixed(2));
+    const vendorPayable = parseFloat((winningBid - commissionAmount - vatAmount).toFixed(2));
+
+    // GS Reference
+    const year = new Date().getFullYear().toString().slice(-2);
+    const seqNum = await getNextSequence('auctionPay');
+    const gsReference = `GS-${year}-AUC-PAY-${seqNum.toString().padStart(6, '0')}`;
+
+    lot.winningBid = winningBid;
+    lot.winner = winningBidDoc.user._id;
+    lot.status = 'sold';
+    lot.buyerPremiumPct = buyerPremiumPct;
+    lot.buyerPremiumAmount = buyerPremiumAmount;
+    lot.barChargePct = barChargePct;
+    lot.barChargeAmount = barChargeAmount;
+    lot.shippingCost = shippingCost;
+    lot.vatPct = vatPct;
+    lot.vatAmount = vatAmount;
+    lot.totalPaidByBuyer = totalPaidByBuyer;
+    lot.commissionPct = commissionPct;
+    lot.commissionAmount = commissionAmount;
+    lot.vendorPayable = vendorPayable;
+    lot.gsReference = gsReference;
+    lot.paymentStatus = 'Paid';
+
+    await lot.save();
+    res.json({ message: 'Auction closed and accounting calculated', lot });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// ADMIN: Get all lots (for admin financial view)
+exports.getAllLots = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    const lots = await AuctionLot.find().sort({ createdAt: -1 }).populate('vendor', 'name email').populate('winner', 'name email');
+    res.json(lots);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+

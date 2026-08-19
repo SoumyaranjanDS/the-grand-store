@@ -19,7 +19,7 @@ export default function AdminAuctionPanel({ onNotify }) {
     try {
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
       const token = userInfo?.token || user?.token;
-      const res = await axios.get('http://localhost:5000/api/auction/admin/lots', {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auction/admin/lots`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const allLots = res.data;
@@ -46,7 +46,7 @@ export default function AdminAuctionPanel({ onNotify }) {
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
       const token = userInfo?.token || user?.token;
       const form = approvalForms[id];
-      await axios.put(`http://localhost:5000/api/auction/${id}/approve`, form, {
+      await axios.put(`${import.meta.env.VITE_API_URL}/api/auction/${id}/approve`, form, {
         headers: { Authorization: `Bearer ${token}` }
       });
       onNotify('Lot approved successfully!');

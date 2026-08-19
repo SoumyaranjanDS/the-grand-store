@@ -29,13 +29,34 @@ export default function EventAdd({ onNotify }) {
   ]);
 
   const [tastingJourney, setTastingJourney] = useState(['']);
+  const [tastingProducts, setTastingProducts] = useState([]);
+  const [vendorProducts, setVendorProducts] = useState([]);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    const fetchVendorProducts = async () => {
+      try {
+        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+        const token = userInfo?.token || user?.token;
+        if (!token) return;
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/products/vendor/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setVendorProducts(res.data);
+      } catch (err) {
+        console.error('Failed to load vendor products', err);
+      }
+    };
+    if (user && user.role === 'vendor_active') {
+      fetchVendorProducts();
+    }
+  }, [user]);
+
   if (!user || user.role !== 'vendor_active') {
     return (
-      <div className="min-h-screen bg-[#0a0907] pt-10 pb-20 px-4 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0a0907] pt-0 pb-20 px-4 flex items-center justify-center">
         <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-6 rounded-xl max-w-md w-full text-center">
           Only approved vendors can create events.
         </div>
@@ -70,12 +91,20 @@ export default function EventAdd({ onNotify }) {
     setTastingJourney(newJourney);
   };
 
+  const handleProductSelect = (index, productId) => {
+    const newProducts = [...tastingProducts];
+    newProducts[index] = productId;
+    setTastingProducts(newProducts);
+  };
+
   const addTastingItem = () => {
     setTastingJourney([...tastingJourney, '']);
+    setTastingProducts([...tastingProducts, '']);
   };
 
   const removeTastingItem = (index) => {
     setTastingJourney(tastingJourney.filter((_, i) => i !== index));
+    setTastingProducts(tastingProducts.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e) => {
@@ -106,10 +135,13 @@ export default function EventAdd({ onNotify }) {
       payload.append('ticketTiers', JSON.stringify(processedTiers));
 
       // Filter out empty tasting journey items
-      const processedTasting = tastingJourney.filter(item => item.trim() !== '');
+      const processedTasting = tastingJourney.filter(item => item && item.trim() !== '');
       payload.append('tastingJourney', JSON.stringify(processedTasting));
+      
+      const processedProducts = tastingProducts.filter(id => id && id.trim() !== '');
+      payload.append('tastingProducts', JSON.stringify(processedProducts));
 
-      await axios.post('http://localhost:5000/api/events', payload, {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/events`, payload, {
         headers: { 
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
@@ -129,7 +161,7 @@ export default function EventAdd({ onNotify }) {
   const scriptFont = { fontFamily: "'Dancing Script', cursive" };
 
   return (
-    <div className="min-h-screen bg-[#0a0907] pt-8 md:pt-12 pb-20 px-4 text-[#eee8dd]">
+    <div className="min-h-screen bg-[#0a0907] pt-0 pb-20 px-4 text-[#eee8dd]">
       <div className="max-w-4xl mx-auto">
         <div className="mb-10">
           <h1 className="text-[var(--color-ivory)] font-serif text-5xl mb-4 leading-tight">
@@ -232,18 +264,30 @@ export default function EventAdd({ onNotify }) {
           {/* Tasting Journey */}
           <section className="bg-white/[0.02] border border-white/5 p-8 rounded-2xl space-y-6">
             <h2 className="text-xl font-medium border-b border-white/10 pb-4">Tasting Journey (Optional)</h2>
-            <p className="text-[#918a7f] text-sm">List the items that will be tasted during this experience.</p>
+            <p className="text-[#918a7f] text-sm">List the items that will be tasted during this experience. You can optionally link them to your inventory so attendees can buy them!</p>
             
             {tastingJourney.map((item, index) => (
-              <div key={index} className="flex gap-4">
-                <input 
-                  type="text" 
-                  value={item} 
-                  onChange={(e) => handleTastingChange(index, e.target.value)}
-                  placeholder={`Item ${index + 1} (e.g. Macallan 18yo)`}
-                  className="flex-1 bg-[#0a0907] border border-white/10 rounded-lg p-3 focus:border-[#c9a35b] outline-none"
-                />
-                <button type="button" onClick={() => removeTastingItem(index)} className="p-3 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20"><Trash2 size={20}/></button>
+              <div key={index} className="flex flex-col md:flex-row gap-4 border border-white/10 p-4 rounded-xl bg-black/20">
+                <div className="flex-1 space-y-4">
+                  <input 
+                    type="text" 
+                    value={item} 
+                    onChange={(e) => handleTastingChange(index, e.target.value)}
+                    placeholder={`Item ${index + 1} Name (e.g. Macallan 18yo)`}
+                    className="w-full bg-[#0a0907] border border-white/10 rounded-lg p-3 focus:border-[#c9a35b] outline-none"
+                  />
+                  <select 
+                    value={tastingProducts[index] || ''}
+                    onChange={(e) => handleProductSelect(index, e.target.value)}
+                    className="w-full bg-[#0a0907] border border-white/10 rounded-lg p-3 focus:border-[#c9a35b] outline-none appearance-none text-[#eee8dd]"
+                  >
+                    <option value="">-- Link to an existing product (Optional) --</option>
+                    {vendorProducts.map(p => (
+                      <option key={p._id} value={p._id}>{p.name} - R{p.price}</option>
+                    ))}
+                  </select>
+                </div>
+                <button type="button" onClick={() => removeTastingItem(index)} className="md:w-auto w-full p-3 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 self-start md:self-stretch flex items-center justify-center"><Trash2 size={20}/></button>
               </div>
             ))}
             <button type="button" onClick={addTastingItem} className="text-gold-gradient text-sm font-semibold uppercase tracking-wider flex items-center gap-2 hover:text-[#e1bd70]">

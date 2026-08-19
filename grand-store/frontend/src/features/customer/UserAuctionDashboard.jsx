@@ -16,15 +16,8 @@ export default function UserAuctionDashboard() {
   }, []);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-[#e1bd70]">Loading...</div>;
-
   return (
-    <div className="min-h-screen bg-[#0a0907] pt-10 pb-20 px-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <button onClick={() => navigate('/customer/profile')} className="inline-flex items-center gap-2 text-[#918a7f] hover:text-white transition-colors">
-            <ChevronLeft size={16} /> Back to Profile
-          </button>
-        </div>
+    <div className="w-full max-w-5xl mx-auto flex flex-col gap-8 md:gap-12">
 
         <div className="flex items-center justify-between mb-12 border-b border-white/10 pb-8">
           <div>
@@ -79,7 +72,6 @@ export default function UserAuctionDashboard() {
             )}
           </div>
         </div>
-      </div>
     </div>
   );
 }

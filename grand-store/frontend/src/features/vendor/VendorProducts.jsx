@@ -21,7 +21,7 @@ export default function VendorProducts() {
       try {
         const userInfo = JSON.parse(localStorage.getItem('userInfo'));
         const token = userInfo?.token || user?.token;
-        const res = await axios.get('http://localhost:5000/api/products/vendor/me', {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/products/vendor/me`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setProducts(res.data);
