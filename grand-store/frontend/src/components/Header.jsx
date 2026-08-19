@@ -39,6 +39,24 @@ export default function Header({
   const [megaTrigger, setMegaTrigger] = useState("shop");
   const headerRef = useRef(null);
 
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > lastScrollY && window.scrollY > 100) {
+        setIsVisible(false);
+        setMegaOpen(false);
+      } else {
+        setIsVisible(true);
+      }
+      setLastScrollY(window.scrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (headerRef.current && !headerRef.current.contains(event.target)) {
@@ -68,8 +86,8 @@ export default function Header({
   };
 
   return (
-    <div className="sticky top-0 left-0 right-0 z-[100] bg-[#0a0a0a]">
-      <div className="announcement-bar py-3 bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] text-black">
+    <div className={`sticky top-0 left-0 right-0 z-[100] bg-[#0a0a0a] transition-transform duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+      <div className="announcement-bar py-1.5 bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] text-black">
         <div className="shell announcement-inner">
           <p className="font-bold tracking-widest uppercase text-[10px]">
             <PackageCheck size={14} className="mr-2" /> Complimentary delivery
@@ -95,7 +113,7 @@ export default function Header({
         ref={headerRef}
         onMouseLeave={() => setMegaOpen(false)}
       >
-        <div className="shell header-main flex items-center justify-between min-h-[58px] sm:min-h-[72px] md:min-h-[108px] px-2 sm:px-6 md:px-10">
+        <div className="shell header-main flex items-center justify-between min-h-[50px] sm:min-h-[64px] md:min-h-[80px] px-2 sm:px-6 md:px-10">
           {/* Left: Mobile Menu + Leftified Brand Logo */}
           <div className="flex items-center gap-1 sm:gap-3 shrink-0">
             <button

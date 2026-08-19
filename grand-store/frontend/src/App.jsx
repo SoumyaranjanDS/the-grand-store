@@ -23,7 +23,6 @@ import WhyChooseUs from './features/home/components/WhyChooseUs'
 import Testimonials from './features/home/components/Testimonials'
 import LatestBlogs from './features/home/components/LatestBlogs'
 import Footer from './components/Footer'
-import SocialRail from './components/SocialRail'
 import SiteMotion from './components/SiteMotion'
 import ProductCard from './components/ProductCard'
 import ProductQuickView from './components/ProductQuickView'
@@ -385,7 +384,7 @@ function App() {
       {!isTradeRoute && !isDashboardRoute && (
         <>
           <Footer />
-          {location.pathname === '/' && <SocialRail />}
+          {/* SocialRail removed */}
           <a className="whatsapp-float" href="https://wa.me/" aria-label="Chat with The Grand Store"><MessageCircle size={22} /></a>
         </>
       )}

@@ -123,7 +123,7 @@ export default function Hero() {
 
   return (
     <section 
-      className="relative w-full h-[calc(100svh-112px)] min-h-[520px] max-h-[760px] bg-black flex flex-col items-center justify-center overflow-hidden select-none" 
+      className="relative w-full h-[calc(100svh-80px)] min-h-[520px] max-h-[760px] bg-black flex flex-col items-center justify-center overflow-hidden select-none" 
       id="top"
     >
       {/* User Selected Luxury Ambient Background Anchored to the Right (Soft Balanced Opacity) */}
