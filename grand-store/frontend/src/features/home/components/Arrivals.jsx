@@ -36,13 +36,13 @@ export default function Arrivals({ onAdd, onWish, onCompare, compareItems }) {
             <h2 className="m-0 text-left font-serif text-[clamp(40px,3.8vw,62px)] font-medium tracking-[-0.02em] leading-[1.05] text-[#eee8dd]">
               New{' '}
               <span
-                className="bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] bg-clip-text text-transparent drop-shadow-[0_0_14px_rgba(230,201,122,0.55)] inline-block pr-2"
-                style={{ fontFamily: "'Pinyon Script', cursive" }}
+                className="gold-gradient-text inline-block pr-2 font-script text-[1.12em]"
+                style={{ fontFamily: "'Dancing Script', cursive" }}
               >
                 Arrivals
               </span>
             </h2>
-            <p className="max-w-[600px] m-[8px_0_0] text-[rgba(244,238,224,0.76)] text-[15px] md:text-[16px] leading-[1.65]">
+            <p className="max-w-[600px] mt-3 text-[rgba(244,238,224,0.76)] text-[15px] md:text-[16px] leading-[1.65]">
               <span className="font-serif text-[#f0cf76] italic text-[1.06em]">Newly discovered, quietly exceptional.</span>{' '}
               Meet the bottles our curators cannot stop talking about.
             </p>

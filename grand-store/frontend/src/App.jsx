@@ -13,7 +13,7 @@ import TradePartnerEnquiry from './trade/TradePartnerEnquiry'
 import WineFarmPage from './features/wine-farm/WineFarmPage'
 import Hero from './features/home/components/Hero'
 import Arrivals from './features/home/components/Arrivals'
-import BrandSection from './features/home/components/BrandSection'
+import WhiskyShowcase from './features/home/components/WhiskyShowcase'
 import TastingCampaign from './features/home/components/TastingCampaign'
 import TequilaShowcase from './features/home/components/TequilaShowcase'
 import BrandyShowcase from './features/home/components/BrandyShowcase'
@@ -274,7 +274,7 @@ function App() {
           <main className="home-page">
             <Hero />
             <Arrivals onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />
-            <BrandSection />
+            <WhiskyShowcase onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />
             <TastingCampaign />
             <TequilaShowcase onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />
             <BrandyShowcase onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />

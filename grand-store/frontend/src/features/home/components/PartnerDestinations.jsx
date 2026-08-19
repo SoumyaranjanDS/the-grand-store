@@ -57,12 +57,19 @@ export default function PartnerDestinations() {
         <div className="flex flex-col items-start justify-between lg:block">
           <h2 
             id="partner-title" 
-            className="max-w-none lg:max-w-[210px] m-[8px_0_0] font-serif text-[clamp(36px,3vw,48px)] font-medium tracking-[-0.035em] leading-[0.98] text-[#eee8dd]"
+            className="max-w-none lg:max-w-[240px] m-0 font-serif text-[clamp(34px,3vw,46px)] font-medium tracking-[-0.02em] leading-[1.08] text-[#eee8dd]"
           >
-            Advertise With Us
+            Partner{' '}
+            <span 
+              className="gold-gradient-text inline-block pr-2 font-script text-[1.12em]"
+              style={{ fontFamily: "'Dancing Script', cursive" }}
+            >
+              Houses
+            </span>
           </h2>
-          <p className="mt-4 lg:mt-6 text-[#918a7f] text-[15px] leading-[1.8]">
-            A private circle of complementary houses, chosen for clients who appreciate craftsmanship beyond the bottle.
+          <p className="mt-3 text-[rgba(244,238,224,0.76)] text-[15px] md:text-[16px] leading-[1.65]">
+            <span className="font-serif text-[#f0cf76] italic text-[1.06em]">A curated circle.</span>{' '}
+            Complementary houses chosen for clients who appreciate craftsmanship beyond the bottle.
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[14px]">
