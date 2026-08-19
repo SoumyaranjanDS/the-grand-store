@@ -1,6 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const { createEvent, getEvents, getEventById, getVendorEvents } = require('../controllers/eventController');
+const { 
+  createEvent, 
+  getEvents, 
+  getEventById, 
+  getVendorEvents,
+  bookEvent,
+  getUserBookings,
+  getEventAttendees,
+  verifyTicket,
+  joinWaitlist
+} = require('../controllers/eventController');
+
 const { protect } = require('../middleware/authMiddleware');
 const multer = require('multer');
 const path = require('path');
@@ -20,8 +31,23 @@ router.route('/')
   .post(protect, upload.single('image'), createEvent)
   .get(getEvents);
 
+router.route('/bookings/my-tickets')
+  .get(protect, getUserBookings);
+
 router.route('/vendor')
   .get(protect, getVendorEvents);
+
+router.route('/vendor/:id/attendees')
+  .get(protect, getEventAttendees);
+
+router.route('/vendor/verify-ticket')
+  .post(protect, verifyTicket);
+
+router.route('/:id/book')
+  .post(protect, bookEvent);
+
+router.route('/:id/waitlist')
+  .post(protect, joinWaitlist);
 
 router.route('/:id')
   .get(getEventById);

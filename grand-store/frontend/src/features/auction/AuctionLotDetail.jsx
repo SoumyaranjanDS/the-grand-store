@@ -23,7 +23,7 @@ export default function AuctionLotDetail({ onNotify }) {
     
     const fetchLot = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/auction/${id}`);
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auction/${id}`);
         setLot(res.data.lot);
         setBids(res.data.bids);
         setLoading(false);
@@ -75,7 +75,7 @@ export default function AuctionLotDetail({ onNotify }) {
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
       const token = userInfo?.token;
 
-      const res = await axios.post(`http://localhost:5000/api/auction/${id}/bid`, {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/auction/${id}/bid`, {
         amount: Number(bidAmount),
         isMaxBid
       }, {
@@ -96,7 +96,7 @@ export default function AuctionLotDetail({ onNotify }) {
   };
 
   return (
-    <main className="pt-8 pb-20 min-h-screen bg-[#0a0907] text-[#eee8dd]">
+    <main className="pt-0 pb-20 min-h-screen bg-[#0a0907] text-[#eee8dd]">
       <div className="shell">
         <div className="mb-8">
           <Link to="/auction" className="inline-flex items-center gap-2 text-[#918a7f] hover:text-white transition-colors">

@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const vendorController = require('../controllers/vendorController');
+const vendorShippingController = require('../controllers/vendorShippingController');
 const { protect } = require('../middleware/authMiddleware');
 
 // Set up Multer for local uploads
@@ -29,5 +30,10 @@ router.get('/onboarding', vendorController.getOnboardingProgress);
 router.post('/onboarding', vendorController.saveOnboardingProgress);
 router.post('/onboarding/upload', upload.single('document'), vendorController.uploadDocument);
 router.post('/onboarding/submit', vendorController.submitApplication);
+router.post('/simulate-payment', vendorController.simulatePayment);
+
+// Shipping Profile Routes
+router.get('/shipping-profile', vendorShippingController.getShippingProfile);
+router.put('/shipping-profile', vendorShippingController.updateShippingProfile);
 
 module.exports = router;

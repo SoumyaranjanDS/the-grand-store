@@ -53,7 +53,7 @@ export default function CountryPavilionPage({ onAdd, onWish, onCompare, compareI
 
       {/* Hero */}
       <div 
-        className="relative h-[65vh] flex items-center justify-center pt-8"
+        className="relative h-[65vh] flex items-center justify-center pt-0"
       >
         <div 
           className="absolute inset-0 bg-cover bg-center"

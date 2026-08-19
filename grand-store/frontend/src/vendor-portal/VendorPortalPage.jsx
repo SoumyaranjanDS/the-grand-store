@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   ShoppingBag,
@@ -20,24 +20,46 @@ import {
 } from "lucide-react";
 
 export default function VendorPortalPage() {
+  const onboardingRoute = "/vendor/onboarding";
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
+  const previewRef = useRef(null);
+  const scrollToPreview = () => {
+    previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   // State for "Preview My Store"
-  const [mockBusinessName, setMockBusinessName] = useState("ABC Wine Estate");
-  const [mockProductName, setMockProductName] = useState("Cabernet Sauvignon");
-  const [mockPrice, setMockPrice] = useState("295");
-  const [mockImagePreview, setMockImagePreview] = useState("");
+  const [mockBusinessName, setMockBusinessName] = useState("Your Company");
+  const [mockBanner, setMockBanner] = useState("");
+  const [mockLogo, setMockLogo] = useState("");
+  const [mockProducts, setMockProducts] = useState([]);
 
   // State for Accordion FAQs
   const [openFaq, setOpenFaq] = useState(null);
 
-  const handleMockImageUpload = (e) => {
+  const [newProdName, setNewProdName] = useState("");
+  const [newProdPrice, setNewProdPrice] = useState("");
+  const [newProdImage, setNewProdImage] = useState("");
+
+  const handleImageUpload = (e, setter) => {
     const file = e.target.files[0];
     if (file) {
-      const url = URL.createObjectURL(file);
-      setMockImagePreview(url);
+      setter(URL.createObjectURL(file));
+    }
+  };
+
+  const handleAddProduct = () => {
+    if (newProdName && newProdPrice) {
+      setMockProducts([
+        { id: Date.now(), name: newProdName, price: newProdPrice, image: newProdImage },
+        ...mockProducts,
+      ]);
+      setNewProdName("");
+      setNewProdPrice("");
+      setNewProdImage("");
     }
   };
 
@@ -122,7 +144,7 @@ export default function VendorPortalPage() {
               of high-quality products from around the world.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-8">
-              <Link to="/vendor/onboarding" className={goldButtonClass}>
+              <Link to={onboardingRoute} className={goldButtonClass}>
                 Become a Vendor
               </Link>
             </div>
@@ -218,7 +240,7 @@ export default function VendorPortalPage() {
               <div key={i} className="text-center">
                 <div className="w-20 h-20 mx-auto bg-white rounded-full shadow-sm flex items-center justify-center mb-6">
                   <f.icon
-                    className="text-gold-gradient"
+                    className="text-[#c9a35b]"
                     strokeWidth={1}
                     size={36}
                   />
@@ -254,98 +276,229 @@ export default function VendorPortalPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+          <div className="flex flex-col gap-16 items-center">
             {/* Input Form - Light Theme */}
-            <div className="space-y-6 max-w-md mx-auto w-full">
-              <div>
-                <label className="block text-xs text-gray-500 uppercase tracking-widest font-semibold mb-2">
-                  Business / Estate Name
-                </label>
-                <input
-                  type="text"
-                  value={mockBusinessName}
-                  onChange={(e) => setMockBusinessName(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 text-black p-4 focus:border-[#c9a35b] outline-none"
-                  placeholder="e.g. ABC Wine Estate"
-                />
+            <div className="space-y-6 w-full max-w-4xl flex flex-col md:flex-row gap-6">
+              <div className="bg-gray-50 p-6 border border-gray-100 shadow-sm flex-1">
+                <h4 className="font-serif text-2xl mb-4">Store Details</h4>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs text-gray-500 uppercase tracking-widest font-semibold mb-2">
+                      Business / Estate Name
+                    </label>
+                    <input
+                      type="text"
+                      value={mockBusinessName}
+                      onChange={(e) => setMockBusinessName(e.target.value)}
+                      className="w-full bg-white border border-gray-200 text-black p-3 focus:border-[#c9a35b] outline-none text-sm"
+                      placeholder="e.g. ABC Wine Estate"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 uppercase tracking-widest font-semibold mb-2">
+                      Store Banner
+                    </label>
+                    <label className="flex items-center justify-center gap-2 w-full border border-dashed border-gray-300 bg-white p-3 text-gray-500 hover:text-[#c9a35b] hover:border-[#c9a35b] cursor-pointer text-xs">
+                      <ImageIcon size={14} />
+                      <span>{mockBanner ? "Change Banner" : "Upload Banner Image"}</span>
+                      <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, setMockBanner)} className="hidden" />
+                    </label>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 uppercase tracking-widest font-semibold mb-2">
+                      Brand Logo
+                    </label>
+                    <label className="flex items-center justify-center gap-2 w-full border border-dashed border-gray-300 bg-white p-3 text-gray-500 hover:text-[#c9a35b] hover:border-[#c9a35b] cursor-pointer text-xs">
+                      <ImageIcon size={14} />
+                      <span>{mockLogo ? "Change Logo" : "Upload Logo Image"}</span>
+                      <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, setMockLogo)} className="hidden" />
+                    </label>
+                  </div>
+                </div>
               </div>
-              <div>
-                <label className="block text-xs text-gray-500 uppercase tracking-widest font-semibold mb-2">
-                  Product Name
-                </label>
-                <input
-                  type="text"
-                  value={mockProductName}
-                  onChange={(e) => setMockProductName(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 text-black p-4 focus:border-[#c9a35b] outline-none"
-                  placeholder="e.g. Cabernet Sauvignon"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 uppercase tracking-widest font-semibold mb-2">
-                  Price (ZAR)
-                </label>
-                <input
-                  type="number"
-                  value={mockPrice}
-                  onChange={(e) => setMockPrice(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 text-black p-4 focus:border-[#c9a35b] outline-none"
-                  placeholder="e.g. 295"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 uppercase tracking-widest font-semibold mb-2">
-                  Product Image (Optional)
-                </label>
-                <label className="flex items-center justify-center gap-3 w-full border-2 border-dashed border-gray-300 bg-gray-50 p-6 text-gray-500 hover:text-gold-gradient hover:border-[#c9a35b] cursor-pointer text-sm">
-                  <ImageIcon size={18} />
-                  <span>Upload a mock image</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleMockImageUpload}
-                    className="hidden"
-                  />
-                </label>
+
+              <div className="bg-gray-50 p-6 border border-gray-100 shadow-sm flex-1 flex flex-col">
+                <h4 className="font-serif text-2xl mb-4">Add Products</h4>
+                <div className="space-y-4 flex-1">
+                  <div>
+                    <label className="block text-xs text-gray-500 uppercase tracking-widest font-semibold mb-2">
+                      Product Name
+                    </label>
+                    <input
+                      type="text"
+                      value={newProdName}
+                      onChange={(e) => setNewProdName(e.target.value)}
+                      className="w-full bg-white border border-gray-200 text-black p-3 focus:border-[#c9a35b] outline-none text-sm"
+                      placeholder="e.g. Cabernet Sauvignon"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 uppercase tracking-widest font-semibold mb-2">
+                      Price (ZAR)
+                    </label>
+                    <input
+                      type="number"
+                      value={newProdPrice}
+                      onChange={(e) => setNewProdPrice(e.target.value)}
+                      className="w-full bg-white border border-gray-200 text-black p-3 focus:border-[#c9a35b] outline-none text-sm"
+                      placeholder="e.g. 295"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 uppercase tracking-widest font-semibold mb-2">
+                      Product Image
+                    </label>
+                    <label className="flex items-center justify-center gap-2 w-full border border-dashed border-gray-300 bg-white p-3 text-gray-500 hover:text-[#c9a35b] hover:border-[#c9a35b] cursor-pointer text-xs">
+                      <ImageIcon size={14} />
+                      <span>{newProdImage ? "Change Image" : "Upload Product Image"}</span>
+                      <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, setNewProdImage)} className="hidden" />
+                    </label>
+                  </div>
+                  <div className="flex gap-4 pt-2">
+                    <button
+                      type="button"
+                      onClick={handleAddProduct}
+                      className="flex-1 bg-[#c9a35b] text-white font-bold uppercase tracking-widest text-xs py-3 transition-colors"
+                    >
+                      Add Product
+                    </button>
+                    <button
+                      type="button"
+                      onClick={scrollToPreview}
+                      className="flex-1 bg-white border-2 border-black text-black font-bold uppercase tracking-widest text-[10px] py-3 hover:bg-gray-100 transition-colors"
+                    >
+                      Preview Store
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Live Preview Card */}
-            <div className="flex justify-center">
-              <div className="w-full max-w-sm bg-[#0a0907] border border-[#c9a35b]/50 p-6 shadow-2xl relative">
-                <div className="absolute top-4 right-4 flex items-center gap-1 text-[9px] text-gold-gradient uppercase tracking-widest font-bold bg-[#c9a35b]/10 px-2 py-1 border border-[#c9a35b]/20">
-                  <Star size={10} fill="currentColor" /> Verified
+            {/* Live Storefront Preview (Desktop & Mobile Frames) */}
+            <div ref={previewRef} className="w-full max-w-6xl flex flex-col xl:flex-row gap-12 items-center xl:items-start justify-center min-h-[500px] pt-8">
+              
+              {/* Desktop Frame */}
+              <div className="relative w-full max-w-[800px] xl:max-w-[700px] bg-white border-[12px] border-gray-900 rounded-[20px] shadow-2xl overflow-hidden aspect-[16/10] shrink-0">
+                {/* Top browser bar mock */}
+                <div className="w-full h-6 bg-gray-900/10 flex items-center px-3 gap-1">
+                  <div className="w-2 h-2 rounded-full bg-red-400"></div>
+                  <div className="w-2 h-2 rounded-full bg-yellow-400"></div>
+                  <div className="w-2 h-2 rounded-full bg-green-400"></div>
                 </div>
-
-                <p className="text-[10px] text-[#918a7f] uppercase tracking-widest font-semibold mb-4 mt-2 truncate pr-20">
-                  {mockBusinessName || "Your Business Name"}
-                </p>
-
-                <div className="aspect-[4/5] bg-white/5 mb-6 flex items-center justify-center overflow-hidden">
-                  {mockImagePreview ? (
-                    <img
-                      src={mockImagePreview}
-                      alt="Mock product"
-                      className="max-w-full max-h-full object-contain p-4"
-                    />
-                  ) : (
-                    <div className="text-[#918a7f]/50 flex flex-col items-center gap-2">
-                      <ImageIcon size={32} strokeWidth={1} />
+                {/* Store Content Mock */}
+                <div className="w-full h-full bg-[#050505] overflow-y-auto overflow-x-hidden flex flex-col custom-scrollbar">
+                  {/* Banner */}
+                  <div className="h-[200px] w-full bg-[#111] relative shrink-0">
+                    {mockBanner && (
+                      <img src={mockBanner} className="w-full h-full object-cover opacity-70" alt="Banner" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent opacity-80"></div>
+                  </div>
+                  {/* Store Header */}
+                  <div className="flex px-10 -mt-16 relative z-10 items-end gap-6 mb-8 shrink-0">
+                    <div className="w-28 h-28 rounded-full border-4 border-[#050505] bg-white overflow-hidden shadow-2xl shrink-0 flex items-center justify-center">
+                       {mockLogo ? (
+                         <img src={mockLogo} className="w-full h-full object-cover" alt="Logo" />
+                       ) : (
+                         <span className="text-gray-400 font-bold text-3xl">{mockBusinessName ? mockBusinessName.charAt(0) : "S"}</span>
+                       )}
                     </div>
-                  )}
+                    <div className="pb-2">
+                      <h3 className="text-3xl font-serif text-white flex items-center gap-3 mb-1">
+                        {mockBusinessName || "Your Estate Name"}
+                        <CheckCircle2 size={18} className="text-[#c9a35b]" />
+                      </h3>
+                      <p className="text-xs text-[#a39c8e] uppercase tracking-widest font-bold">Official Grand Store Partner</p>
+                    </div>
+                  </div>
+                  {/* Products Grid Mock */}
+                  <div className="px-10 flex-1 pb-10">
+                    <div className="w-full border-b border-white/10 pb-3 mb-6 flex justify-between items-end">
+                      <span className="text-sm font-bold uppercase tracking-widest text-[#c9a35b]">Boutique Collection</span>
+                      <span className="text-xs text-gray-500">{mockProducts.length} Items</span>
+                    </div>
+                    <div className="grid grid-cols-3 xl:grid-cols-4 gap-4">
+                      {mockProducts.length === 0 ? (
+                        <div className="col-span-full py-8 text-center text-[#a39c8e] text-xs italic font-serif">
+                          Your products will appear here.
+                        </div>
+                      ) : (
+                        mockProducts.map((p) => (
+                          <div key={p.id} className="bg-[#0a0a0a] border border-white/5 p-3 rounded group hover:border-[#c9a35b]/50 transition-colors">
+                            <div className="aspect-[4/5] bg-white/5 mb-3 flex items-center justify-center overflow-hidden">
+                               {p.image ? (
+                                 <img src={p.image} className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-500" alt="Product" />
+                               ) : (
+                                 <ImageIcon size={24} className="text-white/20" />
+                               )}
+                            </div>
+                            <p className="text-white text-xs font-serif truncate mb-1">{p.name}</p>
+                            <p className="text-[#c9a35b] text-xs font-bold tracking-wider">R{p.price}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
                 </div>
+              </div>
 
-                <h3 className="text-2xl font-serif text-[#eee8dd] mb-2 truncate">
-                  {mockProductName || "Your Product Name"}
-                </h3>
-
-                <p className="text-gold-gradient text-xl font-serif mb-6">
-                  R{Number(mockPrice || 0).toFixed(2)}
-                </p>
-
-                <button className="w-full border border-[#eee8dd] text-black bg-[#eee8dd] py-3 text-[10px] uppercase tracking-widest font-bold hover:bg-gold-gradient hover:border-[#c9a35b] hover:text-black">
-                  Add to Cart
-                </button>
+              {/* Mobile Frame */}
+              <div className="relative w-[280px] h-[550px] bg-white border-[14px] border-gray-900 rounded-[2.5rem] shadow-2xl overflow-hidden shrink-0">
+                {/* Notch */}
+                <div className="absolute top-0 inset-x-0 h-6 bg-gray-900 rounded-b-xl w-32 mx-auto z-50"></div>
+                
+                {/* Store Content Mock */}
+                <div className="w-full h-full bg-[#050505] overflow-y-auto overflow-x-hidden flex flex-col pt-6 custom-scrollbar">
+                  {/* Banner */}
+                  <div className="h-[140px] w-full bg-[#111] relative shrink-0">
+                    {mockBanner && (
+                      <img src={mockBanner} className="w-full h-full object-cover opacity-70" alt="Banner" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent opacity-80"></div>
+                  </div>
+                  {/* Store Header */}
+                  <div className="flex flex-col items-center px-4 -mt-12 relative z-10 text-center shrink-0">
+                    <div className="w-24 h-24 rounded-full border-4 border-[#050505] bg-white overflow-hidden shadow-2xl mb-3 flex items-center justify-center">
+                       {mockLogo ? (
+                         <img src={mockLogo} className="w-full h-full object-cover" alt="Logo" />
+                       ) : (
+                         <span className="text-gray-400 font-bold text-2xl">{mockBusinessName ? mockBusinessName.charAt(0) : "S"}</span>
+                       )}
+                    </div>
+                    <h3 className="text-2xl font-serif text-white flex items-center justify-center gap-2 mb-1">
+                      {mockBusinessName || "Your Estate Name"}
+                      <CheckCircle2 size={16} className="text-[#c9a35b]" />
+                    </h3>
+                    <p className="text-[9px] text-[#a39c8e] uppercase tracking-widest font-bold">Official Grand Store Partner</p>
+                  </div>
+                  {/* Products Grid Mock */}
+                  <div className="px-4 mt-6 flex-1 pb-10">
+                    <div className="w-full border-b border-white/10 pb-2 mb-4 text-center">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-[#c9a35b]">Boutique Collection</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {mockProducts.length === 0 ? (
+                        <div className="col-span-full py-8 text-center text-[#a39c8e] text-[10px] italic font-serif">
+                          Your products will appear here.
+                        </div>
+                      ) : (
+                        mockProducts.map((p) => (
+                          <div key={p.id} className="bg-[#0a0a0a] border border-white/5 p-2 rounded">
+                            <div className="aspect-[4/5] bg-white/5 mb-2 flex items-center justify-center overflow-hidden">
+                               {p.image ? (
+                                 <img src={p.image} className="w-full h-full object-contain p-2" alt="Product" />
+                               ) : (
+                                 <ImageIcon size={16} className="text-white/20" />
+                               )}
+                            </div>
+                            <p className="text-white text-[9px] font-serif truncate mb-1">{p.name}</p>
+                            <p className="text-[#c9a35b] text-[9px] font-bold">R{p.price}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -530,7 +683,7 @@ export default function VendorPortalPage() {
         </p>
         <div className="flex justify-center mb-12">
           <Link
-            to="/vendor/onboarding"
+            to={onboardingRoute}
             className={`inline-flex items-center justify-center gap-3 ${goldButtonClass}`}
           >
             Vendor Sign-Up <ChevronRight size={20} />

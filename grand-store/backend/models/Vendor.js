@@ -8,6 +8,11 @@ const vendorSchema = new mongoose.Schema({
     unique: true
   },
   // Step 1: Progress Tracking
+  vendorType: {
+    type: String,
+    enum: ['local', 'international'],
+    default: 'local'
+  },
   onboardingStep: {
     type: Number,
     default: 1
@@ -88,6 +93,51 @@ const vendorSchema = new mongoose.Schema({
     dispatchDays: String,
     cutoffTime: String,
     processingTime: String,
+  },
+  
+  // International specific fields
+  credentialsInfo: {
+    exportLicenceNumber: String,
+    homeCountryLicence: String,
+    certificates: String,
+  },
+  marketInfo: {
+    targetRegions: [String],
+  },
+  logisticsInfo: {
+    currentImporter: String,
+    freightForwarder: String,
+  },
+  storyInfo: {
+    winemakerBio: String,
+    brandStory: String,
+    wineryPhotosUrl: String,
+  },
+
+  // Detailed Shipping Profile (from GS Checkout flow document)
+  shippingProfile: {
+    pickupAddress: {
+      street: String,
+      city: String,
+      postalCode: String,
+      country: { type: String, default: 'South Africa' }
+    },
+    defaultDimensions: {
+      length: { type: Number, default: 35 },
+      width: { type: Number, default: 25 },
+      height: { type: Number, default: 30 },
+      unit: { type: String, default: 'cm' }
+    },
+    defaultWeight: {
+      value: { type: Number, default: 9 }, // e.g. 9kg for 6 bottles
+      unit: { type: String, default: 'kg' }
+    },
+    shippingZones: [{
+      name: String,
+      rate: Number, // Flat rate for this zone
+    }],
+    freeDeliveryThreshold: { type: Number, default: null }, // e.g., free above R1500
+    handlingTimeDays: { type: Number, default: 2 }
   },
   
   // Step 10: Agreement

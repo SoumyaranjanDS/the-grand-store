@@ -23,6 +23,9 @@ const vendorRoutes = require('./routes/vendorRoutes');
 const auctionRoutes = require('./routes/auctionRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const checkoutRoutes = require('./routes/checkoutRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
@@ -30,6 +33,9 @@ app.use('/api/vendor', vendorRoutes);
 app.use('/api/auction', auctionRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/checkout', checkoutRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

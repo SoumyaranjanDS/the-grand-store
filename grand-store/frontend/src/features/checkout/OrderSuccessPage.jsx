@@ -16,7 +16,7 @@ export default function OrderSuccessPage() {
 
     const fetchOrder = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/orders/${id}`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/${id}`, {
           headers: {
             'Authorization': `Bearer ${user.token}`
           }
@@ -59,7 +59,7 @@ export default function OrderSuccessPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#050505] text-[var(--color-ivory)] pt-10 pb-24">
+    <main className="min-h-screen bg-[#050505] text-[var(--color-ivory)] pt-0 pb-24">
       <div className="max-w-4xl mx-auto px-6">
         
         {/* Success Header (Hide on Print) */}

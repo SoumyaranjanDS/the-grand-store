@@ -1,6 +1,7 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const SystemCode = require('../models/SystemCode');
+const PlatformSettings = require('../models/PlatformSettings');
 const { getNextSequence } = require('../utils/sequenceGenerator');
 
 // @desc    Create new order
@@ -8,16 +9,20 @@ const { getNextSequence } = require('../utils/sequenceGenerator');
 // @access  Private
 const addOrderItems = async (req, res) => {
   try {
-    const {
-      orderItems,
-      shippingAddress,
-      paymentMethod,
-      totalPrice,
-    } = req.body;
+    const { quote, shippingAddress, paymentMethod } = req.body;
 
-    if (orderItems && orderItems.length === 0) {
-      return res.status(400).json({ message: 'No order items' });
+    if (!quote || !quote.shipments || quote.shipments.length === 0) {
+      return res.status(400).json({ message: 'Valid quote with shipments is required' });
     }
+    
+    // Check expiration
+    if (new Date(quote.expiresAt) < new Date()) {
+       return res.status(400).json({ message: 'Quote has expired. Please refresh the quote.' });
+    }
+
+    // Fetch fee settings from DB for GS Commission
+    let settings = await PlatformSettings.findOne();
+    if (!settings) settings = await PlatformSettings.create({});
 
     // Fetch module code for Shop
     const shopCodeDoc = await SystemCode.findOne({ code: 'SHP' });
@@ -27,58 +32,116 @@ const addOrderItems = async (req, res) => {
     const year = new Date().getFullYear().toString().slice(-2);
     const seqNum = await getNextSequence('shopOrder');
     const sequence = seqNum.toString().padStart(6, '0');
-    
-    // Segmented IDs
+
     const transactionId = `GS-${year}-${moduleCode}-TXN-${sequence}`;
     const orderId = `GS-${year}-${moduleCode}-ORD-${sequence}`;
     const paymentId = `GS-${year}-${moduleCode}-PAY-${sequence}`;
     const invoiceNumber = `GS-${year}-${moduleCode}-INV-${sequence}`;
 
-    // Map orderItems to include vendorId from the Product DB safely
-    const enrichedOrderItems = await Promise.all(
-      orderItems.map(async (item) => {
-        const productId = item.product || item.id || item._id;
-        // Try to find the product by custom 'id' (e.g. prod_12345)
-        let product = await Product.findOne({ id: productId }).catch(() => null);
-        
-        // Fallback: If not found and it's a valid ObjectId, try finding by _id
-        if (!product && productId && /^[0-9a-fA-F]{24}$/.test(productId.toString())) {
-          product = await Product.findById(productId).catch(() => null);
-        }
+    const commissionPct = settings.marketplaceCommissionPct || 15;
+    const gatewayFeePct = settings.gatewayFeePct || 2.5;
 
-        return {
-          name: item.name,
-          quantity: item.quantity,
-          image: item.image,
-          price: item.price,
-          option: item.option,
-          product: product ? product._id : productId, // Use original ID if not found
-          vendorId: product ? product.vendorId : null, 
-        };
-      })
-    );
+    // === RECONSTRUCT ACCOUNTING FROM QUOTE ===
+    // The quote contains the exact calculated values.
+    const subTotal = quote.globalSubtotal;
+    const shippingCost = quote.aggregatedTotals.shipping;
+    const vatAmount = quote.aggregatedTotals.vat;
+    const importDuties = quote.aggregatedTotals.estimatedImportDuties;
+    const importTaxes = quote.aggregatedTotals.estimatedImportTaxes;
+    const customsFees = quote.aggregatedTotals.estimatedCustomsFees;
+    
+    // Note: In DDP we might add duties to totalPrice. For now we assume DAP (Duties are paid at customs by customer)
+    // so totalPrice only includes subTotal + shipping + vat.
+    const calculatedTotal = parseFloat((subTotal + shippingCost + vatAmount).toFixed(2));
+    const commissionAmount = parseFloat(((subTotal * commissionPct) / 100).toFixed(2));
+    const gatewayFeeAmount = parseFloat((calculatedTotal * gatewayFeePct / 100).toFixed(2));
 
+    // Consolidate Order Items from Shipments for the Master Order
+    let allOrderItems = [];
+    let vendorPayables = [];
+
+    // Create the master order first (without shipments array yet, we'll push them)
     const order = new Order({
-      orderItems: enrichedOrderItems,
       user: req.user._id,
       shippingAddress,
       paymentMethod,
-      totalPrice,
+      subTotal,
+      shippingCost,
+      vatAmount,
+      importDuties,
+      importTaxes,
+      customsFees,
+      commissionPct,
+      commissionAmount,
+      gatewayFeePct,
+      gatewayFeeAmount,
+      totalPrice: calculatedTotal,
       transactionId,
       orderId,
       paymentId,
       invoiceNumber,
-      isPaid: true, // Simulated payment
+      isPaid: true,
       paidAt: Date.now(),
+      paymentStatus: 'Paid',
+      orderItems: [],
+      shipments: [],
+      vendorPayables: []
     });
+
+    // Process Shipments
+    const Shipment = require('../models/Shipment');
+    let shipmentSeqCounter = 1;
+
+    for (const shp of quote.shipments) {
+      allOrderItems = allOrderItems.concat(shp.items);
+      
+      const vId = shp.vendorId.toString();
+      const vendorGross = shp.subtotal;
+      const vendorCommission = parseFloat(((vendorGross * commissionPct) / 100).toFixed(2));
+      const vendorNet = parseFloat((vendorGross - vendorCommission).toFixed(2)); // VAT is withheld/paid by GS generally in this model
+
+      vendorPayables.push({
+        vendorId: shp.vendorId,
+        grossAmount: vendorGross,
+        commission: vendorCommission,
+        vatDeducted: shp.taxData.vatAmount, // Keeping record
+        netPayable: vendorNet
+      });
+
+      // Create Shipment Record
+      const shipmentSeqString = `${sequence}-${shipmentSeqCounter.toString().padStart(2, '0')}`;
+      const shipmentId = `GS-${year}-${moduleCode}-SHP-${shipmentSeqString}`;
+
+      const newShipment = new Shipment({
+        shipmentId,
+        orderId: order._id,
+        orderRef: order.orderId,
+        vendorId: shp.vendorId,
+        customerId: req.user._id,
+        pickupAddress: { country: shp.originCountry }, // Expanded later from Vendor profile
+        deliveryAddress: shippingAddress,
+        courierName: shp.selectedCourier ? shp.selectedCourier.courierName : 'Vendor Managed',
+        serviceLevel: shp.selectedCourier ? shp.selectedCourier.serviceLevel : 'Standard',
+        shippingCost: shp.selectedCourier ? shp.selectedCourier.cost : 0,
+        status: 'Order Confirmed'
+      });
+
+      await newShipment.save();
+      order.shipments.push(newShipment._id);
+      shipmentSeqCounter++;
+    }
+
+    order.orderItems = allOrderItems;
+    order.vendorPayables = vendorPayables;
 
     const createdOrder = await order.save();
     res.status(201).json(createdOrder);
   } catch (error) {
     console.error('Add Order Error:', error);
-    res.status(500).json({ message: 'Server Error adding order' });
+    res.status(500).json({ message: 'Server Error adding order', error: error.message });
   }
 };
+
 
 // @desc    Get logged in user orders
 // @route   GET /api/orders/myorders
@@ -110,38 +173,43 @@ const getOrderById = async (req, res) => {
   }
 };
 
-// @desc    Get logged in vendor orders/sales
+// @desc    Get logged in vendor orders/sales (Shipments)
 // @route   GET /api/orders/vendor/sales
 // @access  Private (Vendor only)
 const getVendorOrders = async (req, res) => {
   try {
-    // Find all orders that contain at least one item with this vendor's ID
-    const orders = await Order.find({
-      'orderItems.vendorId': req.user._id
-    }).sort({ createdAt: -1 }).populate('user', 'name email');
+    const Shipment = require('../models/Shipment');
+    const Order = require('../models/Order');
+    
+    const shipments = await Shipment.find({ vendorId: req.user._id })
+      .sort({ createdAt: -1 })
+      .populate('customerId', 'name email');
 
-    // Format the response so the vendor only sees their items, not other vendors' items in a mixed cart
-    const vendorSales = orders.map(order => {
-      const vendorItems = order.orderItems.filter(item => 
-        item.vendorId && item.vendorId.toString() === req.user._id.toString()
-      );
-      
-      const vendorTotal = vendorItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    // Attach items from the master order
+    const populatedShipments = await Promise.all(shipments.map(async (shp) => {
+      const masterOrder = await Order.findById(shp.orderId);
+      let items = [];
+      if (masterOrder) {
+        items = masterOrder.orderItems.filter(item => item.vendorId && item.vendorId.toString() === req.user._id.toString());
+      }
       
       return {
-        _id: order._id,
-        invoiceNumber: order.invoiceNumber,
-        createdAt: order.createdAt,
-        isPaid: order.isPaid,
-        isDelivered: order.isDelivered,
-        shippingAddress: order.shippingAddress,
-        items: vendorItems,
-        vendorTotal,
-        customerName: order.user ? order.user.name : 'Guest',
+        _id: shp._id,
+        shipmentId: shp.shipmentId,
+        orderRef: shp.orderRef,
+        createdAt: shp.createdAt,
+        status: shp.status,
+        courierName: shp.courierName,
+        shippingCost: shp.shippingCost,
+        trackingNumber: shp.trackingNumber,
+        deliveryAddress: shp.deliveryAddress,
+        customerName: shp.customerId ? shp.customerId.name : 'Guest',
+        items: items,
+        vendorTotal: items.reduce((acc, item) => acc + (item.price * item.quantity), 0)
       };
-    }).filter(sale => sale.items.length > 0);
+    }));
 
-    res.json(vendorSales);
+    res.json(populatedShipments);
   } catch (error) {
     console.error('Get Vendor Orders Error:', error);
     res.status(500).json({ message: 'Server Error getting vendor orders' });

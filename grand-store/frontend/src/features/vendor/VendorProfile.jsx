@@ -22,7 +22,7 @@ export default function VendorProfile() {
       try {
         const userInfo = JSON.parse(localStorage.getItem('userInfo'));
         const token = userInfo?.token || user?.token;
-        const { data } = await axios.get('http://localhost:5000/api/vendor/onboarding', {
+        const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/vendor/onboarding`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setVendorData(data);

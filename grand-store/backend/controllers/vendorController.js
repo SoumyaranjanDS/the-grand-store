@@ -11,7 +11,7 @@ const generateToken = (id) => {
 
 exports.registerFullVendor = async (req, res) => {
   try {
-    const { accountInfo, businessInfo, kycInfo, taxInfo, licenceInfo, customsInfo, bankingInfo, productCategories, deliveryInfo, agreements } = req.body;
+    const { vendorType, accountInfo, businessInfo, kycInfo, taxInfo, licenceInfo, customsInfo, bankingInfo, productCategories, deliveryInfo, agreements, credentialsInfo, marketInfo, logisticsInfo, storyInfo } = req.body;
 
     let user;
 
@@ -71,34 +71,55 @@ exports.registerFullVendor = async (req, res) => {
     let vendor = await Vendor.findOne({ userId: user._id });
     if (vendor) {
       // Overwrite existing application
+      vendor.vendorType = vendorType || 'local';
       vendor.businessInfo = businessInfo || {};
-      vendor.kycInfo = kycInfo || {};
-      vendor.taxInfo = taxInfo || {};
-      vendor.licenceInfo = licenceInfo || {};
-      vendor.customsInfo = customsInfo || {};
       vendor.bankingInfo = bankingInfo || {};
       vendor.productCategories = productCategories || [];
-      vendor.deliveryInfo = deliveryInfo || {};
       vendor.agreements = { ...agreements, acceptedAt: Date.now() };
+      
+      if (vendorType === 'international') {
+        vendor.credentialsInfo = credentialsInfo || {};
+        vendor.marketInfo = marketInfo || {};
+        vendor.logisticsInfo = logisticsInfo || {};
+        vendor.storyInfo = storyInfo || {};
+      } else {
+        vendor.kycInfo = kycInfo || {};
+        vendor.taxInfo = taxInfo || {};
+        vendor.licenceInfo = licenceInfo || {};
+        vendor.customsInfo = customsInfo || {};
+        vendor.deliveryInfo = deliveryInfo || {};
+      }
+      
       vendor.status = 'pending_approval';
       vendor.onboardingStep = 10;
       await vendor.save();
     } else {
       // Create new vendor application
-      vendor = await Vendor.create({
+      const vendorData = {
         userId: user._id,
+        vendorType: vendorType || 'local',
         businessInfo: businessInfo || {},
-        kycInfo: kycInfo || {},
-        taxInfo: taxInfo || {},
-        licenceInfo: licenceInfo || {},
-        customsInfo: customsInfo || {},
         bankingInfo: bankingInfo || {},
         productCategories: productCategories || [],
-        deliveryInfo: deliveryInfo || {},
         agreements: { ...agreements, acceptedAt: Date.now() },
         status: 'pending_approval',
         onboardingStep: 10
-      });
+      };
+      
+      if (vendorType === 'international') {
+        vendorData.credentialsInfo = credentialsInfo || {};
+        vendorData.marketInfo = marketInfo || {};
+        vendorData.logisticsInfo = logisticsInfo || {};
+        vendorData.storyInfo = storyInfo || {};
+      } else {
+        vendorData.kycInfo = kycInfo || {};
+        vendorData.taxInfo = taxInfo || {};
+        vendorData.licenceInfo = licenceInfo || {};
+        vendorData.customsInfo = customsInfo || {};
+        vendorData.deliveryInfo = deliveryInfo || {};
+      }
+      
+      vendor = await Vendor.create(vendorData);
     }
 
     res.status(201).json({
@@ -195,6 +216,10 @@ exports.submitApplication = async (req, res) => {
       return res.status(404).json({ message: 'Vendor application not found' });
     }
 
+    if (vendor.status === 'approved') {
+      return res.status(400).json({ message: 'Vendor is already approved' });
+    }
+
     vendor.status = 'pending_approval';
     await vendor.save();
 
@@ -202,6 +227,32 @@ exports.submitApplication = async (req, res) => {
     await User.findByIdAndUpdate(req.user._id, { role: 'vendor_pending' });
 
     res.json({ message: 'Application submitted successfully', vendor });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+exports.simulatePayment = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.role !== 'vendor_approved_unpaid') {
+      return res.status(400).json({ message: 'User is not in the correct state to make a payment' });
+    }
+
+    user.role = 'vendor_active';
+    await user.save();
+
+    const vendor = await Vendor.findOne({ userId: user._id });
+    if (vendor) {
+      vendor.status = 'approved';
+      await vendor.save();
+    }
+
+    res.json({ message: 'Payment successful, vendor activated' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

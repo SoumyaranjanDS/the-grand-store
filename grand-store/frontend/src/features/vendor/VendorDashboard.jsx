@@ -13,7 +13,7 @@ export default function VendorDashboard() {
   useEffect(() => {
     const fetchSales = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/orders/vendor/sales', {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/vendor/sales`, {
           headers: {
             Authorization: `Bearer ${user.token}`
           }

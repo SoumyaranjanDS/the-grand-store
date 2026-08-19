@@ -1,0 +1,142 @@
+const Product = require('../models/Product');
+const { calculateTax } = require('../engines/taxEngine');
+const { getShippingQuotes } = require('../engines/shippingEngine');
+
+// @desc    Generate a checkout quote (locked price)
+// @route   POST /api/checkout/quote
+// @access  Private
+const generateQuote = async (req, res) => {
+  try {
+    const { cartItems, shippingAddress } = req.body;
+
+    if (!cartItems || cartItems.length === 0) {
+      return res.status(400).json({ message: 'Cart is empty' });
+    }
+    if (!shippingAddress || !shippingAddress.country) {
+      return res.status(400).json({ message: 'Valid shipping address with country is required' });
+    }
+
+    // 1. Enqueue products and group by vendor
+    const vendorGroups = {};
+    let globalSubtotal = 0;
+
+    for (const item of cartItems) {
+      const productId = item.product || item.id || item._id;
+      let product = await Product.findOne({ id: productId }).catch(() => null);
+      if (!product && productId && /^[0-9a-fA-F]{24}$/.test(productId.toString())) {
+        product = await Product.findById(productId).catch(() => null);
+      }
+
+      if (!product) {
+        return res.status(404).json({ message: `Product not found: ${item.name}` });
+      }
+
+      const vId = product.vendorId ? product.vendorId.toString() : 'unknown_vendor';
+      if (!vendorGroups[vId]) {
+        vendorGroups[vId] = {
+          vendorId: product.vendorId,
+          items: [],
+          subtotal: 0,
+          totalWeightKg: 0
+        };
+      }
+
+      const itemPrice = product.price; // Enforce server-side pricing
+      const itemSubtotal = itemPrice * item.quantity;
+      
+      vendorGroups[vId].items.push({
+        ...item,
+        price: itemPrice, // overriding with server price
+        vendorId: product.vendorId
+      });
+      vendorGroups[vId].subtotal += itemSubtotal;
+      
+      // Default weight assumption if missing: 1.5kg per bottle
+      vendorGroups[vId].totalWeightKg += (1.5 * item.quantity); 
+      globalSubtotal += itemSubtotal;
+    }
+
+    // 2. Generate Shipment Quotes per Vendor
+    const shipments = [];
+    let hasInternational = false;
+    let globalEstimatedDuties = 0;
+    let globalEstimatedTaxes = 0;
+    let globalCustomsFees = 0;
+
+    for (const vId of Object.keys(vendorGroups)) {
+      const group = vendorGroups[vId];
+      
+      const shippingData = await getShippingQuotes(
+        group.vendorId, 
+        shippingAddress, 
+        group.subtotal, 
+        group.totalWeightKg
+      );
+
+      if (shippingData.isInternational) hasInternational = true;
+
+      // Calculate tax for this specific shipment based on origin and dest
+      const taxData = calculateTax(shippingData.originCountry, shippingData.destCountry, group.subtotal);
+
+      let shipmentDuties = 0, shipmentTaxes = 0, shipmentCustoms = 0;
+      if (shippingData.landedCostEstimates) {
+        shipmentDuties = shippingData.landedCostEstimates.estimatedDuties;
+        shipmentTaxes = shippingData.landedCostEstimates.estimatedTaxes;
+        shipmentCustoms = shippingData.landedCostEstimates.customsFees;
+        
+        globalEstimatedDuties += shipmentDuties;
+        globalEstimatedTaxes += shipmentTaxes;
+        globalCustomsFees += shipmentCustoms;
+      }
+
+      shipments.push({
+        vendorId: group.vendorId,
+        items: group.items,
+        subtotal: group.subtotal,
+        originCountry: shippingData.originCountry,
+        destCountry: shippingData.destCountry,
+        isInternational: shippingData.isInternational,
+        taxData,
+        shippingQuotes: shippingData.quotes,
+        landedCostEstimates: shippingData.landedCostEstimates,
+        // Default selected courier is the first one
+        selectedCourier: shippingData.quotes.length > 0 ? shippingData.quotes[0] : null
+      });
+    }
+
+    // Calculate aggregated totals based on default selections
+    let defaultShippingTotal = shipments.reduce((sum, shp) => sum + (shp.selectedCourier ? shp.selectedCourier.cost : 0), 0);
+    let defaultVatTotal = shipments.reduce((sum, shp) => sum + shp.taxData.vatAmount, 0);
+    
+    // Note: Duties/Taxes are usually DAP (Customer pays at customs). If we wanted DDP, we'd add it to total.
+    // For now, we display them as estimates, but do NOT add them to the Grand Store total to pay at checkout.
+    const totalToPay = parseFloat((globalSubtotal + defaultShippingTotal + defaultVatTotal).toFixed(2));
+
+    const quoteId = `QUOTE-${Date.now()}`;
+    const expiresAt = new Date(Date.now() + 10 * 60000); // 10 minutes
+
+    res.json({
+      quoteId,
+      expiresAt,
+      globalSubtotal,
+      hasInternational,
+      aggregatedTotals: {
+        shipping: defaultShippingTotal,
+        vat: defaultVatTotal,
+        estimatedImportDuties: globalEstimatedDuties,
+        estimatedImportTaxes: globalEstimatedTaxes,
+        estimatedCustomsFees: globalCustomsFees,
+        totalToPay // The amount to charge the card
+      },
+      shipments
+    });
+
+  } catch (error) {
+    console.error('Quote Generation Error:', error);
+    res.status(500).json({ message: 'Server Error generating quote' });
+  }
+};
+
+module.exports = {
+  generateQuote
+};

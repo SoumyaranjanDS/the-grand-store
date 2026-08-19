@@ -38,7 +38,7 @@ export default function EditProduct({ onNotify }) {
     }
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/products/${id}`);
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/products/${id}`);
         const product = res.data;
         if (product) {
           setFormData({
@@ -55,9 +55,9 @@ export default function EditProduct({ onNotify }) {
             exportReady: product.exportReady || false
           });
           if (product.image) {
-            const initialPreviews = [`http://localhost:5000${product.image}`];
+            const initialPreviews = [`${import.meta.env.VITE_API_URL}${product.image}`];
             if (product.gallery && product.gallery.length > 0) {
-              product.gallery.forEach(img => initialPreviews.push(`http://localhost:5000${img}`));
+              product.gallery.forEach(img => initialPreviews.push(`${import.meta.env.VITE_API_URL}${img}`));
             }
             setImagePreviews(initialPreviews);
           }
@@ -150,7 +150,7 @@ export default function EditProduct({ onNotify }) {
         payload.append('factSheetPdf', pdfFile);
       }
 
-      await axios.put(`http://localhost:5000/api/products/${id}`, payload, {
+      await axios.put(`${import.meta.env.VITE_API_URL}/api/products/${id}`, payload, {
         headers: { 
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'

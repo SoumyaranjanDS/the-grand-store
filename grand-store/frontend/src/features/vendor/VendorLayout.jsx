@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+import { useNavigate, useLocation, Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Building2, Package, PlusCircle, User, LayoutDashboard, Wallet, Megaphone, GraduationCap, Menu, X, ShoppingBag, Calendar } from 'lucide-react';
+import { Building2, Package, PlusCircle, User, LayoutDashboard, Wallet, Megaphone, GraduationCap, Menu, X, ShoppingBag, Calendar, Settings, Truck } from 'lucide-react';
 
 export default function VendorLayout() {
   const { user } = useAuth();
@@ -9,9 +9,44 @@ export default function VendorLayout() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  if (!user || user.role !== 'vendor_active') {
+  if (!user) {
     navigate('/login');
     return null;
+  }
+
+  // Handle specific vendor states
+  if (user.role === 'vendor_pending') {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
+        <div className="bg-[#0a0a0a] border border-gold/30 p-12 rounded-2xl max-w-md w-full text-center">
+          <h2 className="text-2xl text-white font-light mb-4">Under Review</h2>
+          <p className="text-white/60 mb-6">Your vendor application is currently being reviewed by our team. You will be notified via email once approved.</p>
+          <button onClick={() => navigate('/')} className="text-gold uppercase tracking-widest text-xs hover:text-white transition-colors">Return to Home</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (user.role === 'vendor_rejected') {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
+        <div className="bg-[#0a0a0a] border border-red-500/30 p-12 rounded-2xl max-w-md w-full text-center">
+          <h2 className="text-2xl text-white font-light mb-4">Changes Required</h2>
+          <p className="text-white/60 mb-6">Your application requires some adjustments before approval.</p>
+          <button onClick={() => navigate('/vendor/onboarding')} className="w-full bg-gold text-black py-3 rounded font-medium mb-4 hover:bg-white transition-colors">Edit & Re-apply</button>
+          <button onClick={() => navigate('/')} className="text-white/40 uppercase tracking-widest text-xs hover:text-white transition-colors">Return to Home</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (user.role === 'vendor_approved_unpaid') {
+    return <Navigate to="/vendor/payment" replace />;
+  }
+
+  // Allow admin OR active vendors
+  if (user.role !== 'vendor_active' && user.role !== 'admin') {
+    return <Navigate to="/login" replace />;
   }
 
   const handleNavigate = (path) => {
@@ -46,7 +81,7 @@ export default function VendorLayout() {
             </div>
             <div className="hidden md:block h-4 w-px bg-white/20 mx-2"></div>
             <div className="hidden md:block text-sm tracking-widest text-gold-gradient font-medium uppercase drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]">
-              Business Partner
+              {user?.role === 'admin' ? 'Admin Gateway' : 'Business Partner'}
             </div>
           </div>
         </div>
@@ -54,7 +89,7 @@ export default function VendorLayout() {
           <div className="flex items-center gap-3">
             <div className="text-right hidden md:block">
               <div className="text-sm font-serif">{user.name}</div>
-              <div className="text-xs text-gold-gradient tracking-widest uppercase">Level 1 - New Vendor</div>
+              <div className="text-xs text-gold-gradient tracking-widest uppercase">{user?.role === 'admin' ? 'System Administrator' : 'Level 1 - New Vendor'}</div>
             </div>
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--color-gold)] to-yellow-700 p-[1px]">
               <div className="w-full h-full bg-[#0a0a0a] rounded-full flex items-center justify-center">
@@ -113,10 +148,12 @@ export default function VendorLayout() {
             <button onClick={() => handleNavigate('/vendor/academy')} className={navItemClass('/vendor/academy')}>
               <GraduationCap size={16} /> Vendor Academy
             </button>
-
             <div className="mt-6 pt-6 border-t border-white/[0.05]">
-              <button onClick={() => handleNavigate('/vendor/profile')} className="flex items-center gap-4 px-4 py-3 rounded-xl w-full text-[var(--color-ivory-muted)] hover:bg-[var(--color-gold)]/10 hover:text-gold-gradient transition-all text-left text-xs uppercase tracking-widest border border-transparent hover:border-[var(--color-gold)]/20">
-                <User size={16} /> {user?.role === 'admin' ? 'Admin Profile' : 'Vendor Profile'}
+              <button onClick={() => handleNavigate('/vendor/shipping')} className={navItemClass('/vendor/shipping')}>
+                <Truck size={16} /> Shipping Profile
+              </button>
+              <button onClick={() => handleNavigate('/vendor/profile')} className="flex items-center gap-4 px-4 py-3 mt-2 rounded-xl w-full text-[var(--color-ivory-muted)] hover:bg-[var(--color-gold)]/10 hover:text-gold-gradient transition-all text-left text-xs uppercase tracking-widest border border-transparent hover:border-[var(--color-gold)]/20">
+                <User size={16} /> Vendor Profile
               </button>
             </div>
           </nav>

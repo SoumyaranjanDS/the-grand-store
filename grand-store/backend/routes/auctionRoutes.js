@@ -17,6 +17,9 @@ router.get('/vendor/lots', protect, auctionController.getVendorLots);
 
 // Admin
 router.get('/admin/lots', protect, auctionController.getAdminPendingLots);
+router.get('/admin/all', protect, auctionController.getAllLots);
 router.put('/:id/approve', protect, auctionController.approveLot);
+router.put('/:id/close', protect, auctionController.closeAuction);
 
 module.exports = router;
+

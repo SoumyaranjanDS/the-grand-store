@@ -28,7 +28,7 @@ export default function GlobalOnboardingLanding() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0907] pt-8 pb-20 relative overflow-hidden">
+    <div className="min-h-screen bg-[#0a0907] pt-0 pb-20 relative overflow-hidden">
       
       {/* Background radial glow */}
       <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#c9a35b]/10 via-[#0a0907]/0 to-[#0a0907]/0 pointer-events-none rounded-full blur-3xl opacity-80 mix-blend-screen translate-x-1/4 -translate-y-1/4"></div>
@@ -157,7 +157,7 @@ export default function GlobalOnboardingLanding() {
           <div className="mt-24 text-center relative z-10">
             <Link 
               to="/vendor/onboarding" 
-              className="inline-flex items-center gap-3 text-gold-gradient font-bold uppercase tracking-[0.2em] text-sm hover:text-white transition-colors border-b border-[#c9a35b]/50 hover:border-white pb-2 shadow-[0_4px_15px_-4px_rgba(201,163,91,0.4)]"
+              className="inline-flex items-center justify-center gap-3 px-10 py-5 bg-gold-gradient text-black font-bold uppercase tracking-[0.2em] text-xs hover:brightness-110 transition-all rounded-sm shadow-[0_0_30px_rgba(201,163,91,0.3)] hover:shadow-[0_0_50px_rgba(201,163,91,0.5)]"
             >
               Start the process <ArrowRight size={18} />
             </Link>

@@ -23,7 +23,7 @@ export default function CustomerOrdersPage() {
     const fetchOrders = async () => {
       if (user) {
         try {
-          const { data } = await axios.get('http://localhost:5000/api/orders/myorders', {
+          const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/orders/myorders`, {
             headers: { Authorization: `Bearer ${user.token}` }
           });
           setOrders(data);
@@ -53,91 +53,10 @@ export default function CustomerOrdersPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#050505] text-[var(--color-ivory)] flex flex-col font-sans">
-      
-      {/* Standalone Dashboard Header */}
-      <header className="h-20 bg-black/60 backdrop-blur-xl border-b border-white/[0.05] flex items-center justify-between px-8 sticky top-0 z-50">
-        <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate('/')}>
-          <div className="text-2xl font-serif text-[var(--color-ivory)] tracking-widest uppercase">
-            The Grand Store
-          </div>
-          <div className="h-4 w-px bg-white/20 mx-2"></div>
-          <div className="text-sm tracking-widest text-gold-gradient font-medium uppercase">
-            Client Portal
-          </div>
-        </div>
-        <div className="flex items-center gap-6">
-          <button onClick={() => navigate('/customer/cart')} className="relative text-[var(--color-ivory-muted)] hover:text-[var(--color-ivory)] transition-colors">
-            <Package size={20} />
-          </button>
-          <div className="flex items-center gap-3">
-            <div className="text-right hidden md:block">
-              <div className="text-sm font-serif">{user.name}</div>
-              <div className="text-xs text-gold-gradient tracking-widest uppercase">Private Client</div>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--color-gold)] to-yellow-700 p-[1px]">
-              <div className="w-full h-full bg-[#0a0a0a] rounded-full flex items-center justify-center">
-                <User size={18} className="text-gold-gradient" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="flex flex-1 overflow-hidden relative">
-        {/* Background glow effects */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-          <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[var(--color-gold)]/5 blur-[120px]"></div>
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--color-gold)]/5 blur-[100px]"></div>
-        </div>
-
-        {/* Glassmorphic Sidebar */}
-        <aside className="w-64 bg-white/[0.02] backdrop-blur-xl border-r border-white/[0.02] flex flex-col fixed top-20 bottom-0 left-0 z-10 overflow-y-auto">
-          <nav className="flex flex-col flex-1 p-6 gap-2 mt-4">
-            <button onClick={() => navigate('/customer/profile')} className="flex items-center gap-4 px-4 py-3 rounded-xl text-[var(--color-ivory-muted)] hover:bg-white/[0.03] hover:text-[var(--color-ivory)] transition-all text-left text-xs uppercase tracking-widest border border-transparent">
-              <User size={16} /> My Profile
-            </button>
-            <button className="flex items-center gap-4 px-4 py-3 rounded-xl bg-white/[0.05] text-gold-gradient shadow-[0_0_15px_rgba(212,175,55,0.05)] transition-all text-left text-xs uppercase tracking-widest font-semibold border border-white/[0.05]">
-              <Package size={16} /> My Orders
-            </button>
-            <button onClick={() => navigate('/customer/wishlist')} className="flex items-center gap-4 px-4 py-3 rounded-xl text-[var(--color-ivory-muted)] hover:bg-white/[0.03] hover:text-[var(--color-ivory)] transition-all text-left text-xs uppercase tracking-widest border border-transparent">
-              <Heart size={16} /> Wishlist
-            </button>
-            <button onClick={() => navigate('/customer/auctions')} className="flex items-center gap-4 px-4 py-3 rounded-xl text-[var(--color-ivory-muted)] hover:bg-white/[0.03] hover:text-[var(--color-ivory)] transition-all text-left text-xs uppercase tracking-widest border border-transparent">
-              <Gavel size={16} /> Auction Bids
-            </button>
-            
-            {user.role === 'vendor_active' && (
-              <div className="mt-8 pt-8 border-t border-white/[0.05]">
-                <button onClick={() => navigate('/vendor/dashboard')} className="flex items-center gap-4 px-4 py-3 rounded-xl w-full text-[var(--color-ivory-muted)] hover:bg-[var(--color-gold)]/10 hover:text-gold-gradient transition-all text-left text-xs uppercase tracking-widest border border-transparent hover:border-[var(--color-gold)]/20">
-                  <Building2 size={16} /> Vendor Dashboard
-                </button>
-              </div>
-            )}
-            
-            {user.role !== 'vendor_active' && (
-              <div className="mt-8 pt-8 border-t border-white/[0.05]">
-                <button onClick={() => navigate('/vendor/onboarding')} className="flex items-center gap-4 px-4 py-3 rounded-xl w-full text-[var(--color-ivory-muted)] hover:bg-[var(--color-gold)]/10 hover:text-gold-gradient transition-all text-left text-xs uppercase tracking-widest border border-transparent hover:border-[var(--color-gold)]/20">
-                  <Building2 size={16} /> Become Vendor
-                </button>
-              </div>
-            )}
-          </nav>
-          
-          <div className="p-6 border-t border-white/[0.05]">
-            <button onClick={handleLogout} className="flex items-center gap-4 px-4 py-3 rounded-xl w-full text-[var(--color-ivory-muted)] hover:text-red-400 transition-all text-left text-xs uppercase tracking-widest hover:bg-red-400/10">
-              <LogOut size={16} /> Sign Out
-            </button>
-          </div>
-        </aside>
-
-        {/* Main Content Area */}
-        <main className="flex-1 ml-64 p-12 overflow-y-auto z-10 custom-scrollbar pb-24">
-          <div className="max-w-5xl mx-auto">
-            
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-6 mb-10">
-              <div>
-                <h1 className="text-[var(--color-ivory)] font-serif text-4xl mb-2 flex items-center gap-4">
+    <div className="w-full max-w-5xl mx-auto flex flex-col gap-8 md:gap-12">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-6 mb-10">
+        <div>
+          <h1 className="text-[var(--color-ivory)] font-serif text-3xl md:text-4xl mb-2 flex items-center gap-4">
                   <div className="p-3 bg-[var(--color-gold)]/10 text-gold-gradient rounded-xl border border-[var(--color-gold)]/20 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
                     <Package size={28} />
                   </div>
@@ -228,9 +147,6 @@ export default function CustomerOrdersPage() {
                 ))}
               </div>
             )}
-          </div>
-        </main>
-      </div>
     </div>
   );
 }
