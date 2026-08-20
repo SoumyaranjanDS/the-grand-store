@@ -3806,8 +3806,8 @@ video {
   bottom: 24px;
   z-index: 60;
   @apply grid;
-  width: 49px;
-  height: 49px;
+  width: 56px;
+  height: 56px;
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
