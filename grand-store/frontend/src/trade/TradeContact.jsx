@@ -21,7 +21,7 @@ export default function TradeContact() {
         <div className="trade-contact-wrapper">
           <div className="trade-contact-info">
             <span className="trade-sub-eyebrow">Get In Touch</span>
-            <h1 className="trade-sub-title">Contact Us</h1>
+            <h1 className="trade-sub-title">Contact <span className="trade-script-accent">Us</span></h1>
             <p className="contact-lead">
               We look forward to discussing how we can partner together. Reach out to our trade specialists today.
             </p>

@@ -247,6 +247,7 @@ function App() {
   }
 
   const isTradeRoute = location.pathname.startsWith('/trade')
+  const isWineFarmRoute = location.pathname.startsWith('/winefarm') || location.pathname.startsWith('/wine-farm')
   const isDashboardRoute = location.pathname.startsWith('/customer') || location.pathname.startsWith('/vendor') || location.pathname.startsWith('/admin')
   const isAuthRoute = location.pathname === '/login' || location.pathname === '/register'
 
@@ -257,7 +258,7 @@ function App() {
   return (
     <div className="app">
       <SiteMotion />
-      {!isTradeRoute && !isDashboardRoute && !isAuthRoute && (
+      {!isTradeRoute && !isWineFarmRoute && !isDashboardRoute && !isAuthRoute && (
         <Header
           cartCount={cartCount}
           compareCount={compareItems.length}
@@ -269,6 +270,7 @@ function App() {
       )}
       <Routes>
         <Route path="/winefarm/*" element={<WineFarmPage />} />
+        <Route path="/wine-farm/*" element={<Navigate to="/winefarm" replace />} />
         <Route path="/vendor-portal" element={<VendorPortalPage />} />
         
         <Route path="/trade" element={<TradeLayout />}>

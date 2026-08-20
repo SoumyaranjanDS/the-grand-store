@@ -133,7 +133,7 @@ export default function Header({
               <img
                 src="/logo.png"
                 alt="The Grand Store"
-                className="h-8 sm:h-11 md:h-14 w-auto max-w-[110px] sm:max-w-[160px] md:max-w-[225px] object-contain object-left"
+                className="h-9 w-auto max-w-[135px] object-contain object-left sm:h-12 sm:max-w-[190px] md:h-[62px] md:max-w-[270px]"
               />
             </Link>
           </div>
@@ -197,8 +197,8 @@ export default function Header({
               </>
             )}
 
-            {/* Compare Button - Strictly Hidden on Mobile, Shown on Desktop */}
-            <div className="hidden sm:block">
+            {/* Compare Button - Hidden as per user request */}
+            <div className="hidden">
               <IconButton
                 label="Compare products"
                 count={compareCount}
@@ -381,7 +381,7 @@ export default function Header({
               <img 
                 src="/logo.png" 
                 alt="The Grand Store" 
-                className="h-10 w-auto max-w-[150px] object-contain object-left" 
+                className="h-11 w-auto max-w-[185px] object-contain object-left"
               />
             </Link>
             <IconButton label="Close menu" onClick={closeMenus}>

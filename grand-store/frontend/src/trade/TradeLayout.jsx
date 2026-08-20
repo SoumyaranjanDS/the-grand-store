@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import TradeNavbar from './TradeNavbar'
+import './TradePortal.css'
 
 export default function TradeLayout() {
   const location = useLocation()

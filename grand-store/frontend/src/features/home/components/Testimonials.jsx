@@ -185,10 +185,6 @@ export default function Testimonials() {
                     </div>
                     <div className="text-xs uppercase tracking-widest text-[#918a7f] mt-0.5 flex items-center gap-1.5">
                       <span>{item.location}</span>
-                      <span>•</span>
-                      <span className="text-gold-gradient font-semibold flex items-center gap-1">
-                        <CheckCircle2 size={12} className="text-[#e6c97a]" /> Verified
-                      </span>
                     </div>
                   </div>
                 </div>
@@ -210,9 +206,6 @@ export default function Testimonials() {
             4.98 / 5.0 Rating • 350+ Verified Cellars Delivered
           </span>
         </div>
-        <span className="text-[11px] uppercase tracking-widest text-[#6e685f]">
-          Hover card to pause review
-        </span>
       </div>
     </section>
   )

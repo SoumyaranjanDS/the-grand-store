@@ -7,7 +7,7 @@ export default function TradeExport() {
       <div className="shell trade-export-container">
         <div className="trade-export-content">
           <span className="trade-sub-eyebrow">Trade Export</span>
-          <h1 className="trade-sub-title">Your Global Gateway to South Africa’s Finest Wines</h1>
+          <h1 className="trade-sub-title">Your Global Gateway to <span className="trade-script-accent">South Africa’s Finest Wines</span></h1>
           
           <div className="trade-export-text">
             <p className="lead-paragraph">Our Company is a leading player in the wine industry, with a strong presence in South Africa's various wine growing regions. We have established excellent supply channels, allowing us to source the finest wines from the best vineyards in the region.</p>

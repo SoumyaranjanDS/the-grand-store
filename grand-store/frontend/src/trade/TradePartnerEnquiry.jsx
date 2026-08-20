@@ -31,7 +31,7 @@ export default function TradePartnerEnquiry() {
         <div className="trade-enquiry-content">
           <div className="trade-contact-form-container enquiry-form-container">
             <span className="trade-sub-eyebrow">Get Started</span>
-            <h1 className="form-title">Apply for Trade</h1>
+            <h1 className="form-title trade-enquiry-title">Apply for <span className="trade-script-accent">Trade</span></h1>
             
             {submitted ? (
               <div className="form-success mt-2">

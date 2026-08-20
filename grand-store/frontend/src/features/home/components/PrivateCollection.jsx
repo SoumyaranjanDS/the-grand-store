@@ -1,33 +1,21 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
+import { useProducts } from '../../../context/ProductContext'
 
 export default function PrivateCollection() {
-  const cards = [
-    { 
-      number: '01', 
-      overline: 'Peat & Smoke', 
-      title: 'The Islay Edit', 
-      desc: 'Maritime salt, peat fire and cask strength rarity.',
-      image: '/assets/products/bowmore-12.png',
-      link: '/shop?category=Whisky'
-    },
-    { 
-      number: '02', 
-      overline: 'After-Dark Icons', 
-      title: 'The Host’s Cabinet', 
-      desc: 'Remarkable bottles chosen for hosting milestones.',
-      image: '/assets/products/lady-eclipse.png',
-      link: '/shop?collection=private'
-    },
-    { 
-      number: '03', 
-      overline: 'Silken & Storied', 
-      title: 'Cape Potstill & Irish', 
-      desc: 'Heritage copper pot distillation from Stellenbosch to Cork.',
-      image: '/assets/products/irishman-harvest.png',
-      link: '/shop?category=Brandy'
-    },
-  ]
+  const { products } = useProducts()
+
+  // Use the first 3 products, or fallback to empty array
+  const collectionProducts = products.slice(0, 3)
+
+  const cards = collectionProducts.map((product, index) => ({
+    number: `0${index + 1}`,
+    overline: product.category || product.type || 'Exclusive',
+    title: product.name,
+    desc: product.description || 'Exclusive curated collection selection.',
+    image: product.image,
+    link: `/product/${product.id || product._id}`
+  }))
 
   return (
     <section 
@@ -58,10 +46,6 @@ export default function PrivateCollection() {
                 Intention
               </span>
             </h2>
-            <p className="max-w-[600px] mt-2.5 text-[rgba(244,238,224,0.76)] text-[15px] md:text-[16px] leading-[1.6]">
-              <span className="font-serif text-[#f0cf76] italic text-[1.06em]">The Private Collection.</span>{' '}
-              Thoughtful edits for remarkable tables, important milestones and rare cellar acquisitions.
-            </p>
           </div>
           <Link 
             className="inline-flex items-center gap-2.5 pb-[6px] border-b border-[#bd9054] text-[#e1bd70] text-[13px] font-semibold tracking-[0.13em] uppercase transition-colors hover:text-white shrink-0" 
@@ -72,45 +56,47 @@ export default function PrivateCollection() {
         </div>
         
         {/* 3 Compact Luxury Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 items-stretch">
           {cards.map((card) => (
             <Link 
               key={card.number}
               to={card.link}
-              className="group relative flex flex-col justify-between min-h-[250px] md:min-h-[270px] p-5 md:p-6 rounded-2xl border border-white/10 bg-[#11100d] hover:border-[#c9a35b]/60 hover:bg-[#15120e] hover:shadow-[0_16px_36px_rgba(0,0,0,0.6)] hover:-translate-y-1 transition-all duration-300 overflow-hidden shadow-xl text-left" 
+              className="group relative flex flex-col min-h-[360px] md:min-h-[380px] p-5 md:p-6 rounded-[24px] border border-white/10 bg-gradient-to-b from-[#11100d] to-[#0a0907] hover:border-[#c9a35b]/50 hover:shadow-[0_20px_40px_rgba(0,0,0,0.8)] hover:-translate-y-1.5 transition-all duration-500 overflow-hidden shadow-2xl text-left" 
             >
               {/* Radial ambient glow on hover */}
-              <div className="absolute -top-10 -right-10 w-36 h-36 bg-[var(--color-gold)]/10 rounded-full blur-2xl group-hover:bg-[var(--color-gold)]/20 transition-all pointer-events-none" />
-
-              {/* Floating Bottle Asset */}
-              <img 
-                className="absolute -right-2 -bottom-3 w-[46%] h-[80%] object-contain object-right-bottom drop-shadow-[-12px_16px_20px_rgba(0,0,0,0.75)] transition-transform duration-500 ease-out group-hover:scale-108 group-hover:-translate-y-1.5 pointer-events-none z-10" 
-                src={card.image} 
-                alt={card.title} 
-                loading="lazy"
-              />
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--color-gold)]/5 rounded-full blur-3xl group-hover:bg-[var(--color-gold)]/15 transition-all pointer-events-none" />
 
               {/* Card Top Meta */}
-              <div className="flex items-center justify-between gap-3 relative z-20">
-                <span className="text-[9px] md:text-[10px] uppercase tracking-widest font-bold text-gold-gradient bg-[#c9a35b]/10 px-2.5 py-0.5 rounded-full border border-[#c9a35b]/20">
+              <div className="flex items-start justify-between gap-3 relative z-20 mb-1">
+                <span className="text-[11px] md:text-xs uppercase tracking-[0.2em] font-bold text-gold-gradient bg-[#c9a35b]/10 px-3 py-1 rounded-full border border-[#c9a35b]/25 truncate max-w-[170px]">
                   {card.overline}
                 </span>
-                <span className="text-xs font-mono font-semibold text-[#716957] bg-black/40 px-2 py-0.5 rounded border border-white/5">
+                <span className="text-[14px] font-mono font-semibold text-[#8c8270] bg-black/50 px-2 py-0.5 rounded-md border border-white/5 shrink-0">
                   {card.number}
                 </span>
               </div>
 
-              {/* Card Content & Action */}
-              <div className="relative z-20 mt-6 max-w-[65%]">
-                <h3 className="m-0 font-serif text-xl md:text-[23px] font-medium leading-[1.15] text-[#eee8dd] group-hover:text-[#f0cf76] transition-colors">
+              {/* Dedicated Image Container */}
+              <div className="relative z-10 flex-grow flex items-center justify-center py-3">
+                <img 
+                  className="w-full h-[140px] md:h-[155px] object-contain drop-shadow-[-10px_15px_25px_rgba(0,0,0,0.8)] group-hover:scale-110 group-hover:-translate-y-2 transition-all duration-500 ease-out" 
+                  src={card.image} 
+                  alt={card.title} 
+                  loading="lazy"
+                />
+              </div>
+
+              {/* Card Content & Action (Bottom) */}
+              <div className="relative z-20 mt-auto pt-3 border-t border-white/5">
+                <h3 className="m-0 font-serif text-[24px] md:text-[28px] font-medium leading-[1.2] tracking-wide text-[#eee8dd] group-hover:text-[#f0cf76] transition-colors line-clamp-2">
                   {card.title}
                 </h3>
-                <p className="mt-2 text-xs text-[#918a7f] leading-relaxed line-clamp-2">
+                <p className="mt-2.5 text-[14px] md:text-[15px] text-[#b3ac9f] font-light leading-[1.6] line-clamp-2 min-h-[48px]">
                   {card.desc}
                 </p>
-                <div className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#c9a35b] group-hover:text-white uppercase tracking-wider transition-colors">
-                  <span>Explore</span>
-                  <ArrowRight size={13} className="transform group-hover:translate-x-1 transition-transform" />
+                <div className="mt-4 flex items-center gap-2 text-[13px] font-bold text-[#c9a35b] group-hover:text-white uppercase tracking-[0.2em] transition-colors">
+                  <span>Explore Collection</span>
+                  <ArrowRight size={16} className="transform group-hover:translate-x-2 transition-transform duration-300" />
                 </div>
               </div>
             </Link>
