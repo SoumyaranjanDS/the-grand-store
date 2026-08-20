@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Building2, Package, PlusCircle, User, LayoutDashboard, Wallet, Megaphone, GraduationCap, Menu, X, ShoppingBag, Calendar, Settings, Truck, LogOut, Store, Gavel } from 'lucide-react';
+import { Building2, Package, PlusCircle, User, LayoutDashboard, Wallet, Megaphone, GraduationCap, Menu, X, ShoppingBag, Calendar, Settings, Truck, LogOut, Store, Gavel, MapPin } from 'lucide-react';
 
 export default function VendorLayout() {
   const { user, logout } = useAuth();
@@ -147,6 +147,9 @@ export default function VendorLayout() {
             <div className="text-[10px] text-[var(--color-ivory-muted)] uppercase tracking-widest mb-2 mt-4 pl-2">Growth & Support</div>
             <button onClick={() => handleNavigate('/vendor/store')} className={navItemClass('/vendor/store')}>
               <Store size={16} /> Store Management
+            </button>
+            <button onClick={() => handleNavigate('/vendor/estate-builder')} className={navItemClass('/vendor/estate-builder')}>
+              <MapPin size={16} /> Estate Profile
             </button>
             <button onClick={() => handleNavigate('/vendor/marketing')} className={navItemClass('/vendor/marketing')}>
               <Megaphone size={16} /> Marketing Centre
