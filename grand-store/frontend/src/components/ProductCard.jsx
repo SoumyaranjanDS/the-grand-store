@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { GitCompareArrows, Heart, Search, ShoppingBag, Plus } from 'lucide-react'
+import { GitCompareArrows, Heart, Search, ShoppingBag, Plus, Store } from 'lucide-react'
 import { useWishlist } from '../wishlistContext'
 
 export default function ProductCard({ product, onAdd, onWish, onCompare, isCompared = false, onQuickView }) {
@@ -52,8 +52,17 @@ export default function ProductCard({ product, onAdd, onWish, onCompare, isCompa
         </strong>
 
         {product.storeName && product.storeId && (
-          <div className="text-xs text-[var(--color-ivory-muted)] mt-1 mb-2">
-            From: <Link to={`/store/${product.storeId}`} className="text-gold-gradient hover:underline" onClick={(e) => e.stopPropagation()}>{product.storeName}</Link>
+          <div className="mt-1 mb-2">
+            <Link 
+              to={`/store/${product.storeId}`} 
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1 bg-gradient-to-r from-[#b58b38]/10 to-[#e6c97a]/10 border border-[#b58b38]/30 rounded-full hover:from-[#b58b38]/20 hover:to-[#e6c97a]/20 hover:border-[#b58b38]/60 transition-all duration-300 group/store shadow-[0_2px_10px_rgba(0,0,0,0.2)] hover:shadow-[0_4px_12px_rgba(181,139,56,0.15)]"
+            >
+              <Store size={10} className="text-[#c9a35b] group-hover/store:text-[#e6c97a] transition-colors" />
+              <span className="text-[9px] uppercase tracking-wider text-[#e6c97a] font-medium group-hover/store:text-white transition-colors truncate max-w-[120px]">
+                {product.storeName}
+              </span>
+            </Link>
           </div>
         )}
 
