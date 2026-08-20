@@ -60,6 +60,8 @@ import VendorProducts from './features/vendor/VendorProducts'
 import EditProduct from './features/vendor/EditProduct'
 import VendorLayout from './features/vendor/VendorLayout'
 import VendorStore from './features/vendor/VendorStore'
+import EstateBuilder from './features/vendor/EstateBuilder'
+import EstateDetail from './features/wine-farm/EstateDetail'
 import EventAttendees from './features/vendor/EventAttendees'
 import VendorInventory from './features/vendor/VendorInventory'
 import VendorWallet from './features/vendor/VendorWallet'
@@ -361,6 +363,7 @@ function App() {
           <Route path="events" element={<VendorEvents />} />
           <Route path="events/:id/attendees" element={<EventAttendees onNotify={showToast} />} />
           <Route path="auction-submit" element={<AuctionSubmission onNotify={showToast} />} />
+          <Route path="estate-builder" element={<EstateBuilder />} />
         </Route>
 
         <Route path="/admin" element={<AdminLayout />}>
@@ -376,6 +379,7 @@ function App() {
         <Route path="/auction" element={<AuctionPage onNotify={showToast} />} />
         <Route path="/auction/:id" element={<AuctionLotDetail onNotify={showToast} />} />
         <Route path="/auction/checkout/:id" element={<AuctionCheckout onNotify={showToast} />} />
+        <Route path="/estate/:slug" element={<EstateDetail onNotify={showToast} />} />
         <Route path="/bookatasting" element={<TastingPage onNotify={showToast} />} />
         <Route path="/events" element={<EventsHub />} />
         <Route path="/events/:id" element={<EventDetails onNotify={showToast} onAdd={addToCart} />} />
