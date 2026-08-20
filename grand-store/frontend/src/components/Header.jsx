@@ -197,16 +197,7 @@ export default function Header({
               </>
             )}
 
-            {/* Compare Button - Strictly Hidden on Mobile, Shown on Desktop */}
-            <div className="hidden sm:block">
-              <IconButton
-                label="Compare products"
-                count={compareCount}
-                onClick={onCompareClick}
-              >
-                <GitCompareArrows size={21} />
-              </IconButton>
-            </div>
+
 
             {/* Wishlist / Likes - Visible on Mobile & Desktop */}
             <IconButton
@@ -339,22 +330,7 @@ export default function Header({
                 )}
               </AnimatePresence>
             </div>
-            <button
-              className="nav-dropdown-button"
-              type="button"
-              aria-expanded={megaOpen && megaTrigger === "wine"}
-              onClick={() => toggleMegaMenu("wine", "Wine")}
-            >
-              Wine <ChevronDown size={14} />
-            </button>
-            <button
-              className="nav-dropdown-button"
-              type="button"
-              aria-expanded={megaOpen && megaTrigger === "accessories"}
-              onClick={() => toggleMegaMenu("accessories", "Accessories")}
-            >
-              Accessories <ChevronDown size={14} />
-            </button>
+
             <a href="/#private-collection">Offers</a>
             <Link to="/auction">Auction</Link>
             <Link to="/events" className="font-bold text-[#f0cf76] hover:text-white transition-colors">Events</Link>
@@ -435,9 +411,7 @@ export default function Header({
             <Link to="/global-wines" onClick={closeMenus} className="text-[#f0cf76] font-bold">
               🌍 Global Wines
             </Link>
-            <Link to="/customer/compare" onClick={closeMenus}>
-              Compare
-            </Link>
+
             <Link to="/customer/wishlist" onClick={closeMenus}>
               Wishlist
             </Link>
