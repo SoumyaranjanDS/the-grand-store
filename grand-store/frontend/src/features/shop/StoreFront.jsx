@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { Store, MapPin, Award, CheckCircle, Search } from 'lucide-react';
+import { Store, MapPin, CheckCircle, Search } from 'lucide-react';
 import ProductCard from '../../components/ProductCard';
 
 export default function StoreFront() {
@@ -11,36 +11,15 @@ export default function StoreFront() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In a real scenario, this would fetch from a specific endpoint that returns vendor details and their products
-    // For now, we mock the fetch
     const fetchStore = async () => {
       try {
         setLoading(true);
-        // We'll mock the data for demonstration purposes, as the actual backend endpoint might not exist yet
-        // In real implementation: const res = await axios.get(`/api/shop/stores/${storeId}`);
-        
-        await new Promise(r => setTimeout(r, 1000));
-        
-        setStoreData({
-          _id: storeId,
-          businessName: 'Stellenbosch Vineyards',
-          country: 'South Africa',
-          type: 'local',
-          bannerUrl: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?q=80&w=2000&auto=format&fit=crop',
-          logoUrl: 'https://images.unsplash.com/photo-1559564109-ce879bd2925b?q=80&w=200&auto=format&fit=crop',
-          story: 'Nestled in the heart of the Cape Winelands, Stellenbosch Vineyards has been producing exceptional wines for over a century. Our master winemaker brings traditional techniques together with modern innovation to create award-winning vintages.',
-          isVerified: true,
-        });
-
-        // Mock products
-        setProducts([
-          { _id: '1', title: 'Cabernet Sauvignon 2018', category: 'Wine', price: 450, images: ['https://images.unsplash.com/photo-1584916201218-f4242ceb4809?q=80&w=500&auto=format&fit=crop'] },
-          { _id: '2', title: 'Chenin Blanc Reserve', category: 'Wine', price: 320, images: ['https://images.unsplash.com/photo-1563261775-6e8648b2eb59?q=80&w=500&auto=format&fit=crop'] },
-          { _id: '3', title: 'Pinotage Estate 2020', category: 'Wine', price: 550, images: ['https://images.unsplash.com/photo-1571216581177-33a4c49f8263?q=80&w=500&auto=format&fit=crop'] },
-        ]);
-        
+        const res = await axios.get(`${import.meta.env.VITE_API_URL || ''}/api/shop/stores/${storeId}`);
+        setStoreData(res.data.storeData);
+        setProducts(res.data.products);
       } catch (err) {
-        console.error(err);
+        console.error('Failed to fetch store details:', err);
+        setStoreData(null);
       } finally {
         setLoading(false);
       }
@@ -52,7 +31,7 @@ export default function StoreFront() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <div className="text-[var(--color-ivory-muted)] animate-pulse">Loading Storefront...</div>
+        <div className="w-8 h-8 border border-[var(--color-gold)] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -60,71 +39,101 @@ export default function StoreFront() {
   if (!storeData) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <div className="text-red-500">Store not found</div>
+        <div className="text-red-500 font-serif text-2xl tracking-widest">STORE NOT FOUND</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-[var(--color-ivory)]">
-      {/* Banner */}
-      <div className="relative h-64 md:h-96 w-full">
-        <img src={storeData.bannerUrl} alt="Store Banner" className="w-full h-full object-cover opacity-60" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-black/50" />
+    <div className="min-h-screen bg-[#050505] text-[var(--color-ivory)] font-sans">
+      
+      {/* --- BANNER --- */}
+      <div className="w-full h-40 md:h-56 lg:h-[250px] relative bg-[#111]">
+        <img 
+          src={storeData.bannerUrl} 
+          alt="Store Banner" 
+          className="w-full h-full object-cover"
+        />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-24 md:-mt-32 relative z-10 pb-20">
+      {/* --- STORE DETAILS PROFILE --- */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Header Profile */}
-        <div className="bg-[#0a0a0a] border border-white/10 p-8 rounded-2xl flex flex-col md:flex-row gap-8 items-start mb-12 shadow-2xl">
-          <div className="w-32 h-32 md:w-48 md:h-48 rounded-xl overflow-hidden border-2 border-[var(--color-gold)] shrink-0 bg-black">
-            <img src={storeData.logoUrl} alt="Store Logo" className="w-full h-full object-cover" />
+        <div className="flex flex-col md:flex-row items-start gap-6 -mt-20 md:-mt-28 relative z-10 mb-10">
+          
+          {/* Overlapping Logo */}
+          <div className="w-40 h-40 md:w-56 md:h-56 rounded-full border-[8px] border-[#050505] bg-black overflow-hidden shrink-0 shadow-lg">
+            <img 
+              src={storeData.logoUrl} 
+              alt="Store Logo" 
+              className="w-full h-full object-cover" 
+            />
           </div>
           
-          <div className="flex-1">
+          {/* Details */}
+          <div className="pt-2 md:pt-28 flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl md:text-4xl font-serif text-[var(--color-ivory)]">{storeData.businessName}</h1>
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif text-white">{storeData.businessName}</h1>
               {storeData.isVerified && (
-                <div className="flex items-center gap-1 text-[10px] uppercase tracking-widest text-[var(--color-gold)] bg-[var(--color-gold)]/10 px-2 py-1 rounded-full border border-[var(--color-gold)]/20">
-                  <CheckCircle size={12} /> Verified
-                </div>
+                <CheckCircle size={22} className="text-[#c9a35b]" />
               )}
             </div>
             
-            <div className="flex items-center gap-4 text-xs text-[var(--color-ivory-muted)] uppercase tracking-widest mb-6">
-              <span className="flex items-center gap-1"><MapPin size={14} /> {storeData.country}</span>
-              <span className="flex items-center gap-1"><Store size={14} /> {storeData.type === 'local' ? 'Local Vendor' : 'International Vendor'}</span>
-              <span className="flex items-center gap-1"><Award size={14} /> Top Rated</span>
+            <div className="flex items-center gap-4 text-sm text-[var(--color-ivory-muted)] mb-6">
+              <span className="flex items-center gap-1.5"><MapPin size={16} /> {storeData.country}</span>
+              <span className="flex items-center gap-1.5"><Store size={16} /> {storeData.type === 'local' ? 'Local Vendor' : 'International Vendor'}</span>
             </div>
             
-            <p className="text-white/60 font-light leading-relaxed max-w-3xl">
-              {storeData.story}
-            </p>
+            {storeData.story && (
+              <div className="max-w-4xl">
+                <p className="text-white/70 leading-relaxed font-light text-sm md:text-base">
+                  {storeData.story}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Store Products */}
-        <div>
-          <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/10">
-            <h2 className="text-2xl font-serif text-[var(--color-ivory)]">Store Collection</h2>
-            <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 w-64">
-              <Search size={14} className="text-white/40" />
-              <input type="text" placeholder="Search this store..." className="bg-transparent border-none outline-none text-sm text-white placeholder-white/30 w-full" />
+        {/* Divider */}
+        <div className="w-full h-px bg-white/10 mb-8" />
+
+        {/* --- PRODUCTS SECTION --- */}
+        <div className="pb-24">
+          
+          {/* Tab / Toolbar */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+            <div className="flex items-center gap-8 text-lg font-serif">
+              <button className="text-white border-b-2 border-[#c9a35b] pb-1">Collection</button>
+              {/* Future tabs could go here, like "About" or "Reviews" */}
+            </div>
+            
+            <div className="flex items-center gap-2 bg-[#111] border border-white/10 rounded-full px-4 py-2 w-full sm:w-64 focus-within:border-[#c9a35b]/50 transition-colors">
+              <Search size={16} className="text-white/40" />
+              <input 
+                type="text" 
+                placeholder="Search store..." 
+                className="bg-transparent border-none outline-none text-sm text-white placeholder-white/30 w-full focus:ring-0" 
+              />
             </div>
           </div>
           
+          {/* Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {products.map(product => (
               <ProductCard key={product._id} product={product} />
             ))}
           </div>
           
+          {/* Empty State */}
           {products.length === 0 && (
-            <div className="text-center py-20 text-[var(--color-ivory-muted)] border border-white/5 border-dashed rounded-xl">
-              This store doesn't have any products available yet.
-            </div>
+             <div className="py-24 text-center border border-white/5 rounded-2xl bg-white/[0.02]">
+               <Store size={40} className="mx-auto text-white/20 mb-4" />
+               <h3 className="text-white/60 mb-2 font-serif text-xl">No products available</h3>
+               <p className="text-white/40 text-sm">This store hasn't added any products to their collection yet.</p>
+             </div>
           )}
         </div>
+
       </div>
     </div>
   );
