@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { ChevronRight, ArrowRight, ShieldCheck, Lock, CreditCard, Loader2, Truck, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { formatCartPrice } from '../../data';
 import LocationInput from '../../components/LocationInput';
 
-export default function CheckoutPage({ cartItems, onClearCart, onNotify }) {
+export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, onNotify }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const vendorId = searchParams.get('vendor');
+  const vendorCartItems = cartItems.filter(item => (item.storeId || item.vendorId || 'grand-store') === vendorId);
+
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [quoteLoading, setQuoteLoading] = useState(false);
@@ -23,7 +27,7 @@ export default function CheckoutPage({ cartItems, onClearCart, onNotify }) {
     address: '',
     city: '',
     postalCode: '',
-    country: 'South Africa',
+    country: '',
     cardNumber: '',
     expiry: '',
     cvc: ''
@@ -32,10 +36,18 @@ export default function CheckoutPage({ cartItems, onClearCart, onNotify }) {
   useEffect(() => {
     document.title = 'Checkout – The Grand Store';
     window.scrollTo({ top: 0, behavior: 'auto' });
-    if (cartItems.length === 0) {
+    
+    // Prevent vendors from checking out
+    if (user && user.role && user.role.startsWith('vendor')) {
+      onNotify("Vendors cannot checkout. Please sign up as a customer.");
+      navigate('/register');
+      return;
+    }
+
+    if (!vendorId || vendorCartItems.length === 0) {
       navigate('/customer/cart');
     }
-  }, [cartItems, navigate]);
+  }, [vendorCartItems, navigate, user, onNotify, vendorId]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -53,7 +65,7 @@ export default function CheckoutPage({ cartItems, onClearCart, onNotify }) {
     
     try {
       const payload = {
-        cartItems: cartItems.map(item => ({
+        cartItems: vendorCartItems.map(item => ({
           product: item.id || item._id,
           name: item.fullName || item.name,
           quantity: item.quantity,
@@ -144,7 +156,11 @@ export default function CheckoutPage({ cartItems, onClearCart, onNotify }) {
         throw new Error(data.message || 'Error placing order');
       }
 
-      onClearCart();
+      if (clearVendorCart && vendorId) {
+        clearVendorCart(vendorId);
+      } else {
+        onClearCart();
+      }
       onNotify('Order placed successfully!');
       navigate(`/customer/order/${data._id}`);
       
@@ -206,9 +222,9 @@ export default function CheckoutPage({ cartItems, onClearCart, onNotify }) {
                         onPlaceDetails={({ city, postalCode, country }) => {
                           setFormData(prev => ({
                             ...prev,
-                            city: city || prev.city,
-                            postalCode: postalCode || prev.postalCode,
-                            country: country || prev.country
+                            city: city,
+                            postalCode: postalCode,
+                            country: country
                           }));
                         }}
                         required 
@@ -251,7 +267,7 @@ export default function CheckoutPage({ cartItems, onClearCart, onNotify }) {
 
                 {quote && quote.shipments.map((shp, index) => (
                   <div key={index} className="mb-6 bg-black/40 border border-white/10 rounded-xl p-6">
-                    <h4 className="text-lg font-serif text-gold mb-4 flex items-center gap-2"><Truck size={18} /> Shipment {index + 1}</h4>
+                    <h4 className="text-lg font-serif text-gold mb-4 flex items-center gap-2"><Truck size={18} /> Shipment {index + 1} — {shp.vendorName || 'The Grand Store'}</h4>
                     <p className="text-xs text-[var(--color-ivory-muted)] mb-4">Delivering from {shp.originCountry} to {shp.destCountry}</p>
                     
                     <div className="mb-4">
@@ -361,13 +377,9 @@ export default function CheckoutPage({ cartItems, onClearCart, onNotify }) {
                     <span>Products Subtotal</span>
                     <span>{formatCartPrice(quote.globalSubtotal)}</span>
                   </div>
-                  <div className="flex justify-between text-[var(--color-ivory-muted)]">
+                  <div className="flex justify-between pb-4 border-b border-white/10 text-[var(--color-ivory-muted)]">
                     <span>Delivery (Total)</span>
                     <span>{quote.aggregatedTotals.shipping > 0 ? formatCartPrice(quote.aggregatedTotals.shipping) : 'Free'}</span>
-                  </div>
-                  <div className="flex justify-between pb-4 border-b border-white/10 text-[var(--color-ivory-muted)]">
-                    <span>VAT</span>
-                    <span>{formatCartPrice(quote.aggregatedTotals.vat)}</span>
                   </div>
                   <div className="flex justify-between text-lg font-serif mt-2">
                     <span>Total To Pay</span>
