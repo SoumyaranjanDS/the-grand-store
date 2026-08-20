@@ -53,8 +53,22 @@ const getShippingQuotes = async (vendorId, customerAddress, shipmentItemsSubtota
       quotes.push({
         courierName: 'GS Domestic Logistics',
         serviceLevel: 'Standard',
-        cost: standardCost,
-        estimatedDays: '2-4 business days'
+        cost: standardCost, // What customer sees
+        estimatedDays: '2-4 business days',
+        legs: [
+          {
+            courierName: 'GS Primary',
+            origin: originCountry,
+            destination: destCountry,
+            cost: standardCost > 0 ? standardCost * 0.6 : 80 // Internal commercial cost
+          },
+          {
+            courierName: 'Local Partner',
+            origin: 'Local Hub',
+            destination: customerAddress.city || 'Customer',
+            cost: standardCost > 0 ? standardCost * 0.2 : 30 // Internal commercial cost
+          }
+        ]
       });
       
       if (standardCost > 0) {
@@ -62,7 +76,15 @@ const getShippingQuotes = async (vendorId, customerAddress, shipmentItemsSubtota
           courierName: 'GS Domestic Express',
           serviceLevel: 'Express',
           cost: expressCost,
-          estimatedDays: '1-2 business days'
+          estimatedDays: '1-2 business days',
+          legs: [
+            {
+              courierName: 'GS Express Primary',
+              origin: originCountry,
+              destination: customerAddress.city || 'Customer',
+              cost: expressCost * 0.8
+            }
+          ]
         });
       }
     } 
@@ -77,7 +99,27 @@ const getShippingQuotes = async (vendorId, customerAddress, shipmentItemsSubtota
         courierName: 'DHL Express',
         serviceLevel: 'International Express',
         cost: baseRate,
-        estimatedDays: '5-8 business days'
+        estimatedDays: '5-8 business days',
+        legs: [
+          {
+            courierName: 'Local Courier',
+            origin: originCountry,
+            destination: 'SA Export Hub',
+            cost: 200
+          },
+          {
+            courierName: 'DHL International',
+            origin: 'SA Export Hub',
+            destination: `${destCountry} Import Hub`,
+            cost: baseRate * 0.6
+          },
+          {
+            courierName: 'DHL Local Partner',
+            origin: `${destCountry} Import Hub`,
+            destination: customerAddress.city || destCountry,
+            cost: baseRate * 0.15
+          }
+        ]
       });
 
       // Mock Duties/Taxes (DAP by default, but we can quote landed cost)
@@ -94,7 +136,21 @@ const getShippingQuotes = async (vendorId, customerAddress, shipmentItemsSubtota
         courierName: 'Global Logistics',
         serviceLevel: 'International Priority',
         cost: baseRate,
-        estimatedDays: '7-14 business days'
+        estimatedDays: '7-14 business days',
+        legs: [
+          {
+            courierName: 'Global Logistics',
+            origin: originCountry,
+            destination: 'SA Import Hub',
+            cost: baseRate * 0.65
+          },
+          {
+            courierName: 'GS Domestic Logistics',
+            origin: 'SA Import Hub',
+            destination: customerAddress.city || 'Customer',
+            cost: baseRate * 0.15
+          }
+        ]
       });
       estimatedDuties = parseFloat((shipmentItemsSubtotal * 0.20).toFixed(2));
       estimatedTaxes = parseFloat((shipmentItemsSubtotal * 0.15).toFixed(2)); // SA VAT is 15% on imports
