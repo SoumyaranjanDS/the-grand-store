@@ -305,7 +305,14 @@ export default function OnboardingWizard() {
           {steps.map((step, idx) => {
             const Icon = step.icon;
             const isActive = currentStep === step.id;
-            const isComplete = step.id === 6 ? (currentStep > 6 || !!customsInfo.exportCode) : isStepComplete(step.id);
+            let isComplete = false;
+            if (isLocal && step.id === 6) {
+              isComplete = currentStep > 6 || !!customsInfo.exportCode;
+            } else if (!isLocal && step.id === 5) {
+              isComplete = currentStep > 5 || !!logisticsInfo.currentImporter || !!logisticsInfo.freightForwarder;
+            } else {
+              isComplete = isStepComplete(step.id);
+            }
             
             return (
               <div key={step.id} className="flex items-center min-w-max">
