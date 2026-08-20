@@ -1,258 +1,263 @@
-import React, { useEffect, useState } from "react";
-import { useAuth } from "../../context/AuthContext";
-import { BarChart3, Filter, Download, TrendingUp, DollarSign, Users, AlertCircle, Search } from "lucide-react";
-import axios from "axios";
-
-const formatR = v => `R${Number(v || 0).toLocaleString("en-ZA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const MODULE_LABELS = { SHP: "Shop", AUC: "Auction", EVT: "Events" };
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { DollarSign, ArrowUpRight, ArrowDownRight, TrendingUp, History } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export default function AdminFinancials({ hideHeader = false }) {
   const { user } = useAuth();
-  const [orders, setOrders] = useState([]);
-  const [bookings, setBookings] = useState([]);
-  const [auctionLots, setAuctionLots] = useState([]);
+  const [metrics, setMetrics] = useState(null);
+  const [transactions, setTransactions] = useState([]);
+  const [shopOrders, setShopOrders] = useState([]);
+  const [auctionOrders, setAuctionOrders] = useState([]);
+  const [eventBookings, setEventBookings] = useState([]);
+  const [activeTab, setActiveTab] = useState('shop');
   const [loading, setLoading] = useState(true);
-  const [filterModule, setFilterModule] = useState("ALL");
-  const [filterStatus, setFilterStatus] = useState("ALL");
-  const [searchRef, setSearchRef] = useState("");
+  const [error, setError] = useState('');
 
-  const goldText = "bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] bg-clip-text text-transparent";
-  const scriptFont = { fontFamily: "'Dancing Script', cursive" };
+  const formatMoney = (amount) => {
+    return new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(amount || 0);
+  };
 
-  // ... (useEffects and mapping logic remains exactly the same below)
   useEffect(() => {
-    const headers = { Authorization: `Bearer ${user.token}` };
-    const fetchAll = async () => {
+    const fetchFinanceData = async () => {
       try {
-        const [ordRes, bkgRes, aucRes] = await Promise.allSettled([
-          axios.get(`${import.meta.env.VITE_API_URL}/api/orders/myorders`, { headers }),
-          axios.get(`${import.meta.env.VITE_API_URL}/api/events/bookings/my-tickets`, { headers }),
-          axios.get(`${import.meta.env.VITE_API_URL}/api/auction/admin/all`, { headers }),
-        ]);
-        if (ordRes.status === "fulfilled") setOrders(ordRes.value.data || []);
-        if (bkgRes.status === "fulfilled") setBookings(bkgRes.value.data || []);
-        if (aucRes.status === "fulfilled") setAuctionLots(aucRes.value.data || []);
-      } catch (e) {
-        console.error(e);
+        const API_URL = import.meta.env.VITE_API_URL || '';
+        const res = await axios.get(`${API_URL}/api/admin/finance`, {
+          headers: { Authorization: `Bearer ${user?.token}` }
+        });
+        setMetrics(res.data.metrics);
+        setTransactions(res.data.transactions);
+        setShopOrders(res.data.shopOrders || []);
+        setAuctionOrders(res.data.auctionOrders || []);
+        setEventBookings(res.data.eventBookings || []);
+      } catch (err) {
+        setError('Failed to load finance data');
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
-    fetchAll();
-  }, [user]);
 
-  // Unify transactions
-  const allTransactions = [
-    ...orders.map(o => ({
-      ref: o.invoiceNumber || o.transactionId || o._id,
-      module: "SHP",
-      type: "Sale",
-      date: new Date(o.createdAt),
-      customer: o.user?.name || "Customer",
-      vendor: o.orderItems?.[0]?.vendorId || "—",
-      grossSale: o.subTotal || o.totalPrice,
-      commission: o.commissionAmount || 0,
-      vat: o.vatAmount || 0,
-      vendorPayable: o.vendorPayables?.[0]?.netPayable || 0,
-      shipping: o.shippingCost || 0,
-      total: o.totalPrice,
-      status: o.paymentStatus || (o.isPaid ? "Paid" : "Pending"),
-    })),
-    ...bookings.map(b => ({
-      ref: b.gsReference || b.ticketId,
-      module: "EVT",
-      type: "Event Booking",
-      date: new Date(b.bookingDate),
-      customer: b.user?.name || "Customer",
-      vendor: b.vendor?.name || "Organizer",
-      grossSale: b.subTotal || b.totalPrice,
-      commission: b.commissionAmount || 0,
-      vat: b.vatAmount || 0,
-      vendorPayable: b.organizerPayable || 0,
-      shipping: 0,
-      total: b.totalPrice,
-      status: b.paymentStatus || "Paid",
-    })),
-    ...auctionLots.filter(l => l.status === "sold").map(l => ({
-      ref: l.gsReference || l._id,
-      module: "AUC",
-      type: "Auction Sale",
-      date: new Date(l.updatedAt),
-      customer: l.winner?.name || "Winner",
-      vendor: l.vendor?.name || "Vendor",
-      grossSale: l.winningBid,
-      commission: l.commissionAmount || 0,
-      vat: l.vatAmount || 0,
-      vendorPayable: l.vendorPayable || 0,
-      shipping: l.shippingCost || 0,
-      total: l.totalPaidByBuyer,
-      status: l.paymentStatus || "Paid",
-    })),
-  ].sort((a, b) => b.date - a.date);
+    fetchFinanceData();
+  }, []);
 
-  const filtered = allTransactions.filter(t => {
-    if (filterModule !== "ALL" && t.module !== filterModule) return false;
-    if (filterStatus !== "ALL" && t.status !== filterStatus) return false;
-    if (searchRef && !t.ref?.toLowerCase().includes(searchRef.toLowerCase())) return false;
-    return true;
-  });
-
-  const totalReceived = filtered.reduce((s, t) => s + (t.total || 0), 0);
-  const totalCommission = filtered.reduce((s, t) => s + (t.commission || 0), 0);
-  const totalVAT = filtered.reduce((s, t) => s + (t.vat || 0), 0);
-  const totalVendorPayable = filtered.reduce((s, t) => s + (t.vendorPayable || 0), 0);
-  const gsRevenue = totalCommission; // GS earns commission
-
-  const statusColor = s => {
-    if (s === "Paid" || s === "Settled") return "text-green-400 bg-green-500/10 border-green-500/20";
-    if (s === "Pending") return "text-yellow-400 bg-yellow-500/10 border-yellow-500/20";
-    if (s === "Refunded") return "text-blue-400 bg-blue-500/10 border-blue-500/20";
-    if (s === "Failed" || s === "Disputed") return "text-red-400 bg-red-500/10 border-red-500/20";
-    return "text-white/50 bg-white/5 border-white/10";
-  };
-
-  const moduleColor = m => {
-    if (m === "SHP") return "text-blue-400 bg-blue-500/10";
-    if (m === "AUC") return "text-purple-400 bg-purple-500/10";
-    if (m === "EVT") return "text-amber-400 bg-amber-500/10";
-    return "text-white/50 bg-white/5";
-  };
+  if (loading) return <div className="text-white p-8 text-center animate-pulse">Loading financial data...</div>;
+  if (error) return <div className="text-red-500 p-8">{error}</div>;
 
   return (
-    <div className={`flex flex-col gap-10 w-full max-w-7xl mx-auto ${hideHeader ? '' : 'pb-10'}`}>
+    <div className="space-y-6">
       {!hideHeader && (
-        <section>
-          <h1 className="text-[var(--color-ivory)] font-serif text-5xl mb-4 leading-tight">
-            Financial <span className={goldText} style={scriptFont}>Control Centre</span>
-          </h1>
-          <p className="text-[var(--color-ivory-muted)] text-lg font-light">
-            Unified view of all transactions across Shop, Auctions and Events.
-          </p>
-        </section>
+        <div className="flex justify-between items-end">
+          <div>
+            <h2 className="text-2xl font-serif text-white">Financial Control Centre</h2>
+            <p className="text-gray-400 text-sm mt-1">Master overview of marketplace revenue and vendor payables based on immutable ledgers.</p>
+          </div>
+        </div>
       )}
 
-      {!hideHeader && (
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { label: "Total Received", value: formatR(totalReceived), icon: TrendingUp, color: "text-green-400" },
-            { label: "GS Revenue (Commission)", value: formatR(gsRevenue), icon: DollarSign, color: "text-[var(--color-gold)]" },
-            { label: "VAT Collected", value: formatR(totalVAT), icon: BarChart3, color: "text-blue-400" },
-            { label: "Owed to Vendors", value: formatR(totalVendorPayable), icon: Users, color: "text-purple-400" },
-          ].map((kpi, i) => (
-            <div key={i} className="p-5 bg-[#0a0a0a] border border-white/10 rounded-2xl group hover:border-white/20 transition-all">
-              <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-[var(--color-ivory-muted)] mb-3">
-                <kpi.icon size={14} className={kpi.color} /> {kpi.label}
-              </div>
-              <div className={`text-2xl font-serif ${kpi.color}`}>{loading ? "..." : kpi.value}</div>
+      {/* METRICS */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-[#111] border border-[#b58b38]/30 rounded-sm p-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-10">
+            <TrendingUp size={64} className="text-[#b58b38]" />
+          </div>
+          <p className="text-gray-400 text-xs font-bold tracking-widest uppercase mb-1">Total Processed (Sales)</p>
+          <p className="text-3xl font-serif text-[#e6c97a]">{formatMoney(metrics?.totalProcessed)}</p>
+          <p className="text-[#888] text-xs mt-2">Gross customer payments cleared</p>
+        </div>
+
+        <div className="bg-[#111] border border-white/10 rounded-sm p-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-5">
+            <ArrowUpRight size={64} className="text-green-500" />
+          </div>
+          <p className="text-gray-400 text-xs font-bold tracking-widest uppercase mb-1">GS Commission</p>
+          <p className="text-3xl font-serif text-white">{formatMoney(metrics?.totalPlatformRevenue)}</p>
+          <p className="text-[#888] text-xs mt-2">Earned marketplace commissions</p>
+        </div>
+
+        <div className="bg-[#111] border border-white/10 rounded-sm p-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-5">
+            <DollarSign size={64} className="text-yellow-500" />
+          </div>
+          <p className="text-gray-400 text-xs font-bold tracking-widest uppercase mb-1">VAT Collected</p>
+          <p className="text-3xl font-serif text-white">{formatMoney(metrics?.totalVatCollected)}</p>
+          <p className="text-[#888] text-xs mt-2">VAT securely withheld & tracked</p>
+        </div>
+
+        <div className="bg-[#111] border border-white/10 rounded-sm p-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-5">
+            <ArrowDownRight size={64} className="text-red-500" />
+          </div>
+          <p className="text-gray-400 text-xs font-bold tracking-widest uppercase mb-1">Owed to Vendors</p>
+          <p className="text-3xl font-serif text-white">{formatMoney(metrics?.totalPendingPayables)}</p>
+          <p className="text-[#888] text-xs mt-2">Pending payables to be disbursed</p>
+        </div>
+      </div>
+
+      {/* ORDER FINANCIAL BREAKDOWN */}
+      <div className="bg-[#111] border border-white/10 rounded-sm overflow-hidden mt-8">
+        <div className="px-6 py-4 border-b border-white/10 bg-black/40 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+          <h3 className="text-white font-serif text-xl">Revenue Breakdown</h3>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setActiveTab('shop')}
+              className={`px-4 py-2 text-xs font-bold tracking-wider uppercase rounded-sm transition-colors ${
+                activeTab === 'shop' ? 'bg-[#b58b38] text-black' : 'bg-white/5 text-[#888] hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              Product Purchases
+            </button>
+            <button
+              onClick={() => setActiveTab('events')}
+              className={`px-4 py-2 text-xs font-bold tracking-wider uppercase rounded-sm transition-colors ${
+                activeTab === 'events' ? 'bg-[#b58b38] text-black' : 'bg-white/5 text-[#888] hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              Event Tickets
+            </button>
+            <button
+              onClick={() => setActiveTab('auctions')}
+              className={`px-4 py-2 text-xs font-bold tracking-wider uppercase rounded-sm transition-colors ${
+                activeTab === 'auctions' ? 'bg-[#b58b38] text-black' : 'bg-white/5 text-[#888] hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              Auctions
+            </button>
+          </div>
+        </div>
+        
+        {activeTab === 'shop' && (
+          shopOrders.length === 0 ? (
+            <div className="p-12 text-center text-[#666]">
+              <History size={48} className="mx-auto mb-4 opacity-20" />
+              <p>No shop orders yet.</p>
             </div>
-          ))}
-        </section>
-      )}
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse whitespace-nowrap">
+                <thead>
+                  <tr className="bg-black/60 text-[#888] text-[10px] uppercase tracking-wider">
+                    <th className="p-4 font-medium">Order Ref</th>
+                    <th className="p-4 font-medium">Date</th>
+                    <th className="p-4 font-medium text-right">Products</th>
+                    <th className="p-4 font-medium text-right">Shipping</th>
+                    <th className="p-4 font-medium text-right text-blue-400">Ship Margin</th>
+                    <th className="p-4 font-medium text-right text-yellow-500">VAT</th>
+                    <th className="p-4 font-medium text-right font-bold text-white">Total Paid</th>
+                    <th className="p-4 font-medium text-right text-green-500">Commission</th>
+                    <th className="p-4 font-medium text-right text-red-400">Vendor Payout</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm text-gray-300">
+                  {shopOrders.map(order => {
+                    const totalVendorPayout = order.vendorPayables?.reduce((sum, p) => sum + (p.netPayable || 0), 0) || 0;
+                    
+                    // Calculate Shipping Margin
+                    let customerShipping = order.shippingCost || 0;
+                    let actualShipping = 0;
+                    if (order.shipments && order.shipments.length > 0) {
+                      actualShipping = order.shipments.reduce((sum, shp) => sum + (shp.actualShippingCost || 0), 0);
+                    }
+                    const shippingMargin = customerShipping - actualShipping;
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 items-center">
-        <div className="flex items-center gap-2 bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2">
-          <Search size={14} className="text-[var(--color-ivory-muted)]" />
-          <input
-            value={searchRef}
-            onChange={e => setSearchRef(e.target.value)}
-            placeholder="Search GS Reference..."
-            className="bg-transparent text-sm text-white outline-none placeholder:text-white/30 w-44"
-          />
-        </div>
-        <div className="flex gap-2">
-          {["ALL", "SHP", "AUC", "EVT"].map(m => (
-            <button key={m} onClick={() => setFilterModule(m)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors ${filterModule === m ? "bg-[var(--color-gold)]/20 text-[var(--color-gold)] border border-[var(--color-gold)]/30" : "bg-white/5 text-white/50 border border-white/10 hover:bg-white/10"}`}>
-              {m === "ALL" ? "All" : MODULE_LABELS[m]}
-            </button>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          {["ALL", "Paid", "Pending", "Refunded", "Failed"].map(s => (
-            <button key={s} onClick={() => setFilterStatus(s)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors ${filterStatus === s ? "bg-[var(--color-gold)]/20 text-[var(--color-gold)] border border-[var(--color-gold)]/30" : "bg-white/5 text-white/50 border border-white/10 hover:bg-white/10"}`}>
-              {s}
-            </button>
-          ))}
-        </div>
-        <span className="ml-auto text-xs text-[var(--color-ivory-muted)]">{filtered.length} transactions</span>
-      </div>
-
-      {/* Table */}
-      <div className="overflow-x-auto bg-[#0a0a0a] border border-white/5 rounded-2xl">
-        {loading ? (
-          <div className="p-12 text-center text-[var(--color-ivory-muted)] animate-pulse">Loading transactions...</div>
-        ) : filtered.length === 0 ? (
-          <div className="p-12 text-center flex flex-col items-center gap-4">
-            <AlertCircle className="text-white/20" size={48} />
-            <p className="text-[var(--color-ivory-muted)]">No transactions match your filters.</p>
-          </div>
-        ) : (
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-white/10 text-[10px] uppercase tracking-widest text-[var(--color-ivory-muted)] bg-black/20">
-                <th className="py-4 pl-6 font-semibold">Reference</th>
-                <th className="py-4 font-semibold">Module</th>
-                <th className="py-4 font-semibold">Date</th>
-                <th className="py-4 font-semibold">Customer</th>
-                <th className="py-4 font-semibold text-right">Sale</th>
-                <th className="py-4 font-semibold text-right">Commission</th>
-                <th className="py-4 font-semibold text-right">VAT</th>
-                <th className="py-4 font-semibold text-right">Vendor Payable</th>
-                <th className="py-4 font-semibold text-right">Total</th>
-                <th className="py-4 pr-6 font-semibold">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((t, i) => (
-                <tr key={i} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-                  <td className="py-3 pl-6 font-bold text-xs text-[var(--color-gold)] font-mono">{t.ref}</td>
-                  <td className="py-3">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${moduleColor(t.module)}`}>
-                      {MODULE_LABELS[t.module] || t.module}
-                    </span>
-                  </td>
-                  <td className="py-3 text-xs text-[var(--color-ivory-muted)]">
-                    {t.date.toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" })}
-                  </td>
-                  <td className="py-3 text-sm text-[var(--color-ivory)] font-serif">{t.customer}</td>
-                  <td className="py-3 text-xs text-right text-[var(--color-ivory)]">{formatR(t.grossSale)}</td>
-                  <td className="py-3 text-xs text-right text-[var(--color-gold)]">{formatR(t.commission)}</td>
-                  <td className="py-3 text-xs text-right text-blue-400">{formatR(t.vat)}</td>
-                  <td className="py-3 text-xs text-right text-green-400">{formatR(t.vendorPayable)}</td>
-                  <td className="py-3 text-sm text-right font-bold text-[var(--color-ivory)] font-mono">{formatR(t.total)}</td>
-                  <td className="py-3 pr-6">
-                    <span className={`px-2 py-0.5 rounded border text-[10px] font-bold uppercase tracking-widest ${statusColor(t.status)}`}>
-                      {t.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    return (
+                      <tr key={order._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                        <td className="p-4 font-mono text-xs text-[#b58b38]">{order.orderId || order.transactionId}</td>
+                        <td className="p-4 text-xs">{new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                        <td className="p-4 text-right text-xs">{formatMoney(order.subTotal)}</td>
+                        <td className="p-4 text-right text-xs">{formatMoney(customerShipping)}</td>
+                        <td className="p-4 text-right text-xs text-blue-400/80">{formatMoney(shippingMargin)}</td>
+                        <td className="p-4 text-right text-xs text-yellow-500/80">{formatMoney(order.vatAmount)}</td>
+                        <td className="p-4 text-right font-bold text-white">{formatMoney(order.totalPrice)}</td>
+                        <td className="p-4 text-right text-green-500/80">{formatMoney(order.commissionAmount)}</td>
+                        <td className="p-4 text-right text-red-400/80">{formatMoney(totalVendorPayout)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )
         )}
-      </div>
 
-      {/* VAT Summary */}
-      <div className="p-6 bg-[#0a0a0a] border border-[var(--color-gold)]/20 rounded-2xl">
-        <h3 className="text-[var(--color-ivory)] font-serif text-xl mb-4 flex items-center gap-2">
-          <BarChart3 size={20} className="text-[var(--color-gold)]" /> VAT History Summary
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm">
-          <div>
-            <p className="text-[var(--color-ivory-muted)] text-xs uppercase tracking-widest mb-1">Shop VAT Collected</p>
-            <p className="text-2xl font-serif text-blue-400">{formatR(allTransactions.filter(t => t.module === "SHP").reduce((s, t) => s + t.vat, 0))}</p>
-          </div>
-          <div>
-            <p className="text-[var(--color-ivory-muted)] text-xs uppercase tracking-widest mb-1">Event VAT Collected</p>
-            <p className="text-2xl font-serif text-blue-400">{formatR(allTransactions.filter(t => t.module === "EVT").reduce((s, t) => s + t.vat, 0))}</p>
-          </div>
-          <div>
-            <p className="text-[var(--color-ivory-muted)] text-xs uppercase tracking-widest mb-1">Auction VAT Collected</p>
-            <p className="text-2xl font-serif text-blue-400">{formatR(allTransactions.filter(t => t.module === "AUC").reduce((s, t) => s + t.vat, 0))}</p>
-          </div>
-        </div>
+        {activeTab === 'events' && (
+          eventBookings.length === 0 ? (
+            <div className="p-12 text-center text-[#666]">
+              <History size={48} className="mx-auto mb-4 opacity-20" />
+              <p>No event bookings yet.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse whitespace-nowrap">
+                <thead>
+                  <tr className="bg-black/60 text-[#888] text-[10px] uppercase tracking-wider">
+                    <th className="p-4 font-medium">Ticket Ref</th>
+                    <th className="p-4 font-medium">Date</th>
+                    <th className="p-4 font-medium text-right">Subtotal</th>
+                    <th className="p-4 font-medium text-right text-yellow-500">VAT</th>
+                    <th className="p-4 font-medium text-right font-bold text-white">Customer Paid</th>
+                    <th className="p-4 font-medium text-right text-green-500">Commission</th>
+                    <th className="p-4 font-medium text-right text-red-400">Organizer Payout</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm text-gray-300">
+                  {eventBookings.map(booking => (
+                    <tr key={booking._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                      <td className="p-4 font-mono text-xs text-[#b58b38]">{booking.gsReference || booking.ticketId}</td>
+                      <td className="p-4 text-xs">{new Date(booking.bookingDate || booking.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                      <td className="p-4 text-right text-xs">{formatMoney(booking.subTotal)}</td>
+                      <td className="p-4 text-right text-xs text-yellow-500/80">{formatMoney(booking.vatAmount)}</td>
+                      <td className="p-4 text-right font-bold text-white">{formatMoney(booking.totalPrice)}</td>
+                      <td className="p-4 text-right text-green-500/80">{formatMoney(booking.commissionAmount)}</td>
+                      <td className="p-4 text-right text-red-400/80">{formatMoney(booking.organizerPayable)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        )}
+
+        {activeTab === 'auctions' && (
+          auctionOrders.length === 0 ? (
+            <div className="p-12 text-center text-[#666]">
+              <History size={48} className="mx-auto mb-4 opacity-20" />
+              <p>No auction payments yet.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse whitespace-nowrap">
+                <thead>
+                  <tr className="bg-black/60 text-[#888] text-[10px] uppercase tracking-wider">
+                    <th className="p-4 font-medium">Order Ref</th>
+                    <th className="p-4 font-medium">Date</th>
+                    <th className="p-4 font-medium text-right">Hammer Price</th>
+                    <th className="p-4 font-medium text-right text-yellow-500">VAT</th>
+                    <th className="p-4 font-medium text-right font-bold text-white">Buyer Paid</th>
+                    <th className="p-4 font-medium text-right text-green-500">Commission</th>
+                    <th className="p-4 font-medium text-right text-red-400">Vendor Payout</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm text-gray-300">
+                  {auctionOrders.map(order => {
+                    const totalVendorPayout = order.vendorPayables?.reduce((sum, p) => sum + (p.netPayable || 0), 0) || 0;
+                    return (
+                      <tr key={order._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                        <td className="p-4 font-mono text-xs text-[#b58b38]">{order.transactionId || order.orderId}</td>
+                        <td className="p-4 text-xs">{new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                        <td className="p-4 text-right text-xs">{formatMoney(order.subTotal)}</td>
+                        <td className="p-4 text-right text-xs text-yellow-500/80">{formatMoney(order.vatAmount)}</td>
+                        <td className="p-4 text-right font-bold text-white">{formatMoney(order.totalPrice)}</td>
+                        <td className="p-4 text-right text-green-500/80">{formatMoney(order.commissionAmount)}</td>
+                        <td className="p-4 text-right text-red-400/80">{formatMoney(totalVendorPayout)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )
+        )}
       </div>
     </div>
   );
