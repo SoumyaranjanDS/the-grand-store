@@ -26,6 +26,8 @@ const orderRoutes = require('./routes/orderRoutes');
 const checkoutRoutes = require('./routes/checkoutRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const shopRoutes = require('./routes/shopRoutes');
+const socialProofRoutes = require('./routes/socialProofRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
@@ -36,11 +38,19 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/checkout', checkoutRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/shop', shopRoutes);
+app.use('/api/social-proof', socialProofRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'API is running' });
 });
+
+const startAuctionCronJobs = require('./jobs/auctionJobs');
+startAuctionCronJobs();
+
+const startVendorTrustJobs = require('./jobs/vendorTrustJob');
+startVendorTrustJobs();
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
