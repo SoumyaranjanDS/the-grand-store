@@ -16,9 +16,13 @@ export default function AuctionSubmission({ onNotify }) {
     startingBid: '',
     reservePrice: '',
     condition: '',
-    provenance: ''
+    provenance: '',
+    startDate: '',
+    endDate: ''
   });
-  const [imageUrl, setImageUrl] = useState('');
+  
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
   
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -35,6 +39,28 @@ export default function AuctionSubmission({ onNotify }) {
     );
   }
 
+  const handleImageChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const files = Array.from(e.target.files).slice(0, 5); // Max 5
+      setImageFiles(files);
+      
+      const previews = [];
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          previews.push(reader.result);
+          if (previews.length === files.length) {
+            setImagePreviews([...previews]);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    } else {
+      setImageFiles([]);
+      setImagePreviews([]);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -45,20 +71,30 @@ export default function AuctionSubmission({ onNotify }) {
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
       const token = userInfo?.token || user?.token;
 
-      const payload = {
-        title: formData.title,
-        description: formData.description,
-        startingBid: Number(formData.startingBid),
-        reservePrice: Number(formData.reservePrice),
-        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        images: [imageUrl],
-        category: formData.category || 'Whisky',
-        condition: formData.condition,
-        provenance: formData.provenance
-      };
+      if (!imageFiles || imageFiles.length === 0) {
+        throw new Error('At least one image is required.');
+      }
+
+      const payload = new FormData();
+      payload.append('title', formData.title);
+      payload.append('description', formData.description);
+      payload.append('startingBid', Number(formData.startingBid));
+      payload.append('reservePrice', Number(formData.reservePrice));
+      payload.append('startDate', formData.startDate ? new Date(formData.startDate).toISOString() : new Date().toISOString());
+      payload.append('endDate', formData.endDate ? new Date(formData.endDate).toISOString() : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString());
+      payload.append('category', formData.category || 'Whisky');
+      payload.append('condition', formData.condition);
+      payload.append('provenance', formData.provenance);
+
+      imageFiles.forEach(file => {
+        payload.append('images', file);
+      });
 
       await axios.post(`${import.meta.env.VITE_API_URL}/api/auction`, payload, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
       });
 
       setSuccess(true);
@@ -154,30 +190,25 @@ export default function AuctionSubmission({ onNotify }) {
                 </div>
               </div>
 
-              <div className="relative z-0 w-full group mt-8">
-                <div className="flex flex-col md:flex-row items-start gap-6">
-                  {imageUrl && (
-                    <div className="w-24 h-24 rounded-2xl overflow-hidden border border-[var(--color-gold)]/30 shrink-0 bg-black/40">
-                      <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" onError={(e) => e.target.style.display = 'none'} onLoad={(e) => e.target.style.display = 'block'} />
+              <div className="space-y-10 pt-6 border-b border-white/[0.05] pb-10">
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-4 font-semibold">Lot Images (Up to 5) *</label>
+                  <div className="flex flex-col md:flex-row items-start gap-6">
+                    <div className="flex flex-wrap gap-4">
+                      {imagePreviews.map((preview, idx) => (
+                        <div key={idx} className="w-24 h-24 rounded-2xl overflow-hidden border border-[var(--color-gold)]/30 shrink-0 bg-black/40">
+                          <img src={preview} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                        </div>
+                      ))}
                     </div>
-                  )}
-                  <div className="flex-1 w-full relative pt-4">
                     <input 
-                      type="url" 
-                      name="imageUrl" 
-                      id="imageUrl"
-                      value={imageUrl} 
-                      onChange={e => setImageUrl(e.target.value)} 
-                      className="block py-3 px-0 w-full text-base text-[var(--color-ivory)] bg-transparent border-0 border-b border-white/20 appearance-none focus:outline-none focus:ring-0 focus:border-[var(--color-gold)] peer" 
-                      placeholder=" " 
-                      required 
+                      type="file" 
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      required
+                      multiple
+                      className="w-full text-sm text-[var(--color-ivory-muted)] file:mr-6 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-[10px] file:uppercase file:tracking-widest file:font-bold file:bg-[var(--color-gold)]/10 file:text-gold-gradient hover:file:bg-[var(--color-gold)]/20 transition-all cursor-pointer mt-4"
                     />
-                    <label 
-                      htmlFor="imageUrl" 
-                      className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-gold-gradient peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-                    >
-                      Image URL *
-                    </label>
                   </div>
                 </div>
               </div>
@@ -297,6 +328,52 @@ export default function AuctionSubmission({ onNotify }) {
                     Reserve Price (ZAR) *
                   </label>
                   <p className="text-[10px] tracking-widest uppercase text-gold-gradient mt-3 font-light absolute -bottom-6">Lot will not be sold below this price.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Auction Schedule */}
+            <div className="space-y-10 pt-6">
+              <h2 className="text-[var(--color-ivory)] font-serif text-3xl flex items-center gap-4 border-b border-white/[0.05] pb-4">
+                <CheckCircle2 size={24} className="text-gold-gradient" />
+                Schedule
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                <div className="w-full group">
+                  <label 
+                    htmlFor="startDate" 
+                    className="block text-sm uppercase tracking-widest text-[var(--color-ivory-muted)] font-medium mb-3"
+                  >
+                    Start Date/Time *
+                  </label>
+                  <input 
+                    type="datetime-local" 
+                    name="startDate" 
+                    id="startDate"
+                    value={formData.startDate} 
+                    onChange={e => setFormData({...formData, startDate: e.target.value})} 
+                    className="block w-full px-4 py-3 text-base text-[var(--color-ivory)] bg-black/20 border border-[var(--color-gold)]/50 rounded-lg focus:outline-none focus:border-[var(--color-gold)] focus:bg-black/40 transition-colors [color-scheme:dark]" 
+                    required 
+                  />
+                </div>
+
+                <div className="w-full group">
+                  <label 
+                    htmlFor="endDate" 
+                    className="block text-sm uppercase tracking-widest text-[var(--color-ivory-muted)] font-medium mb-3"
+                  >
+                    End Date/Time *
+                  </label>
+                  <input 
+                    type="datetime-local" 
+                    name="endDate" 
+                    id="endDate"
+                    value={formData.endDate} 
+                    onChange={e => setFormData({...formData, endDate: e.target.value})} 
+                    className="block w-full px-4 py-3 text-base text-[var(--color-ivory)] bg-black/20 border border-[var(--color-gold)]/50 rounded-lg focus:outline-none focus:border-[var(--color-gold)] focus:bg-black/40 transition-colors [color-scheme:dark]" 
+                    required 
+                  />
                 </div>
               </div>
             </div>
