@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { TrendingUp, Package, DollarSign, Activity, AlertCircle, ShoppingBag, Lightbulb, Calendar } from 'lucide-react';
+import { TrendingUp, Package, DollarSign, Activity, AlertCircle, ShoppingBag, Lightbulb, Calendar, Gavel } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { formatCartPrice } from '../../data';
 
@@ -8,30 +8,74 @@ export default function VendorDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [sales, setSales] = useState([]);
+  const [lots, setLots] = useState([]);
+  const [wallet, setWallet] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [resubmitLotId, setResubmitLotId] = useState(null);
+  const [resubmitDates, setResubmitDates] = useState({ startDate: '', endDate: '' });
+  const [expandedLot, setExpandedLot] = useState(null);
 
   useEffect(() => {
-    const fetchSales = async () => {
+    const fetchDashboardData = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/vendor/sales`, {
-          headers: {
-            Authorization: `Bearer ${user.token}`
-          }
-        });
-        const data = await res.json();
-        if (res.ok) {
-          setSales(data);
+        const headers = { Authorization: `Bearer ${user.token}` };
+        
+        // Fetch Sales
+        const salesRes = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/vendor/sales`, { headers });
+        if (salesRes.ok) setSales(await salesRes.json());
+
+        // Fetch Lots
+        const lotsRes = await fetch(`${import.meta.env.VITE_API_URL}/api/auction/vendor/lots`, { headers });
+        if (lotsRes.ok) setLots(await lotsRes.json());
+
+        // Fetch Wallet
+        const walletRes = await fetch(`${import.meta.env.VITE_API_URL}/api/vendor/wallet`, { headers });
+        if (walletRes.ok) {
+          const data = await walletRes.json();
+          setWallet(data.wallet);
         }
       } catch (error) {
-        console.error('Failed to fetch sales', error);
+        console.error('Failed to fetch dashboard data', error);
       } finally {
         setLoading(false);
       }
     };
     if (user) {
-      fetchSales();
+      fetchDashboardData();
     }
   }, [user]);
+
+  const handleResubmit = async (lotId) => {
+    try {
+      const headers = { 
+        Authorization: `Bearer ${user.token}`,
+        'Content-Type': 'application/json'
+      };
+      
+      const payload = {
+        startDate: resubmitDates.startDate ? new Date(resubmitDates.startDate).toISOString() : new Date().toISOString(),
+        endDate: resubmitDates.endDate ? new Date(resubmitDates.endDate).toISOString() : new Date(Date.now() + 7 * 86400000).toISOString()
+      };
+
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auction/${lotId}/resubmit`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        setResubmitLotId(null);
+        // Refresh lots
+        const lotsRes = await fetch(`${import.meta.env.VITE_API_URL}/api/auction/vendor/lots`, { headers: { Authorization: `Bearer ${user.token}` } });
+        if (lotsRes.ok) setLots(await lotsRes.json());
+      } else {
+        alert("Failed to resubmit lot.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error resubmitting lot.");
+    }
+  };
 
   const goldTextClass = "bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(230,201,122,0.6)]";
   const scriptFont = { fontFamily: "'Dancing Script', cursive" };
@@ -39,7 +83,7 @@ export default function VendorDashboard() {
   const totalRevenue = sales.reduce((sum, sale) => sum + sale.vendorTotal, 0);
   const totalOrders = sales.length;
   const unitsSold = sales.reduce((sum, sale) => sum + sale.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
-  const netPayout = totalRevenue * 0.85; // 15% commission mock
+  const netPayout = wallet ? (wallet.availableBalance + wallet.pendingBalance) : 0;
 
   return (
     <div className="flex flex-col gap-10 w-full max-w-7xl mx-auto pb-10">
@@ -107,10 +151,10 @@ export default function VendorDashboard() {
       {/* KPI Cards (Sales Intelligence) */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { title: "Net Payout", value: formatCartPrice(netPayout), icon: DollarSign, trend: "+12.5%", positive: true },
-          { title: "Revenue", value: formatCartPrice(totalRevenue), icon: TrendingUp, trend: "+15.2%", positive: true },
-          { title: "Units Sold", value: unitsSold, icon: Package, trend: "+2.4%", positive: true },
-          { title: "Total Orders", value: totalOrders, icon: ShoppingBag, trend: "+5.1%", positive: true },
+          { title: "Net Payout", value: formatCartPrice(netPayout), icon: DollarSign },
+          { title: "Revenue", value: formatCartPrice(totalRevenue), icon: TrendingUp },
+          { title: "Units Sold", value: unitsSold, icon: Package },
+          { title: "Total Orders", value: totalOrders, icon: ShoppingBag },
         ].map((kpi, idx) => (
           <div key={idx} className="p-6 border-b border-white/10 group transition-all">
             <div className="flex justify-between items-start mb-4">
@@ -120,9 +164,6 @@ export default function VendorDashboard() {
               </div>
             </div>
             <div className="text-3xl font-serif text-[var(--color-ivory)] mb-2 group-hover:text-gold-gradient transition-colors">{loading ? '...' : kpi.value}</div>
-            <div className={`text-xs font-semibold ${kpi.positive ? 'text-green-500' : 'text-red-500'}`}>
-              {kpi.trend} <span className="text-[var(--color-ivory-muted)] font-normal ml-1">vs last month</span>
-            </div>
           </div>
         ))}
       </section>
@@ -232,6 +273,135 @@ export default function VendorDashboard() {
                       {formatCartPrice(sale.vendorTotal)}
                     </td>
                   </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {/* Vendor Auction Lots */}
+      <section className="mt-2 border-t border-white/10 pt-8">
+        <h3 className="text-2xl font-serif text-[var(--color-ivory)] mb-6 flex items-center gap-3">
+          <div className="p-2 bg-[var(--color-gold)]/10 text-gold-gradient rounded-lg">
+            <Gavel size={20} />
+          </div>
+          My Auction Lots
+        </h3>
+        
+        {lots.length === 0 ? (
+          <div className="text-center py-12 border border-white/5 rounded-2xl bg-white/[0.01]">
+            <p className="text-[var(--color-ivory-muted)]">No auction lots submitted yet.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto bg-white/[0.01] border border-white/5 rounded-2xl">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-white/10 text-[10px] uppercase tracking-widest text-[var(--color-ivory-muted)] bg-black/20">
+                  <th className="py-4 font-semibold pl-6">Lot Title</th>
+                  <th className="py-4 font-semibold">Status</th>
+                  <th className="py-4 font-semibold">Start / End</th>
+                  <th className="py-4 font-semibold">Current/Winning Bid</th>
+                  <th className="py-4 font-semibold pr-6">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {lots.map((lot) => (
+                  <React.Fragment key={lot._id}>
+                    <tr className="border-b border-white/5 hover:bg-white/[0.03] transition-colors">
+                      <td className="py-4 pl-6 font-serif text-sm text-[var(--color-ivory)]">
+                        <Link to={`/auction/${lot._id}`} className="hover:text-gold-gradient transition-colors">
+                          {lot.title}
+                        </Link>
+                      </td>
+                      <td className="py-4 text-xs font-bold uppercase tracking-widest text-[var(--color-gold)]">
+                        {lot.status.replace('_', ' ')}
+                        {lot.status === 'sold' && (
+                          <span className={`ml-2 px-1.5 py-0.5 rounded text-[8px] ${lot.paymentStatus === 'Paid' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                            {lot.paymentStatus || 'Pending'}
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-4 text-xs text-[var(--color-ivory-muted)]">
+                        <div className="mb-1 text-white">Start: {new Date(lot.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                        <div>End: {new Date(lot.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                      </td>
+                      <td className="py-4 text-sm font-bold text-[var(--color-ivory)] font-serif">
+                        R{(lot.winningBid || lot.currentBid || 0).toLocaleString('en-ZA')}
+                      </td>
+                      <td className="py-4 pr-6 text-sm flex items-center gap-2">
+                        {(lot.status === 'unsold' || lot.status === 'closed') && (
+                          resubmitLotId === lot._id ? (
+                            <div className="flex flex-col gap-2">
+                              <input type="datetime-local" className="text-xs p-1 bg-black/50 border border-white/20 text-white rounded" onChange={e => setResubmitDates({...resubmitDates, startDate: e.target.value})} placeholder="Start Date" />
+                              <input type="datetime-local" className="text-xs p-1 bg-black/50 border border-white/20 text-white rounded" onChange={e => setResubmitDates({...resubmitDates, endDate: e.target.value})} placeholder="End Date" />
+                              <div className="flex gap-2">
+                                <button onClick={() => handleResubmit(lot._id)} className="text-[10px] bg-gold-gradient text-black px-2 py-1 rounded font-bold uppercase tracking-widest hover:scale-105 transition-transform">Save</button>
+                                <button onClick={() => setResubmitLotId(null)} className="text-[10px] border border-white/20 text-white px-2 py-1 rounded hover:bg-white/10 transition-colors uppercase tracking-widest">Cancel</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button onClick={() => setResubmitLotId(lot._id)} className="text-[10px] border border-[var(--color-gold)] text-gold-gradient hover:bg-[var(--color-gold)]/10 px-3 py-1.5 rounded uppercase tracking-widest font-bold transition-all">
+                              Resubmit Lot
+                            </button>
+                          )
+                        )}
+                        {lot.status === 'sold' && (
+                          <button 
+                            onClick={() => setExpandedLot(expandedLot === lot._id ? null : lot._id)} 
+                            className="text-[10px] border border-white/20 text-white hover:bg-white/10 px-3 py-1.5 rounded uppercase tracking-widest font-bold transition-all"
+                          >
+                            {expandedLot === lot._id ? 'Hide Details' : 'View Details'}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                    {/* Expanded Row for Sold Lots */}
+                    {expandedLot === lot._id && lot.status === 'sold' && (
+                      <tr className="bg-white/[0.02]">
+                        <td colSpan="5" className="p-6">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
+                            <div className="bg-[#0a0a0a] p-5 rounded-xl border border-white/10">
+                               <h4 className="text-[var(--color-gold)] font-bold tracking-widest uppercase text-[10px] mb-4">Financial Breakdown</h4>
+                               <div className="space-y-2 font-mono text-[var(--color-ivory-muted)]">
+                                  <div className="flex justify-between"><span>Winning Bid:</span> <span>R {lot.winningBid?.toLocaleString('en-ZA')}</span></div>
+                                  <div className="flex justify-between"><span>Auction Commission ({(lot.commissionPct || 15)}%):</span> <span className="text-red-400">- R {lot.commissionAmount?.toLocaleString('en-ZA')}</span></div>
+                                  <div className="flex justify-between"><span>VAT Deducted:</span> <span className="text-red-400">- R {lot.vatAmount?.toLocaleString('en-ZA')}</span></div>
+                                  <div className="flex justify-between border-t border-white/10 pt-2 mt-2 text-white font-bold">
+                                     <span>Your Net Payable:</span> 
+                                     <span className="text-[var(--color-gold)]">R {lot.vendorPayable?.toLocaleString('en-ZA')}</span>
+                                  </div>
+                               </div>
+                            </div>
+                            <div className="bg-[#0a0a0a] p-5 rounded-xl border border-white/10">
+                               <h4 className="text-[var(--color-gold)] font-bold tracking-widest uppercase text-[10px] mb-4">Winner & Delivery Details</h4>
+                               {lot.winner ? (
+                                  <div className="mb-4">
+                                    <p className="text-white">{lot.winner.name}</p>
+                                    <p className="text-[var(--color-ivory-muted)]">{lot.winner.email}</p>
+                                  </div>
+                               ) : (
+                                  <p className="text-[var(--color-ivory-muted)] mb-4">Winner info not available.</p>
+                               )}
+                               
+                               <h5 className="text-[var(--color-ivory-muted)] text-[10px] tracking-widest uppercase font-bold mb-2">Shipping Address</h5>
+                               {lot.paymentStatus === 'Paid' && lot.shippingAddress ? (
+                                  <div className="text-[var(--color-ivory-muted)] text-xs">
+                                     <p>{lot.shippingAddress.address}</p>
+                                     <p>{lot.shippingAddress.city}, {lot.shippingAddress.postalCode}</p>
+                                     <p>{lot.shippingAddress.country}</p>
+                                  </div>
+                               ) : (
+                                  <p className="text-[var(--color-ivory-muted)] text-xs italic">
+                                     {lot.paymentStatus === 'Paid' ? 'No shipping address provided.' : 'Waiting for buyer to complete checkout.'}
+                                  </p>
+                               )}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>
