@@ -4,6 +4,7 @@ import { Search, ArrowRight, ShieldCheck, Gift, CircleUserRound, GitCompareArrow
 import axios from 'axios';
 import AuctionLotCard from './AuctionLotCard';
 import AuctionCountdown from './AuctionCountdown';
+import LuxuryAuctionHero from './LuxuryAuctionHero';
 
 export default function AuctionPage({ onNotify }) {
   const [lots, setLots] = useState([]);
@@ -13,24 +14,23 @@ export default function AuctionPage({ onNotify }) {
   const [filters, setFilters] = useState({ search: '', category: 'all', price: 'all', ending: 'all' });
   const [appliedFilters, setAppliedFilters] = useState(filters);
 
+  const fetchLots = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auction`);
+      setLots(res.data);
+      setLoading(false);
+    } catch (err) {
+      console.error(err);
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     document.title = 'Rare Whisky Auctions — The Grand Store';
     window.scrollTo({ top: 0, behavior: 'auto' });
     
     // Timer for UI ticking
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
-    
-    // Polling for data
-    const fetchLots = async () => {
-      try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auction`);
-        setLots(res.data);
-        setLoading(false);
-      } catch (err) {
-        console.error(err);
-        setLoading(false);
-      }
-    };
     
     fetchLots();
     const interval = setInterval(fetchLots, 5000);
@@ -49,7 +49,7 @@ export default function AuctionPage({ onNotify }) {
       || (appliedFilters.price === 'under-10000' ? lot.currentBid < 10000 : lot.currentBid >= 10000);
     const remainingDays = (new Date(lot.endDate).getTime() - now) / 86400000;
     const matchesEnding = appliedFilters.ending === 'all' || remainingDays < 5;
-    return matchesSearch && matchesCategory && matchesPrice && matchesEnding && lot.status === 'live';
+    return matchesSearch && matchesCategory && matchesPrice && matchesEnding && (lot.status === 'live' || lot.status === 'upcoming');
   });
 
   const pastLots = lots.filter(lot => lot.status === 'closed' || lot.status === 'sold');
@@ -65,78 +65,54 @@ export default function AuctionPage({ onNotify }) {
      return <div className="min-h-screen flex items-center justify-center text-white">Loading Auctions...</div>;
   }
 
-  // Hero uses the first live lot if available
-  const heroLot = visibleLots.length > 0 ? visibleLots[0] : null;
+  // Get top 3 live lots to feature in the hero section
+  const heroLots = visibleLots.slice(0, 3);
 
   return (
     <main className="auction-page">
-      <section className="auction-hero" aria-labelledby="auction-hero-title">
-        <div className="auction-hero-glow" />
-        <div className="shell auction-hero-inner">
-          <div className="auction-hero-copy">
-            <p className="eyebrow">Featured Lot</p>
-            <h1 id="auction-hero-title">{heroLot ? heroLot.title : 'Exceptional Collections'}</h1>
-            <p>{heroLot ? heroLot.description.substring(0, 100) + '...' : 'Rare wines and spirits available to the highest bidder.'}</p>
-          </div>
-          <div className="auction-hero-bottle">
-            {heroLot && <span>{heroLot.lotNumber}</span>}
-            <img src={heroLot ? heroLot.images[0] : "/assets/auction/macallan-25.png"} alt="Hero collector bottle" />
-          </div>
-          <div className="auction-offer">
-            {heroLot ? (
-               <>
-                 <p>Exclusive offer ends in</p>
-                 <AuctionCountdown endTime={new Date(heroLot.endDate).getTime()} now={now} />
-                 <Link className="button button-outline" to={`/auction/${heroLot._id}`}>View Lot</Link>
-               </>
-            ) : (
-               <p>No featured lot currently live.</p>
-            )}
-          </div>
-        </div>
-        <div className="shell auction-assurance">
-          <div><ShieldCheck /><span><strong>Authenticated lots</strong>Verified provenance and condition</span></div>
-          <div><GitCompareArrows /><span><strong>Secure bidding</strong>Protected bidder transactions</span></div>
-          <div><Gift /><span><strong>Curated selection</strong>Rare bottles chosen by specialists</span></div>
-          <div><CircleUserRound /><span><strong>Collector support</strong>Guidance from bid to collection</span></div>
-        </div>
-      </section>
+      <LuxuryAuctionHero lots={heroLots} now={now} onNotify={onNotify} onRefresh={fetchLots} />
 
-      <section className="auction-story section">
-        <div className="shell auction-story-grid">
-          <div className="auction-story-image"><img src="/assets/auction/hibiki-17.jpeg" alt="Rare whisky" /></div>
-          <div className="auction-story-copy">
-            <p className="eyebrow">Heritage in every bottle</p>
-            <h2>Timeless whisky.<br /><em>Global prestige.</em></h2>
-            <p>Welcome to a realm where time is distilled into liquid gold and legacy is held in every bottle. Our auction edit brings together rare antique whiskies, historic distilleries and private collections from across the world.</p>
-            <div className="auction-stats"><span><strong>100%</strong>Curated lots</span><span><strong>Global</strong>Collector reach</span><span><strong>Rare</strong>Limited releases</span></div>
+      <section className="auction-catalogue py-24 bg-[#050505] border-t border-white/[0.05]" id="current-auctions" aria-labelledby="current-auctions-title">
+        <div className="shell max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-gold-gradient font-bold mb-2">Live catalogue</p>
+              <h2 id="current-auctions-title" className="text-4xl md:text-5xl font-serif text-[var(--color-ivory)]">Current Auctions</h2>
+            </div>
+            <p className="text-[var(--color-ivory-muted)] text-sm md:text-base max-w-md font-light leading-relaxed">
+              Explore rare single malts, iconic releases and investment-grade bottles selected for serious collectors.
+            </p>
           </div>
-        </div>
-      </section>
-
-      <section className="auction-catalogue section" id="current-auctions" aria-labelledby="current-auctions-title">
-        <div className="shell">
-          <div className="auction-section-heading"><div><p className="eyebrow">Live catalogue</p><h2 id="current-auctions-title">Current Auctions</h2></div><p>Explore rare single malts, iconic Japanese releases and investment-grade bottles selected for serious collectors.</p></div>
-          <form className="auction-filters" onSubmit={(event) => { event.preventDefault(); setAppliedFilters(filters) }}>
-            <label><Search size={16} /><input value={filters.search} onChange={(event) => setFilters({ ...filters, search: event.target.value })} placeholder="Search whisky, distillery or lot" aria-label="Search auction lots" /></label>
-            <select value={filters.category} onChange={(event) => setFilters({ ...filters, category: event.target.value })} aria-label="Category">
+          
+          <form className="flex flex-col md:flex-row gap-4 mb-12 bg-white/[0.02] p-4 rounded-2xl border border-white/[0.05]" onSubmit={(event) => { event.preventDefault(); setAppliedFilters(filters) }}>
+            <label className="flex-1 flex items-center gap-3 bg-black/40 border border-white/[0.05] rounded-xl px-4 py-3">
+              <Search size={16} className="text-gold-gradient" />
+              <input className="bg-transparent text-sm text-[var(--color-ivory)] w-full focus:outline-none placeholder-white/30" value={filters.search} onChange={(event) => setFilters({ ...filters, search: event.target.value })} placeholder="Search whisky, distillery or lot" aria-label="Search auction lots" />
+            </label>
+            <select className="bg-black/40 border border-white/[0.05] rounded-xl px-4 py-3 text-sm text-[var(--color-ivory)] focus:outline-none focus:border-[var(--color-gold)]/50 [color-scheme:dark]" value={filters.category} onChange={(event) => setFilters({ ...filters, category: event.target.value })} aria-label="Category">
                <option value="all">All categories</option>
                <option>Whisky</option>
                <option>Wine</option>
                <option>Spirits</option>
             </select>
-            <select value={filters.price} onChange={(event) => setFilters({ ...filters, price: event.target.value })} aria-label="Price range">
+            <select className="bg-black/40 border border-white/[0.05] rounded-xl px-4 py-3 text-sm text-[var(--color-ivory)] focus:outline-none focus:border-[var(--color-gold)]/50 [color-scheme:dark]" value={filters.price} onChange={(event) => setFilters({ ...filters, price: event.target.value })} aria-label="Price range">
                <option value="all">All price ranges</option>
                <option value="under-10000">Under R10,000</option>
                <option value="over-10000">R10,000 and above</option>
             </select>
-            <button type="submit">Apply</button>
+            <button className="bg-gold-gradient text-black font-bold uppercase tracking-widest text-[10px] px-8 py-3 rounded-xl hover:shadow-[0_0_15px_rgba(212,175,55,0.4)] transition-shadow" type="submit">Apply</button>
           </form>
+          
           {visibleLots.length ? (
-            <div className="auction-lot-grid">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {visibleLots.map((lot) => <AuctionLotCard lot={lot} endTime={new Date(lot.endDate).getTime()} now={now} key={lot._id} />)}
             </div>
-          ) : <div className="auction-empty"><h3>No lots match your selection.</h3><button type="button" onClick={() => { const reset = { search: '', category: 'all', price: 'all', ending: 'all' }; setFilters(reset); setAppliedFilters(reset) }}>Clear filters</button></div>}
+          ) : (
+            <div className="py-24 text-center flex flex-col items-center bg-white/[0.01] rounded-3xl border border-white/[0.02]">
+              <h3 className="text-2xl font-serif text-[var(--color-ivory)] mb-4">No lots match your selection.</h3>
+              <button className="text-xs uppercase tracking-widest text-gold-gradient border-b border-[var(--color-gold)] pb-1 hover:opacity-70 transition-opacity" type="button" onClick={() => { const reset = { search: '', category: 'all', price: 'all', ending: 'all' }; setFilters(reset); setAppliedFilters(reset) }}>Clear filters</button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -145,13 +121,20 @@ export default function AuctionPage({ onNotify }) {
            <div className="auction-section-heading"><div><p className="eyebrow">Previous results</p><h2 id="past-auctions-title">Past Auctions</h2></div></div>
            <div className="past-auction-grid">
               {pastLots.map((lot) => (
-                 <article key={lot._id}>
-                   <div><img src={lot.images && lot.images[0] ? lot.images[0] : '/assets/auction/hibiki-17.jpeg'} alt={lot.title} loading="lazy" /><span>Auction ended</span></div>
+                 <article key={lot._id} className="relative group block">
+                   <Link to={`/auction/${lot._id}`} className="absolute inset-0 z-10">
+                     <span className="sr-only">View Lot Details</span>
+                   </Link>
+                   <div>
+                     <img src={lot.images && lot.images[0] ? lot.images[0] : '/assets/auction/hibiki-17.jpeg'} alt={lot.title} loading="lazy" className="group-hover:scale-105 transition-transform duration-500" />
+                     <span>Auction ended</span>
+                   </div>
                    <section>
-                     <h3>{lot.title}</h3>
-                     <dl>
-                       <div><dt>Final result</dt><dd>R{lot.currentBid.toLocaleString('en-ZA')}</dd></div>
-                       <div><dt>Category</dt><dd>{lot.category}</dd></div>
+                     <h3 className="group-hover:text-gold-gradient transition-colors">{lot.title}</h3>
+                     <dl className="mt-4 space-y-2">
+                       <div className="flex justify-between text-sm"><dt className="text-[var(--color-ivory-muted)]">Base Price</dt><dd className="font-serif">R{(lot.startingBid || 0).toLocaleString('en-ZA')}</dd></div>
+                       <div className="flex justify-between text-sm"><dt className="text-[var(--color-ivory-muted)]">Highest Bid</dt><dd className="font-serif text-black font-bold">R{(lot.winningBid || lot.currentBid || 0).toLocaleString('en-ZA')}</dd></div>
+                       <div className="flex justify-between text-sm"><dt className="text-[var(--color-ivory-muted)]">Winner</dt><dd className="font-serif">{lot.winner ? lot.winner.name : (lot.status === 'unsold' ? 'Unsold' : 'TBD')}</dd></div>
                      </dl>
                    </section>
                  </article>
