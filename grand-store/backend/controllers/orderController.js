@@ -3,6 +3,8 @@ const Product = require('../models/Product');
 const SystemCode = require('../models/SystemCode');
 const PlatformSettings = require('../models/PlatformSettings');
 const { getNextSequence } = require('../utils/sequenceGenerator');
+const Transaction = require('../models/Transaction');
+const Wallet = require('../models/Wallet');
 
 // @desc    Create new order
 // @route   POST /api/orders
@@ -51,8 +53,8 @@ const addOrderItems = async (req, res) => {
     const customsFees = quote.aggregatedTotals.estimatedCustomsFees;
     
     // Note: In DDP we might add duties to totalPrice. For now we assume DAP (Duties are paid at customs by customer)
-    // so totalPrice only includes subTotal + shipping + vat.
-    const calculatedTotal = parseFloat((subTotal + shippingCost + vatAmount).toFixed(2));
+    // VAT is deducted from the vendor, so the customer ONLY pays Subtotal + Shipping.
+    const calculatedTotal = parseFloat((subTotal + shippingCost).toFixed(2));
     const commissionAmount = parseFloat(((subTotal * commissionPct) / 100).toFixed(2));
     const gatewayFeeAmount = parseFloat((calculatedTotal * gatewayFeePct / 100).toFixed(2));
 
@@ -95,22 +97,39 @@ const addOrderItems = async (req, res) => {
     for (const shp of quote.shipments) {
       allOrderItems = allOrderItems.concat(shp.items);
       
-      const vId = shp.vendorId.toString();
       const vendorGross = shp.subtotal;
       const vendorCommission = parseFloat(((vendorGross * commissionPct) / 100).toFixed(2));
-      const vendorNet = parseFloat((vendorGross - vendorCommission).toFixed(2)); // VAT is withheld/paid by GS generally in this model
+      const vendorVat = shp.taxData.vatAmount;
+      const shippingCostVendorGets = shp.selectedCourier ? shp.selectedCourier.cost : 0;
+      
+      // Vendor gets: Subtotal - Commission - VAT + Shipping
+      const vendorNet = parseFloat((vendorGross - vendorCommission - vendorVat + shippingCostVendorGets).toFixed(2));
 
       vendorPayables.push({
         vendorId: shp.vendorId,
         grossAmount: vendorGross,
         commission: vendorCommission,
-        vatDeducted: shp.taxData.vatAmount, // Keeping record
+        vatDeducted: vendorVat,
         netPayable: vendorNet
       });
 
       // Create Shipment Record
       const shipmentSeqString = `${sequence}-${shipmentSeqCounter.toString().padStart(2, '0')}`;
       const shipmentId = `GS-${year}-${moduleCode}-SHP-${shipmentSeqString}`;
+
+      // Calculate actual internal cost
+      let internalLegs = [];
+      let actualCost = 0;
+      if (shp.selectedCourier && shp.selectedCourier.legs) {
+        internalLegs = shp.selectedCourier.legs.map(leg => ({
+          courierName: leg.courierName,
+          origin: leg.origin,
+          destination: leg.destination,
+          cost: leg.cost,
+          status: 'Pending'
+        }));
+        actualCost = internalLegs.reduce((sum, leg) => sum + leg.cost, 0);
+      }
 
       const newShipment = new Shipment({
         shipmentId,
@@ -120,9 +139,9 @@ const addOrderItems = async (req, res) => {
         customerId: req.user._id,
         pickupAddress: { country: shp.originCountry }, // Expanded later from Vendor profile
         deliveryAddress: shippingAddress,
-        courierName: shp.selectedCourier ? shp.selectedCourier.courierName : 'Vendor Managed',
-        serviceLevel: shp.selectedCourier ? shp.selectedCourier.serviceLevel : 'Standard',
-        shippingCost: shp.selectedCourier ? shp.selectedCourier.cost : 0,
+        customerShippingCharge: shp.selectedCourier ? shp.selectedCourier.cost : 0,
+        actualShippingCost: actualCost,
+        legs: internalLegs,
         status: 'Order Confirmed'
       });
 
@@ -135,6 +154,81 @@ const addOrderItems = async (req, res) => {
     order.vendorPayables = vendorPayables;
 
     const createdOrder = await order.save();
+
+    // === GENERATE ACCOUNTING LEDGER ===
+    
+    // 1. Customer Payment Transaction
+    const customerPaymentTxn = new Transaction({
+      gsReference: transactionId,
+      type: 'payment',
+      module: 'shop',
+      amount: calculatedTotal,
+      netAmount: parseFloat((calculatedTotal - gatewayFeeAmount).toFixed(2)),
+      customer: req.user._id,
+      order: createdOrder._id,
+      status: 'cleared',
+      description: 'Customer order payment'
+    });
+    await customerPaymentTxn.save();
+
+    // 2. Grand Store Commission Transaction
+    if (commissionAmount > 0) {
+      const gsCommSeqNum = await getNextSequence('shopOrder');
+      const commissionTxn = new Transaction({
+        gsReference: `GS-${year}-${moduleCode}-COM-${gsCommSeqNum.toString().padStart(6, '0')}`,
+        type: 'commission',
+        module: 'shop',
+        amount: commissionAmount,
+        netAmount: commissionAmount,
+        order: createdOrder._id,
+        status: 'cleared',
+        description: 'Marketplace commission from order'
+      });
+      await commissionTxn.save();
+    }
+
+    // 2.5 VAT Transaction
+    if (vatAmount > 0) {
+      const gsVatSeqNum = await getNextSequence('shopOrder');
+      const vatTxn = new Transaction({
+        gsReference: `GS-${year}-${moduleCode}-VAT-${gsVatSeqNum.toString().padStart(6, '0')}`,
+        type: 'vat',
+        module: 'shop',
+        amount: vatAmount,
+        netAmount: vatAmount,
+        order: createdOrder._id,
+        status: 'cleared',
+        description: 'VAT collected from order'
+      });
+      await vatTxn.save();
+    }
+
+    // 3. Vendor Payable Transactions & Wallet Updates
+    for (const payable of vendorPayables) {
+      const vendorSeqNum = await getNextSequence('shopOrder');
+      const payableTxn = new Transaction({
+        gsReference: `GS-${year}-${moduleCode}-PAYABLE-${vendorSeqNum.toString().padStart(6, '0')}`,
+        type: 'payout',
+        module: 'shop',
+        amount: payable.netPayable,
+        netAmount: payable.netPayable,
+        vendor: payable.vendorId,
+        order: createdOrder._id,
+        status: 'pending', // Pending until payout is cleared
+        description: 'Vendor payable from order'
+      });
+      await payableTxn.save();
+
+      // Update Vendor Wallet
+      let wallet = await Wallet.findOne({ vendorId: payable.vendorId });
+      if (!wallet) {
+        wallet = new Wallet({ vendorId: payable.vendorId });
+      }
+      wallet.pendingBalance += payable.netPayable;
+      wallet.totalEarned += payable.netPayable; // Total earned tracks gross earnings
+      await wallet.save();
+    }
+
     res.status(201).json(createdOrder);
   } catch (error) {
     console.error('Add Order Error:', error);
@@ -161,7 +255,9 @@ const getMyOrders = async (req, res) => {
 // @access  Private
 const getOrderById = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id).populate('user', 'name email');
+    const order = await Order.findById(req.params.id)
+      .populate('user', 'name email')
+      .populate('shipments');
     if (order) {
       res.json(order);
     } else {
@@ -199,8 +295,8 @@ const getVendorOrders = async (req, res) => {
         orderRef: shp.orderRef,
         createdAt: shp.createdAt,
         status: shp.status,
-        courierName: shp.courierName,
-        shippingCost: shp.shippingCost,
+        courierName: shp.legs && shp.legs.length > 0 ? shp.legs[0].courierName : 'Vendor Managed',
+        shippingCost: shp.customerShippingCharge,
         trackingNumber: shp.trackingNumber,
         deliveryAddress: shp.deliveryAddress,
         customerName: shp.customerId ? shp.customerId.name : 'Guest',
