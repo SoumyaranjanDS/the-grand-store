@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import WineFarmHero from './components/WineFarmHero'
 import WineFarmAbout from './components/WineFarmAbout'
@@ -11,7 +12,8 @@ import NavBar from './components/NavBar'
 
 const liveBase = 'https://grandstore.co.za'
 
-const farms = [
+// Fallback estates shown when no vendors have published profiles yet
+const FALLBACK_FARMS = [
   {
     name: 'Tesselaarsdal Wines',
     vendor: 'Ms. BERENE SAULS',
@@ -51,27 +53,71 @@ function SectionHeading({ kicker, title, copy, align = 'left' }) {
 }
 
 function Farms() {
+  const [estates, setEstates] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URL}/api/estates`)
+      .then(r => r.json())
+      .then(data => setEstates(Array.isArray(data) ? data : []))
+      .catch(() => setEstates([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  // If no published estates yet, fall back to static placeholders
+  const showFallback = !loading && estates.length === 0;
+
   return (
     <section className="py-24 px-6 max-w-7xl mx-auto" id="farms">
       <div className="mb-12">
-        <SectionHeading kicker="Farm journal" title={<>Explore By <em className="text-[#7b263c]">Cultivar</em></>} />
-        <p className="text-lg text-ink/70">Two distinct stories shaped by soil, sea air, heritage and an unhurried devotion to craft.</p>
+        <SectionHeading kicker="Wine Estates" title={<>Discover Our <em className="text-[#7b263c]">Estate Network</em></>} />
+        <p className="text-lg text-ink/70">Stories shaped by soil, sea air, heritage and an unhurried devotion to craft.</p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-        {farms.map((farm, index) => (
-          <article className="bg-[#fcfbf8] rounded-2xl overflow-hidden shadow-sm border border-black/5" key={farm.name}>
-            <div className="relative h-64 overflow-hidden">
-              <img src={farm.image} alt={farm.name} className="w-full h-full object-cover transition-transform hover:scale-105 duration-700" />
-            </div>
-            <div className="p-8">
-              <p className="text-xs uppercase tracking-widest text-[#7b263c] mb-2 font-bold">Vendor : {farm.vendor}</p>
-              <h3 className="text-2xl font-serif text-ink mb-4">{farm.name}</h3>
-              <p className="text-ink/70 leading-relaxed mb-6">{farm.copy}</p>
-              <a className="inline-flex items-center gap-2 uppercase text-xs font-bold tracking-widest border-b border-ink pb-1" href={`${liveBase}/winefarm/winefarm`} target="_blank" rel="noreferrer">Read More <span>↗</span></a>
-            </div>
-          </article>
-        ))}
-      </div>
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+          {[1,2].map(i => <div key={i} className="bg-black/5 rounded-2xl h-96 animate-pulse" />)}
+        </div>
+      ) : showFallback ? (
+        // Fallback static cards
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+          {FALLBACK_FARMS.map((farm) => (
+            <article className="bg-[#fcfbf8] rounded-2xl overflow-hidden shadow-sm border border-black/5" key={farm.name}>
+              <div className="relative h-64 overflow-hidden">
+                <img src={farm.image} alt={farm.name} className="w-full h-full object-cover transition-transform hover:scale-105 duration-700" />
+              </div>
+              <div className="p-8">
+                <p className="text-xs uppercase tracking-widest text-[#7b263c] mb-2 font-bold">Vendor : {farm.vendor}</p>
+                <h3 className="text-2xl font-serif text-ink mb-4">{farm.name}</h3>
+                <p className="text-ink/70 leading-relaxed mb-6">{farm.copy}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        // Real published estates from API
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {estates.map((estate) => (
+            <Link to={`/estate/${estate.slug}`} key={estate._id}
+              className="group bg-[#fcfbf8] rounded-2xl overflow-hidden shadow-sm border border-black/5 hover:-translate-y-1 transition-all hover:shadow-xl">
+              <div className="relative h-56 overflow-hidden">
+                {estate.heroImageUrl
+                  ? <img src={estate.heroImageUrl} alt={estate.estateName} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-700" />
+                  : <div className="w-full h-full bg-gradient-to-br from-[#7b263c]/20 to-[#b58b38]/20 flex items-center justify-center text-4xl">🍷</div>
+                }
+              </div>
+              <div className="p-6">
+                {estate.region && <p className="text-xs uppercase tracking-widest text-[#7b263c] mb-1 font-bold">{estate.region}</p>}
+                <h3 className="text-xl font-serif text-ink mb-2">{estate.estateName}</h3>
+                {estate.tagline && <p className="text-ink/60 text-sm leading-relaxed mb-4">{estate.tagline}</p>}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-ink/40">{estate.followers?.length || 0} followers</span>
+                  <span className="inline-flex items-center gap-1 uppercase text-xs font-bold tracking-widest text-[#7b263c] border-b border-[#7b263c] pb-0.5">Explore ↗</span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </section>
   )
 }
