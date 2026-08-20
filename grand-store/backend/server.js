@@ -28,6 +28,7 @@ const settingsRoutes = require('./routes/settingsRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const shopRoutes = require('./routes/shopRoutes');
 const socialProofRoutes = require('./routes/socialProofRoutes');
+const estateRoutes = require('./routes/estateRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
@@ -40,6 +41,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/shop', shopRoutes);
 app.use('/api/social-proof', socialProofRoutes);
+app.use('/api/estates', estateRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
