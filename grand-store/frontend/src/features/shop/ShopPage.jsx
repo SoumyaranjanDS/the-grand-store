@@ -11,7 +11,6 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const [sortBy, setSortBy] = useState('featured')
   const [priceLimit, setPriceLimit] = useState(3000)
-  const [regionTab, setRegionTab] = useState('local') // 'local' or 'global'
 
   useEffect(() => {
     document.title = 'Shop the Collection — The Grand Store'
@@ -44,10 +43,7 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
   const priceValue = (product) => Number(product.price.toString().replace(/[^0-9.]/g, ''))
   
   let filteredProducts = products.filter((product) => {
-    const isLocal = product.country === 'South Africa' || !product.country;
-    if (regionTab === 'local' && !isLocal) return false;
-    if (regionTab === 'global' && isLocal) return false;
-    
+
     return (!selectedCategories.length || selectedCategories.includes(product.category))
     && (!selectedBrands.length || selectedBrands.includes(product.brand))
     && (!selectedSizes.length || selectedSizes.includes(product.size))
@@ -65,24 +61,6 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
 
   return (
     <main className="min-h-screen bg-[#050505] text-[#e0e0e0] font-sans pb-24">
-      {/* Region Tabs */}
-      <div className="w-full bg-[#0a0a0a] border-b border-white/5 flex justify-center sticky top-20 z-40">
-        <div className="flex">
-          <button 
-            onClick={() => setRegionTab('local')}
-            className={`px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] transition-all border-b-2 ${regionTab === 'local' ? 'text-gold-gradient border-gold border-b-[#c9a35b]' : 'text-[#888] border-transparent hover:text-white'}`}
-          >
-            Local Boutique
-          </button>
-          <button 
-            onClick={() => setRegionTab('global')}
-            className={`px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] transition-all border-b-2 ${regionTab === 'global' ? 'text-gold-gradient border-gold border-b-[#c9a35b]' : 'text-[#888] border-transparent hover:text-white'}`}
-          >
-            Global Pavilion
-          </button>
-        </div>
-      </div>
-
       {/* Main Catalog Section */}
       <section className="max-w-7xl mx-auto px-2 lg:px-4 pt-12">
         <div className="flex flex-col lg:flex-row gap-12">
