@@ -2,9 +2,7 @@ import React from 'react';
 import { PlayCircle, MessageCircle, HelpCircle, PhoneCall, BookOpen } from 'lucide-react';
 
 export default function VendorAcademy() {
-  const goldTextClass = "bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(230,201,122,0.6)]";
-  const scriptFont = { fontFamily: "'Dancing Script', cursive" };
-
+  const goldTextClass = "text-[#c9a35b] drop-shadow-[0_0_12px_rgba(230,201,122,0.6)]";
   const videos = [
     { title: "How to sell more on Grand Store", duration: "4:12" },
     { title: "How to photograph wine bottles", duration: "6:45" },
@@ -20,7 +18,7 @@ export default function VendorAcademy() {
       {/* Header */}
       <section>
         <h1 className="text-[var(--color-ivory)] font-serif text-5xl mb-4 leading-tight">
-          Vendor <span className={goldTextClass} style={scriptFont}>Academy</span>
+          Vendor <span className={goldTextClass} >Academy</span>
         </h1>
         <p className="text-[var(--color-ivory-muted)] text-lg max-w-2xl font-light leading-relaxed">
           Master the marketplace. Learn how to optimize your store, photograph your products, and grow your sales.
