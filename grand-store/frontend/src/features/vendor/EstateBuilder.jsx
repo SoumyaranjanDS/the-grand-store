@@ -1,109 +1,250 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
 import {
-  Globe, MapPin, Wine, Utensils, Bed, Star, Eye, EyeOff,
-  Plus, Trash2, Save, CheckCircle, ChevronDown, ChevronUp, ExternalLink, Copy
-} from 'lucide-react';
+  Globe,
+  MapPin,
+  Wine,
+  Utensils,
+  Bed,
+  Star,
+  Eye,
+  EyeOff,
+  Plus,
+  Trash2,
+  Save,
+  ExternalLink,
+  Copy,
+  BookOpen,
+  Phone,
+  Mail,
+  Camera,
+} from "lucide-react";
 
 const API = import.meta.env.VITE_API_URL;
+const APP = import.meta.env.VITE_APP_URL || "";
 
-const token = () => JSON.parse(localStorage.getItem('userInfo'))?.token;
+const token = () => JSON.parse(localStorage.getItem("userInfo"))?.token;
 const headers = () => ({ Authorization: `Bearer ${token()}` });
 
-const Section = ({ title, icon: Icon, children, defaultOpen = false }) => {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className="border border-white/10 rounded-xl overflow-hidden mb-4">
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-6 py-4 bg-white/5 hover:bg-white/10 transition-colors text-left"
-      >
-        <div className="flex items-center gap-3">
-          <Icon size={18} className="text-amber-400" />
-          <span className="font-semibold text-white">{title}</span>
-        </div>
-        {open ? <ChevronUp size={16} className="text-white/50" /> : <ChevronDown size={16} className="text-white/50" />}
-      </button>
-      {open && <div className="px-6 py-5 bg-white/[0.03] space-y-4">{children}</div>}
-    </div>
-  );
-};
+/* ─── Nav sections config ─── */
+const NAV = [
+  { id: "core", label: "Core Details", icon: Globe },
+  { id: "story", label: "Our Story", icon: BookOpen },
+  { id: "vineyard", label: "Vineyard", icon: MapPin },
+  { id: "tastings", label: "Wine Tastings", icon: Wine },
+  { id: "restaurant", label: "Restaurant", icon: Utensils },
+  { id: "accommodation", label: "Accommodation", icon: Bed },
+  { id: "experiences", label: "Experiences", icon: Star },
+  { id: "contact", label: "Contact & Social", icon: Phone },
+];
 
-const Input = ({ label, value, onChange, placeholder, type = 'text', textarea = false }) => (
+/* ─── Field components ─── */
+const Field = ({ label, children }) => (
   <div>
-    <label className="block text-xs text-white/50 uppercase tracking-widest mb-1">{label}</label>
-    {textarea
-      ? <textarea rows={4} value={value || ''} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/30 text-sm focus:outline-none focus:border-amber-400/60 resize-none" />
-      : <input type={type} value={value || ''} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/30 text-sm focus:outline-none focus:border-amber-400/60" />}
+    <label className="block text-[11px] text-white/40 uppercase tracking-[0.15em] mb-2 font-medium">
+      {label}
+    </label>
+    {children}
   </div>
 );
 
-const Toggle = ({ label, value, onChange }) => (
-  <div className="flex items-center justify-between">
-    <span className="text-sm text-white/70">{label}</span>
-    <button onClick={() => onChange(!value)}
-      className={`relative w-12 h-6 rounded-full transition-colors ${value ? 'bg-amber-500' : 'bg-white/20'}`}>
-      <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${value ? 'left-7' : 'left-1'}`} />
+const Input = ({ label, value, onChange, placeholder, type = "text" }) => (
+  <Field label={label}>
+    <input
+      type={type}
+      value={value || ""}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="w-full bg-white/[0.04] border border-white/10 px-4 py-3 text-white placeholder-white/20 text-sm focus:outline-none focus:border-amber-400/50 focus:bg-white/[0.07] transition-all"
+    />
+  </Field>
+);
+
+const Textarea = ({ label, value, onChange, placeholder, rows = 4 }) => (
+  <Field label={label}>
+    <textarea
+      rows={rows}
+      value={value || ""}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="w-full bg-white/[0.04] border border-white/10 px-4 py-3 text-white placeholder-white/20 text-sm focus:outline-none focus:border-amber-400/50 focus:bg-white/[0.07] transition-all resize-none"
+    />
+  </Field>
+);
+
+const Toggle = ({ label, description, value, onChange }) => (
+  <div className="flex items-start justify-between gap-8 py-4 border-b border-white/[0.06]">
+    <div>
+      <p className="text-white/80 text-sm font-medium">{label}</p>
+      {description && (
+        <p className="text-white/30 text-xs mt-0.5">{description}</p>
+      )}
+    </div>
+    <button
+      onClick={() => onChange(!value)}
+      className={`relative flex-shrink-0 w-12 h-6 transition-colors ${value ? "bg-amber-500" : "bg-white/10"}`}
+    >
+      <span
+        className={`absolute top-1 w-4 h-4 bg-white transition-all ${value ? "left-7" : "left-1"}`}
+      />
     </button>
   </div>
 );
 
-const ExperienceEditor = ({ items = [], onChange, label }) => {
-  const add = () => onChange([...items, { name: '', description: '', price: '', duration: '', capacity: '', isAvailable: true }]);
+/* ─── Experience / Tasting package editor ─── */
+const PackageEditor = ({ items = [], onChange, addLabel = "Add Package" }) => {
+  const add = () =>
+    onChange([
+      ...items,
+      { name: "", description: "", price: "", duration: "", capacity: "" },
+    ]);
   const remove = (i) => onChange(items.filter((_, idx) => idx !== i));
-  const update = (i, field, val) => onChange(items.map((item, idx) => idx === i ? { ...item, [field]: val } : item));
+  const update = (i, field, val) =>
+    onChange(
+      items.map((item, idx) => (idx === i ? { ...item, [field]: val } : item)),
+    );
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs uppercase text-white/50 tracking-widest">{label}</span>
-        <button onClick={add} className="flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 transition-colors">
-          <Plus size={12} /> Add
-        </button>
-      </div>
-      {items.map((exp, i) => (
-        <div key={i} className="bg-white/5 rounded-lg p-4 mb-3 relative">
-          <button onClick={() => remove(i)} className="absolute top-3 right-3 text-red-400/60 hover:text-red-400">
+    <div className="space-y-4">
+      {items.map((item, i) => (
+        <div
+          key={i}
+          className="border border-white/10 bg-white/[0.03] p-5 relative group"
+        >
+          <button
+            onClick={() => remove(i)}
+            className="absolute top-4 right-4 text-white/20 hover:text-red-400 transition-colors"
+          >
             <Trash2 size={14} />
           </button>
-          <div className="grid grid-cols-2 gap-3">
-            <Input label="Name" value={exp.name} onChange={v => update(i, 'name', v)} placeholder="e.g. Classic Tasting" />
-            <Input label="Price (R)" value={exp.price} onChange={v => update(i, 'price', v)} type="number" />
-            <Input label="Duration" value={exp.duration} onChange={v => update(i, 'duration', v)} placeholder="e.g. 60 minutes" />
-            <Input label="Max Guests" value={exp.capacity} onChange={v => update(i, 'capacity', v)} type="number" />
-          </div>
-          <div className="mt-3">
-            <Input label="Description" value={exp.description} onChange={v => update(i, 'description', v)} textarea placeholder="Describe this experience..." />
+          <div className="grid grid-cols-2 gap-x-6 gap-y-4 pr-8">
+            <Input
+              label="Name"
+              value={item.name}
+              onChange={(v) => update(i, "name", v)}
+              placeholder="e.g. Classic Tasting"
+            />
+            <Input
+              label="Price (R)"
+              value={item.price}
+              onChange={(v) => update(i, "price", v)}
+              type="number"
+              placeholder="250"
+            />
+            <Input
+              label="Duration"
+              value={item.duration}
+              onChange={(v) => update(i, "duration", v)}
+              placeholder="60 minutes"
+            />
+            <Input
+              label="Max Guests"
+              value={item.capacity}
+              onChange={(v) => update(i, "capacity", v)}
+              type="number"
+              placeholder="10"
+            />
+            <div className="col-span-2">
+              <Input
+                label="Image URL"
+                value={item.imageUrl}
+                onChange={(v) => update(i, "imageUrl", v)}
+                placeholder="https://images.unsplash.com/..."
+              />
+            </div>
+            <div className="col-span-2">
+              <Textarea
+                label="Description"
+                value={item.description}
+                onChange={(v) => update(i, "description", v)}
+                rows={2}
+                placeholder="What guests will experience..."
+              />
+            </div>
           </div>
         </div>
       ))}
+      <button
+        onClick={add}
+        className="flex items-center gap-2 text-amber-400/70 hover:text-amber-400 text-xs uppercase tracking-widest transition-colors py-2 border border-dashed border-amber-400/20 hover:border-amber-400/40 w-full justify-center"
+      >
+        <Plus size={13} /> {addLabel}
+      </button>
     </div>
+  );
+};
+
+/* ─── Section wrapper ─── */
+const Section = ({ id, title, children }) => (
+  <section id={id} className="mb-16 scroll-mt-8">
+    <div className="mb-6 pb-3 border-b border-white/[0.07]">
+      <h2 className="text-lg font-semibold text-white">{title}</h2>
+    </div>
+    <div className="space-y-5">{children}</div>
+  </section>
+);
+
+/* ─── Inline save status ─── */
+const SaveStatus = ({ status }) => {
+  if (!status) return null;
+  return (
+    <span
+      className={`text-xs font-medium flex items-center gap-1.5 transition-all ${
+        status === "saving"
+          ? "text-white/40"
+          : status === "saved"
+            ? "text-green-400"
+            : "text-red-400"
+      }`}
+    >
+      {status === "saving" && (
+        <span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+      )}
+      {status === "saving"
+        ? "Saving…"
+        : status === "saved"
+          ? "✓ Saved"
+          : "✗ Failed"}
+    </span>
   );
 };
 
 export default function EstateBuilder() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState(null);
+  const [saveStatus, setSaveStatus] = useState(null); // 'saving' | 'saved' | 'error'
+  const [publishStatus, setPublishStatus] = useState(null);
+  const [activeSection, setActiveSection] = useState("core");
+  const contentRef = useRef(null);
 
-  const notify = (msg, type = 'success') => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
-  };
+  // Scroll spy
+  useEffect(() => {
+    const el = document.getElementById("estate-content");
+    if (!el) return;
+    const onScroll = () => {
+      for (const nav of [...NAV].reverse()) {
+        const sec = document.getElementById(nav.id);
+        if (sec && sec.getBoundingClientRect().top < 160) {
+          setActiveSection(nav.id);
+          break;
+        }
+      }
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
-    axios.get(`${API}/api/estates/vendor/my-profile`, { headers: headers() })
-      .then(res => setProfile(res.data || {}))
+    axios
+      .get(`${API}/api/estates/vendor/my-profile`, { headers: headers() })
+      .then((res) => setProfile(res.data || {}))
       .catch(() => setProfile({}))
       .finally(() => setLoading(false));
   }, []);
 
   const set = (path, value) => {
-    setProfile(prev => {
-      const keys = path.split('.');
+    setProfile((prev) => {
+      const keys = path.split(".");
       const updated = { ...prev };
       let cur = updated;
       for (let i = 0; i < keys.length - 1; i++) {
@@ -116,205 +257,552 @@ export default function EstateBuilder() {
   };
 
   const save = async () => {
-    setSaving(true);
+    setSaveStatus("saving");
     try {
-      const res = await axios.post(`${API}/api/estates/vendor/my-profile`, profile, { headers: headers() });
+      const res = await axios.post(
+        `${API}/api/estates/vendor/my-profile`,
+        profile,
+        { headers: headers() },
+      );
       setProfile(res.data.estate);
-      notify('Estate profile saved!');
-    } catch (err) {
-      notify(err.response?.data?.message || 'Save failed', 'error');
-    } finally {
-      setSaving(false);
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus(null), 3000);
+    } catch {
+      setSaveStatus("error");
+      setTimeout(() => setSaveStatus(null), 3000);
     }
   };
 
   const togglePublish = async () => {
+    setPublishStatus("loading");
     try {
-      const res = await axios.patch(`${API}/api/estates/vendor/my-profile/publish`, {}, { headers: headers() });
-      setProfile(prev => ({ ...prev, isPublished: res.data.isPublished }));
-      notify(res.data.message);
-    } catch (err) {
-      notify(err.response?.data?.message || 'Error toggling publish', 'error');
+      const res = await axios.patch(
+        `${API}/api/estates/vendor/my-profile/publish`,
+        {},
+        { headers: headers() },
+      );
+      setProfile((prev) => ({ ...prev, isPublished: res.data.isPublished }));
+      setPublishStatus(null);
+    } catch {
+      setPublishStatus(null);
     }
   };
 
-  if (loading) return (
-    <div className="min-h-[400px] flex items-center justify-center">
-      <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-    </div>
-  );
+  const scrollTo = (id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      setActiveSection(id);
+    }
+  };
+
+  if (loading)
+    return (
+      <div className="h-full flex items-center justify-center py-32">
+        <div className="w-8 h-8 border border-amber-400/40 border-t-amber-400 rounded-full animate-spin" />
+      </div>
+    );
 
   const p = profile || {};
 
   return (
-    <div className="max-w-3xl mx-auto">
-      {/* Toast */}
-      {toast && (
-        <div className={`fixed top-6 right-6 z-50 px-5 py-3 rounded-xl shadow-2xl text-sm font-medium transition-all ${toast.type === 'error' ? 'bg-red-500 text-white' : 'bg-amber-500 text-black'}`}>
-          {toast.msg}
+    <div
+      className="flex h-full min-h-screen"
+      style={{ background: "transparent" }}
+    >
+      {/* ══════════ LEFT SIDEBAR ══════════ */}
+      <aside className="w-64 flex-shrink-0 sticky top-0 h-screen overflow-y-auto border-r border-white/[0.07] flex flex-col">
+        {/* Estate name + status */}
+        <div className="px-6 py-6 border-b border-white/[0.07]">
+          <p className="text-[10px] text-white/30 uppercase tracking-widest mb-1">
+            Estate Profile
+          </p>
+          <h1 className="text-white font-semibold text-sm leading-snug truncate">
+            {p.estateName || "Untitled Estate"}
+          </h1>
+          {/* Status pill */}
+          <div
+            className={`inline-flex items-center gap-1.5 mt-2 text-[10px] uppercase tracking-widest font-medium ${
+              p.isPublished ? "text-green-400" : "text-white/30"
+            }`}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${p.isPublished ? "bg-green-400" : "bg-white/20"}`}
+            />
+            {p.isPublished ? "Published" : "Draft"}
+          </div>
         </div>
-      )}
 
-      {/* Header */}
-      <div className="flex items-start justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-white mb-1">Your Estate Profile</h1>
-          <p className="text-white/50 text-sm">Build your digital home on Grand Store</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${p.isPublished ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-white/50'}`}>
-            {p.isPublished ? <><Eye size={12} /> Published</> : <><EyeOff size={12} /> Draft</>}
-          </div>
-          <button onClick={togglePublish}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${p.isPublished ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-green-500 text-white hover:bg-green-600'}`}>
-            {p.isPublished ? 'Unpublish' : 'Publish'}
-          </button>
-          <button onClick={save} disabled={saving}
-            className="flex items-center gap-2 px-5 py-2 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg text-sm transition-colors disabled:opacity-50">
-            <Save size={15} /> {saving ? 'Saving...' : 'Save'}
-          </button>
-        </div>
-      </div>
-      {/* ── Live Estate URL Banner ─────────────── */}
-      {p.slug && (
-        <div className={`mb-6 rounded-xl px-5 py-4 flex items-center justify-between gap-4 ${
-          p.isPublished
-            ? 'bg-green-500/10 border border-green-500/30'
-            : 'bg-white/5 border border-white/10'
-        }`}>
-          <div>
-            <p className="text-xs text-white/40 uppercase tracking-widest mb-1">
-              {p.isPublished ? '🟢 Your estate is live at' : '⚪ Estate URL (publish to go live)'}
-            </p>
-            <p className="text-sm text-amber-400 font-mono break-all">
-              {import.meta.env.VITE_APP_URL}/estate/{p.slug}
-            </p>
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
+        {/* Nav links */}
+        <nav className="flex-1 px-3 py-4 space-y-0.5">
+          {NAV.map(({ id, label, icon: Icon }) => (
             <button
-              onClick={() => {
-                navigator.clipboard.writeText(`${import.meta.env.VITE_APP_URL}/estate/${p.slug}`);
-                notify('Link copied!');
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white/70 hover:text-white text-xs rounded-lg transition-colors"
+              key={id}
+              onClick={() => scrollTo(id)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm text-left transition-all ${
+                activeSection === id
+                  ? "text-amber-400 bg-amber-400/10 border-l-2 border-amber-400 pl-[10px]"
+                  : "text-white/40 hover:text-white/70 hover:bg-white/[0.04] border-l-2 border-transparent"
+              }`}
             >
-              <Copy size={12} /> Copy
+              <Icon
+                size={14}
+                className={
+                  activeSection === id ? "text-amber-400" : "text-white/30"
+                }
+              />
+              {label}
             </button>
-            {p.isPublished && (
-              <a
-                href={`/estate/${p.slug}`}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black text-xs font-semibold rounded-lg transition-colors"
+          ))}
+        </nav>
+
+        {/* Live URL */}
+        {p.slug && (
+          <div
+            className={`mx-4 mb-4 p-4 border text-xs ${
+              p.isPublished
+                ? "border-green-500/20 bg-green-500/5"
+                : "border-white/[0.07] bg-white/[0.02]"
+            }`}
+          >
+            <p className="text-white/30 uppercase tracking-widest text-[9px] mb-2">
+              {p.isPublished ? "🟢 Live URL" : "Estate URL"}
+            </p>
+            <p className="text-amber-400/70 font-mono text-[10px] break-all leading-relaxed mb-3">
+              {APP}/estate/{p.slug}
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(`${APP}/estate/${p.slug}`);
+                }}
+                className="flex items-center gap-1 text-white/30 hover:text-white/60 text-[9px] uppercase tracking-widest transition-colors"
               >
-                <ExternalLink size={12} /> View Estate
-              </a>
-            )}
+                <Copy size={9} /> Copy
+              </button>
+              {p.isPublished && (
+                <a
+                  href={`/estate/${p.slug}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1 text-amber-400/50 hover:text-amber-400 text-[9px] uppercase tracking-widest transition-colors ml-2"
+                >
+                  <ExternalLink size={9} /> View
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Action buttons */}
+        <div className="px-4 pb-6 space-y-2">
+          <button
+            onClick={togglePublish}
+            disabled={publishStatus === "loading"}
+            className={`w-full py-2.5 text-xs font-semibold uppercase tracking-widest transition-all ${
+              p.isPublished
+                ? "border border-white/10 text-white/40 hover:border-white/20 hover:text-white/60"
+                : "border border-green-500/40 text-green-400 hover:bg-green-500/10"
+            }`}
+          >
+            {p.isPublished ? "Unpublish" : "Publish Estate"}
+          </button>
+          <button
+            onClick={save}
+            className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
+          >
+            <Save size={13} />
+            Save Changes
+          </button>
+          <div className="flex justify-center pt-1">
+            <SaveStatus status={saveStatus} />
           </div>
         </div>
-      )}
+      </aside>
 
-      <Section title="Core Details" icon={Globe} defaultOpen>
-        <Input label="Estate Name *" value={p.estateName} onChange={v => set('estateName', v)} placeholder="ABC Wine Estate" />
-        <Input label="Tagline" value={p.tagline} onChange={v => set('tagline', v)} placeholder="Where tradition meets innovation" />
-        <div className="grid grid-cols-2 gap-4">
-          <Input label="Region" value={p.region} onChange={v => set('region', v)} placeholder="Stellenbosch" />
-          <Input label="Country" value={p.country} onChange={v => set('country', v)} placeholder="South Africa" />
-        </div>
-        <Input label="Hero Image URL" value={p.heroImageUrl} onChange={v => set('heroImageUrl', v)} placeholder="https://..." />
-      </Section>
-
-      {/* ── Our Story ─────────────────────────── */}
-      <Section title="Our Story" icon={Star}>
-        <div className="grid grid-cols-2 gap-4">
-          <Input label="Founded Year" value={p.story?.foundedYear} onChange={v => set('story.foundedYear', v)} type="number" />
-          <Input label="Founders" value={p.story?.founders} onChange={v => set('story.founders', v)} placeholder="John & Jane Smith" />
-        </div>
-        <Input label="History" value={p.story?.history} onChange={v => set('story.history', v)} textarea placeholder="Tell the story of your estate..." />
-        <Input label="Winemaker Name" value={p.story?.winemaker} onChange={v => set('story.winemaker', v)} placeholder="James Smith" />
-        <Input label="Winemaker Bio" value={p.story?.winemakerBio} onChange={v => set('story.winemakerBio', v)} textarea placeholder="The winemaker's journey..." />
-        <Input label="Philosophy" value={p.story?.philosophy} onChange={v => set('story.philosophy', v)} textarea placeholder="Our approach to winemaking..." />
-      </Section>
-
-      {/* ── Vineyard ──────────────────────────── */}
-      <Section title="Vineyard" icon={MapPin}>
-        <div className="grid grid-cols-2 gap-4">
-          <Input label="Altitude" value={p.vineyard?.altitude} onChange={v => set('vineyard.altitude', v)} placeholder="350m above sea level" />
-          <Input label="Soil" value={p.vineyard?.soil} onChange={v => set('vineyard.soil', v)} placeholder="Decomposed granite" />
-          <Input label="Climate" value={p.vineyard?.climate} onChange={v => set('vineyard.climate', v)} placeholder="Mediterranean" />
-          <Input label="Viticulture" value={p.vineyard?.viticulture} onChange={v => set('vineyard.viticulture', v)} placeholder="Organic / Biodynamic" />
-        </div>
-        <Input label="Sustainability Notes" value={p.vineyard?.sustainability} onChange={v => set('vineyard.sustainability', v)} textarea placeholder="Our sustainable farming practices..." />
-      </Section>
-
-      {/* ── Wine Tastings ─────────────────────── */}
-      <Section title="Wine Tastings" icon={Wine}>
-        <Toggle label="We offer wine tastings" value={p.hospitality?.hasTastings} onChange={v => set('hospitality.hasTastings', v)} />
-        {p.hospitality?.hasTastings && (
-          <ExperienceEditor
-            label="Tasting Packages"
-            items={p.hospitality?.tastings || []}
-            onChange={v => set('hospitality.tastings', v)}
-          />
-        )}
-      </Section>
-
-      {/* ── Restaurant ────────────────────────── */}
-      <Section title="Restaurant" icon={Utensils}>
-        <Toggle label="We have a restaurant" value={p.hospitality?.hasRestaurant} onChange={v => set('hospitality.hasRestaurant', v)} />
-        {p.hospitality?.hasRestaurant && (
-          <>
-            <Input label="Restaurant Name" value={p.hospitality?.restaurant?.name} onChange={v => set('hospitality.restaurant.name', v)} placeholder="The Cellar Restaurant" />
-            <Input label="Description" value={p.hospitality?.restaurant?.description} onChange={v => set('hospitality.restaurant.description', v)} textarea placeholder="What makes dining here special..." />
-            <div className="grid grid-cols-2 gap-4">
-              <Input label="Opening Hours" value={p.hospitality?.restaurant?.openingHours} onChange={v => set('hospitality.restaurant.openingHours', v)} placeholder="Wed–Sun 12:00–15:00" />
-              <Input label="Phone" value={p.hospitality?.restaurant?.phoneNumber} onChange={v => set('hospitality.restaurant.phoneNumber', v)} placeholder="+27 21 000 0000" />
+      {/* ══════════ MAIN CONTENT ══════════ */}
+      <div id="estate-content" className="flex-1 overflow-y-auto">
+        <div className="max-w-4xl mx-auto px-10 py-10">
+          {/* ── Core Details ── */}
+          <Section id="core" title="Core Details">
+            <div className="grid grid-cols-2 gap-6">
+              <div className="col-span-2">
+                <Input
+                  label="Estate Name *"
+                  value={p.estateName}
+                  onChange={(v) => set("estateName", v)}
+                  placeholder="Stellenbosch Hills Wine Estate"
+                />
+              </div>
+              <div className="col-span-2">
+                <Input
+                  label="Tagline"
+                  value={p.tagline}
+                  onChange={(v) => set("tagline", v)}
+                  placeholder="Where the mountains meet the vine"
+                />
+              </div>
+              <Input
+                label="Region"
+                value={p.region}
+                onChange={(v) => set("region", v)}
+                placeholder="Stellenbosch"
+              />
+              <Input
+                label="Country"
+                value={p.country}
+                onChange={(v) => set("country", v)}
+                placeholder="South Africa"
+              />
+              <div className="col-span-2">
+                <Input
+                  label="Hero Image URL"
+                  value={p.heroImageUrl}
+                  onChange={(v) => set("heroImageUrl", v)}
+                  placeholder="https://images.unsplash.com/..."
+                />
+                {p.heroImageUrl && (
+                  <div className="mt-3 relative overflow-hidden h-48 bg-white/5">
+                    <img
+                      src={p.heroImageUrl}
+                      alt="Hero preview"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
+                    />
+                    <div className="absolute inset-0 border border-white/10 pointer-events-none" />
+                    <span className="absolute top-2 left-2 text-[9px] uppercase tracking-widest text-white/40 bg-black/40 px-2 py-1">
+                      Preview
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-          </>
-        )}
-      </Section>
+          </Section>
 
-      {/* ── Accommodation ─────────────────────── */}
-      <Section title="Accommodation" icon={Bed}>
-        <Toggle label="We offer accommodation" value={p.hospitality?.hasAccommodation} onChange={v => set('hospitality.hasAccommodation', v)} />
-        {p.hospitality?.hasAccommodation && (
-          <>
-            <Input label="Description" value={p.hospitality?.accommodation?.description} onChange={v => set('hospitality.accommodation.description', v)} textarea placeholder="Describe your accommodation..." />
-            <div className="grid grid-cols-2 gap-4">
-              <Input label="Price From (R/night)" value={p.hospitality?.accommodation?.priceFrom} onChange={v => set('hospitality.accommodation.priceFrom', v)} type="number" />
-              <Input label="Booking Email" value={p.hospitality?.accommodation?.bookingEmail} onChange={v => set('hospitality.accommodation.bookingEmail', v)} placeholder="stay@myfarm.co.za" />
+          {/* ── Our Story ── */}
+          <Section id="story" title="Our Story">
+            <div className="grid grid-cols-2 gap-6">
+              <Input
+                label="Founded Year"
+                value={p.story?.foundedYear}
+                onChange={(v) => set("story.foundedYear", v)}
+                type="number"
+                placeholder="1998"
+              />
+              <Input
+                label="Founders"
+                value={p.story?.founders}
+                onChange={(v) => set("story.founders", v)}
+                placeholder="Johann & Anna Meyer"
+              />
             </div>
-          </>
-        )}
-      </Section>
+            <Textarea
+              label="History"
+              value={p.story?.history}
+              onChange={(v) => set("story.history", v)}
+              rows={5}
+              placeholder="Tell the story of your estate — how it started, what makes it unique..."
+            />
+            <div className="grid grid-cols-2 gap-6">
+              <Input
+                label="Winemaker Name"
+                value={p.story?.winemaker}
+                onChange={(v) => set("story.winemaker", v)}
+                placeholder="Pieter van der Berg"
+              />
+              <div /> {/* spacer */}
+            </div>
+            <Textarea
+              label="Winemaker Bio"
+              value={p.story?.winemakerBio}
+              onChange={(v) => set("story.winemakerBio", v)}
+              rows={3}
+              placeholder="The winemaker's background and approach..."
+            />
+            <Textarea
+              label="Winemaking Philosophy"
+              value={p.story?.philosophy}
+              onChange={(v) => set("story.philosophy", v)}
+              rows={3}
+              placeholder="Our core beliefs about wine and the land..."
+            />
 
-      {/* ── Other Experiences ─────────────────── */}
-      <Section title="Other Experiences" icon={Star}>
-        <ExperienceEditor
-          label="Experiences (vineyard tours, harvests, etc.)"
-          items={p.hospitality?.experiences || []}
-          onChange={v => set('hospitality.experiences', v)}
-        />
-      </Section>
+            <div className="mt-4">
+              <label className="block text-[11px] text-white/40 uppercase tracking-[0.15em] mb-2 font-medium">
+                Story Image URLs (Max 4)
+              </label>
+              <div className="grid grid-cols-2 gap-4">
+                {[0, 1, 2, 3].map((i) => (
+                  <Input
+                    key={i}
+                    label={`Image ${i + 1} URL`}
+                    value={p.story?.images?.[i] || ""}
+                    onChange={(v) => {
+                      const newImages = [...(p.story?.images || [])];
+                      newImages[i] = v;
+                      set("story.images", newImages);
+                    }}
+                    placeholder="https://images.unsplash.com/..."
+                  />
+                ))}
+              </div>
+            </div>
+          </Section>
 
-      {/* ── Contact ───────────────────────────── */}
-      <Section title="Contact & Social" icon={Globe}>
-        <div className="grid grid-cols-2 gap-4">
-          <Input label="Email" value={p.contact?.email} onChange={v => set('contact.email', v)} placeholder="info@myestate.co.za" />
-          <Input label="Phone" value={p.contact?.phone} onChange={v => set('contact.phone', v)} placeholder="+27 21 000 0000" />
-          <Input label="Website" value={p.contact?.website} onChange={v => set('contact.website', v)} placeholder="https://myestate.co.za" />
-          <Input label="Instagram" value={p.contact?.instagram} onChange={v => set('contact.instagram', v)} placeholder="@myestate" />
+          {/* ── Vineyard ── */}
+          <Section id="vineyard" title="Vineyard">
+            <div className="mb-6">
+              <Input
+                label="Vineyard Image URL"
+                value={p.vineyard?.imageUrl}
+                onChange={(v) => set("vineyard.imageUrl", v)}
+                placeholder="https://images.unsplash.com/..."
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-6">
+              <Input
+                label="Altitude"
+                value={p.vineyard?.altitude}
+                onChange={(v) => set("vineyard.altitude", v)}
+                placeholder="320m above sea level"
+              />
+              <Input
+                label="Soil Type"
+                value={p.vineyard?.soil}
+                onChange={(v) => set("vineyard.soil", v)}
+                placeholder="Decomposed granite and clay"
+              />
+              <Input
+                label="Climate"
+                value={p.vineyard?.climate}
+                onChange={(v) => set("vineyard.climate", v)}
+                placeholder="Mediterranean"
+              />
+              <Input
+                label="Viticulture"
+                value={p.vineyard?.viticulture}
+                onChange={(v) => set("vineyard.viticulture", v)}
+                placeholder="Organic / Biodynamic"
+              />
+            </div>
+            <Textarea
+              label="Sustainability Notes"
+              value={p.vineyard?.sustainability}
+              onChange={(v) => set("vineyard.sustainability", v)}
+              rows={3}
+              placeholder="Our sustainable farming practices — water use, solar, composting..."
+            />
+          </Section>
+
+          {/* ── Wine Tastings & Experiences ── */}
+          <Section id="tastings" title="Wine Tastings & Hospitality">
+            <div className="grid grid-cols-2 gap-6 mb-8">
+              <Input
+                label="Section Title"
+                value={p.hospitality?.title}
+                onChange={(v) => set("hospitality.title", v)}
+                placeholder="Curated experiences designed to guide you..."
+              />
+              <Input
+                label="Section Subtitle"
+                value={p.hospitality?.subtitle}
+                onChange={(v) => set("hospitality.subtitle", v)}
+                placeholder="Visit & join us at the estate"
+              />
+            </div>
+
+            <Toggle
+              label="We offer wine tastings"
+              description="Allow customers to see and book tasting packages"
+              value={p.hospitality?.hasTastings}
+              onChange={(v) => set("hospitality.hasTastings", v)}
+            />
+            {p.hospitality?.hasTastings && (
+              <div className="pt-2">
+                <Input
+                  label="Tastings Image URL"
+                  value={p.hospitality?.tastingsImageUrl}
+                  onChange={(v) => set("hospitality.tastingsImageUrl", v)}
+                  placeholder="https://images.unsplash.com/..."
+                />
+                <div className="mt-4">
+                  <PackageEditor
+                    items={p.hospitality?.tastings || []}
+                    onChange={(v) => set("hospitality.tastings", v)}
+                    addLabel="Add Tasting Package"
+                  />
+                </div>
+              </div>
+            )}
+          </Section>
+
+          {/* ── Restaurant ── */}
+          <Section id="restaurant" title="Restaurant">
+            <Toggle
+              label="We have a restaurant"
+              description="Show restaurant details on your estate page"
+              value={p.hospitality?.hasRestaurant}
+              onChange={(v) => set("hospitality.hasRestaurant", v)}
+            />
+            {p.hospitality?.hasRestaurant && (
+              <>
+                <Input
+                  label="Restaurant Image URL"
+                  value={p.hospitality?.restaurant?.imageUrl}
+                  onChange={(v) => set("hospitality.restaurant.imageUrl", v)}
+                  placeholder="https://images.unsplash.com/..."
+                />
+                <Input
+                  label="Restaurant Name"
+                  value={p.hospitality?.restaurant?.name}
+                  onChange={(v) => set("hospitality.restaurant.name", v)}
+                  placeholder="The Cellar Table"
+                />
+                <Textarea
+                  label="Description"
+                  value={p.hospitality?.restaurant?.description}
+                  onChange={(v) => set("hospitality.restaurant.description", v)}
+                  rows={3}
+                  placeholder="Farm-to-table cuisine with panoramic vineyard views..."
+                />
+                <div className="grid grid-cols-2 gap-6">
+                  <Input
+                    label="Opening Hours"
+                    value={p.hospitality?.restaurant?.openingHours}
+                    onChange={(v) =>
+                      set("hospitality.restaurant.openingHours", v)
+                    }
+                    placeholder="Wed–Sun 12:00–15:00"
+                  />
+                  <Input
+                    label="Phone"
+                    value={p.hospitality?.restaurant?.phoneNumber}
+                    onChange={(v) =>
+                      set("hospitality.restaurant.phoneNumber", v)
+                    }
+                    placeholder="+27 21 000 0000"
+                  />
+                </div>
+              </>
+            )}
+          </Section>
+
+          {/* ── Accommodation ── */}
+          <Section id="accommodation" title="Accommodation">
+            <Toggle
+              label="We offer accommodation"
+              description="Vineyard cottages, guesthouses, or rooms"
+              value={p.hospitality?.hasAccommodation}
+              onChange={(v) => set("hospitality.hasAccommodation", v)}
+            />
+            {p.hospitality?.hasAccommodation && (
+              <>
+                <Input
+                  label="Accommodation Image URL"
+                  value={p.hospitality?.accommodation?.imageUrl}
+                  onChange={(v) => set("hospitality.accommodation.imageUrl", v)}
+                  placeholder="https://images.unsplash.com/..."
+                />
+                <Textarea
+                  label="Description"
+                  value={p.hospitality?.accommodation?.description}
+                  onChange={(v) =>
+                    set("hospitality.accommodation.description", v)
+                  }
+                  rows={3}
+                  placeholder="Stay in our vineyard cottages surrounded by vines..."
+                />
+                <div className="grid grid-cols-2 gap-6">
+                  <Input
+                    label="Price From (R / night)"
+                    value={p.hospitality?.accommodation?.priceFrom}
+                    onChange={(v) =>
+                      set("hospitality.accommodation.priceFrom", v)
+                    }
+                    type="number"
+                    placeholder="1800"
+                  />
+                  <Input
+                    label="Booking Email"
+                    value={p.hospitality?.accommodation?.bookingEmail}
+                    onChange={(v) =>
+                      set("hospitality.accommodation.bookingEmail", v)
+                    }
+                    placeholder="stay@myfarm.co.za"
+                  />
+                </div>
+              </>
+            )}
+          </Section>
+
+          {/* ── Other Experiences ── */}
+          <Section id="experiences" title="Other Experiences">
+            <p className="text-white/30 text-sm mb-4">
+              Vineyard tours, harvest experiences, cellar tours, and more.
+            </p>
+            <PackageEditor
+              items={p.hospitality?.experiences || []}
+              onChange={(v) => set("hospitality.experiences", v)}
+              addLabel="Add Experience"
+            />
+          </Section>
+
+          {/* ── Contact & Social ── */}
+          <Section id="contact" title="Contact & Social">
+            <div className="grid grid-cols-2 gap-6">
+              <Input
+                label="Email"
+                value={p.contact?.email}
+                onChange={(v) => set("contact.email", v)}
+                placeholder="info@myestate.co.za"
+              />
+              <Input
+                label="Phone"
+                value={p.contact?.phone}
+                onChange={(v) => set("contact.phone", v)}
+                placeholder="+27 21 000 0000"
+              />
+              <Input
+                label="Website"
+                value={p.contact?.website}
+                onChange={(v) => set("contact.website", v)}
+                placeholder="https://myestate.co.za"
+              />
+              <Input
+                label="Instagram"
+                value={p.contact?.instagram}
+                onChange={(v) => set("contact.instagram", v)}
+                placeholder="@myestate"
+              />
+            </div>
+            <Textarea
+              label="Physical Address"
+              value={p.contact?.address}
+              onChange={(v) => set("contact.address", v)}
+              rows={2}
+              placeholder="1 Wine Route Road, Stellenbosch, 7600"
+            />
+            <Input
+              label="Google Maps Link"
+              value={p.contact?.mapLink}
+              onChange={(v) => set("contact.mapLink", v)}
+              placeholder="https://maps.google.com/..."
+            />
+          </Section>
+
+          {/* Bottom save bar */}
+          <div className="sticky bottom-0 -mx-10 px-10 py-4 bg-gradient-to-t from-[#1a1410] to-transparent flex items-center justify-between">
+            <SaveStatus status={saveStatus} />
+            <button
+              onClick={save}
+              className="flex items-center gap-2 px-8 py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm uppercase tracking-widest transition-colors"
+            >
+              <Save size={15} /> Save Estate Profile
+            </button>
+          </div>
         </div>
-        <Input label="Physical Address" value={p.contact?.address} onChange={v => set('contact.address', v)} placeholder="1 Farm Road, Stellenbosch, 7600" />
-        <Input label="Google Maps Link" value={p.contact?.mapLink} onChange={v => set('contact.mapLink', v)} placeholder="https://maps.google.com/..." />
-      </Section>
-
-      {/* Save button at bottom */}
-      <div className="flex justify-end pt-4 pb-12">
-        <button onClick={save} disabled={saving}
-          className="flex items-center gap-2 px-8 py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl text-sm transition-colors disabled:opacity-50">
-          <Save size={16} /> {saving ? 'Saving...' : 'Save Estate Profile'}
-        </button>
       </div>
     </div>
   );
