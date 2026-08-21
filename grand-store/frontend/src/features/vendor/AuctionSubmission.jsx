@@ -118,7 +118,7 @@ export default function AuctionSubmission({ onNotify }) {
         {/* Welcome Section */}
         <section className="mb-4">
           <h1 className="text-[var(--color-ivory)] font-serif text-5xl mb-4">
-            Submit <span className="text-6xl text-gold-gradient font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Auction Lot</span>
+            Submit <span className="text-6xl text-[#e1bd70] font-normal ml-2 tracking-wide ">Auction Lot</span>
           </h1>
           <p className="text-[var(--color-ivory-muted)] text-lg max-w-2xl font-light">
             Submit your rare and collectible items for review by our expert curators.
@@ -143,7 +143,7 @@ export default function AuctionSubmission({ onNotify }) {
             {/* General Information */}
             <div className="space-y-10">
               <h2 className="text-[var(--color-ivory)] font-serif text-3xl flex items-center gap-4 border-b border-white/[0.05] pb-4">
-                <Gavel size={24} className="text-gold-gradient" />
+                <Gavel size={24} className="text-[#e1bd70]" />
                 Lot Information
               </h2>
               
@@ -161,7 +161,7 @@ export default function AuctionSubmission({ onNotify }) {
                   />
                   <label 
                     htmlFor="title" 
-                    className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-gold-gradient peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                    className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[#e1bd70] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
                   >
                     Lot Title *
                   </label>
@@ -207,7 +207,7 @@ export default function AuctionSubmission({ onNotify }) {
                       onChange={handleImageChange}
                       required
                       multiple
-                      className="w-full text-sm text-[var(--color-ivory-muted)] file:mr-6 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-[10px] file:uppercase file:tracking-widest file:font-bold file:bg-[var(--color-gold)]/10 file:text-gold-gradient hover:file:bg-[var(--color-gold)]/20 transition-all cursor-pointer mt-4"
+                      className="w-full text-sm text-[var(--color-ivory-muted)] file:mr-6 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-[10px] file:uppercase file:tracking-widest file:font-bold file:bg-[var(--color-gold)]/10 file:text-[#e1bd70] hover:file:bg-[var(--color-gold)]/20 transition-all cursor-pointer mt-4"
                     />
                   </div>
                 </div>
@@ -236,7 +236,7 @@ export default function AuctionSubmission({ onNotify }) {
             {/* Authentication */}
             <div className="space-y-10 pt-6">
               <h2 className="text-[var(--color-ivory)] font-serif text-3xl flex items-center gap-4 border-b border-white/[0.05] pb-4">
-                <CheckCircle2 size={24} className="text-gold-gradient" />
+                <CheckCircle2 size={24} className="text-[#e1bd70]" />
                 Authentication Details
               </h2>
               
@@ -254,7 +254,7 @@ export default function AuctionSubmission({ onNotify }) {
                   />
                   <label 
                     htmlFor="condition" 
-                    className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-gold-gradient peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                    className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[#e1bd70] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
                   >
                     Condition Report *
                   </label>
@@ -273,7 +273,7 @@ export default function AuctionSubmission({ onNotify }) {
                   />
                   <label 
                     htmlFor="provenance" 
-                    className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-gold-gradient peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                    className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[#e1bd70] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
                   >
                     Provenance *
                   </label>
@@ -284,7 +284,7 @@ export default function AuctionSubmission({ onNotify }) {
             {/* Financials */}
             <div className="space-y-10 pt-6">
               <h2 className="text-[var(--color-ivory)] font-serif text-3xl flex items-center gap-4 border-b border-white/[0.05] pb-4">
-                <Package size={24} className="text-gold-gradient" />
+                <Package size={24} className="text-[#e1bd70]" />
                 Financials
               </h2>
               
@@ -303,7 +303,7 @@ export default function AuctionSubmission({ onNotify }) {
                   />
                   <label 
                     htmlFor="startingBid" 
-                    className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-gold-gradient peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                    className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[#e1bd70] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
                   >
                     Starting Bid (ZAR) *
                   </label>
@@ -323,11 +323,11 @@ export default function AuctionSubmission({ onNotify }) {
                   />
                   <label 
                     htmlFor="reservePrice" 
-                    className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-gold-gradient peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                    className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[#e1bd70] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
                   >
                     Reserve Price (ZAR) *
                   </label>
-                  <p className="text-[10px] tracking-widest uppercase text-gold-gradient mt-3 font-light absolute -bottom-6">Lot will not be sold below this price.</p>
+                  <p className="text-[10px] tracking-widest uppercase text-[#e1bd70] mt-3 font-light absolute -bottom-6">Lot will not be sold below this price.</p>
                 </div>
               </div>
             </div>
@@ -335,7 +335,7 @@ export default function AuctionSubmission({ onNotify }) {
             {/* Auction Schedule */}
             <div className="space-y-10 pt-6">
               <h2 className="text-[var(--color-ivory)] font-serif text-3xl flex items-center gap-4 border-b border-white/[0.05] pb-4">
-                <CheckCircle2 size={24} className="text-gold-gradient" />
+                <CheckCircle2 size={24} className="text-[#e1bd70]" />
                 Schedule
               </h2>
               
@@ -382,7 +382,7 @@ export default function AuctionSubmission({ onNotify }) {
               <button 
                 type="submit" 
                 disabled={submitting} 
-                className="bg-gold-gradient text-black font-bold uppercase tracking-widest text-sm px-10 py-4 rounded-full hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] transition-all disabled:opacity-50 inline-flex items-center justify-center gap-3"
+                className="bg-[#c9a35b] text-black font-bold uppercase tracking-widest text-sm px-10 py-4 rounded-full  transition-all disabled:opacity-50 inline-flex items-center justify-center gap-3"
               >
                 {submitting ? 'Submitting...' : <><CheckCircle2 size={20} /> Submit to Admin for Review</>}
               </button>

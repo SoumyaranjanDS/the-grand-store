@@ -775,7 +775,7 @@ export default function EstateBuilder() {
           </Section>
 
           {/* Bottom save bar */}
-          <div className="sticky bottom-0 -mx-10 px-10 py-4 bg-gradient-to-t from-[#1a1410] to-transparent flex items-center justify-between">
+          <div className="sticky bottom-0 -mx-10 px-10 py-4 bg-[#1a1410] flex items-center justify-between">
             <SaveStatus status={saveStatus} />
             <button
               onClick={save}

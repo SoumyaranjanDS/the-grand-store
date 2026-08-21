@@ -51,7 +51,7 @@ export default function NavBar() {
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 lg:flex items-center justify-center h-full">
           <a href="/">
             <img 
-              src="/assets/images/logo1.webp" 
+              src="/grand-store-logo.png" 
               alt="The Grand Store" 
               className={`h-auto transition-all duration-400 ease-in-out ${isScrolled ? 'max-w-[110px] filter-none' : 'max-w-[140px] brightness-0 invert'}`} 
             />

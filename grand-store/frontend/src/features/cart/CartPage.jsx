@@ -50,13 +50,15 @@ export default function CartPage({ cartItems, onUpdateQuantity, onRemove, onClea
     <main className="cart-page">
       <section className="cart-hero">
         <div className="shell cart-hero-inner">
-          <div>
-            <p className="eyebrow">You are here</p>
+          <div className="cart-hero-copy">
             <div className="cart-breadcrumb"><Link to="/">Home</Link><ChevronRight size={14} /><span>My Cart</span></div>
-          </div>
-          <div className="cart-hero-title">
-            <span>{String(itemCount).padStart(2, '0')}</span>
+            <p className="eyebrow">Your private selection</p>
             <h1>Your Cart</h1>
+            <p className="cart-hero-description">Review your bottles and complete each shipment through our secure checkout.</p>
+          </div>
+          <div className="cart-hero-count">
+            <strong>{String(itemCount).padStart(2, '0')}</strong>
+            <span>{itemCount === 1 ? 'Item selected' : 'Items selected'}</span>
           </div>
         </div>
       </section>

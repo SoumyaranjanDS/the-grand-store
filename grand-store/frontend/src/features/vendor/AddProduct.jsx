@@ -138,18 +138,18 @@ export default function AddProduct({ onNotify }) {
         {/* Welcome Section */}
         <section className="mb-4">
               <h1 className="text-[var(--color-ivory)] font-serif text-5xl mb-4">
-                Add <span className="text-6xl text-gold-gradient font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Retail Product</span>
+                Add <span className="text-6xl text-[#e1bd70] font-normal ml-2 tracking-wide ">Retail Product</span>
               </h1>
               <p className="text-[var(--color-ivory-muted)] text-lg max-w-2xl font-light">
                 List a standard product for direct sale in The Grand Store.
               </p>
               
               <div className="mt-6 flex items-center gap-3 p-4 bg-black/40 border border-white/10 rounded-xl inline-flex">
-                <Building2 size={20} className="text-gold-gradient" />
+                <Building2 size={20} className="text-[#e1bd70]" />
                 <div>
                   <p className="text-xs text-[var(--color-ivory-muted)] uppercase tracking-widest font-bold">Listing Destination</p>
                   <p className="text-sm text-white mt-1">
-                    This product will appear publicly in: <strong className="text-gold-gradient">{user.name}'s Store</strong>
+                    This product will appear publicly in: <strong className="text-[#e1bd70]">{user.name}'s Store</strong>
                   </p>
                 </div>
               </div>
@@ -166,7 +166,7 @@ export default function AddProduct({ onNotify }) {
               {/* General Information */}
               <div className="space-y-10">
                 <h2 className="text-[var(--color-ivory)] font-serif text-3xl flex items-center gap-4 border-b border-white/[0.05] pb-4">
-                  <Package size={24} className="text-gold-gradient" />
+                  <Package size={24} className="text-[#e1bd70]" />
                   General Information
                 </h2>
                 
@@ -184,7 +184,7 @@ export default function AddProduct({ onNotify }) {
                     />
                     <label 
                       htmlFor="name" 
-                      className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-gold-gradient peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                      className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[#e1bd70] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
                     >
                       Product Name *
                     </label>
@@ -247,7 +247,7 @@ export default function AddProduct({ onNotify }) {
                     />
                     <label 
                       htmlFor="price" 
-                      className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-gold-gradient peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                      className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[#e1bd70] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
                     >
                       Price (ZAR) *
                     </label>
@@ -267,7 +267,7 @@ export default function AddProduct({ onNotify }) {
                     />
                     <label 
                       htmlFor="stock" 
-                      className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-gold-gradient peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                      className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[#e1bd70] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
                     >
                       Stock Quantity *
                     </label>
@@ -287,7 +287,7 @@ export default function AddProduct({ onNotify }) {
                     />
                     <label 
                       htmlFor="tags" 
-                      className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-gold-gradient peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                      className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[#e1bd70] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
                     >
                       Tags (Comma separated)
                     </label>
@@ -305,7 +305,7 @@ export default function AddProduct({ onNotify }) {
                     />
                     <label 
                       htmlFor="tastingNotes" 
-                      className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-gold-gradient peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                      className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[#e1bd70] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
                     >
                       Tasting Notes (Comma separated)
                     </label>
@@ -316,7 +316,7 @@ export default function AddProduct({ onNotify }) {
               {/* Advanced Channels */}
               <div className="space-y-10 pt-6">
                 <h2 className="text-[var(--color-ivory)] font-serif text-3xl flex items-center gap-4 border-b border-white/[0.05] pb-4">
-                  <Building2 size={24} className="text-gold-gradient" />
+                  <Building2 size={24} className="text-[#e1bd70]" />
                   Advanced Channels
                 </h2>
                 
@@ -336,7 +336,7 @@ export default function AddProduct({ onNotify }) {
                       />
                       <label 
                         htmlFor="tradePrice" 
-                        className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-gold-gradient peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                        className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[#e1bd70] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
                       >
                         Trade Price (ZAR)
                       </label>
@@ -354,7 +354,7 @@ export default function AddProduct({ onNotify }) {
                       />
                       <label 
                         htmlFor="minOrderQuantity" 
-                        className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-gold-gradient peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                        className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[#e1bd70] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
                       >
                         Min. Order Quantity (Wholesale)
                       </label>
@@ -369,7 +369,7 @@ export default function AddProduct({ onNotify }) {
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" name="exportReady" checked={formData.exportReady} onChange={handleChange} className="sr-only peer" />
-                    <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold-gradient"></div>
+                    <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#c9a35b]"></div>
                   </label>
                 </div>
               </div>
@@ -377,7 +377,7 @@ export default function AddProduct({ onNotify }) {
               {/* File Uploads */}
               <div className="space-y-10 pt-6">
                 <h2 className="text-[var(--color-ivory)] font-serif text-3xl flex items-center gap-4 border-b border-white/[0.05] pb-4">
-                  <UploadCloud size={24} className="text-gold-gradient" />
+                  <UploadCloud size={24} className="text-[#e1bd70]" />
                   Media & Documents
                 </h2>
                 
@@ -397,15 +397,15 @@ export default function AddProduct({ onNotify }) {
                       onChange={handleImageChange}
                       required
                       multiple
-                      className="w-full text-sm text-[var(--color-ivory-muted)] file:mr-6 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-[10px] file:uppercase file:tracking-widest file:font-bold file:bg-[var(--color-gold)]/10 file:text-gold-gradient hover:file:bg-[var(--color-gold)]/20 transition-all cursor-pointer mt-4"
+                      className="w-full text-sm text-[var(--color-ivory-muted)] file:mr-6 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-[10px] file:uppercase file:tracking-widest file:font-bold file:bg-[var(--color-gold)]/10 file:text-[#e1bd70] hover:file:bg-[var(--color-gold)]/20 transition-all cursor-pointer mt-4"
                     />
                   </div>
                 </div>
 
                 {formData.type.toLowerCase() === 'wine' && (
                   <div className="border border-[var(--color-gold)]/20 p-8 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--color-gold)]/10 via-[var(--color-gold)]/50 to-[var(--color-gold)]/10"></div>
-                    <label className="block text-[10px] uppercase tracking-widest text-gold-gradient mb-2 font-bold">Fact Sheet PDF (Required for Wine) *</label>
+                    <div className="absolute top-0 left-0 w-full h-1 bg-[var(--color-gold)]/40"></div>
+                    <label className="block text-[10px] uppercase tracking-widest text-[#e1bd70] mb-2 font-bold">Fact Sheet PDF (Required for Wine) *</label>
                     <p className="text-sm text-[var(--color-ivory-muted)] mb-6 font-light">Please upload the official vineyard fact sheet or authentication document.</p>
                     <input 
                       type="file" 
@@ -422,7 +422,7 @@ export default function AddProduct({ onNotify }) {
                 <button 
                   type="submit" 
                   disabled={submitting}
-                  className="bg-gold-gradient text-black font-bold uppercase tracking-widest text-sm px-10 py-4 rounded-full hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] transition-all disabled:opacity-50 inline-flex items-center justify-center gap-3"
+                  className="bg-[#c9a35b] text-black font-bold uppercase tracking-widest text-sm px-10 py-4 rounded-full  transition-all disabled:opacity-50 inline-flex items-center justify-center gap-3"
                 >
                   {submitting ? 'Adding Product...' : <><CheckCircle2 size={20} /> Add Product to Store</>}
                 </button>

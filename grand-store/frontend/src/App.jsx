@@ -28,6 +28,7 @@ import SiteMotion from './components/SiteMotion'
 import ProductCard from './components/ProductCard'
 import ProductQuickView from './components/ProductQuickView'
 import IconButton from './components/IconButton'
+import AgeGate from './components/AgeGate'
 import Header from './components/Header'
 import StoreFront from './features/shop/StoreFront'
 import ComparePage from './features/compare/ComparePage'
@@ -285,6 +286,7 @@ function App() {
 
   return (
     <div className="app">
+      <AgeGate />
       <SiteMotion />
       {!isTradeRoute && !isWineFarmRoute && !isDashboardRoute && !isAuthRoute && !isEstateRoute && (
         <Header

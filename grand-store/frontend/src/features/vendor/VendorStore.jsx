@@ -124,7 +124,7 @@ export default function VendorStore() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-serif text-[var(--color-ivory)] mb-2 flex items-center gap-3">
-            <Store className="text-gold-gradient" />
+            <Store className="text-[#e1bd70]" />
             Store Management
           </h1>
           <p className="text-[var(--color-ivory-muted)]">
@@ -144,7 +144,7 @@ export default function VendorStore() {
           <button 
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 px-6 py-3 rounded text-sm font-medium uppercase tracking-widest bg-gradient-to-r from-[#b58b38] to-[#e6c97a] text-black hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="flex items-center gap-2 px-6 py-3 rounded text-sm font-medium uppercase tracking-widest bg-[#c9a35b] text-black hover:bg-[#e1bd70] transition-colors disabled:opacity-50"
           >
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
             {saving ? 'Saving...' : 'Save Changes'}

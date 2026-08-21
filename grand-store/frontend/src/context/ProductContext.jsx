@@ -1,6 +1,23 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { products as catalogProducts } from '../data';
 
 const ProductContext = createContext();
+const catalogProductsById = new Map(catalogProducts.map((product) => [String(product.id), product]));
+
+const hydrateProductMetadata = (product) => {
+  const catalogProduct = catalogProductsById.get(String(product.id));
+  const hydratedProduct = catalogProduct ? { ...catalogProduct, ...product } : product;
+  const firstOption = Array.isArray(hydratedProduct.options)
+    ? hydratedProduct.options.find((option) => typeof option === 'string' && option.trim())
+    : null;
+
+  return {
+    ...hydratedProduct,
+    category: hydratedProduct.category || hydratedProduct.type,
+    brand: hydratedProduct.brand || hydratedProduct.storeName,
+    size: hydratedProduct.size || firstOption,
+  };
+};
 
 export const ProductProvider = ({ children }) => {
   const [products, setProducts] = useState([]);
@@ -13,8 +30,9 @@ export const ProductProvider = ({ children }) => {
         const res = await fetch('/api/products');
         if (!res.ok) throw new Error('Failed to fetch products');
         const data = await res.json();
-        // Since original logic relies on 'id' mapping directly, ensure data is clean
-        setProducts(data);
+        // The API's legacy products only contain the fields in the database schema.
+        // Restore their catalog metadata and normalize newer vendor product fields.
+        setProducts(data.map(hydrateProductMetadata));
         setLoading(false);
       } catch (err) {
         console.error(err);

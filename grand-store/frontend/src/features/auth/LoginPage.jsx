@@ -48,7 +48,7 @@ export default function LoginPage() {
 
       <div className="w-full max-w-md z-10">
         <div className="text-center mb-10">
-          <h1 className="text-[#c9a35b] drop-shadow-[0_0_12px_rgba(230,201,122,0.6)] font-serif text-4xl md:text-5xl font-medium tracking-tight mb-4 py-2">
+          <h1 className="text-[#d8b76d] font-serif text-4xl md:text-5xl font-medium tracking-tight mb-4 py-2">
             Private Access
           </h1>
           <p className="text-[var(--color-ivory-muted)] text-sm md:text-base">
@@ -88,7 +88,7 @@ export default function LoginPage() {
                 <label className="block text-[var(--color-ivory-muted)] text-[10px] font-bold uppercase tracking-widest">
                   Password
                 </label>
-                <a href="#" className="text-[10px] uppercase tracking-widest text-gold-gradient hover:text-white transition-colors font-bold">
+                <a href="#" className="text-[10px] uppercase tracking-widest text-[#d8b76d] hover:text-white transition-colors font-bold">
                   Forgot?
                 </a>
               </div>
@@ -117,7 +117,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex justify-center items-center py-4 px-4 shadow-[0_0_15px_rgba(212,175,55,0.4)] text-[10px] uppercase tracking-widest font-bold text-black bg-[#c9a35b] hover:shadow-[0_0_20px_rgba(212,175,55,0.6)] focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-8 rounded-xl"
+              className="w-full flex justify-center items-center py-4 px-4 text-[10px] uppercase tracking-widest font-bold text-black bg-[#c9a35b] hover:bg-[#e1bd70] focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-8 rounded-xl"
             >
               {isLoading ? 'Authenticating...' : 'Sign In'}
             </button>
@@ -126,7 +126,7 @@ export default function LoginPage() {
           <div className="mt-8 text-center pt-6">
             <p className="text-sm text-[var(--color-ivory-muted)]">
               Not a member yet?{' '}
-              <Link to={`/register${searchParams.get('redirect') ? `?redirect=${searchParams.get('redirect')}` : ''}`} className="font-bold text-gold-gradient hover:text-white transition-colors inline-flex items-center gap-1">
+              <Link to={`/register${searchParams.get('redirect') ? `?redirect=${searchParams.get('redirect')}` : ''}`} className="font-bold text-[#d8b76d] hover:text-white transition-colors inline-flex items-center gap-1">
                 Request an invitation <ArrowRight size={14} />
               </Link>
             </p>

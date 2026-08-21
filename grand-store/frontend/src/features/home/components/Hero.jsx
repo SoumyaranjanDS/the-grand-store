@@ -14,7 +14,7 @@ const heroFilms = [
     maxTime: 13,
   },
   {
-    src: '/assets/media/grand-store-hero-celebration-wide.mp4',
+    src: '/assets/media/grand-store-hero-third.mp4',
     label: 'A refined celebration featuring premium wine and spirits',
     maxTime: 13,
   },
@@ -134,8 +134,7 @@ export default function Hero() {
           </div>
         </div>
 
-        <a className="scroll-cue" href="#arrivals">
-          <span>Scroll to discover</span>
+        <a className="scroll-cue" href="#arrivals" aria-label="Scroll to featured arrivals">
           <ArrowDown size={17} />
         </a>
 

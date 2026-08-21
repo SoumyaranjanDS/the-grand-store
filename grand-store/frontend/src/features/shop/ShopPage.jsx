@@ -6,6 +6,16 @@ import ProductCard from '../../components/ProductCard';
 import FilterGroup from './FilterGroup';
 import Price from '../../components/ui/Price';
 
+const isVisibleFilterValue = (value) => (
+  typeof value === 'string'
+  && value.trim()
+  && !['undefined', 'null'].includes(value.trim().toLowerCase())
+);
+
+const getFilterOptions = (products, key) => [
+  ...new Set(products.map((product) => product[key]).filter(isVisibleFilterValue).map((value) => value.trim())),
+];
+
 export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
   const { products } = useProducts();
   const [searchParams, setSearchParams] = useSearchParams()
@@ -19,13 +29,13 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
     return () => { document.title = 'The Grand Store — Luxury Wines & Spirits' }
   }, [])
 
-  const selectedCategories = searchParams.getAll('category')
-  const selectedBrands = searchParams.getAll('brand')
-  const selectedSizes = searchParams.getAll('size')
+  const selectedCategories = searchParams.getAll('category').filter(isVisibleFilterValue)
+  const selectedBrands = searchParams.getAll('brand').filter(isVisibleFilterValue)
+  const selectedSizes = searchParams.getAll('size').filter(isVisibleFilterValue)
   const shopProducts = products.filter(product => product.type !== 'accessory');
-  const categoryOptions = [...new Set(shopProducts.map((product) => product.category))]
-  const brandOptions = [...new Set(shopProducts.map((product) => product.brand))]
-  const sizeOptions = [...new Set(shopProducts.map((product) => product.size))]
+  const categoryOptions = getFilterOptions(shopProducts, 'category')
+  const brandOptions = getFilterOptions(shopProducts, 'brand')
+  const sizeOptions = getFilterOptions(shopProducts, 'size')
 
   const toggleFilter = (key, value) => {
     const nextParams = new URLSearchParams(searchParams)
@@ -77,12 +87,12 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
             </div>
             
             <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/10">
-              <div className="flex items-center gap-2 text-white font-medium tracking-wider text-sm uppercase">
+              <div className="flex items-center gap-2 text-white font-medium tracking-wider text-base uppercase">
                 <SlidersHorizontal size={16} className="text-[#b58b38]" /> Filters 
                 {activeFilterCount > 0 && <span className="bg-[#b58b38] text-black w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold">{activeFilterCount}</span>}
               </div>
               {activeFilterCount > 0 && (
-                <button type="button" onClick={resetFilters} className="text-[#888] text-[10px] uppercase tracking-widest hover:text-white transition-colors">Clear all</button>
+                <button type="button" onClick={resetFilters} className="text-[#c8c1b6] text-xs uppercase tracking-widest hover:text-white transition-colors">Clear all</button>
               )}
             </div>
 
@@ -92,7 +102,7 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
               <FilterGroup title="Bottle size" options={sizeOptions} selectedValues={selectedSizes} onToggle={(value) => toggleFilter('size', value)} />
               
               <div className="pt-2">
-                <h3 className="text-white text-xs font-bold tracking-[0.15em] uppercase mb-4">Price range</h3>
+                <h3 className="text-white text-sm font-bold tracking-[0.15em] uppercase mb-4">Price range</h3>
                 <input 
                   type="range" 
                   min="500" 
@@ -102,9 +112,9 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
                   onChange={(event) => setPriceLimit(Number(event.target.value))} 
                   className="w-full accent-[#b58b38] h-1 bg-white/20 rounded-full appearance-none cursor-pointer"
                 />
-                <div className="flex justify-between items-center mt-3 text-[10px] tracking-widest text-[#888] uppercase">
+                <div className="flex justify-between items-center mt-3 text-xs tracking-widest text-[#c8c1b6] uppercase">
                   <span><Price amount={500} /></span>
-                  <strong className="text-[#e6c97a]">Up to <Price amount={priceLimit.toLocaleString()} /></strong>
+                  <strong className="text-[#e6c97a]">Up to <Price amount={priceLimit} /></strong>
                 </div>
               </div>
             </div>
