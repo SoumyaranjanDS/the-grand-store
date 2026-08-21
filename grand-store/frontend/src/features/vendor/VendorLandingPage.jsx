@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Store, Globe, Users, CreditCard, Truck, BarChart3, ChevronRight, Eye } from 'lucide-react';
 import PreviewStoreModal from './PreviewStoreModal';
+import Price from '../../components/ui/Price';
 
 export default function VendorLandingPage() {
   const navigate = useNavigate();
@@ -72,11 +73,11 @@ export default function VendorLandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10 relative z-10">
             <div>
               <div className="text-xs uppercase tracking-widest text-white/40 mb-2">Once-off Setup</div>
-              <div className="text-3xl font-mono text-gold">R2,500</div>
+              <div className="text-3xl font-mono text-gold"><Price amount={2500} /></div>
             </div>
             <div className="md:border-l md:border-r border-white/10">
               <div className="text-xs uppercase tracking-widest text-white/40 mb-2">Monthly Fee</div>
-              <div className="text-3xl font-mono text-gold">R500</div>
+              <div className="text-3xl font-mono text-gold"><Price amount={500} /></div>
             </div>
             <div>
               <div className="text-xs uppercase tracking-widest text-white/40 mb-2">Sales Commission</div>

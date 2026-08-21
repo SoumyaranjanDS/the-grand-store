@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Price from '../../components/ui/Price';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import {
@@ -419,7 +420,7 @@ export default function EstateDetail() {
                 {hospitality.accommodation?.priceFrom && (
                   <div>
                     <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1">Starting From</p>
-                    <p className="font-medium">R{hospitality.accommodation.priceFrom} / night</p>
+                    <p className="font-medium"><Price amount={hospitality.accommodation.priceFrom} /> / night</p>
                   </div>
                 )}
                 {hospitality.accommodation?.bookingEmail && (
@@ -475,7 +476,7 @@ export default function EstateDetail() {
                     {exp.price && (
                       <div className="col-span-2">
                         <p className="text-[10px] uppercase tracking-widest text-white/60 mb-1">Price</p>
-                        <p className="text-sm">R{exp.price} / person</p>
+                        <p className="text-sm"><Price amount={exp.price} /> / person</p>
                       </div>
                     )}
                   </div>
@@ -548,7 +549,7 @@ export default function EstateDetail() {
                     }
                   </div>
                   <h4 className="font-serif text-lg text-ink mb-1 group-hover:text-[#7b263c] transition-colors">{p.name}</h4>
-                  <p className="text-ink/60 text-xs">R{Number(p.price).toLocaleString()}</p>
+                  <p className="text-ink/60 text-xs"><Price amount={Number(p.price).toLocaleString()} /></p>
                 </Link>
              ))}
           </div>
@@ -626,12 +627,14 @@ export default function EstateDetail() {
             </div>
           </div>
 
-          {/* Right Side Info Block */}
-          <div className="flex-1 bg-black/20 p-10 flex items-center justify-center text-center">
-             <div>
-               <span className="block text-[10px] uppercase tracking-widest text-white/50 mb-4 font-bold">{estate.region}</span>
-               <h2 className="font-serif text-3xl mb-8">{estate.estateName}</h2>
-               <button onClick={handleFollow} className="inline-block bg-[#cc8e6b] text-white uppercase text-[10px] font-bold tracking-widest px-8 py-4 hover:bg-white hover:text-ink transition-all duration-300 shadow-lg hover:shadow-xl">
+          {/* Right Side Info Block with Background Image */}
+          <div className="flex-1 relative overflow-hidden p-10 flex items-center justify-center text-center border border-white/10">
+             <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${estate.heroImageUrl || 'https://images.unsplash.com/photo-1565922336365-1d44eb37a06a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'})` }} />
+             <div className="absolute inset-0 bg-black/70" />
+             <div className="relative z-10 flex flex-col items-center">
+               <span className="block text-[10px] uppercase tracking-widest text-white/70 mb-4 font-bold">{estate.region}</span>
+               <h2 className="font-serif text-3xl md:text-4xl text-white mb-8 leading-tight">{estate.estateName}</h2>
+               <button onClick={handleFollow} className="inline-block bg-transparent border-2 border-[#c9a35b] text-[#c9a35b] hover:bg-[#c9a35b] hover:text-black uppercase text-[10px] font-bold tracking-widest px-8 py-4 transition-all duration-300 shadow-lg hover:shadow-xl rounded-none">
                  {following ? 'Following Estate' : 'Follow Estate'}
                </button>
              </div>

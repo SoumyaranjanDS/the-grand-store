@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, ShieldCheck } from 'lucide-react';
+import Price from '../ui/Price';
 
 export default function BidConfirmationModal({ isOpen, onClose, lot, bidAmount, isMaxBid, onConfirm, loading }) {
   if (!isOpen) return null;
@@ -23,7 +24,7 @@ export default function BidConfirmationModal({ isOpen, onClose, lot, bidAmount, 
 
           <div className="bg-[#0a0907] p-4 rounded-lg border border-white/5 mb-6 text-center">
             <p className="text-sm text-[#918a7f] mb-1">{isMaxBid ? 'Your Maximum Bid' : 'Your Bid'}</p>
-            <p className="text-3xl font-bold text-[#eee8dd]">R{bidAmount.toLocaleString('en-ZA')}</p>
+            <p className="text-3xl font-bold text-[#eee8dd]"><Price amount={bidAmount.toLocaleString('en-ZA')} /></p>
           </div>
 
           <div className="flex items-start gap-3 bg-[#c9a35b]/10 text-gold-gradient p-4 rounded-lg text-sm mb-6">

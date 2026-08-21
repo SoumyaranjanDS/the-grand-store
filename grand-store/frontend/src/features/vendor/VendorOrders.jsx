@@ -10,6 +10,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { formatCartPrice } from "../../data";
+import Price from '../../components/ui/Price';
 
 export default function VendorOrders() {
   const { user } = useAuth();
@@ -262,7 +263,7 @@ export default function VendorOrders() {
                       Products Total
                     </div>
                     <div className="text-xl font-serif text-[#e1bd70]">
-                      {formatCartPrice(shp.vendorTotal)}
+                      <Price amount={shp.vendorTotal} />
                     </div>
                   </div>
                 </div>
@@ -344,10 +345,10 @@ export default function VendorOrders() {
                           </div>
                           <div className="text-right">
                             <div className="text-sm text-[var(--color-ivory)]">
-                              {item.quantity} × {formatCartPrice(item.price)}
+                              {item.quantity} × <Price amount={item.price} />
                             </div>
                             <div className="text-xs font-bold text-[#e1bd70] mt-1">
-                              {formatCartPrice(item.price * item.quantity)}
+                              <Price amount={item.price * item.quantity} />
                             </div>
                           </div>
                         </div>

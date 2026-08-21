@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Package, DollarSign, Gavel } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { formatCartPrice } from '../../data';
+import Price from '../../components/ui/Price';
 
 export default function AuctionHostDashboard() {
   const { user } = useAuth();
@@ -68,7 +69,7 @@ export default function AuctionHostDashboard() {
       {/* KPI Cards */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {[
-          { title: "Net Payout", value: formatCartPrice(netPayout), icon: DollarSign },
+          { title: "Net Payout", value: <Price amount={netPayout} />, icon: DollarSign },
           { title: "Total Lots Submitted", value: totalLots, icon: Package },
         ].map((kpi, idx) => (
           <div key={idx} className="p-6 border-b border-white/10 group transition-all">
@@ -114,7 +115,7 @@ export default function AuctionHostDashboard() {
                       <div className="font-serif text-[var(--color-ivory)]">{lot.title}</div>
                     </td>
                     <td className="py-4">
-                      <div className="text-sm text-[var(--color-ivory-muted)]">{formatCartPrice(lot.reservePrice)}</div>
+                      <div className="text-sm text-[var(--color-ivory-muted)]"><Price amount={lot.reservePrice} /></div>
                     </td>
                     <td className="py-4 text-sm text-[var(--color-ivory)]">
                       <span className={`px-2 py-1 rounded text-xs ${

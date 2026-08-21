@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { SlidersHorizontal, Grid3X3, X } from 'lucide-react';
 import ProductCard from '../../components/ProductCard';
 import FilterGroup from './FilterGroup';
+import Price from '../../components/ui/Price';
 
 const isVisibleFilterValue = (value) => (
   typeof value === 'string'
@@ -31,9 +32,10 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
   const selectedCategories = searchParams.getAll('category').filter(isVisibleFilterValue)
   const selectedBrands = searchParams.getAll('brand').filter(isVisibleFilterValue)
   const selectedSizes = searchParams.getAll('size').filter(isVisibleFilterValue)
-  const categoryOptions = getFilterOptions(products, 'category')
-  const brandOptions = getFilterOptions(products, 'brand')
-  const sizeOptions = getFilterOptions(products, 'size')
+  const shopProducts = products.filter(product => product.type !== 'accessory');
+  const categoryOptions = getFilterOptions(shopProducts, 'category')
+  const brandOptions = getFilterOptions(shopProducts, 'brand')
+  const sizeOptions = getFilterOptions(shopProducts, 'size')
 
   const toggleFilter = (key, value) => {
     const nextParams = new URLSearchParams(searchParams)
@@ -52,7 +54,7 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
 
   const priceValue = (product) => Number(product.price.toString().replace(/[^0-9.]/g, ''))
   
-  let filteredProducts = products.filter((product) => {
+  let filteredProducts = shopProducts.filter((product) => {
 
     return (!selectedCategories.length || selectedCategories.includes(product.category))
     && (!selectedBrands.length || selectedBrands.includes(product.brand))
@@ -111,8 +113,8 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
                   className="w-full accent-[#b58b38] h-1 bg-white/20 rounded-full appearance-none cursor-pointer"
                 />
                 <div className="flex justify-between items-center mt-3 text-xs tracking-widest text-[#c8c1b6] uppercase">
-                  <span>R500</span>
-                  <strong className="text-[#e6c97a]">Up to R{priceLimit.toLocaleString()}</strong>
+                  <span><Price amount={500} /></span>
+                  <strong className="text-[#e6c97a]">Up to <Price amount={priceLimit} /></strong>
                 </div>
               </div>
             </div>

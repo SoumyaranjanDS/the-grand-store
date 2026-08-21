@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { Calendar, Filter, MapPin, Users } from 'lucide-react';
+import Price from '../../components/ui/Price';
 
 export default function EventsHub() {
   const [events, setEvents] = useState([]);
@@ -146,7 +147,7 @@ export default function EventsHub() {
                         <div>
                           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#777066]">From</p>
                           <p className="mt-1 font-serif text-2xl text-[#d8b76d]">
-                            {startingPrice === null ? 'Enquire' : `R${startingPrice.toLocaleString('en-ZA')}`}
+                            {startingPrice === null ? 'Enquire' : <Price amount={startingPrice} />}
                           </p>
                         </div>
                         <Link

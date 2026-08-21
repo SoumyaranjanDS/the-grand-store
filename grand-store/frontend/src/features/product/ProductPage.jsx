@@ -9,6 +9,7 @@ import TrustBadges from '../../components/social/TrustBadges';
 import ReviewSection from '../../components/social/ReviewSection';
 import ProductQnA from '../../components/social/ProductQnA';
 import ExpertReviewCard from '../../components/social/ExpertReviewCard';
+import Price from '../../components/ui/Price';
 export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
   const { products } = useProducts();
   const { slug } = useParams()
@@ -59,13 +60,11 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
   useEffect(() => {
     if (!product) return;
     const isDomestic = deliveryCountry === 'South Africa';
-    const localCurrencySymbol = currency === 'ZAR' ? 'R' : (currency || '$');
-    
-    setShippingEstimate({
-      cost: isDomestic ? `${localCurrencySymbol}150` : `${localCurrencySymbol}450`,
-      time: isDomestic ? '2-4 days' : '5-8 days'
-    });
-  }, [deliveryCountry, product, currency]);
+      setShippingEstimate({
+        cost: isDomestic ? <Price amount={150} /> : <Price amount={450} />,
+        time: isDomestic ? '2-4 days' : '5-8 days'
+      });
+    }, [deliveryCountry, product, currency]);
 
   if (!product) return <Navigate to="/" replace />
 
@@ -168,7 +167,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
           </div>
 
           <div className="text-[42px] font-serif text-[#d8b76d] mb-8">
-            {currency === 'ZAR' ? 'R' : (currency || '$')}{formattedPrice}
+            <Price amount={product.price} />
           </div>
 
           {/* Details Grid */}

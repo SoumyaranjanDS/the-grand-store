@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Wine, X, Star, Store, MapPin } from "lucide-react";
+import Price from '../../components/ui/Price';
 
 export default function PreviewStoreModal({ isOpen, onClose }) {
   const [storeName, setStoreName] = useState("ABC Wine Estate");
@@ -135,7 +136,7 @@ export default function PreviewStoreModal({ isOpen, onClose }) {
                 </h5>
                 <div className="flex justify-between items-center mt-4">
                   <span className="text-white/80 font-mono">
-                    R {productPrice || "0.00"}
+                    <Price amount={productPrice || "0.00"} />
                   </span>
                   <button className="text-xs bg-white text-black px-3 py-1.5 rounded hover:bg-gold transition-colors">
                     Add

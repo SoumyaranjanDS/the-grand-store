@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { CreditCard, CheckCircle, Store, ShieldCheck } from 'lucide-react';
+import Price from '../../components/ui/Price';
 
 export default function VendorPaymentGate() {
   const { user, login } = useAuth();
@@ -82,17 +83,17 @@ export default function VendorPaymentGate() {
             <div className="space-y-4 border-b border-white/10 pb-6 mb-6">
               <div className="flex justify-between text-sm">
                 <span className="text-white/60">Setup & Verification</span>
-                <span className="text-white">R 2,500.00</span>
+                <span className="text-white"><Price amount={2500} /></span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-white/60">First Month Subscription</span>
-                <span className="text-white">R 500.00</span>
+                <span className="text-white"><Price amount={500} /></span>
               </div>
             </div>
             
             <div className="flex justify-between text-lg">
               <span className="text-white">Total Due</span>
-              <span className="text-gold font-mono">R 3,000.00</span>
+              <span className="text-gold font-mono"><Price amount={3000} /></span>
             </div>
           </div>
           
@@ -175,7 +176,7 @@ export default function VendorPaymentGate() {
               disabled={processing}
               className="w-full bg-gold text-black py-4 rounded font-medium tracking-wide hover:bg-white transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {processing ? 'Processing Payment...' : 'Pay R 3,000.00 & Activate'}
+              {processing ? 'Processing Payment...' : 'Pay <Price amount={3000} /> & Activate'}
             </button>
           </form>
         </div>

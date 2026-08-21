@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Calendar, Users, DollarSign, Activity } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { formatCartPrice } from '../../data';
+import Price from '../../components/ui/Price';
 
 export default function EventHostDashboard() {
   const { user } = useAuth();
@@ -70,7 +71,7 @@ export default function EventHostDashboard() {
       {/* KPI Cards */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[
-          { title: "Net Payout", value: formatCartPrice(netPayout), icon: DollarSign },
+          { title: "Net Payout", value: <Price amount={netPayout} />, icon: DollarSign },
           { title: "Total Events", value: totalEvents, icon: Calendar },
           { title: "Total Attendees", value: totalAttendees, icon: Users },
         ].map((kpi, idx) => (

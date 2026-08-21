@@ -5,6 +5,7 @@ import { ChevronRight, ChevronLeft, ShoppingBag, ArrowRight, Minus, Plus, Trash2
 import { brandyBrands, brands, menuCategories, tequilaBrands } from '../../data';
 import { useWishlist } from '../../wishlistContext';
 import ProductCard from '../../components/ProductCard';
+import Price from '../../components/ui/Price';
 
 export default function TastingPage({ onNotify }) {
   const { products } = useProducts();
@@ -47,7 +48,7 @@ export default function TastingPage({ onNotify }) {
               {filteredEvents.map((event) => (
                 <article className={`tasting-event-card ${event.status}`} key={event.id}>
                   <div className="tasting-event-image"><img src={event.image} alt={event.title} loading="lazy" /><span>{event.status === 'live' ? 'Now booking' : 'Completed'}</span><Wine size={24} /></div>
-                  <div className="tasting-event-copy"><p className="eyebrow">{event.type} experience</p><h3>{event.title}</h3><p>{event.description}</p><div className="tasting-event-price"><strong>R{event.price.toLocaleString('en-ZA')}</strong><span>per guest</span></div><div className="tasting-event-footer"><span className={event.seats <= 8 ? 'limited' : ''}>{event.status === 'live' ? `${event.seats} seats available` : 'Event concluded'}</span><button type="button" disabled={event.status === 'past'} onClick={() => setSelectedEvent(event)}>{event.status === 'live' ? 'Select a time' : 'View details'} <ArrowRight size={15} /></button></div></div>
+                  <div className="tasting-event-copy"><p className="eyebrow">{event.type} experience</p><h3>{event.title}</h3><p>{event.description}</p><div className="tasting-event-price"><strong><Price amount={event.price.toLocaleString('en-ZA')} /></strong><span>per guest</span></div><div className="tasting-event-footer"><span className={event.seats <= 8 ? 'limited' : ''}>{event.status === 'live' ? `${event.seats} seats available` : 'Event concluded'}</span><button type="button" disabled={event.status === 'past'} onClick={() => setSelectedEvent(event)}>{event.status === 'live' ? 'Select a time' : 'View details'} <ArrowRight size={15} /></button></div></div>
                 </article>
               ))}
             </div>

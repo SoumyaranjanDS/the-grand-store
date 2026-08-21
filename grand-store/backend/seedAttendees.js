@@ -1,8 +1,9 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 const Event = require('./models/Event');
 const Booking = require('./models/Booking');
 
-mongoose.connect('mongodb://localhost:27017/grandstore')
+mongoose.connect(process.env.MONGO_URI)
   .then(async () => {
     console.log('Connected to DB');
     

@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { formatCartPrice } from '../../data';
 import { LogOut, User, Package, Heart, Building2, Gavel, CheckCircle2, ChevronRight, Search } from 'lucide-react';
+import Price from '../../components/ui/Price';
 
 export default function CustomerOrdersPage() {
   const { user, logout } = useAuth();
@@ -112,7 +113,7 @@ export default function CustomerOrdersPage() {
                       <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
                         <div className="text-left md:text-right">
                           <div className="text-sm text-[var(--color-ivory-muted)] mb-1">Order Total</div>
-                          <div className="text-2xl font-serif text-[var(--color-ivory)]">{formatCartPrice(order.totalPrice)}</div>
+                          <div className="text-2xl font-serif text-[var(--color-ivory)]"><Price amount={order.totalPrice} /></div>
                         </div>
                         <button 
                           onClick={() => navigate(`/customer/order/${order._id}`)}

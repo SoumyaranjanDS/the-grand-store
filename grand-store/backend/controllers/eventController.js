@@ -192,83 +192,108 @@ const bookEvent = async (req, res) => {
       totalPrice: customerTotal,
       gsReference,
       ticketId,
-      paymentStatus: "Paid",
-      ticketStatus: "Valid",
+      paymentStatus: "Pending",
+      ticketStatus: "Pending",
     });
 
     const savedBooking = await booking.save();
-
-    // === ACCOUNTING LEDGER INTEGRATION ===
-    const seqStr = seqNum.toString().padStart(6, "0");
-
-    // 1. Customer Payment
-    const paymentTxn = new Transaction({
-      gsReference: `GS-${year}-EVT-TXN-${seqStr}`,
-      type: "payment",
-      module: "events",
-      amount: customerTotal,
-      netAmount: customerTotal * 0.975, // mock 2.5% gateway fee
-      customer: req.user._id,
-      vendor: event.vendorId,
-      status: "cleared",
-      description: `Event Ticket Purchase - ${event.title}`,
-    });
-    await paymentTxn.save();
-
-    // 2. GS Commission
-    const commTxn = new Transaction({
-      gsReference: `GS-${year}-EVT-COM-${seqStr}`,
-      type: "commission",
-      module: "events",
-      amount: commissionAmount,
-      netAmount: commissionAmount,
-      customer: req.user._id,
-      vendor: event.vendorId,
-      status: "cleared",
-      description: `Event Commission - ${event.title}`,
-    });
-    await commTxn.save();
-
-    // 3. VAT Withheld
-    const vatTxn = new Transaction({
-      gsReference: `GS-${year}-EVT-VAT-${seqStr}`,
-      type: "vat",
-      module: "events",
-      amount: vatAmount,
-      netAmount: vatAmount,
-      customer: req.user._id,
-      vendor: event.vendorId,
-      status: "cleared",
-      description: `Event VAT - ${event.title}`,
-    });
-    await vatTxn.save();
-
-    // 4. Vendor Payable
-    const payoutTxn = new Transaction({
-      gsReference: `GS-${year}-EVT-PAYABLE-${seqStr}`,
-      type: "payout",
-      module: "events",
-      amount: organizerPayable,
-      netAmount: organizerPayable,
-      customer: req.user._id,
-      vendor: event.vendorId,
-      status: "pending",
-      description: `Event Vendor Payable - ${event.title}`,
-    });
-    await payoutTxn.save();
-
-    // 5. Update Vendor Wallet
-    let wallet = await Wallet.findOne({ vendorId: event.vendorId });
-    if (!wallet) {
-      wallet = new Wallet({ vendorId: event.vendorId });
-    }
-    wallet.pendingBalance += organizerPayable;
-    await wallet.save();
 
     res.status(201).json(savedBooking);
   } catch (error) {
     console.error("Error booking event:", error);
     res.status(500).json({ message: "Server error booking event" });
+  }
+};
+
+/**
+ * Process the ledger transactions, wallet updates, and event sold quantities after a successful event payment
+ * This function will be called by the PayFast ITN Webhook Controller
+ */
+const processEventPayment = async (bookingId) => {
+  const booking = await Booking.findById(bookingId).populate("event");
+  if (!booking || booking.paymentStatus === "Paid") return;
+
+  const event = booking.event;
+  if (!event) return;
+
+  // 1. Mark booking as paid and valid
+  booking.paymentStatus = "Paid";
+  booking.ticketStatus = "Valid";
+  await booking.save();
+
+  // 2. Increment ticket sold count
+  const tierIndex = event.ticketTiers.findIndex(t => t.name === booking.ticketType);
+  if (tierIndex !== -1) {
+    event.ticketTiers[tierIndex].sold += booking.quantity;
+    await event.save();
+  }
+
+  // 3. Process Accounting Ledger Integration
+  try {
+    const seqNum = await getNextSequence("eventBooking");
+    const year = new Date().getFullYear().toString().slice(-2);
+    const seqStr = seqNum.toString().padStart(6, "0");
+
+    const paymentTxn = new Transaction({
+      gsReference: `GS-${year}-EVT-TXN-${seqStr}`,
+      type: "payment",
+      module: "events",
+      amount: booking.totalPrice,
+      netAmount: booking.totalPrice * 0.975,
+      customer: booking.user,
+      vendor: booking.vendor,
+      status: "cleared",
+      description: `Event Ticket Purchase - ${event.title}`,
+    });
+    await paymentTxn.save();
+
+    const commTxn = new Transaction({
+      gsReference: `GS-${year}-EVT-COM-${seqStr}`,
+      type: "commission",
+      module: "events",
+      amount: booking.commissionAmount,
+      netAmount: booking.commissionAmount,
+      customer: booking.user,
+      vendor: booking.vendor,
+      status: "cleared",
+      description: `Event Commission - ${event.title}`,
+    });
+    await commTxn.save();
+
+    const vatTxn = new Transaction({
+      gsReference: `GS-${year}-EVT-VAT-${seqStr}`,
+      type: "vat",
+      module: "events",
+      amount: booking.vatAmount,
+      netAmount: booking.vatAmount,
+      customer: booking.user,
+      vendor: booking.vendor,
+      status: "cleared",
+      description: `Event VAT - ${event.title}`,
+    });
+    await vatTxn.save();
+
+    const payoutTxn = new Transaction({
+      gsReference: `GS-${year}-EVT-PAYABLE-${seqStr}`,
+      type: "payout",
+      module: "events",
+      amount: booking.organizerPayable,
+      netAmount: booking.organizerPayable,
+      customer: booking.user,
+      vendor: booking.vendor,
+      status: "pending",
+      description: `Event Vendor Payable - ${event.title}`,
+    });
+    await payoutTxn.save();
+
+    let wallet = await Wallet.findOne({ vendorId: booking.vendor });
+    if (!wallet) {
+      wallet = new Wallet({ vendorId: booking.vendor });
+    }
+    wallet.pendingBalance += booking.organizerPayable;
+    await wallet.save();
+  } catch (error) {
+    console.error("Error processing event ledger transactions:", error);
   }
 };
 
@@ -396,6 +421,7 @@ module.exports = {
   getEventById,
   getVendorEvents,
   bookEvent,
+  processEventPayment,
   getUserBookings,
   getEventAttendees,
   verifyTicket,

@@ -5,6 +5,7 @@ import { ChevronRight, ChevronLeft, ShoppingBag, ArrowRight, Minus, Plus, Trash2
 import { useWishlist } from '../../wishlistContext';
 import ProductCard from '../../components/ProductCard';
 import AuctionCountdown from './AuctionCountdown';
+import Price from '../../components/ui/Price';
 
 export default function AuctionLotCard({ lot, endTime, now, saved, onSave, onBid }) {
   const { products } = useProducts();
@@ -49,11 +50,11 @@ export default function AuctionLotCard({ lot, endTime, now, saved, onSave, onBid
           <div className="flex justify-between items-end mb-5">
             <div>
               <div className="text-[9px] uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1 font-semibold">Starting Bid</div>
-              <div className="text-sm font-serif opacity-70 line-through decoration-white/20">ZAR {lot.startingBid ? lot.startingBid.toLocaleString('en-ZA') : '0'}</div>
+              <div className="text-sm font-serif opacity-70 line-through decoration-white/20">ZA<Price amount={lot.startingBid ? lot.startingBid.toLocaleString('en-ZA') : '0'} /></div>
             </div>
             <div className="text-right">
               <div className="text-[9px] uppercase tracking-widest text-gold-gradient mb-1 font-semibold">Current Bid</div>
-              <div className="text-xl font-serif font-bold text-gold-gradient">ZAR {lot.currentBid ? lot.currentBid.toLocaleString('en-ZA') : (lot.startingBid ? lot.startingBid.toLocaleString('en-ZA') : '0')}</div>
+              <div className="text-xl font-serif font-bold text-gold-gradient">ZA<Price amount={lot.currentBid ? lot.currentBid.toLocaleString('en-ZA') : (lot.startingBid ? lot.startingBid.toLocaleString('en-ZA') : '0')} /></div>
             </div>
           </div>
           

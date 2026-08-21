@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { ChevronLeft, Gavel, PackageCheck, Heart, AlertCircle } from 'lucide-react';
+import Price from '../../components/ui/Price';
 
 export default function UserAuctionDashboard() {
   const [bids, setBids] = useState([]);
@@ -55,7 +56,7 @@ export default function UserAuctionDashboard() {
                   <div key={lot._id} className="flex justify-between items-center bg-black/40 p-4 rounded-lg border border-white/5">
                     <div>
                       <Link to={`/auction/${lot._id}`} className="text-white hover:text-gold-gradient transition-colors font-serif block">{lot.title}</Link>
-                      <span className="text-xs text-[#918a7f]">Current Bid: R{lot.currentBid.toLocaleString('en-ZA')}</span>
+                      <span className="text-xs text-[#918a7f]">Current Bid: <Price amount={lot.currentBid.toLocaleString('en-ZA')} /></span>
                     </div>
                     <Link to={`/auction/${lot._id}`} className="px-3 py-1 bg-gold-gradient text-black rounded text-[10px] font-bold uppercase tracking-widest hover:scale-105 transition-transform">
                       View
@@ -103,15 +104,15 @@ export default function UserAuctionDashboard() {
                     </div>
 
                     <div className="text-sm font-mono text-green-100/70 space-y-1">
-                      <div className="flex justify-between"><span>Winning Bid:</span> <span>R {lot.winningBid?.toLocaleString('en-ZA')}</span></div>
+                      <div className="flex justify-between"><span>Winning Bid:</span> <span><Price amount={lot.winningBid?.toLocaleString('en-ZA')} /></span></div>
                       {lot.paymentStatus === 'Paid' && (
                         <>
-                          <div className="flex justify-between"><span>Buyer Premium:</span> <span>R {lot.buyerPremiumAmount?.toLocaleString('en-ZA')}</span></div>
-                          <div className="flex justify-between"><span>BAR Charge:</span> <span>R {lot.barChargeAmount?.toLocaleString('en-ZA')}</span></div>
-                          <div className="flex justify-between"><span>VAT:</span> <span>R {lot.vatAmount?.toLocaleString('en-ZA')}</span></div>
-                          <div className="flex justify-between"><span>Shipping:</span> <span>R {lot.shippingCost?.toLocaleString('en-ZA')}</span></div>
+                          <div className="flex justify-between"><span>Buyer Premium:</span> <span><Price amount={lot.buyerPremiumAmount?.toLocaleString('en-ZA')} /></span></div>
+                          <div className="flex justify-between"><span>BAR Charge:</span> <span><Price amount={lot.barChargeAmount?.toLocaleString('en-ZA')} /></span></div>
+                          <div className="flex justify-between"><span>VAT:</span> <span><Price amount={lot.vatAmount?.toLocaleString('en-ZA')} /></span></div>
+                          <div className="flex justify-between"><span>Shipping:</span> <span><Price amount={lot.shippingCost?.toLocaleString('en-ZA')} /></span></div>
                           <div className="flex justify-between border-t border-green-500/20 pt-2 mt-2 text-green-300 font-bold text-base">
-                            <span>Total Paid:</span> <span>R {lot.totalPaidByBuyer?.toLocaleString('en-ZA')}</span>
+                            <span>Total Paid:</span> <span><Price amount={lot.totalPaidByBuyer?.toLocaleString('en-ZA')} /></span>
                           </div>
                         </>
                       )}
@@ -141,7 +142,7 @@ export default function UserAuctionDashboard() {
                       </div>
                       <div className="p-3">
                         <h3 className="text-white text-xs font-serif line-clamp-1 group-hover:text-gold-gradient transition-colors">{lot.title}</h3>
-                        <p className="text-[10px] text-[#918a7f] mt-1">R{(lot.currentBid || 0).toLocaleString('en-ZA')}</p>
+                        <p className="text-[10px] text-[#918a7f] mt-1"><Price amount={(lot.currentBid || 0).toLocaleString('en-ZA')} /></p>
                       </div>
                     </div>
                   </Link>

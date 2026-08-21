@@ -34,6 +34,8 @@ const socialProofRoutes = require("./routes/socialProofRoutes");
 const estateRoutes = require("./routes/estateRoutes");
 const hostApplicationRoutes = require("./routes/hostApplicationRoutes");
 const postnetRoutes = require("./routes/postnetRoutes");
+const payfastRoutes = require("./routes/payfastRoutes");
+const configRoutes = require("./routes/configRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
@@ -49,6 +51,8 @@ app.use("/api/social-proof", socialProofRoutes);
 app.use("/api/estates", estateRoutes);
 app.use("/api/host-applications", hostApplicationRoutes);
 app.use("/api/postnet", postnetRoutes);
+app.use("/api/payfast", payfastRoutes);
+app.use("/api/config", configRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
