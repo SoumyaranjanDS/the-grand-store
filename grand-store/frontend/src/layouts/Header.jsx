@@ -1,3 +1,4 @@
+import Price from '../components/ui/Price';
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -13,6 +14,7 @@ import {
   X,
 } from 'lucide-react'
 import { menuCategories } from '../data'
+import { useCurrency } from '../context/CurrencyContext'
 
 function IconButton({ label, children, count, onClick, className = '' }) {
   return (
@@ -29,6 +31,8 @@ export default function Header({ cartCount, compareCount, wishlistCount, onBagCl
   const [activeCategory, setActiveCategory] = useState(0)
   const [megaTrigger, setMegaTrigger] = useState('shop')
   const headerRef = useRef(null)
+  const { currency, availableCurrencies, changeCurrency } = useCurrency();
+  const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -63,12 +67,34 @@ export default function Header({ cartCount, compareCount, wishlistCount, onBagCl
       {/* Tailwind Converted Announcement Bar */}
       <div className="bg-panel-light text-ivory text-xs border-b border-white-line py-2">
         <div className="max-w-7xl mx-auto px-4 flex justify-between items-center flex-wrap gap-2">
-          <p className="flex items-center gap-2"><PackageCheck size={14} className="text-gold" /> Complimentary delivery over R1,500</p>
+          <p className="flex items-center gap-2"><PackageCheck size={14} className="text-gold" /> Complimentary delivery over <Price amount={1500} /></p>
           <p className="hidden md:block text-ivory-muted tracking-wide uppercase text-[10px]">Private cellar sourcing available worldwide</p>
           <div className="flex items-center gap-4">
             <button className="flex items-center gap-1 hover:text-gold transition-colors" type="button">South Africa <ChevronDown size={13} /></button>
             <span className="w-px h-3 bg-white-line" />
-            <button className="flex items-center gap-1 hover:text-gold transition-colors" type="button">ZAR <ChevronDown size={13} /></button>
+            
+            <div className="relative">
+              <button 
+                className="flex items-center gap-1 hover:text-gold transition-colors" 
+                type="button"
+                onClick={() => setShowCurrencyDropdown(!showCurrencyDropdown)}
+              >
+                {currency} <ChevronDown size={13} />
+              </button>
+              {showCurrencyDropdown && (
+                <div className="absolute right-0 top-full mt-1 bg-panel border border-white-line rounded shadow-lg z-50 min-w-[80px]">
+                  {availableCurrencies.map(c => (
+                    <button 
+                      key={c}
+                      className="block w-full text-left px-4 py-2 hover:bg-gold/10 hover:text-gold transition-colors"
+                      onClick={() => { changeCurrency(c); setShowCurrencyDropdown(false); }}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
