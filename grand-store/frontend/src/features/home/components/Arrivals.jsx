@@ -36,8 +36,8 @@ export default function Arrivals({ onAdd, onWish, onCompare, compareItems }) {
             <h2 className="m-0 text-left font-serif text-[clamp(40px,3.8vw,62px)] font-medium tracking-[-0.02em] leading-[1.05] text-[#eee8dd]">
               New{' '}
               <span
-                className="gold-gradient-text inline-block pr-2 font-script text-[1.12em]"
-                style={{ fontFamily: "'Dancing Script', cursive" }}
+                className="gold-gradient-text inline-block pr-2 text-[1.12em]"
+                
               >
                 Arrivals
               </span>
