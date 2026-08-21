@@ -71,8 +71,6 @@ export default function VendorEvents() {
     }
   };
 
-  const scriptFont = { fontFamily: "'Dancing Script', cursive" };
-
   return (
     <div className="flex flex-col gap-8 w-full max-w-7xl mx-auto pb-10">
       {/* Page Header */}
@@ -82,7 +80,7 @@ export default function VendorEvents() {
             <div className="p-3 bg-[var(--color-gold)]/10 text-[var(--color-gold)] rounded-xl border border-[var(--color-gold)]/20 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
               <CalendarDays size={28} />
             </div>
-            My <span className="text-gold-gradient ml-2" style={scriptFont}>Events</span>
+            My <span className="text-gold-gradient ml-2" >Events</span>
           </h1>
           <p className="text-[var(--color-ivory-muted)] text-sm max-w-2xl font-light">
             Manage your tastings, masterclasses, and virtual experiences. 
@@ -90,7 +88,7 @@ export default function VendorEvents() {
         </div>
         
         <button 
-          onClick={() => navigate('/vendor/event-add')}
+          onClick={() => navigate(user.role === 'event_host' ? '/event-manager/event-add' : '/vendor/event-add')}
           className="bg-gold-gradient text-black font-bold uppercase tracking-widest text-xs px-6 py-3 rounded-full flex items-center gap-2 hover:scale-105 transition-transform"
         >
           <PlusCircle size={16} /> Create New Event
@@ -105,7 +103,7 @@ export default function VendorEvents() {
           <h3 className="text-xl font-serif text-white mb-2">No events scheduled</h3>
           <p className="text-[var(--color-ivory-muted)] mb-6">Host your first tasting or masterclass today.</p>
           <button 
-            onClick={() => navigate('/vendor/event-add')}
+            onClick={() => navigate(user.role === 'event_host' ? '/event-manager/event-add' : '/vendor/event-add')}
             className="border border-[var(--color-gold)] text-[var(--color-gold)] px-6 py-2 rounded-full uppercase tracking-widest text-xs font-bold hover:bg-[var(--color-gold)] hover:text-black transition-colors"
           >
             Create Event
@@ -182,7 +180,7 @@ export default function VendorEvents() {
                 
                 <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mt-8">
                   <button 
-                    onClick={() => navigate(`/vendor/events/${event._id}/attendees`)}
+                    onClick={() => navigate(user.role === 'event_host' ? `/event-manager/events/${event._id}/attendees` : `/vendor/events/${event._id}/attendees`)}
                     className="w-full sm:w-auto relative group overflow-hidden bg-[var(--color-gold)]/10 px-6 py-3 rounded-2xl border border-[var(--color-gold)]/20 hover:border-[var(--color-gold)]/50 transition-all flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(212,175,55,0.05)] hover:shadow-[0_0_30px_rgba(212,175,55,0.15)]"
                   >
                     <div className="absolute inset-0 w-0 bg-[var(--color-gold)]/20 transition-all duration-300 ease-out group-hover:w-full"></div>
