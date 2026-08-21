@@ -32,6 +32,8 @@ export default function LocationInput({ name, value, onChange, placeholder, clas
           let city = '';
           let postalCode = '';
           let country = '';
+          let lat = typeof place.geometry?.location?.lat === 'function' ? place.geometry.location.lat() : null;
+          let lng = typeof place.geometry?.location?.lng === 'function' ? place.geometry.location.lng() : null;
 
           if (place.address_components) {
             for (const component of place.address_components) {
@@ -62,7 +64,7 @@ export default function LocationInput({ name, value, onChange, placeholder, clas
           }
 
           if (onPlaceDetailsRef.current) {
-            onPlaceDetailsRef.current({ city, postalCode, country });
+            onPlaceDetailsRef.current({ city, postalCode, country, lat, lng });
           }
         }
       });
