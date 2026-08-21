@@ -88,7 +88,7 @@ export default function ProductCard({ product, onAdd, onWish, onCompare, isCompa
               e.stopPropagation(); 
               onAdd(product); 
             }}
-            className="flex-1 h-9 flex items-center justify-center bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] text-[#050505] text-[9px] uppercase tracking-widest font-bold shadow-[0_0_10px_rgba(230,201,122,0.3)] hover:shadow-[0_0_15px_rgba(230,201,122,0.6)] hover:opacity-90 transition-all ml-1"
+            className="flex-1 h-9 flex items-center justify-center bg-[#c9a35b] text-[#050505] text-[9px] uppercase tracking-widest font-bold shadow-[0_0_10px_rgba(230,201,122,0.3)] hover:shadow-[0_0_15px_rgba(230,201,122,0.6)] hover:opacity-90 transition-all ml-1"
           >
             Checkout
           </button>
