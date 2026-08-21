@@ -551,7 +551,7 @@ export default function OnboardingWizard() {
               <button 
                 onClick={handleNext}
                 disabled={saving || !canAccessStep(currentStep)}
-                className={`px-8 py-4 text-xs font-bold uppercase tracking-widest text-black flex items-center gap-2 shadow-[0_0_20px_rgba(201,163,91,0.2)] transition-all ${saving || !canAccessStep(currentStep) ? 'bg-[#e1bd70]/50 cursor-not-allowed' : 'bg-gradient-to-r from-[#c9a35b] to-[#e1bd70] hover:brightness-110'}`}
+                className={`px-8 py-4 text-xs font-bold uppercase tracking-widest text-black flex items-center gap-2 shadow-[0_0_20px_rgba(201,163,91,0.2)] transition-all ${saving || !canAccessStep(currentStep) ? 'bg-[#e1bd70]/50 cursor-not-allowed' : 'bg-[#c9a35b] hover:brightness-110'}`}
               >
                 {saving ? 'Saving...' : 'Save & Continue'} <ChevronRight size={16} />
               </button>
@@ -559,7 +559,7 @@ export default function OnboardingWizard() {
               <button 
                 onClick={handleSubmit}
                 disabled={saving || !canAccessStep(currentStep) || !agreements.termsAccepted || !agreements.informationAccurate}
-                className="px-8 py-4 text-xs font-bold uppercase tracking-widest text-black flex items-center gap-2 shadow-[0_0_20px_rgba(201,163,91,0.2)] transition-all bg-gradient-to-r from-[#c9a35b] to-[#e1bd70] hover:brightness-110 disabled:opacity-50"
+                className="px-8 py-4 text-xs font-bold uppercase tracking-widest text-black flex items-center gap-2 shadow-[0_0_20px_rgba(201,163,91,0.2)] transition-all bg-[#c9a35b] hover:brightness-110 disabled:opacity-50"
               >
                 {saving ? 'Submitting...' : 'Submit Application'}
               </button>
