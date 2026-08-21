@@ -175,14 +175,19 @@ const PackageEditor = ({ items = [], onChange, addLabel = "Add Package" }) => {
 };
 
 /* ─── Section wrapper ─── */
-const Section = ({ id, title, children }) => (
-  <section id={id} className="mb-16 scroll-mt-8">
+const Section = ({ id, title, children, isActive }) => {
+  if (!isActive) return null;
+  return (
+    <section id={id} className="mb-8">
+      
     <div className="mb-6 pb-3 border-b border-white/[0.07]">
       <h2 className="text-lg font-semibold text-white">{title}</h2>
     </div>
     <div className="space-y-5">{children}</div>
-  </section>
-);
+  
+    </section>
+  );
+};
 
 /* ─── Inline save status ─── */
 const SaveStatus = ({ status }) => {
@@ -216,23 +221,6 @@ export default function EstateBuilder() {
   const [publishStatus, setPublishStatus] = useState(null);
   const [activeSection, setActiveSection] = useState("core");
   const contentRef = useRef(null);
-
-  // Scroll spy
-  useEffect(() => {
-    const el = document.getElementById("estate-content");
-    if (!el) return;
-    const onScroll = () => {
-      for (const nav of [...NAV].reverse()) {
-        const sec = document.getElementById(nav.id);
-        if (sec && sec.getBoundingClientRect().top < 160) {
-          setActiveSection(nav.id);
-          break;
-        }
-      }
-    };
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
-  }, []);
 
   useEffect(() => {
     axios
@@ -288,13 +276,7 @@ export default function EstateBuilder() {
     }
   };
 
-  const scrollTo = (id) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-      setActiveSection(id);
-    }
-  };
+  const scrollTo = (id) => { setActiveSection(id); document.getElementById("estate-content")?.scrollTo({ top: 0, behavior: "smooth" }); }
 
   if (loading)
     return (
@@ -424,7 +406,7 @@ export default function EstateBuilder() {
       <div id="estate-content" className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto px-10 py-10">
           {/* ── Core Details ── */}
-          <Section id="core" title="Core Details">
+          <Section isActive={activeSection === "core"} id="core" title="Core Details">
             <div className="grid grid-cols-2 gap-6">
               <div className="col-span-2">
                 <Input
@@ -482,7 +464,7 @@ export default function EstateBuilder() {
           </Section>
 
           {/* ── Our Story ── */}
-          <Section id="story" title="Our Story">
+          <Section isActive={activeSection === "story"} id="story" title="Our Story">
             <div className="grid grid-cols-2 gap-6">
               <Input
                 label="Founded Year"
@@ -552,7 +534,7 @@ export default function EstateBuilder() {
           </Section>
 
           {/* ── Vineyard ── */}
-          <Section id="vineyard" title="Vineyard">
+          <Section isActive={activeSection === "vineyard"} id="vineyard" title="Vineyard">
             <div className="mb-6">
               <Input
                 label="Vineyard Image URL"
@@ -597,7 +579,7 @@ export default function EstateBuilder() {
           </Section>
 
           {/* ── Wine Tastings & Experiences ── */}
-          <Section id="tastings" title="Wine Tastings & Hospitality">
+          <Section isActive={activeSection === "tastings"} id="tastings" title="Wine Tastings & Hospitality">
             <div className="grid grid-cols-2 gap-6 mb-8">
               <Input
                 label="Section Title"
@@ -639,7 +621,7 @@ export default function EstateBuilder() {
           </Section>
 
           {/* ── Restaurant ── */}
-          <Section id="restaurant" title="Restaurant">
+          <Section isActive={activeSection === "restaurant"} id="restaurant" title="Restaurant">
             <Toggle
               label="We have a restaurant"
               description="Show restaurant details on your estate page"
@@ -690,7 +672,7 @@ export default function EstateBuilder() {
           </Section>
 
           {/* ── Accommodation ── */}
-          <Section id="accommodation" title="Accommodation">
+          <Section isActive={activeSection === "accommodation"} id="accommodation" title="Accommodation">
             <Toggle
               label="We offer accommodation"
               description="Vineyard cottages, guesthouses, or rooms"
@@ -738,7 +720,7 @@ export default function EstateBuilder() {
           </Section>
 
           {/* ── Other Experiences ── */}
-          <Section id="experiences" title="Other Experiences">
+          <Section isActive={activeSection === "experiences"} id="experiences" title="Other Experiences">
             <p className="text-white/30 text-sm mb-4">
               Vineyard tours, harvest experiences, cellar tours, and more.
             </p>
@@ -750,7 +732,7 @@ export default function EstateBuilder() {
           </Section>
 
           {/* ── Contact & Social ── */}
-          <Section id="contact" title="Contact & Social">
+          <Section isActive={activeSection === "contact"} id="contact" title="Contact & Social">
             <div className="grid grid-cols-2 gap-6">
               <Input
                 label="Email"
@@ -807,3 +789,4 @@ export default function EstateBuilder() {
     </div>
   );
 }
+
