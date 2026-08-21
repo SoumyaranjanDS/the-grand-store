@@ -21,7 +21,7 @@
 
 .nav-shell {
   display: flex;
-  width: min(1460px, calc(100% - 64px));
+  width: min(1200px, calc(100% - 120px));
   height: 100%;
   align-items: center;
   justify-content: space-between;
@@ -36,14 +36,8 @@
 
 .nav-brand img {
   width: 50px;
-  height: 54px;
+  height: 64px;
   object-fit: contain;
-  mix-blend-mode: multiply;
-}
-
-.navbar:not(.is-scrolled) .nav-brand img {
-  padding: 4px;
-  background: rgba(255, 250, 240, 0.92);
 }
 
 .nav-brand span {

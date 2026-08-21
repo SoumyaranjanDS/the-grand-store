@@ -9,7 +9,7 @@ gsap.registerPlugin(ScrollTrigger)
 export default function HeroScrollVideo() {
   const sectionRef = useRef(null)
   const stageRef = useRef(null)
-  const videoRef = useRef(null)
+  const canvasRef = useRef(null)
   const mediaRef = useRef(null)
   const introRef = useRef(null)
   const terroirRef = useRef(null)
@@ -17,16 +17,46 @@ export default function HeroScrollVideo() {
   const progressRef = useRef(null)
 
   useEffect(() => {
-    const video = videoRef.current
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     let context
 
     const createExperience = () => {
-      video.pause()
       if (reducedMotion) return
 
-      const playhead = { time: 0 }
+      const canvas = canvasRef.current
+      const ctx = canvas.getContext('2d')
+      const dpr = window.devicePixelRatio || 1
+      canvas.width = 1920 * dpr
+      canvas.height = 1080 * dpr
+      ctx.scale(dpr, dpr)
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
+
+      const frameCount = 300
+      const currentFrame = index => `/hero-sequence/ezgif-frame-${(index + 1).toString().padStart(3, '0')}.jpg`
+
+      const images = []
+      const playhead = { frame: 0 }
+
+      let currentFrameIndex = -1
+      for (let i = 0; i < frameCount; i++) {
+        const img = new Image()
+        img.src = currentFrame(i)
+        images.push(img)
+      }
+
+      function render() {
+        const frame = Math.round(playhead.frame)
+        if (frame !== currentFrameIndex && images[frame] && images[frame].complete) {
+          ctx.drawImage(images[frame], 0, 0, 1920, 1080)
+          currentFrameIndex = frame
+        }
+      }
+
+      images[0].onload = render
+
       context = gsap.context(() => {
+        // Intro text animations on load
         gsap.fromTo(
           introRef.current.children,
           { y: 68, autoAlpha: 0, clipPath: 'inset(0 0 100% 0)' },
@@ -38,46 +68,54 @@ export default function HeroScrollVideo() {
             stagger: 0.16,
             ease: 'power3.out',
             delay: 0.12,
-            clearProps: 'transform,opacity,visibility,clipPath',
+            clearProps: 'transform,clipPath', // keep opacity
           },
         )
 
+        // The background image sequence loops infinitely
+        gsap.to(playhead, {
+          frame: frameCount - 1,
+          snap: 'frame',
+          duration: 10,
+          repeat: -1,
+          ease: 'none',
+          onUpdate: render,
+        })
+
+        // Progress bar loops
+        gsap.to(progressRef.current, { 
+          scaleX: 1, 
+          duration: 10, 
+          repeat: -1, 
+          ease: 'none' 
+        })
+
+        // Text sequencing timeline (loops with the video)
         const timeline = gsap.timeline({
-          defaults: { ease: 'none' },
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: 'top top',
-            end: '+=240%',
-            scrub: 1.15,
-            pin: true,
-            anticipatePin: 1,
-            invalidateOnRefresh: true,
-          },
+          repeat: -1,
+          defaults: { ease: 'power2.inOut' }
         })
 
         timeline
-          .to(playhead, {
-            time: Math.max(0.1, video.duration - 0.08),
-            duration: 3,
-            onUpdate: () => {
-              if (Number.isFinite(playhead.time) && Math.abs(video.currentTime - playhead.time) > 0.025) video.currentTime = playhead.time
-            },
-          }, 0)
-          .to(progressRef.current, { scaleX: 1, duration: 3 }, 0)
-          .to(introRef.current, { y: -45, autoAlpha: 0, duration: 0.4 }, 0.42)
-          .fromTo(terroirRef.current, { x: -45, autoAlpha: 0 }, { x: 0, autoAlpha: 1, duration: 0.42 }, 0.7)
-          .to(terroirRef.current, { x: 28, autoAlpha: 0, duration: 0.34 }, 1.38)
-          .fromTo(editionRef.current, { x: 45, autoAlpha: 0 }, { x: 0, autoAlpha: 1, duration: 0.46 }, 1.58)
-          .to(editionRef.current, { y: -24, autoAlpha: 0, duration: 0.36 }, 2.57)
+          // Intro stays for a bit, then fades out
+          .to(introRef.current, { y: -45, autoAlpha: 0, duration: 1 }, 2.5)
+          // Terroir fades in
+          .fromTo(terroirRef.current, { x: -45, autoAlpha: 0 }, { x: 0, autoAlpha: 1, duration: 1 }, 3.5)
+          // Terroir fades out
+          .to(terroirRef.current, { x: 28, autoAlpha: 0, duration: 1 }, 6.0)
+          // Edition fades in
+          .fromTo(editionRef.current, { x: 45, autoAlpha: 0 }, { x: 0, autoAlpha: 1, duration: 1 }, 7.0)
+          // Edition fades out before loop restarts
+          .to(editionRef.current, { y: -24, autoAlpha: 0, duration: 1 }, 9.5)
+          // Reset intro for the next loop (so it matches the 10 second loop of the video)
+          .set(introRef.current, { y: 68, autoAlpha: 0 }, 10)
+
       }, sectionRef)
-      ScrollTrigger.refresh()
     }
 
-    if (video.readyState >= 1) createExperience()
-    else video.addEventListener('loadedmetadata', createExperience, { once: true })
+    createExperience()
 
     return () => {
-      video.removeEventListener('loadedmetadata', createExperience)
       context?.revert()
     }
   }, [])
@@ -86,34 +124,26 @@ export default function HeroScrollVideo() {
     <section className="hero-scroll" id="home" ref={sectionRef}>
       <div className="hero-stage" ref={stageRef}>
         <div className="hero-media" ref={mediaRef}>
-          <video ref={videoRef} src="/assets/hero-video-scroll.mp4" muted playsInline preload="auto" aria-label="Millionaires Collection sparkling wine film" />
+          <canvas ref={canvasRef} aria-label="Millionaires Collection sparkling wine film sequence" />
           <div className="hero-film-shade" />
         </div>
 
         <div className="hero-intro shell" ref={introRef}>
-          <p>Signature Méthode Cap Classique</p>
+          <p>Méthode Cap Classique</p>
           <h1><span>The 2021</span>Limited Edition</h1>
-          <div className="hero-intro-foot">
-            <p>Chardonnay &amp; Pinot Noir</p>
-            <span>An African masterpiece in every sip</span>
-          </div>
         </div>
 
         <article className="hero-chapter hero-terroir" ref={terroirRef}>
-          <span>01 — Origin</span>
           <strong>13</strong>
-          <h2>Distinct wine pockets</h2>
-          <p>Scattered across the Western Cape’s most celebrated wine-growing regions.</p>
+          <h2>Distinct Terroirs</h2>
         </article>
 
         <article className="hero-chapter hero-edition" ref={editionRef}>
-          <span>02 — The marque</span>
-          <h2>The “M” stands for <em>Millionaire.</em></h2>
-          <p>A symbol of status, select taste, and timeless sophistication—crafted for collectors and connoisseurs who accept only the rarest and the best.</p>
+          <h2>The <em>Millionaire</em> Marque</h2>
+          <p>Timeless sophistication crafted for connoisseurs.</p>
           <a href="#story">Enter the collection</a>
         </article>
 
-        <div className="hero-scroll-cue"><ArrowDown size={15} /><span>Scroll to play the film</span></div>
         <div className="hero-progress"><span ref={progressRef} /></div>
       </div>
     </section>
