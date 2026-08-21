@@ -4,6 +4,8 @@ import axios from 'axios';
 import { ChevronRight, ArrowRight, ShieldCheck, CreditCard, Loader2 } from 'lucide-react';
 import LocationInput from '../../components/LocationInput';
 import { formatCartPrice } from '../../data';
+import PaymentForm from '../checkout/PaymentForm';
+import Price from '../../components/ui/Price';
 
 export default function AuctionCheckout({ onNotify }) {
   const { id } = useParams();
@@ -22,11 +24,11 @@ export default function AuctionCheckout({ onNotify }) {
     address: '',
     city: '',
     postalCode: '',
-    country: 'South Africa',
-    cardNumber: '',
-    expiry: '',
-    cvc: ''
+    country: 'South Africa'
   });
+
+  const [paymentData, setPaymentData] = useState(null);
+  const [payfastUrl, setPayfastUrl] = useState(null);
 
   useEffect(() => {
     document.title = 'Auction Checkout – The Grand Store';
@@ -67,6 +69,8 @@ export default function AuctionCheckout({ onNotify }) {
     setProcessing(true);
     try {
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+      
+      // Save shipping details and set lot to pending
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/auction/${id}/pay`,
         { 
@@ -80,12 +84,20 @@ export default function AuctionCheckout({ onNotify }) {
         },
         { headers: { Authorization: `Bearer ${userInfo.token}` } }
       );
-      onNotify('Payment successful! Your auction win has been processed.');
-      navigate(`/auction/${id}`);
+      
+      // Request PayFast signature
+      const pfRes = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/payfast/generate-auction`,
+        { auctionId: id },
+        { headers: { Authorization: `Bearer ${userInfo.token}` } }
+      );
+
+      setPayfastUrl(pfRes.data.url);
+      setPaymentData(pfRes.data.data);
+      
     } catch (err) {
       console.error(err);
       onNotify(err.response?.data?.message || 'Payment failed');
-    } finally {
       setProcessing(false);
     }
   };
@@ -191,16 +203,9 @@ export default function AuctionCheckout({ onNotify }) {
                   </h2>
                   <div className="bg-[#0a0a0a] border border-[var(--color-gold)]/30 rounded-2xl p-6 relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 opacity-10"><CreditCard size={100} /></div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
-                      <div className="md:col-span-2">
-                        <input type="text" name="cardNumber" value={formData.cardNumber} onChange={handleChange} required maxLength="19" placeholder="Card Number (Mock)" className="w-full bg-transparent border-b border-white/20 px-0 py-3 text-sm focus:border-[var(--color-gold)] focus:outline-none transition-colors placeholder:text-white/20" />
-                      </div>
-                      <div>
-                        <input type="text" name="expiry" value={formData.expiry} onChange={handleChange} required placeholder="MM / YY" className="w-full bg-transparent border-b border-white/20 px-0 py-3 text-sm focus:border-[var(--color-gold)] focus:outline-none transition-colors placeholder:text-white/20" />
-                      </div>
-                      <div>
-                        <input type="text" name="cvc" value={formData.cvc} onChange={handleChange} required placeholder="CVC" className="w-full bg-transparent border-b border-white/20 px-0 py-3 text-sm focus:border-[var(--color-gold)] focus:outline-none transition-colors placeholder:text-white/20" />
-                      </div>
+                    <div className="relative z-10">
+                      <p className="text-sm text-[var(--color-ivory-muted)] mb-2">You will be redirected to PayFast to securely complete your purchase.</p>
+                      <img src="https://payfast.io/images/payfast-logo.svg" alt="PayFast" className="h-8 mb-4 brightness-0 invert opacity-80" />
                     </div>
                   </div>
                 </section>
@@ -210,8 +215,10 @@ export default function AuctionCheckout({ onNotify }) {
                   disabled={processing}
                   className="w-full mt-8 bg-[#c9a35b] text-black font-bold uppercase tracking-widest text-xs py-4 rounded-xl hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all flex items-center justify-center gap-2"
                 >
-                  {processing ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : <>Pay {formatCartPrice(total)} <ArrowRight size={16} /></>}
+                  {processing ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : <>Pay <Price amount={total} /> <ArrowRight size={16} /></>}
                 </button>
+                
+                <PaymentForm paymentData={paymentData} payfastUrl={payfastUrl} />
               </form>
             )}
             
@@ -235,24 +242,24 @@ export default function AuctionCheckout({ onNotify }) {
               <div className="border-t border-white/10 pt-6 flex flex-col gap-3 text-sm font-mono">
                 <div className="flex justify-between text-[var(--color-ivory-muted)]">
                   <span>Winning Bid</span>
-                  <span>R {lot.winningBid.toLocaleString('en-ZA')}</span>
+                  <span><Price amount={lot.winningBid.toLocaleString('en-ZA')} /></span>
                 </div>
                 <div className="flex justify-between text-[var(--color-ivory-muted)]">
                   <span>Buyer Premium</span>
-                  <span>R {lot.buyerPremiumAmount.toLocaleString('en-ZA')}</span>
+                  <span><Price amount={lot.buyerPremiumAmount.toLocaleString('en-ZA')} /></span>
                 </div>
                 <div className="flex justify-between text-[var(--color-ivory-muted)]">
                   <span>BAR Charge</span>
-                  <span>R {lot.barChargeAmount.toLocaleString('en-ZA')}</span>
+                  <span><Price amount={lot.barChargeAmount.toLocaleString('en-ZA')} /></span>
                 </div>
                 <div className="flex justify-between text-[var(--color-ivory-muted)]">
                   <span>VAT ({lot.vatPct}%)</span>
-                  <span>R {lot.vatAmount.toLocaleString('en-ZA')}</span>
+                  <span><Price amount={lot.vatAmount.toLocaleString('en-ZA')} /></span>
                 </div>
                 {checkoutStep === 2 ? (
                   <div className="flex justify-between pb-4 border-b border-white/10 text-white">
                     <span>Shipping</span>
-                    <span>R {dynamicShipping.toLocaleString('en-ZA')}</span>
+                    <span><Price amount={dynamicShipping.toLocaleString('en-ZA')} /></span>
                   </div>
                 ) : (
                    <div className="pb-4 border-b border-white/10"></div>
@@ -260,7 +267,7 @@ export default function AuctionCheckout({ onNotify }) {
                 
                 <div className="flex justify-between text-lg font-serif mt-2">
                   <span>Total To Pay</span>
-                  <span className="text-gold-gradient font-bold">{checkoutStep === 2 ? formatCartPrice(total) : formatCartPrice(total - dynamicShipping)}</span>
+                  <span className="text-gold-gradient font-bold">{checkoutStep === 2 ? <Price amount={total} /> : <Price amount={total - dynamicShipping} />}</span>
                 </div>
                 {checkoutStep === 1 && (
                   <p className="text-[10px] text-white/30 italic mt-4">
