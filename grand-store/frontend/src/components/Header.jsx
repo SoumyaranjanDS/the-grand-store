@@ -1,3 +1,4 @@
+import Price from './ui/Price';
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -15,7 +16,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import IconButton from "./IconButton";
-import { storeCategories } from "../data";
+import { storeCategories, accessoryCategories } from "../data";
 import { useAuth } from "../context/AuthContext";
 import { useProducts } from "../context/ProductContext";
 import { useGeoLocation } from "../context/LocationContext";
@@ -91,7 +92,7 @@ export default function Header({
         <div className="shell announcement-inner">
           <p className="font-bold tracking-widest uppercase text-[10px]">
             <PackageCheck size={14} className="mr-2" /> Complimentary delivery
-            over R1,500
+            over <Price amount={1500} />
           </p>
           <p className="announcement-message font-bold tracking-widest uppercase text-[10px]">
             Private cellar sourcing available worldwide
@@ -241,7 +242,7 @@ export default function Header({
             <div
               className="relative nav-shop-control"
               onMouseEnter={() => {
-                setActiveCategory(0);
+                setActiveCategory(-1);
                 setMegaTrigger("shop");
                 setMegaOpen(true);
               }}
@@ -258,9 +259,9 @@ export default function Header({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute top-full left-0 pt-4 z-50 flex"
+                    className="absolute top-full left-0 pt-4 z-50 flex items-start"
                   >
-                    <div className="w-48 bg-[#0a0a0a] border border-[#b58b38]/20 shadow-[0_4px_20px_rgba(0,0,0,0.8)] rounded-sm h-96 overflow-y-auto custom-scrollbar relative">
+                    <div className="w-56 bg-[#222222] shadow-[0_4px_20px_rgba(0,0,0,0.8)] rounded-l-sm h-96 overflow-y-auto custom-scrollbar relative">
                       {storeCategories.map((category, index) => (
                         <div
                           key={category}
@@ -268,7 +269,7 @@ export default function Header({
                           onMouseEnter={() => setActiveCategory(index)}
                         >
                           <div
-                            className={`px-4 py-3 flex items-center justify-between text-sm cursor-pointer transition-colors ${activeCategory === index ? "text-[#e6c97a] bg-white/5" : "text-white hover:text-[#e6c97a]"}`}
+                            className={`px-5 py-4 flex items-center justify-between text-sm font-medium cursor-pointer transition-colors border-b border-dashed border-white/10 ${activeCategory === index ? "text-[#e6c97a]" : "text-white hover:text-[#e6c97a]"}`}
                           >
                             {category}
                             <ChevronRight size={14} />
@@ -282,13 +283,13 @@ export default function Header({
                         storeCategories[activeCategory] && (
                           <motion.div
                             key={activeCategory}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -5 }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
                             transition={{ duration: 0.2 }}
-                            className="pl-4 w-72"
+                            className="w-72 bg-[#1a1a1a] shadow-[0_4px_20px_rgba(0,0,0,0.8)] rounded-r-sm h-96 overflow-y-auto custom-scrollbar"
                           >
-                            <div className="flex flex-col gap-2 max-h-[80vh] overflow-y-auto overflow-x-hidden custom-scrollbar pr-2 py-1">
+                            <div className="flex flex-col">
                               {products
                                 .filter((p) =>
                                   (p.category || p.type || "")
@@ -300,23 +301,14 @@ export default function Header({
                                     ),
                                 )
                                 .map((product, i) => (
-                                  <motion.div
+                                  <Link
                                     key={product.id}
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{
-                                      duration: 0.2,
-                                      delay: i * 0.03,
-                                    }}
+                                    to={`/product/${product.slug || product.id}`}
+                                    onClick={closeMenus}
+                                    className="block px-6 py-4 text-sm font-medium text-white border-b border-dashed border-white/10 hover:text-[#e6c97a] transition-all"
                                   >
-                                    <Link
-                                      to={`/product/${product.slug || product.id}`}
-                                      onClick={closeMenus}
-                                      className="block px-5 py-2 text-sm text-white bg-[#0a0a0a] border border-[#b58b38]/30 shadow-[0_4px_15px_rgba(0,0,0,0.5)] rounded-lg hover:text-[#e6c97a] hover:border-[#e6c97a]/60 hover:bg-[#b58b38]/10 transition-all truncate text-center"
-                                    >
-                                      {product.name}
-                                    </Link>
-                                  </motion.div>
+                                    {product.name}
+                                  </Link>
                                 ))}
                               {products.filter((p) =>
                                 (p.category || p.type || "")
@@ -327,13 +319,9 @@ export default function Header({
                                     ].toLowerCase(),
                                   ),
                               ).length === 0 && (
-                                <motion.div
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  className="px-5 py-2 text-[#888] text-xs bg-[#0a0a0a] border border-white/10 rounded-lg shadow-[0_4px_15px_rgba(0,0,0,0.5)] text-center whitespace-normal break-words"
-                                >
+                                <div className="px-6 py-4 text-sm font-medium text-[#888] border-b border-dashed border-white/10">
                                   New allocations arriving soon.
-                                </motion.div>
+                                </div>
                               )}
                             </div>
                           </motion.div>
@@ -346,7 +334,75 @@ export default function Header({
 
             <a href="/#private-collection">Offers</a>
             <Link to="/auction">Auction</Link>
-            <Link to="/accessories" className="text-[#f0cf76] hover:text-white transition-colors">Accessories</Link>
+            <div
+              className="relative nav-accessories-control"
+              onMouseEnter={() => {
+                setActiveCategory(-1);
+                setMegaTrigger("accessories");
+                setMegaOpen(true);
+              }}
+              onMouseLeave={() => setMegaOpen(false)}
+            >
+              <Link to="/accessories" className="nav-shop-link text-[#f0cf76] hover:text-white transition-colors">
+                Accessories
+              </Link>
+
+              <AnimatePresence>
+                {megaOpen && megaTrigger === "accessories" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute top-full left-0 pt-4 z-50 flex items-start"
+                  >
+                    <div className="w-56 bg-[#222222] shadow-[0_4px_20px_rgba(0,0,0,0.8)] rounded-l-sm h-auto relative">
+                      {Object.keys(accessoryCategories).map((category, index) => (
+                        <div
+                          key={category}
+                          className="relative group/category"
+                          onMouseEnter={() => setActiveCategory(index)}
+                        >
+                          <div
+                            className={`px-5 py-4 flex items-center justify-between text-sm font-medium cursor-pointer transition-colors border-b border-dashed border-white/10 ${activeCategory === index ? "text-[#e6c97a]" : "text-white hover:text-[#e6c97a]"}`}
+                          >
+                            {category}
+                            <ChevronRight size={14} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <AnimatePresence mode="wait">
+                      {activeCategory >= 0 &&
+                        Object.keys(accessoryCategories)[activeCategory] && (
+                          <motion.div
+                            key={activeCategory}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="w-64 bg-[#1a1a1a] shadow-[0_4px_20px_rgba(0,0,0,0.8)] rounded-r-sm h-auto"
+                          >
+                            <div className="flex flex-col">
+                              {accessoryCategories[Object.keys(accessoryCategories)[activeCategory]].map((subcategory, i) => (
+                                <Link
+                                  key={subcategory}
+                                  to={`/accessories?category=${encodeURIComponent(Object.keys(accessoryCategories)[activeCategory])}&subcategory=${encodeURIComponent(subcategory)}`}
+                                  onClick={closeMenus}
+                                  className="block px-6 py-4 text-sm font-medium text-white border-b border-dashed border-white/10 hover:text-[#e6c97a] transition-all"
+                                >
+                                  {subcategory}
+                                </Link>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                    </AnimatePresence>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
             <Link to="/events" className="font-bold text-[#f0cf76] hover:text-white transition-colors">Events</Link>
             <Link to="/vendor-portal">Sell on The Grand Store</Link>
             <Link to="/bookatasting">Book a tasting</Link>
@@ -413,9 +469,24 @@ export default function Header({
             <Link to="/auction" onClick={closeMenus}>
               Auction
             </Link>
-            <Link to="/accessories" onClick={closeMenus} className="text-[#f0cf76]">
-              Accessories
-            </Link>
+            <details>
+              <summary className="text-[#f0cf76]">
+                Accessories
+                <ChevronDown size={15} />
+              </summary>
+              <div className="mobile-nest">
+                <strong>Shop accessories</strong>
+                {Object.keys(accessoryCategories).map((category) => (
+                  <Link
+                    to={`/accessories?category=${encodeURIComponent(category)}`}
+                    onClick={closeMenus}
+                    key={category}
+                  >
+                    {category}
+                  </Link>
+                ))}
+              </div>
+            </details>
             <Link to="/events" onClick={closeMenus} className="font-bold text-[#f0cf76]">
               Events
             </Link>
