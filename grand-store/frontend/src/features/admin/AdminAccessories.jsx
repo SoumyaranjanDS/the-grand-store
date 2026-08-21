@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { Search, Plus, Edit2, Trash2 } from "lucide-react";
+import Price from '../../components/ui/Price';
 
 export default function AdminAccessories() {
   const { user } = useAuth();
@@ -149,7 +150,7 @@ export default function AdminAccessories() {
                     )}
                   </td>
                   <td className="py-4 text-sm text-[var(--color-ivory)] font-serif">{acc.name}</td>
-                  <td className="py-4 text-sm text-[var(--color-gold)] font-mono">R {acc.price}</td>
+                  <td className="py-4 text-sm text-[var(--color-gold)] font-mono"><Price amount={acc.price} /></td>
                   <td className="py-4 text-sm text-white/70">{acc.stock}</td>
                   <td className="py-4 pr-6 text-right space-x-3">
                     <button onClick={() => handleOpenModal(acc)} className="text-white/50 hover:text-white transition">
