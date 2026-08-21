@@ -10,8 +10,7 @@ export default function VendorLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (!user) {
-    navigate('/login');
-    return null;
+    return <Navigate to="/login" replace />;
   }
 
   // Handle specific vendor states
