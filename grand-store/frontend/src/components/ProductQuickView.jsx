@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, ShoppingBag, X } from 'lucide-react'
+import Price from './ui/Price'
 
 export default function ProductQuickView({ product, onClose, onAdd }) {
   useEffect(() => {
@@ -56,7 +57,7 @@ export default function ProductQuickView({ product, onClose, onAdd }) {
             {product.fullName || product.name}
           </h2>
           <strong className="text-[#e1bd70] font-serif text-[32px] font-medium">
-            {product.price}
+            <Price amount={product.price} />
           </strong>
           <p className="m-[22px_0] text-[#a9a195] font-serif text-[17px] leading-[1.6]">
             {product.description}
