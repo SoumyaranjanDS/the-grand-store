@@ -6,13 +6,24 @@ const Vendor = require('../models/Vendor');
 // @access  Public
 const getProducts = async (req, res) => {
   try {
-    const products = await Product.find({}).lean();
+    const query = {};
+    if (req.query.type) {
+      query.type = req.query.type;
+    }
+    const products = await Product.find(query).lean();
     
     const vendorIds = [...new Set(products.filter(p => p.vendorId).map(p => p.vendorId.toString()))];
     const vendors = await Vendor.find({ userId: { $in: vendorIds } }).lean();
     
     const productsWithStore = products.map(product => {
-      if (!product.vendorId) return product;
+      if (!product.vendorId) {
+        // Internal product (like Accessories) managed by Admin
+        return {
+          ...product,
+          storeId: 'admin',
+          storeName: 'The Grand Store'
+        };
+      }
       
       const vendor = vendors.find(v => v.userId.toString() === product.vendorId.toString());
       if (vendor) {
@@ -37,8 +48,18 @@ const getProducts = async (req, res) => {
 // @access  Public
 const getProductById = async (req, res) => {
   try {
-    const product = await Product.findOne({ id: req.params.id });
+    const product = await Product.findOne({ id: req.params.id }).lean();
     if (product) {
+      if (!product.vendorId) {
+        product.storeId = 'admin';
+        product.storeName = 'The Grand Store';
+      } else {
+        const vendor = await Vendor.findOne({ userId: product.vendorId }).lean();
+        if (vendor) {
+          product.storeId = vendor.userId;
+          product.storeName = vendor.businessInfo?.tradingName || vendor.businessInfo?.legalName || 'Unknown Store';
+        }
+      }
       res.json(product);
     } else {
       res.status(404).json({ message: 'Product not found' });
@@ -47,22 +68,22 @@ const getProductById = async (req, res) => {
     res.status(500).json({ message: 'Server error fetching product' });
   }
 };
-// @desc    Create a new product (Vendor only)
+// @desc    Create a new product (Vendor or Admin)
 // @route   POST /api/products
-// @access  Private (Vendor)
+// @access  Private (Vendor/Admin)
 const createProduct = async (req, res) => {
   try {
-    if (req.user.role !== 'vendor_active') {
-      return res.status(403).json({ message: 'Only approved vendors can add products' });
+    if (req.user.role !== 'vendor_active' && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Only approved vendors or admins can add products' });
     }
 
     const { name, type, description, price, options, tags, tastingNotes, stock } = req.body;
+    let { image, gallery } = req.body; // Allows passing image links from frontend for admins
 
     // Check if type is whisky and ensure fact sheet is provided
     let factSheetPdf = null;
-    let image = null;
-    let gallery = [];
-
+    
+    // If files are uploaded (multipart/form-data)
     if (req.files) {
       if (req.files.images && req.files.images.length > 0) {
         image = `/uploads/${req.files.images[0].filename}`;
@@ -75,7 +96,14 @@ const createProduct = async (req, res) => {
       }
     }
 
-    if (type && type.toLowerCase() === 'wine' && !factSheetPdf) {
+    // Admins might pass gallery as a string or array of links
+    if (typeof gallery === 'string') {
+      gallery = [gallery];
+    } else if (!gallery) {
+      gallery = [];
+    }
+
+    if (type && type.toLowerCase() === 'wine' && !factSheetPdf && req.user.role !== 'admin') {
       return res.status(400).json({ message: 'Fact Sheet PDF is required for Wine products' });
     }
 
@@ -88,11 +116,11 @@ const createProduct = async (req, res) => {
       image,
       gallery,
       factSheetPdf,
-      options: options ? JSON.parse(options) : [],
-      tags: tags ? JSON.parse(tags) : [],
-      tastingNotes: tastingNotes ? JSON.parse(tastingNotes) : [],
+      options: options && typeof options === 'string' ? JSON.parse(options) : options || [],
+      tags: tags && typeof tags === 'string' ? JSON.parse(tags) : tags || [],
+      tastingNotes: tastingNotes && typeof tastingNotes === 'string' ? JSON.parse(tastingNotes) : tastingNotes || [],
       stock: Number(stock) || 0,
-      vendorId: req.user._id,
+      vendorId: req.user.role === 'admin' ? null : req.user._id,
       approvalStatus: 'approved'
     });
 
@@ -105,19 +133,20 @@ const createProduct = async (req, res) => {
 };
 // @desc    Fetch products for a specific vendor
 // @route   GET /api/products/vendor/me
-// @access  Private (Vendor)
+// @access  Private (Vendor/Admin)
 const getVendorProducts = async (req, res) => {
   try {
-    const products = await Product.find({ vendorId: req.user._id });
+    const filter = req.user.role === 'admin' ? { vendorId: null } : { vendorId: req.user._id };
+    const products = await Product.find(filter);
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: 'Server error fetching vendor products' });
   }
 };
 
-// @desc    Update a product (Vendor only)
+// @desc    Update a product (Vendor or Admin)
 // @route   PUT /api/products/:id
-// @access  Private (Vendor)
+// @access  Private (Vendor/Admin)
 const updateProduct = async (req, res) => {
   try {
     const product = await Product.findOne({ id: req.params.id });
@@ -126,20 +155,25 @@ const updateProduct = async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    if (product.vendorId.toString() !== req.user._id.toString()) {
+    if (req.user.role !== 'admin' && product.vendorId?.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Not authorized to edit this product' });
     }
 
-    const { name, type, description, price, options, tags, tastingNotes, stock } = req.body;
+    const { name, type, description, price, options, tags, tastingNotes, stock, image: imageLink, gallery: galleryLinks } = req.body;
 
     product.name = name || product.name;
     product.type = type || product.type;
-    product.description = description || product.description;
+    product.description = description !== undefined ? description : product.description;
     product.price = price || product.price;
-    product.options = options ? JSON.parse(options) : product.options;
-    product.tags = tags ? JSON.parse(tags) : product.tags;
-    product.tastingNotes = tastingNotes ? JSON.parse(tastingNotes) : product.tastingNotes;
+    product.options = options && typeof options === 'string' ? JSON.parse(options) : options || product.options;
+    product.tags = tags && typeof tags === 'string' ? JSON.parse(tags) : tags || product.tags;
+    product.tastingNotes = tastingNotes && typeof tastingNotes === 'string' ? JSON.parse(tastingNotes) : tastingNotes || product.tastingNotes;
     product.stock = stock !== undefined ? Number(stock) : product.stock;
+
+    if (imageLink) product.image = imageLink;
+    if (galleryLinks) {
+      product.gallery = typeof galleryLinks === 'string' ? [galleryLinks] : galleryLinks;
+    }
 
     if (req.files) {
       if (req.files.images && req.files.images.length > 0) {
@@ -153,10 +187,6 @@ const updateProduct = async (req, res) => {
       if (req.files.factSheetPdf && req.files.factSheetPdf[0]) {
         product.factSheetPdf = `/uploads/${req.files.factSheetPdf[0].filename}`;
       }
-    }
-
-    if (product.type && product.type.toLowerCase() === 'wine' && !product.factSheetPdf) {
-      return res.status(400).json({ message: 'Fact Sheet PDF is required for Wine products' });
     }
 
     const updatedProduct = await product.save();

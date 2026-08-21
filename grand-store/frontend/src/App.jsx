@@ -80,6 +80,8 @@ import AdminVendors from './features/admin/AdminVendors'
 import AdminExpertReviews from './features/admin/AdminExpertReviews'
 import AdminSettings from './features/admin/AdminSettings'
 import AdminFinancials from './features/admin/AdminFinancials'
+import AdminAccessories from './features/admin/AdminAccessories'
+import AccessoriesPage from './features/shop/AccessoriesPage'
 import VendorMarketing from './features/vendor/VendorMarketing'
 import VendorAcademy from './features/vendor/VendorAcademy'
 import CheckoutPage from './features/checkout/CheckoutPage'
@@ -320,6 +322,7 @@ function App() {
           </main>
         )} />
         <Route path="/shop" element={<ShopPage onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />} />
+        <Route path="/accessories" element={<AccessoriesPage onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />} />
         <Route path="/store/:storeId" element={<StoreFront />} />
         <Route path="/customer/cart" element={(
           <CartPage
@@ -405,6 +408,7 @@ function App() {
           <Route path="users" element={<AdminUsers />} />
           <Route path="vendors" element={<AdminVendors />} />
           <Route path="expert-reviews" element={<AdminExpertReviews />} />
+          <Route path="accessories" element={<AdminAccessories />} />
           <Route path="host-applications" element={<AdminHostApplications />} />
           <Route path="auctions" element={<AdminAuctionPanel onNotify={showToast} />} />
           <Route path="settings" element={<AdminSettings />} />

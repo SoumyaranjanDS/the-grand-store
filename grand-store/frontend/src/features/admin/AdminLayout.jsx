@@ -93,6 +93,9 @@ export default function AdminLayout() {
             <button onClick={() => handleNavigate('/admin/auctions')} className={navItemClass('/admin/auctions')}>
               <Gavel size={16} /> Auctions Management
             </button>
+            <button onClick={() => handleNavigate('/admin/accessories')} className={navItemClass('/admin/accessories')}>
+              <Star size={16} /> Accessories
+            </button>
             <button onClick={() => handleNavigate('/admin/expert-reviews')} className={navItemClass('/admin/expert-reviews')}>
               <Star size={16} /> Expert Reviews
             </button>

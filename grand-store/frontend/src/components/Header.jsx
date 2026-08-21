@@ -241,7 +241,7 @@ export default function Header({
               <Link className="nav-shop-link" to="/shop">
                 Shop
               </Link>
-
+              
               <AnimatePresence>
                 {megaOpen && megaTrigger === "shop" && (
                   <motion.div
@@ -337,6 +337,7 @@ export default function Header({
 
             <a href="/#private-collection">Offers</a>
             <Link to="/auction">Auction</Link>
+            <Link to="/accessories" className="text-[#f0cf76] hover:text-white transition-colors">Accessories</Link>
             <Link to="/events" className="font-bold text-[#f0cf76] hover:text-white transition-colors">Events</Link>
             <Link to="/vendor-portal">Sell on The Grand Store</Link>
             <Link to="/bookatasting">Book a tasting</Link>
@@ -402,6 +403,9 @@ export default function Header({
             </a>
             <Link to="/auction" onClick={closeMenus}>
               Auction
+            </Link>
+            <Link to="/accessories" onClick={closeMenus} className="text-[#f0cf76]">
+              Accessories
             </Link>
             <Link to="/events" onClick={closeMenus} className="font-bold text-[#f0cf76]">
               Events

@@ -205,6 +205,8 @@ const addOrderItems = async (req, res) => {
 
     // 3. Vendor Payable Transactions & Wallet Updates
     for (const payable of vendorPayables) {
+      if (!payable.vendorId) continue; // Skip admin-owned items
+
       const vendorSeqNum = await getNextSequence('shopOrder');
       const payableTxn = new Transaction({
         gsReference: `GS-${year}-${moduleCode}-PAYABLE-${vendorSeqNum.toString().padStart(6, '0')}`,

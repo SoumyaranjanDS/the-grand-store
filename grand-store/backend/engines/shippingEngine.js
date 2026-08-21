@@ -13,7 +13,10 @@ const isSouthAfrica = (country) => {
 
 const getShippingQuotes = async (vendorId, customerAddress, shipmentItemsSubtotal, totalWeightKg) => {
   try {
-    const vendor = await Vendor.findById(vendorId);
+    let vendor = null;
+    if (vendorId && /^[0-9a-fA-F]{24}$/.test(vendorId.toString())) {
+      vendor = await Vendor.findById(vendorId);
+    }
     const originCountry = vendor?.shippingProfile?.pickupAddress?.country || 'South Africa';
     const destCountry = customerAddress.country || 'South Africa';
 
