@@ -5,6 +5,7 @@ import { ChevronRight, ChevronLeft, ShoppingBag, ArrowRight, Minus, Plus, Trash2
 import { brandyBrands, brands, menuCategories, tequilaBrands } from '../../data';
 import { useWishlist } from '../../wishlistContext';
 import ProductCard from '../../components/ProductCard';
+import Price from '../../components/ui/Price';
 
 export default function TastingBookingModal({ event, onClose, onConfirm }) {
   const { products } = useProducts();
@@ -51,7 +52,7 @@ export default function TastingBookingModal({ event, onClose, onConfirm }) {
       <button className="tasting-modal-scrim" type="button" onClick={onClose} aria-label="Close reservation" />
       <div className="tasting-modal-panel">
         <button className="tasting-modal-close" type="button" onClick={onClose} aria-label="Close reservation"><X size={22} /></button>
-        <div className="tasting-modal-intro"><img src={event.image} alt="" /><div><p className="eyebrow">Private tasting</p><h2 id="tasting-modal-title">{event.title}</h2><p>{event.description}</p><strong>R{event.price.toLocaleString('en-ZA')} per guest</strong></div></div>
+        <div className="tasting-modal-intro"><img src={event.image} alt="" /><div><p className="eyebrow">Private tasting</p><h2 id="tasting-modal-title">{event.title}</h2><p>{event.description}</p><strong><Price amount={event.price.toLocaleString('en-ZA')} /> per guest</strong></div></div>
         <form className="tasting-booking-form" onSubmit={submitBooking}>
           <fieldset><legend>Choose a date</legend><div className="tasting-date-options">{event.dates.map((item) => <button className={selectedDate === item.date ? 'active' : ''} type="button" onClick={() => selectDate(item.date)} key={item.date}><CalendarDays size={17} /><span>{item.label}</span></button>)}</div></fieldset>
           <fieldset><legend>Select a time</legend><div className="tasting-time-options">{activeDate?.times.map((time) => <button className={selectedTime === time ? 'active' : ''} type="button" onClick={() => setSelectedTime(time)} key={time}>{time}</button>)}</div></fieldset>
