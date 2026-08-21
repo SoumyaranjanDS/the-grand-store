@@ -6,6 +6,7 @@ const experienceSchema = new mongoose.Schema({
   price: { type: Number },
   duration: { type: String },                    // e.g. "60 minutes"
   capacity: { type: Number },                    // max guests
+  imageUrl: { type: String },                    // image per package
   isAvailable: { type: Boolean, default: true }
 }, { _id: false });
 
@@ -43,6 +44,7 @@ const estateProfileSchema = new mongoose.Schema({
     winemaker:       { type: String },
     winemakerBio:    { type: String },
     philosophy:      { type: String },
+    images:          [{ type: String }],          // Max 4 images
   },
 
   // ── Vineyard Details ─────────────────────────
@@ -53,11 +55,16 @@ const estateProfileSchema = new mongoose.Schema({
     grapeVarieties:  [{ type: String }],
     viticulture:     { type: String },            // e.g. "Organic", "Biodynamic"
     sustainability:  { type: String },
+    imageUrl:        { type: String },            // Image for Terroir section
   },
 
   // ── Hospitality ──────────────────────────────
   hospitality: {
+    title: { type: String },
+    subtitle: { type: String },
+
     hasTastings: { type: Boolean, default: false },
+    tastingsImageUrl: { type: String },
     tastings: [experienceSchema],                 // Available tasting packages
 
     hasRestaurant: { type: Boolean, default: false },
@@ -67,6 +74,7 @@ const estateProfileSchema = new mongoose.Schema({
       openingHours: { type: String },             // e.g. "Wed–Sun 12:00–15:00"
       menuUrl:      { type: String },
       phoneNumber:  { type: String },
+      imageUrl:     { type: String },
     },
 
     hasAccommodation: { type: Boolean, default: false },
@@ -76,6 +84,7 @@ const estateProfileSchema = new mongoose.Schema({
       priceFrom:     { type: Number },            // Starting nightly rate
       bookingEmail:  { type: String },
       bookingPhone:  { type: String },
+      imageUrl:      { type: String },
     },
 
     experiences: [experienceSchema],              // Other experiences (tours, harvests, etc.)
