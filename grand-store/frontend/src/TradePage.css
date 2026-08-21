@@ -18,13 +18,13 @@
 .trade-hero {
   position: relative;
   isolation: isolate;
-  min-height: min(780px, 100svh);
-  padding: 112px 0 72px;
+  min-height: min(720px, 100svh);
+  padding: 106px 0 54px;
   display: flex;
   align-items: center;
   overflow: hidden;
-  background: #050505;
-  border-bottom: 1px solid rgba(203, 158, 61, .32);
+  background: #04182b;
+  border-bottom: 1px solid rgba(111, 174, 224, .28);
   color: #f8f4eb;
 }
 
@@ -45,44 +45,37 @@
   width: 100%;
   height: 110%;
   object-fit: cover;
-  object-position: center;
+  object-position: center 56%;
   transform-origin: center;
 }
 
 .trade-hero-overlay {
-  background:
-    linear-gradient(90deg, rgba(5, 5, 5, .94) 0%, rgba(5, 5, 5, .81) 35%, rgba(5, 5, 5, .32) 66%, rgba(5, 5, 5, .16) 100%),
-    linear-gradient(180deg, rgba(5, 5, 5, .28), transparent 36%, rgba(5, 5, 5, .68));
+  background: rgba(3, 20, 37, .58);
 }
 
 .trade-hero-grid {
-  opacity: .28;
-  background:
-    linear-gradient(90deg, rgba(224, 184, 85, .18) 1px, transparent 1px) 0 0 / 9vw 100%,
-    linear-gradient(rgba(255, 255, 255, .08) 1px, transparent 1px) 0 0 / 100% 22%;
-  -webkit-mask-image: linear-gradient(90deg, #000, transparent 68%);
-  mask-image: linear-gradient(90deg, #000, transparent 68%);
+  display: none;
 }
 
 .trade-hero-stage {
   position: relative;
   z-index: 2;
-  min-height: 530px;
+  min-height: 510px;
   display: grid;
-  grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr);
+  grid-template-columns: minmax(0, .72fr) minmax(0, 1.28fr);
   align-items: center;
 }
 
 .trade-hero-copy {
   position: relative;
   z-index: 4;
-  max-width: 590px;
+  max-width: 530px;
   padding-bottom: 10px;
 }
 
 .trade-hero-eyebrow,
 .trade-kicker {
-  color: #d3a74e;
+  color: #8fc9f0;
   font-size: 13px;
   line-height: 1;
   font-weight: 900;
@@ -91,10 +84,10 @@
 }
 
 .trade-hero-copy h1 {
-  margin: 21px 0 23px;
+  margin: 18px 0 20px;
   color: #fffaf0;
   font-family: 'Playfair Display', serif;
-  font-size: clamp(55px, 5vw, 76px);
+  font-size: clamp(52px, 4.7vw, 72px);
   font-weight: 500;
   letter-spacing: -.05em;
   line-height: .94;
@@ -104,23 +97,18 @@
   display: block;
 }
 
-.trade-hero-copy .trade-script-accent {
-  margin-top: 4px;
-  margin-left: 34px;
-  font-size: 1.03em;
-  line-height: 1.1;
-}
-
-.trade-portal .trade-hero-copy .trade-script-accent {
-  font-size: 1.03em;
+.trade-hero-accent {
+  display: block;
+  color: #b8ddf5;
+  font-style: italic;
 }
 
 .trade-hero-copy > p {
-  max-width: 570px;
-  margin: 0 0 28px;
-  color: rgba(248, 244, 235, .75);
-  font-size: clamp(16px, 1.2vw, 19px);
-  line-height: 1.68;
+  max-width: 500px;
+  margin: 0 0 24px;
+  color: rgba(236, 246, 253, .8);
+  font-size: clamp(16px, 1.12vw, 18px);
+  line-height: 1.58;
 }
 
 .trade-hero-modes {
@@ -150,32 +138,57 @@
 .trade-logistics-scene {
   position: relative;
   align-self: stretch;
-  min-height: 530px;
+  min-height: 510px;
   pointer-events: none;
 }
 
 .trade-hero-truck {
   position: absolute;
   z-index: 2;
-  right: 15vw;
-  bottom: -6px;
-  width: min(39vw, 590px);
-  height: auto;
-  opacity: .78;
-  filter: drop-shadow(0 25px 24px rgba(0, 0, 0, .5));
+  right: 6.5vw;
+  bottom: 5px;
+  width: min(47vw, 720px);
+  opacity: .97;
+  filter: drop-shadow(0 28px 30px rgba(0, 8, 18, .55));
   transform-origin: 60% 100%;
   will-change: transform;
+}
+
+.trade-hero-truck-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  -webkit-mask: url('/assets/trade/grand-store-trade-truck-clean-v3.png') center / 100% 100% no-repeat;
+  mask: url('/assets/trade/grand-store-trade-truck-clean-v3.png') center / 100% 100% no-repeat;
+}
+
+.trade-hero-truck-brand {
+  position: absolute;
+  z-index: 1;
+  top: 29%;
+  left: 16%;
+  width: 35%;
+  transform: perspective(1200px) rotateY(-2deg) rotateZ(-.55deg) skewY(-.18deg);
+  transform-origin: center right;
+  opacity: .94;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, .58));
+}
+
+.trade-hero-truck-brand-mark {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .trade-hero-phone {
   position: absolute;
   z-index: 6;
-  right: -3vw;
-  bottom: 25px;
-  width: min(16vw, 245px);
+  right: -128px;
+  bottom: 24px;
+  width: min(13vw, 205px);
   height: auto;
   max-width: none;
-  filter: drop-shadow(0 28px 28px rgba(0, 0, 0, .5));
+  filter: saturate(.72) brightness(.9) contrast(1.08) hue-rotate(4deg) drop-shadow(0 28px 28px rgba(0, 8, 18, .62));
   transform-origin: 70% 100%;
   will-change: transform;
 }
@@ -433,24 +446,25 @@
 }
 
 .trade-button-gold {
-  background: linear-gradient(135deg, #e2bc62, #ac7528);
-  border-color: #d5a84d;
+  color: #fff;
+  background: #176da5;
+  border-color: #4ca1d8;
 }
 
 .trade-button-gold:hover {
-  color: #111;
-  filter: brightness(1.08);
+  color: #fff;
+  background: #2182bf;
 }
 
 .trade-button-ghost {
-  color: #e8c970;
-  background: transparent;
-  border-color: #b98a35;
+  color: #d9effd;
+  background: rgba(5, 31, 53, .42);
+  border-color: rgba(151, 204, 238, .65);
 }
 
 .trade-button-ghost:hover {
-  color: #f6df9b;
-  border-color: #e6c46c;
+  color: #fff;
+  border-color: #b9e2fb;
 }
 
 .trade-button-outline {
@@ -923,17 +937,17 @@
 
 @media (max-width: 1120px) {
   .trade-hero-stage {
-    grid-template-columns: minmax(0, 1fr) minmax(410px, .8fr);
+    grid-template-columns: minmax(0, .82fr) minmax(430px, 1.18fr);
   }
 
   .trade-hero-truck {
-    right: 20vw;
-    width: min(45vw, 560px);
+    right: 7vw;
+    width: min(52vw, 650px);
   }
 
   .trade-hero-phone {
-    right: -2vw;
-    width: min(18vw, 220px);
+    right: -72px;
+    width: min(16vw, 190px);
   }
 
   .trade-scene-orbit {
@@ -953,9 +967,7 @@
   }
 
   .trade-hero-overlay {
-    background:
-      linear-gradient(90deg, rgba(5, 5, 5, .95), rgba(5, 5, 5, .68) 76%, rgba(5, 5, 5, .42)),
-      linear-gradient(180deg, rgba(5, 5, 5, .15), transparent 35%, rgba(5, 5, 5, .8));
+    background: rgba(3, 20, 37, .7);
   }
 
   .trade-hero-stage {
@@ -980,16 +992,16 @@
   }
 
   .trade-hero-truck {
-    right: 28vw;
-    bottom: -5px;
-    width: min(62vw, 540px);
-    opacity: .42;
+    right: 11vw;
+    bottom: 5px;
+    width: min(68vw, 590px);
+    opacity: .48;
   }
 
   .trade-hero-phone {
-    right: -2vw;
+    right: -54px;
     bottom: 36px;
-    width: min(25vw, 205px);
+    width: min(22vw, 175px);
   }
 
   .trade-scene-orbit {
@@ -1123,16 +1135,16 @@
   }
 
   .trade-hero-truck {
-    right: 150px;
-    bottom: -4px;
+    right: 86px;
+    bottom: 2px;
     width: 430px;
-    opacity: .25;
+    opacity: .27;
   }
 
   .trade-hero-phone {
-    right: -28px;
+    right: -39px;
     bottom: 36px;
-    width: 145px;
+    width: 132px;
     opacity: .82;
   }
 

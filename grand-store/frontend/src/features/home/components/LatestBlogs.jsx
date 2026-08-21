@@ -141,15 +141,12 @@ export default function LatestBlogs() {
 
   return (
     <section
-      className="relative overflow-hidden border-y border-white/10 bg-[linear-gradient(135deg,#080705_0%,#12100c_48%,#090806_100%)] py-7 text-[#f3ede2] md:py-9"
+      className="relative overflow-hidden border-y border-white/10 bg-[#0b0907] py-7 text-[#f3ede2] md:py-9"
       id="journal"
       ref={sectionRef}
       aria-labelledby="latest-blogs-title"
     >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#e4c474]/65 to-transparent" />
-      <div className="pointer-events-none absolute inset-0 opacity-30 [background-image:radial-gradient(rgba(218,181,102,0.14)_0.65px,transparent_0.65px)] [background-size:7px_7px]" />
-      <div className="pointer-events-none absolute -left-40 top-40 h-[520px] w-[520px] rounded-full bg-[#b88636]/10 blur-[150px]" />
-      <div className="pointer-events-none absolute right-[6%] top-[14%] h-[360px] w-[360px] rounded-full bg-[radial-gradient(circle,rgba(218,181,102,0.08),transparent_68%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[#d8b56c]/45" />
 
       <div className="relative z-10 mx-auto max-w-[1390px] px-5 sm:px-8 xl:px-10">
         <header
@@ -164,13 +161,7 @@ export default function LatestBlogs() {
               id="latest-blogs-title"
               className="m-0 font-serif text-[clamp(42px,4.7vw,66px)] font-medium leading-[0.92] tracking-[-0.04em] text-[#f3ede2]"
             >
-              Explore the{' '}
-              <span
-                className="gold-gradient-text inline-block pr-3 font-script text-[1.08em] font-normal"
-                style={{ fontFamily: "'Dancing Script', cursive" }}
-              >
-                Journal
-              </span>
+              Explore the <span className="text-[#dfbd72]">Journal</span>
             </h2>
           </div>
         </header>
@@ -200,14 +191,14 @@ export default function LatestBlogs() {
                       decoding="async"
                     />
                   </div>
-                  <span className="flex min-h-8 items-center border-t border-[#edce82]/30 bg-[linear-gradient(100deg,#94691f_0%,#dfbd6d_55%,#a97828_100%)] px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.15em] text-[#100c06] transition-[filter] duration-500 group-hover/story:brightness-110 sm:text-[10px]">
+                  <span className="flex min-h-8 items-center border-t border-[#edce82]/30 bg-[#cda858] px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.15em] text-[#100c06] transition-colors duration-500 group-hover/story:bg-[#dfbd72] sm:text-[10px]">
                     {String(index + 1).padStart(2, '0')} / {index === 0 ? 'Featured story' : post.category}
                   </span>
                 </Link>
 
                 <div className={`${imageFirst ? '' : 'lg:order-1'} relative text-left`} data-journal-story>
                   <span
-                    className="absolute -left-5 top-0 hidden h-14 w-px bg-gradient-to-b from-[#e2c475] to-transparent transition-all duration-500 group-hover/story:h-24 lg:block"
+                    className="absolute -left-5 top-0 hidden h-14 w-px bg-[#d8b56c]/65 transition-all duration-500 group-hover/story:h-24 lg:block"
                     aria-hidden="true"
                   />
 
@@ -215,7 +206,7 @@ export default function LatestBlogs() {
                     <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#d8b56c] sm:text-[11px]">
                       Edition {String(index + 1).padStart(2, '0')}
                     </span>
-                    <span className="h-px w-8 bg-gradient-to-r from-[#e4c474] to-transparent" aria-hidden="true" />
+                    <span className="h-px w-8 bg-[#d8b56c]/65" aria-hidden="true" />
                     <span className="font-serif text-[14px] italic tracking-[0.02em] text-[#c9bda9] sm:text-[15px]">
                       {post.category}
                     </span>
@@ -224,10 +215,7 @@ export default function LatestBlogs() {
                   <h3 className="mb-0 mt-2.5 max-w-[640px] font-serif text-[clamp(29px,2.9vw,44px)] font-medium leading-[1.08] tracking-[-0.03em] text-[#f3ede2]">
                     <Link className="transition-colors duration-300" to={`/blog/${post.slug}`} aria-label={post.title}>
                       {post.titleBefore}
-                      <span
-                        className="gold-gradient-text inline-block pr-2 font-script text-[1.08em] font-normal tracking-normal transition-[filter] duration-300 group-hover/story:brightness-125"
-                        style={{ fontFamily: "'Dancing Script', cursive" }}
-                      >
+                      <span className="inline text-[#dfbd72]">
                         {post.titleAccent}
                       </span>
                       {post.titleAfter}
@@ -251,7 +239,7 @@ export default function LatestBlogs() {
                     className="mt-4 inline-flex items-center gap-6 border-b border-[#d8b56c] pb-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-[#e5c577] transition-[filter,border-color] hover:border-white hover:brightness-125"
                     to={`/blog/${post.slug}`}
                   >
-                    <span className="gold-gradient-text">Read story</span>
+                    <span>Read story</span>
                     <ArrowUpRight className="transition-transform duration-300 group-hover/story:-translate-y-0.5 group-hover/story:translate-x-0.5" size={15} aria-hidden="true" />
                   </Link>
                 </div>

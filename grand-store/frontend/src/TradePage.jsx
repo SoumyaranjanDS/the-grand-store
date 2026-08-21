@@ -23,17 +23,17 @@ const services = [
     icon: BadgeCheck,
   },
   {
-    title: 'Sourcing & Blending',
+    title: 'Sourcing and Blending',
     desc: 'We source a wide range of bulk wines from established producers across South Africa’s celebrated wine regions.',
     icon: Blend,
   },
   {
-    title: 'Procurement & Filling',
+    title: 'Procurement and Filling',
     desc: 'We manage packaging procurement, filling, warehousing, documentation and the approvals required to get every order market-ready.',
     icon: PackageCheck,
   },
   {
-    title: 'Transport & Shipping',
+    title: 'Transport and Shipping',
     desc: 'Our logistics team manages FOB, CIF and DAP shipments, including container loading, documentation and door-to-door insurance.',
     icon: Ship,
   },
@@ -77,7 +77,7 @@ export default function TradePage() {
       intro
         .fromTo('.trade-hero-bg-image', { scale: 1.1 }, { scale: 1.02, duration: 1.8 })
         .fromTo('[data-hero-reveal]', { y: 28 }, { y: 0, duration: .72, stagger: .08 }, .08)
-        .fromTo('[data-trade-phone]', { x: 42, y: 28, rotation: 4 }, { x: 0, y: 0, rotation: 0, duration: 1.15, ease: 'back.out(1.25)' }, .58)
+        .fromTo('[data-trade-phone]', { x: -42, y: 28, rotation: -2 }, { x: 0, y: 0, rotation: 0, duration: 1.15, ease: 'back.out(1.18)' }, .58)
 
       gsap.to('[data-trade-phone]', {
         y: -10,
@@ -113,7 +113,7 @@ export default function TradePage() {
       })
 
       gsap.to('[data-trade-phone]', {
-        xPercent: 6,
+        xPercent: 0,
         yPercent: -9,
         ease: 'none',
         scrollTrigger: {
@@ -135,7 +135,7 @@ export default function TradePage() {
     <main className="trade-page">
       <section ref={heroRef} className="trade-hero trade-motion-hero" aria-label="Grand Store global trade partnerships">
         <div className="trade-hero-media" aria-hidden="true">
-          <img className="trade-hero-bg-image" src="/assets/trade/trade-port-hero-v2.png" alt="" />
+          <img className="trade-hero-bg-image" src="/assets/trade/trade-port-hero-blue-v3.png" alt="" />
           <div className="trade-hero-overlay" />
           <div className="trade-hero-grid" />
         </div>
@@ -144,52 +144,39 @@ export default function TradePage() {
           <div className="trade-hero-copy">
             <span className="trade-hero-eyebrow" data-hero-reveal>Grand Store Trade · South Africa</span>
             <h1 data-hero-reveal>
-              <span>Premium trade.</span>
-              <span className="trade-script-accent">Without limits.</span>
+              <span>Global trade.</span>
+              <span className="trade-hero-accent">Simplified.</span>
             </h1>
             <p data-hero-reveal>
-              Sourcing, private label development and export logistics—coordinated through one trusted beverage trade partner.
+              Sourcing, private label and logistics—from Cape Town to global markets.
             </p>
             <div className="trade-hero-actions" data-hero-reveal>
               <Link to="/trade/partner-enquiry" className="trade-button trade-button-gold">
-                Start a partnership <ArrowRight size={18} />
+                Partner with us <ArrowRight size={18} />
               </Link>
               <Link to="/trade/trade-export" className="trade-button trade-button-ghost">
-                Explore trade export
+                Explore exports
               </Link>
-            </div>
-            <div className="trade-hero-modes" data-hero-reveal>
-              <span><Container size={17} /> Road freight</span>
-              <span><Ship size={17} /> Ocean freight</span>
-              <span><Globe2 size={17} /> Global reach</span>
             </div>
           </div>
 
           <div className="trade-logistics-scene" aria-hidden="true">
-            <div className="trade-scene-orbit"><span /><span /><span /></div>
-            <img
-              className="trade-hero-truck"
-              src="/assets/trade/grand-store-trade-truck-v2.png"
-              alt=""
-              data-trade-truck
-            />
+            <div className="trade-hero-truck" data-trade-truck>
+              <img
+                className="trade-hero-truck-image"
+                src="/assets/trade/grand-store-trade-truck-blue-v4.png"
+                alt=""
+              />
+              <div className="trade-hero-truck-brand">
+                <img className="trade-hero-truck-brand-mark" src="/logo.png" alt="" />
+              </div>
+            </div>
             <img
               className="trade-hero-phone"
               src="/assets/trade/grand-store-trade-phone-v2.png"
               alt=""
               data-trade-phone
             />
-            <div className="trade-road-motion"><span /><span /><span /></div>
-          </div>
-        </div>
-
-        <div className="trade-hero-footer" data-hero-reveal>
-          <div className="shell trade-hero-footer-inner">
-            <span>Private label</span><i />
-            <span>Procurement</span><i />
-            <span>Export documentation</span><i />
-            <span>Worldwide delivery</span>
-            <b>Scroll to explore <ArrowRight size={15} /></b>
           </div>
         </div>
       </section>
@@ -272,7 +259,7 @@ export default function TradePage() {
           </div>
 
           <div className="trade-export-content">
-            <span className="trade-kicker">Export & logistics</span>
+            <span className="trade-kicker">Export and logistics</span>
             <h2>From documentation to <span className="trade-script-accent">destination.</span></h2>
             <p>
               We adhere to the required wine export approval and transport procedures, maintain records and retention samples for export loads, and coordinate the shipment details that keep trade moving.

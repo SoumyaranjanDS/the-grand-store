@@ -86,13 +86,7 @@ export default function WhyChooseUs() {
         <div className="mb-8 flex flex-col justify-between gap-6 text-left md:mb-9 lg:flex-row lg:items-end">
           <div className="max-w-[680px]">
             <h2 className="m-0 font-serif text-[clamp(44px,4.2vw,66px)] font-medium leading-[1] tracking-[-0.035em] text-[#eee8dd]">
-              Why{' '}
-              <span 
-                className="gold-gradient-text inline-block pr-2 font-script text-[1.12em]"
-                style={{ fontFamily: "'Dancing Script', cursive" }}
-              >
-                Choose Us
-              </span>
+              Why <span className="text-[#dfbd72]">Choose Us</span>
             </h2>
             <p className="mt-4 max-w-[650px] text-[16px] leading-[1.65] text-[rgba(244,238,224,0.76)] md:text-[18px]">
               <span className="font-serif text-[#f0cf76] italic text-[1.06em]">Uncompromising excellence.</span>{' '}
@@ -103,15 +97,15 @@ export default function WhyChooseUs() {
           {/* KPI Stats Trio */}
           <div className="grid shrink-0 grid-cols-3 gap-2.5 sm:gap-3">
             <div className="group min-w-0 rounded-xl border border-white/10 bg-[#11100d] p-3 text-center transition-all hover:border-[#c9a35b]/40 sm:min-w-[128px] sm:p-4">
-              <div className="mb-1 font-serif text-2xl font-bold text-gold-gradient sm:text-[28px]">100%</div>
+              <div className="mb-1 font-serif text-2xl font-bold text-[#dfbd72] sm:text-[28px]">100%</div>
               <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#a69e92] sm:text-[11px]">Estate Direct</div>
             </div>
             <div className="group min-w-0 rounded-xl border border-white/10 bg-[#11100d] p-3 text-center transition-all hover:border-[#c9a35b]/40 sm:min-w-[128px] sm:p-4">
-              <div className="mb-1 font-serif text-2xl font-bold text-gold-gradient sm:text-[28px]">500+</div>
+              <div className="mb-1 font-serif text-2xl font-bold text-[#dfbd72] sm:text-[28px]">500+</div>
               <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#a69e92] sm:text-[11px]">Curated Bottles</div>
             </div>
             <div className="group min-w-0 rounded-xl border border-white/10 bg-[#11100d] p-3 text-center transition-all hover:border-[#c9a35b]/40 sm:min-w-[128px] sm:p-4">
-              <div className="mb-1 font-serif text-2xl font-bold text-gold-gradient sm:text-[28px]">24/7</div>
+              <div className="mb-1 font-serif text-2xl font-bold text-[#dfbd72] sm:text-[28px]">24/7</div>
               <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#a69e92] sm:text-[11px]">Cellar Concierge</div>
             </div>
           </div>
@@ -132,7 +126,7 @@ export default function WhyChooseUs() {
                   onMouseLeave={() => setActiveTab(null)}
                   className={`why-card group relative overflow-hidden rounded-xl border px-4 py-4 text-left shadow-lg transition-all duration-300 md:px-5 md:py-[18px] ${
                     isActive 
-                      ? 'border-[#c9a35b]/60 bg-gradient-to-r from-[#17140e] to-[#0f0d0a] shadow-[0_8px_30px_rgba(0,0,0,0.45)]' 
+                      ? 'border-[#c9a35b]/60 bg-[#15120e] shadow-[0_8px_30px_rgba(0,0,0,0.45)]' 
                       : 'border-white/10 bg-[#11100d] hover:border-[#c9a35b]/40 hover:bg-[#15120e]'
                   }`}
                 >
@@ -141,7 +135,7 @@ export default function WhyChooseUs() {
 
                   {/* Active Indicator bar */}
                   {isActive && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#b58b38] via-[#e6c97a] to-[#b58b38]" />
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#d5ad58]" />
                   )}
 
                   <div className="relative z-10 grid grid-cols-[54px_minmax(0,1fr)] items-start gap-4 text-left sm:grid-cols-[60px_minmax(0,1fr)] sm:gap-5">
@@ -150,12 +144,12 @@ export default function WhyChooseUs() {
                     <div className="flex shrink-0 flex-col items-center justify-start gap-2.5">
                       <div className={`flex h-[50px] w-[50px] items-center justify-center rounded-xl border shadow-md transition-all duration-300 ${
                         isActive 
-                          ? 'border-[#c9a35b] bg-[#1a1711] text-gold-gradient shadow-[0_0_15px_rgba(212,175,55,0.3)]' 
-                          : 'border-white/10 bg-[#0a0a0a] text-[#918a7f] group-hover:text-gold-gradient group-hover:border-[#c9a35b]/50'
+                          ? 'border-[#c9a35b] bg-[#1a1711] text-[#dfbd72] shadow-[0_0_15px_rgba(212,175,55,0.3)]' 
+                          : 'border-white/10 bg-[#0a0a0a] text-[#918a7f] group-hover:text-[#dfbd72] group-hover:border-[#c9a35b]/50'
                       }`}>
-                        <Icon size={23} strokeWidth={1.5} className="text-gold-gradient" />
+                        <Icon size={23} strokeWidth={1.5} className="text-[#dfbd72]" />
                       </div>
-                      <span className="shrink-0 font-serif text-[24px] font-bold tracking-tight text-gold-gradient md:text-[27px]">
+                      <span className="shrink-0 font-serif text-[24px] font-bold tracking-tight text-[#dfbd72] md:text-[27px]">
                         {pillar.id}
                       </span>
                     </div>
@@ -164,10 +158,7 @@ export default function WhyChooseUs() {
                     <div className="text-left flex-1">
                       <h3 className="m-0 text-left font-serif text-[27px] font-medium leading-[1.05] text-[#eee8dd] transition-colors group-hover:text-white md:text-[31px]">
                         {pillar.titlePrefix && <>{pillar.titlePrefix}{' '}</>}
-                        <span
-                          className="gold-gradient-text inline-block pr-2 font-script text-[1.12em]"
-                          style={{ fontFamily: "'Dancing Script', cursive" }}
-                        >
+                        <span className="inline-block pr-1 font-serif text-[#dfbd72]">
                           {pillar.titleAccent}
                         </span>
                       </h3>
@@ -195,13 +186,13 @@ export default function WhyChooseUs() {
               aria-label="Friends enjoying wine together"
             />
             {/* Ambient Darkened Gradient Overlays */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/60 pointer-events-none" />
+            <div className="absolute inset-0 bg-black/55 pointer-events-none" />
             <div className="absolute top-0 right-0 w-48 h-48 bg-[var(--color-gold)]/10 rounded-full blur-[80px] pointer-events-none" />
             <div className="absolute inset-2.5 border border-white/10 rounded-lg pointer-events-none" />
 
             {/* Floating Top Badge */}
             <div className="relative z-10 self-start">
-              <span className="inline-flex items-center gap-2 rounded-lg border border-[#c9a35b]/40 bg-black/75 px-3.5 py-2 text-[12px] font-semibold uppercase tracking-[0.13em] text-gold-gradient shadow-lg backdrop-blur-md">
+              <span className="inline-flex items-center gap-2 rounded-lg border border-[#c9a35b]/40 bg-black/75 px-3.5 py-2 text-[12px] font-semibold uppercase tracking-[0.13em] text-[#dfbd72] shadow-lg backdrop-blur-md">
                 <CheckCircle2 size={14} className="text-[#e6c97a]" />
                 {activeTab === null ? 'The Grand Store Standard' : pillars[activeTab].highlight}
               </span>
@@ -209,7 +200,7 @@ export default function WhyChooseUs() {
 
             {/* Bottom Caption Box */}
             <div className="relative z-10 mt-auto p-4 rounded-lg bg-black/65 backdrop-blur-md border border-white/10 text-left">
-              <div className="mb-1 text-[11px] font-bold uppercase tracking-[0.15em] text-gold-gradient">
+              <div className="mb-1 text-[11px] font-bold uppercase tracking-[0.15em] text-[#dfbd72]">
                 The Connoisseur Experience
               </div>
               <p className="m-0 font-serif text-[17px] italic leading-[1.5] text-[var(--color-ivory)] sm:text-[19px]">
@@ -232,7 +223,7 @@ export default function WhyChooseUs() {
               key={idx} 
               className="group flex items-center gap-3 rounded-lg border border-white/5 bg-[#11100d] p-3.5 transition-all hover:border-[#c9a35b]/30"
             >
-              <div className="p-1.5 rounded-md bg-[var(--color-gold)]/10 text-gold-gradient border border-[var(--color-gold)]/20 group-hover:bg-[var(--color-gold)]/20 transition-colors shrink-0">
+              <div className="p-1.5 rounded-md bg-[var(--color-gold)]/10 text-[#dfbd72] border border-[var(--color-gold)]/20 group-hover:bg-[var(--color-gold)]/20 transition-colors shrink-0">
                 <CheckCircle2 size={14} />
               </div>
               <span className="truncate text-[12px] font-semibold uppercase tracking-[0.13em] text-[var(--color-ivory)] sm:text-[13px]">

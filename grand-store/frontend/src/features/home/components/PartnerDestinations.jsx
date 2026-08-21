@@ -54,7 +54,7 @@ export default function PartnerDestinations() {
 
   return (
     <section
-      className="relative overflow-hidden border-y border-[#c9a35b]/15 bg-[linear-gradient(120deg,#0b0907_0%,#15110c_48%,#0a0806_100%)] py-7 lg:py-8"
+      className="relative overflow-hidden border-y border-[#c9a35b]/15 bg-[#0b0907] py-7 lg:py-8"
       ref={sectionRef}
       aria-labelledby="partner-title"
     >
@@ -67,13 +67,7 @@ export default function PartnerDestinations() {
             id="partner-title"
             className="m-0 font-serif text-[clamp(34px,3.7vw,52px)] font-medium leading-[0.98] tracking-[-0.035em] text-[#f5efe4]"
           >
-            Partner{' '}
-            <span
-              className="gold-gradient-text inline-block pr-2 font-script text-[1.12em] font-normal"
-              style={{ fontFamily: "'Dancing Script', cursive" }}
-            >
-              Houses
-            </span>
+            Partner <span className="text-[#dfbd72]">Houses</span>
           </h2>
 
           <p className="mb-0 mt-3 text-[14px] leading-[1.55] text-[#b8afa2]">
@@ -92,7 +86,7 @@ export default function PartnerDestinations() {
               key={destination.title}
               aria-label={`${destination.label} (opens in a new tab)`}
             >
-              <div className="relative h-[205px] overflow-hidden border-b border-[#d8b56c]/20 bg-[radial-gradient(circle_at_center,rgba(201,163,91,0.11),#0c0a08_68%)] sm:h-[225px] lg:h-[235px]">
+              <div className="relative h-[205px] overflow-hidden border-b border-[#d8b56c]/20 bg-[#0c0a08] sm:h-[225px] lg:h-[235px]">
                 <img
                   className="absolute inset-0 h-full w-full object-contain object-center p-2 transition-transform duration-700 ease-out group-hover:scale-[1.015]"
                   src={destination.image}
@@ -107,10 +101,7 @@ export default function PartnerDestinations() {
                   <small className="block text-[13px] font-bold uppercase tracking-[0.18em] text-[#d8b56c] sm:text-[14px]">
                     {destination.eyebrow}
                   </small>
-                  <strong
-                    className="mt-2 block font-script text-[clamp(32px,2.5vw,42px)] font-normal leading-[1.04] tracking-normal text-[#f3d384]"
-                    style={{ fontFamily: "'Dancing Script', cursive" }}
-                  >
+                  <strong className="mt-2 block font-serif text-[clamp(29px,2.25vw,38px)] font-medium leading-[1.05] tracking-[-0.025em] text-[#f3eee5]">
                     {destination.title}
                   </strong>
                   <p className="mb-0 mt-2.5 text-[16px] leading-[1.5] text-[#aaa196] sm:text-[17px]">

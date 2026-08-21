@@ -1,138 +1,238 @@
-import { Link, useNavigate } from 'react-router-dom'
-import { GitCompareArrows, Heart, Eye, ShoppingCart, ShoppingBag } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { GitCompareArrows, Heart, Search, ShoppingBag } from 'lucide-react'
+import IconButton from './IconButton'
 import { useWishlist } from '../wishlistContext'
 
-export default function ProductCard({ product, index, onAdd, onWish, onCompare, isCompared = false, onQuickView }) {
-  const navigate = useNavigate()
-  const productPath = `/product/${product.slug || product.id || product._id}`
-  const { isWishlisted } = useWishlist()
-  const wishlisted = isWishlisted(product)
+const fallbackBadges = ['Just in', 'Limited', 'Cellar pick', 'New vintage', 'Sommelier pick']
+const trimmedUploadCache = new Map()
+const vendorImageFitVersion = 'full-bottle-v4'
+const preparedVendorImages = {
+  '/uploads/images-1787292711461.png': '/assets/products/vendor/whisky-tona-full.png',
+}
 
-  const handleCardClick = (e) => {
-    if (e.target.closest('button') || e.target.closest('a')) return
-    navigate(productPath)
+function VendorProductImage({ src, alt }) {
+  const preparedSource = Object.entries(preparedVendorImages)
+    .find(([uploadPath]) => String(src || '').includes(uploadPath))?.[1]
+  const cacheKey = `${vendorImageFitVersion}:${src}`
+  const [displaySource, setDisplaySource] = useState(() => preparedSource || trimmedUploadCache.get(cacheKey) || src)
+
+  useEffect(() => {
+    if (preparedSource) {
+      setDisplaySource(preparedSource)
+      return undefined
+    }
+
+    if (!src || !src.includes('/uploads/') || trimmedUploadCache.has(cacheKey)) {
+      setDisplaySource(trimmedUploadCache.get(cacheKey) || src)
+      return undefined
+    }
+
+    let cancelled = false
+    const sourceImage = new Image()
+    sourceImage.decoding = 'async'
+
+    sourceImage.onload = () => {
+      try {
+        const naturalWidth = sourceImage.naturalWidth
+        const naturalHeight = sourceImage.naturalHeight
+        const analysisScale = Math.min(1, 800 / Math.max(naturalWidth, naturalHeight))
+        const analysisWidth = Math.max(1, Math.round(naturalWidth * analysisScale))
+        const analysisHeight = Math.max(1, Math.round(naturalHeight * analysisScale))
+        const analysisCanvas = document.createElement('canvas')
+        const analysisContext = analysisCanvas.getContext('2d', { willReadFrequently: true })
+
+        if (!analysisContext) return
+
+        analysisCanvas.width = analysisWidth
+        analysisCanvas.height = analysisHeight
+        analysisContext.drawImage(sourceImage, 0, 0, analysisWidth, analysisHeight)
+
+        const pixels = analysisContext.getImageData(0, 0, analysisWidth, analysisHeight).data
+        let minX = analysisWidth
+        let minY = analysisHeight
+        let maxX = -1
+        let maxY = -1
+
+        for (let y = 0; y < analysisHeight; y += 1) {
+          for (let x = 0; x < analysisWidth; x += 1) {
+            const alpha = pixels[((y * analysisWidth) + x) * 4 + 3]
+            if (alpha <= 12) continue
+            minX = Math.min(minX, x)
+            minY = Math.min(minY, y)
+            maxX = Math.max(maxX, x)
+            maxY = Math.max(maxY, y)
+          }
+        }
+
+        if (maxX < minX || maxY < minY) return
+
+        const visibleWidth = maxX - minX + 1
+        const visibleHeight = maxY - minY + 1
+        const needsTrim = visibleWidth < analysisWidth * 0.88 || visibleHeight < analysisHeight * 0.88
+
+        if (!needsTrim) {
+          trimmedUploadCache.set(cacheKey, src)
+          return
+        }
+
+        const sourceX = minX / analysisScale
+        const sourceY = minY / analysisScale
+        const sourceWidth = visibleWidth / analysisScale
+        const sourceHeight = visibleHeight / analysisScale
+        // Pad from the detected object dimensions rather than the longest
+        // side. This preserves a natural portrait ratio for tall bottles.
+        const horizontalPadding = sourceWidth * 0.12
+        const topPadding = sourceHeight * 0.08
+        const bottomPadding = sourceHeight * 0.18
+        const paddedWidth = sourceWidth + (horizontalPadding * 2)
+        const paddedHeight = sourceHeight + topPadding + bottomPadding
+        const outputScale = Math.min(1, 1200 / Math.max(paddedWidth, paddedHeight))
+        const outputCanvas = document.createElement('canvas')
+        const outputContext = outputCanvas.getContext('2d')
+
+        if (!outputContext) return
+
+        outputCanvas.width = Math.max(1, Math.round(paddedWidth * outputScale))
+        outputCanvas.height = Math.max(1, Math.round(paddedHeight * outputScale))
+        outputContext.drawImage(
+          sourceImage,
+          sourceX,
+          sourceY,
+          sourceWidth,
+          sourceHeight,
+          horizontalPadding * outputScale,
+          topPadding * outputScale,
+          sourceWidth * outputScale,
+          sourceHeight * outputScale,
+        )
+
+        const trimmedSource = outputCanvas.toDataURL('image/png')
+        trimmedUploadCache.set(cacheKey, trimmedSource)
+        if (!cancelled) setDisplaySource(trimmedSource)
+      } catch {
+        trimmedUploadCache.set(cacheKey, src)
+      }
+    }
+
+    sourceImage.onerror = () => trimmedUploadCache.set(cacheKey, src)
+    sourceImage.crossOrigin = 'anonymous'
+    sourceImage.src = src
+
+    return () => {
+      cancelled = true
+    }
+  }, [cacheKey, preparedSource, src])
+
+  if (preparedSource) {
+    return (
+      <span
+        className="prepared-vendor-product"
+        role="img"
+        aria-label={alt}
+        style={{ backgroundImage: `url(${preparedSource})` }}
+      />
+    )
   }
 
-  // Format price
-  const formattedPrice = typeof product.price === 'number'
-    ? `R ${product.price.toLocaleString()}`
-    : (product.price?.toString().startsWith('R') ? product.price : `R ${product.price}`)
+  return (
+    <span className="vendor-product-image-frame">
+      <img
+        className="vendor-product-image"
+        src={displaySource}
+        alt={alt}
+        loading="lazy"
+        style={{ width: 'auto', objectFit: 'contain' }}
+      />
+    </span>
+  )
+}
 
-  // Derive badge text (Category)
-  const badge = product.category || product.type || product.badge || 'Wine'
+function formatPrice(price) {
+  if (typeof price === 'number') return `R${price.toLocaleString('en-ZA')}`
 
-  // Derive Vendor, Origin, Volume
-  const vendorName = product.storeName || product.vendor || 'Grand Store'
-  const origin = product.origin || product.region || product.country || 'South Africa'
-  const volume = product.volume || (product.options && product.options[0]) || '750ml'
+  const value = String(price ?? '').trim()
+  if (!value) return 'Price on request'
+  if (/^R/i.test(value)) return value.replace(/^R\s*/i, 'R')
 
-  // The elegant pure gold gradient matching Arrivals text
-  const goldRedGradient = "bg-[linear-gradient(135deg,#c5993b_0%,#f7df95_50%,#b88628_100%)]"
-  const activeText = "text-black" // Explicitly black text
-  const idleBg = "bg-[#181613]"
-  const idleText = "text-[#f7df95]"
+  const numericValue = Number(value.replace(/[^0-9.]/g, ''))
+  return Number.isFinite(numericValue) && numericValue > 0
+    ? `R${numericValue.toLocaleString('en-ZA')}`
+    : value
+}
+
+export default function ProductCard({
+  product,
+  index = 0,
+  onAdd,
+  onWish,
+  onCompare,
+  isCompared = false,
+  onQuickView,
+}) {
+  const productId = product.id || product._id
+  const productPath = `/product/${product.slug || productId}`
+  const { isWishlisted } = useWishlist()
+  const wishlisted = isWishlisted(product)
+  const productName = product.name || product.fullName || 'Cellar selection'
+  const category = product.category || product.type || 'Wine & spirits'
+  const origin = product.origin || product.region || product.country || product.storeName || 'South Africa'
+  const badge = product.badge || fallbackBadges[index % fallbackBadges.length]
 
   return (
-    <article 
-      onClick={handleCardClick} 
-      className="group relative flex flex-col w-full cursor-pointer select-none transition-all duration-300 rounded-xl bg-gradient-to-b from-[#c5993b]/50 via-[#f7df95]/15 to-[#b88628]/25 p-[1px] hover:from-[#f7df95]/70 hover:to-[#b88628]/40"
-    >
-      <div className="flex flex-col w-full h-full bg-[#0a0a0a] rounded-xl overflow-hidden pb-3">
-        {/* 1. Bottle Display Area - Compact */}
-        <div className="relative w-full h-[220px] sm:h-[240px] flex items-center justify-center bg-transparent mt-2">
-          
-          {/* Floor ambient radial glow under the bottle - updated to match gold/red theme */}
-          <div
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[130px] h-[25px] rounded-[100%] pointer-events-none opacity-80"
-            style={{
-              background: 'radial-gradient(ellipse at center, rgba(217, 119, 6, 0.45) 0%, rgba(255, 215, 0, 0.1) 50%, transparent 70%)',
-              filter: 'blur(6px)'
-            }}
-          />
+    <article className="product-card">
+      <div className="product-visual">
+        <span className="product-badge">{badge}</span>
 
-          {/* Pill Badge (Top-Left) with Gold Boundary */}
-          {badge && (
-            <div className={`absolute top-2 left-2 z-20 px-2.5 h-[28px] rounded-full ${goldRedGradient} border-[1.5px] border-[#f7df95] ${activeText} font-bold text-[10px] uppercase tracking-wider flex items-center justify-center shadow-[0_0_12px_rgba(217,119,6,0.5)]`}>
-              {badge}
-            </div>
+        <div className="quick-actions">
+          {onCompare && (
+            <IconButton
+              className={isCompared ? 'compare-action-active' : ''}
+              label={isCompared ? `View ${productName} in comparison` : `Compare ${productName}`}
+              onClick={() => onCompare(product)}
+            >
+              <GitCompareArrows size={17} />
+            </IconButton>
           )}
 
+          {onWish && (
+            <IconButton
+              className={wishlisted ? 'wishlist-action-active' : ''}
+              label={wishlisted ? `Remove ${productName} from wishlist` : `Add ${productName} to wishlist`}
+              onClick={() => onWish(product)}
+            >
+              <Heart size={17} fill={wishlisted ? 'currentColor' : 'none'} />
+            </IconButton>
+          )}
 
-          {/* The Bottle - Tall Standing Cutout */}
-          <img 
-            src={product.image} 
-            alt={product.name} 
-            className="relative z-10 w-auto h-[92%] max-h-[230px] object-contain drop-shadow-[0_12px_20px_rgba(0,0,0,0.85)] transition-transform duration-500 ease-out group-hover:-translate-y-1.5 group-hover:scale-105"
-            loading="lazy" 
-          />
+          {onQuickView ? (
+            <IconButton label={`Quick view ${productName}`} onClick={() => onQuickView(product)}>
+              <Search size={17} />
+            </IconButton>
+          ) : (
+            <Link className="icon-button" to={productPath} aria-label={`View ${productName}`}>
+              <Search size={17} />
+            </Link>
+          )}
         </div>
 
-        {/* 2. Typography & Metadata Section - Centered Layout & Compact */}
-        <div className="mt-2 flex flex-col items-center text-center px-2">
-          
-          {/* Line 1: Title / Brand Name - Elegant Gold */}
-          <h3 className="font-serif text-[18px] sm:text-[20px] font-medium text-[#f7df95] leading-tight line-clamp-1 w-full">
-            {product.name}
-          </h3>
+        <Link className="product-image-link" to={productPath} aria-label={`View ${productName}`}>
+          <VendorProductImage src={product.image} alt={productName} />
+        </Link>
+        <div className="product-glow" />
+      </div>
 
-          {/* Line 2: Sub-info (Vendor / Origin / Volume) */}
-          <p className="text-[#918a7f] text-[12px] font-normal tracking-wide mt-1 line-clamp-1 flex items-center justify-center gap-1.5">
-            <span className="text-[#c5993b]">{vendorName}</span>
-            <span>{origin}</span>
-            <span>{volume}</span>
-          </p>
-
-          {/* Line 3: Price */}
-          <div className="mt-1 flex items-baseline justify-center gap-2 min-h-[24px] w-full">
-            <span className="text-[#f7df95] font-bold text-[18px] sm:text-[20px] tracking-wide">
-              {formattedPrice}
-            </span>
-            {product.originalPrice && (
-              <span className="text-[#75726c] line-through text-[12px] sm:text-[13px]">
-                {product.originalPrice}
-              </span>
-            )}
-          </div>
-
-          {/* Line 4: Action Buttons (Elegant Gold theme) */}
-          <div className="mt-2.5 flex items-center justify-center gap-2.5 w-full">
-            {/* Wishlist */}
-            {onWish && (
-              <button
-                onClick={(e) => { e.stopPropagation(); onWish(product); }}
-                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border-[1.5px] transition-all ${
-                  wishlisted 
-                    ? `${goldRedGradient} border-[#f7df95] ${activeText} shadow-[0_0_15px_rgba(217,119,6,0.5)]` 
-                    : `${idleBg} border-[#c5993b] ${idleText} hover:${goldRedGradient} hover:border-[#fff] hover:${activeText} hover:shadow-[0_0_15px_rgba(217,119,6,0.5)]`
-                }`}
-                title="Wishlist"
-              >
-                <Heart size={16} fill={wishlisted ? 'currentColor' : 'none'} />
-              </button>
-            )}
-
-            {/* Add to Cart (Icon only) */}
-            {onAdd && (
-              <button
-                onClick={(e) => { e.stopPropagation(); onAdd(product); }}
-                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border-[1.5px] transition-all ${idleBg} border-[#c5993b] ${idleText} hover:${goldRedGradient} hover:border-[#fff] hover:${activeText} hover:shadow-[0_0_15px_rgba(217,119,6,0.5)]`}
-                title="Add to Cart"
-              >
-                <ShoppingCart size={16} />
-              </button>
-            )}
-
-            {/* Checkout (Pill) */}
-            {onAdd && (
-              <button
-                onClick={(e) => { e.stopPropagation(); onAdd(product); navigate('/checkout'); }}
-                className={`h-9 sm:h-10 px-6 sm:px-8 rounded-full flex items-center justify-center ${goldRedGradient} border-[1.5px] border-[#f7df95] !text-black text-[14px] sm:text-[15px] font-black uppercase tracking-wider [-webkit-text-stroke:0.5px_black] drop-shadow-[0_1px_3px_rgba(255,255,255,0.5)] transition-all hover:border-[#fff] hover:shadow-[0_0_15px_rgba(217,119,6,0.5)]`}
-                title="Checkout"
-              >
-                Checkout
-              </button>
-            )}
-          </div>
+      <div className="product-info">
+        <p className="product-category">{category}</p>
+        <h3><Link to={productPath}>{productName}</Link></h3>
+        <p className="product-origin">{origin}</p>
+        <div className="product-buy-row">
+          <strong>{formatPrice(product.price)}</strong>
+          {onAdd && (
+            <button type="button" onClick={() => onAdd(product)} aria-label={`Add ${productName} to bag`}>
+              Add to bag <ShoppingBag size={16} />
+            </button>
+          )}
         </div>
       </div>
     </article>
