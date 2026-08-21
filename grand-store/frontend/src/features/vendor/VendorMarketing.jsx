@@ -2,9 +2,7 @@ import React from 'react';
 import { Megaphone, Star, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 export default function VendorMarketing() {
-  const goldTextClass = "bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(230,201,122,0.6)]";
-  const scriptFont = { fontFamily: "'Dancing Script', cursive" };
-
+  const goldTextClass = "text-[#c9a35b] drop-shadow-[0_0_12px_rgba(230,201,122,0.6)]";
   return (
     <div className="flex flex-col gap-10 w-full max-w-7xl mx-auto pb-10">
       
@@ -12,7 +10,7 @@ export default function VendorMarketing() {
       <section className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <h1 className="text-[var(--color-ivory)] font-serif text-5xl mb-4 leading-tight">
-            Marketing <span className={goldTextClass} style={scriptFont}>Centre</span>
+            Marketing <span className={goldTextClass} >Centre</span>
           </h1>
           <p className="text-[var(--color-ivory-muted)] text-lg max-w-2xl font-light leading-relaxed">
             Grow your business by participating in Grand Store campaigns, curated collections, and promotions.
