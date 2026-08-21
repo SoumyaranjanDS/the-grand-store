@@ -4,6 +4,24 @@ export const storeCategories = [
   'Ciders', 'Spirits', 'Scotch'
 ];
 
+export const accessoryCategories = {
+  'Glassware': [
+    'Beer Glass',
+    'Wine Glasses',
+    'Champagne Glasse',
+    'Red Wine Glasses'
+  ],
+  'Drinkware': [
+    'Carafes & Decanters',
+    'Highball Glasses',
+    'Bulk Glassware',
+    'Zombie Glasses',
+    'Gin Glasses',
+    'Whiskey Glasses',
+    'White Wine Glasses'
+  ]
+};
+
 export const products = [
   {
     id: 1,
