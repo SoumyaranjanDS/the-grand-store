@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, ChevronLeft, Download, Printer, Truck, Package, MapPin } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { formatCartPrice } from '../../data';
+import Price from '../../components/ui/Price';
 
-export default function OrderSuccessPage() {
+export default function OrderSuccessPage({ onClearCart }) {
   const { id } = useParams();
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const paymentStatus = searchParams.get('payment');
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -24,6 +27,9 @@ export default function OrderSuccessPage() {
         const data = await res.json();
         if (res.ok) {
           setOrder(data);
+          if (paymentStatus === 'success' && onClearCart) {
+            onClearCart();
+          }
         }
       } catch (error) {
         console.error('Error fetching order', error);
@@ -68,7 +74,18 @@ export default function OrderSuccessPage() {
             <CheckCircle2 size={40} className="text-gold-gradient" />
           </div>
           <h1 className="text-4xl md:text-5xl font-serif mb-4">Order Placed Successfully</h1>
-          <p className="text-[var(--color-ivory-muted)]">Thank you for your purchase. Your order is being processed.</p>
+          
+          {paymentStatus === 'success' ? (
+             <div className="inline-block px-4 py-2 bg-green-900/30 border border-green-500/50 rounded-lg text-green-400 font-medium mb-4">
+                Payment completed successfully via PayFast.
+             </div>
+          ) : paymentStatus === 'cancel' ? (
+             <div className="inline-block px-4 py-2 bg-red-900/30 border border-red-500/50 rounded-lg text-red-400 font-medium mb-4">
+                Payment was cancelled. You can retry payment from your account dashboard.
+             </div>
+          ) : (
+             <p className="text-[var(--color-ivory-muted)]">Thank you for your purchase. Your order is being processed.</p>
+          )}
         </div>
 
         {/* Invoice Card */}
@@ -122,8 +139,8 @@ export default function OrderSuccessPage() {
                       <p className="text-xs text-[var(--color-ivory-muted)] print:text-gray-500 mt-1">{item.option}</p>
                     </td>
                     <td className="py-4 text-center text-sm">{item.quantity}</td>
-                    <td className="py-4 text-right text-sm">{formatCartPrice(item.price)}</td>
-                    <td className="py-4 text-right text-sm font-medium">{formatCartPrice(item.price * item.quantity)}</td>
+                    <td className="py-4 text-right text-sm"><Price amount={item.price} /></td>
+                    <td className="py-4 text-right text-sm font-medium"><Price amount={item.price * item.quantity} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -134,15 +151,15 @@ export default function OrderSuccessPage() {
             <div className="w-full md:w-1/2">
               <div className="flex justify-between py-2 text-sm text-[var(--color-ivory-muted)] print:text-gray-600">
                 <span>Subtotal</span>
-                <span>{formatCartPrice(order.totalPrice - order.shippingCost)}</span>
+                <span><Price amount={order.totalPrice - order.shippingCost} /></span>
               </div>
               <div className="flex justify-between py-2 text-sm text-[var(--color-ivory-muted)] print:text-gray-600 border-b border-white/10 print:border-black/20">
                 <span>Shipping</span>
-                <span>{order.shippingCost === 0 ? 'Complimentary' : formatCartPrice(order.shippingCost)}</span>
+                <span>{order.shippingCost === 0 ? 'Complimentary' : <Price amount={order.shippingCost} />}</span>
               </div>
               <div className="flex justify-between py-4 text-xl font-serif text-gold-gradient print:text-black">
                 <span>Total</span>
-                <span>{formatCartPrice(order.totalPrice)}</span>
+                <span><Price amount={order.totalPrice} /></span>
               </div>
               <div className="flex justify-between py-2 text-xs text-[var(--color-ivory-muted)] print:text-gray-500">
                 <span>Payment Method</span>
