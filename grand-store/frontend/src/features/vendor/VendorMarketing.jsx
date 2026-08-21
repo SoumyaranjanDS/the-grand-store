@@ -1,5 +1,6 @@
 import React from 'react';
 import { Megaphone, Star, ArrowRight, CheckCircle2 } from 'lucide-react';
+import Price from '../../components/ui/Price';
 
 export default function VendorMarketing() {
   const goldTextClass = "text-[#c9a35b] drop-shadow-[0_0_12px_rgba(230,201,122,0.6)]";
@@ -81,7 +82,7 @@ export default function VendorMarketing() {
             { title: "Best South African Reds", icon: "🍷", status: "Open" },
             { title: "Sparkling for Celebrations", icon: "🥂", status: "Open" },
             { title: "Rare & Collectible", icon: "💎", status: "Invite Only" },
-            { title: "Whisky Under R1,000", icon: "🥃", status: "Open" },
+            { title: "Whisky Under <Price amount={1000} />", icon: "🥃", status: "Open" },
             { title: "Corporate Gifts", icon: "🎁", status: "Open" },
             { title: "Proudly South African", icon: "🇿🇦", status: "Open" }
           ].map((collection, idx) => (
