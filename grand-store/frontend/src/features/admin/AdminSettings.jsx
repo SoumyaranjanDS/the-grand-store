@@ -10,9 +10,7 @@ export default function AdminSettings() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const goldText = "bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] bg-clip-text text-transparent";
-  const scriptFont = { fontFamily: "'Dancing Script', cursive" };
-
+  const goldText = "text-[#c9a35b]";
   useEffect(() => {
     const fetchSettings = async () => {
       try {
@@ -91,7 +89,7 @@ export default function AdminSettings() {
     <div className="flex flex-col gap-8 w-full max-w-5xl mx-auto pb-12">
       <section>
         <h1 className="text-[var(--color-ivory)] font-serif text-4xl mb-3">
-          Platform <span className={goldText} style={scriptFont}>Rates & Fees</span>
+          Platform <span className={goldText} >Rates & Fees</span>
         </h1>
         <p className="text-[var(--color-ivory-muted)] text-sm">
           Set the global rates for taxes, shipping, and commissions. The calculators below show exactly how these rates affect payouts.
