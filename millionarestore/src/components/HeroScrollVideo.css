@@ -42,6 +42,8 @@
   overflow: hidden;
   transform-origin: center;
   box-shadow: 0 28px 90px rgba(40, 33, 24, 0.22);
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .hero-media video,
@@ -49,6 +51,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center top; /* Align to the very top to prevent head crop */
   background: var(--navy);
 }
 
@@ -271,5 +274,63 @@
   .hero-chapter,
   .hero-progress {
     display: none;
+  }
+}
+
+.hero-mobile-only {
+  display: none;
+}
+
+.hero-desktop-only {
+  display: block;
+  height: 100%;
+}
+
+@media (max-width: 768px) {
+  .hero-desktop-only {
+    display: none;
+  }
+
+  .hero-mobile-only {
+    display: block;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .hero-mobile-only img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .hero-mobile-text {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 60px 24px 80px;
+    background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0) 100%);
+    text-align: center;
+  }
+
+  .hero-mobile-text p {
+    color: #e5b266;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin: 0 0 16px;
+  }
+
+  .hero-mobile-text h1 {
+    color: #fff;
+    font-family: var(--serif);
+    font-size: 38px;
+    font-weight: 400;
+    margin: 0;
+    line-height: 1.1;
   }
 }

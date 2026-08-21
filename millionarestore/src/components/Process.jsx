@@ -18,72 +18,69 @@ export default function Process() {
   const bottleRef = useRef(null)
 
   useEffect(() => {
-    const isMobile = window.innerWidth < 768
+    let mm = gsap.matchMedia();
 
-    const context = gsap.context(() => {
-      if (!isMobile) {
-        const scrollWidth = trackRef.current.scrollWidth - window.innerWidth
+    mm.add("(min-width: 768px)", () => {
+      const scrollWidth = trackRef.current.scrollWidth - window.innerWidth;
 
-        const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: 'top top',
-            end: `+=${scrollWidth * 0.35}`, // Fast scroll
-            scrub: 0.3, // Snappy
-            pin: true,
-            invalidateOnRefresh: true,
-          }
-        })
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: 'top top',
+          end: `+=${scrollWidth * 0.35}`, // Fast scroll
+          scrub: 0.3, // Snappy
+          pin: true,
+          invalidateOnRefresh: true,
+        }
+      });
 
-        // 1. Horizontal Scroll Animation
-        tl.to(trackRef.current, {
-          x: -scrollWidth,
-          ease: 'none',
-          duration: 1 // Baseline duration for the timeline
-        }, 0)
+      // 1. Horizontal Scroll Animation
+      tl.to(trackRef.current, {
+        x: -scrollWidth,
+        ease: 'none',
+        duration: 1 // Baseline duration for the timeline
+      }, 0);
 
-        // 2. Bottle Rotation
-        gsap.to(bottleRef.current, {
-          rotate: 18,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: 'top top',
-            end: `+=${scrollWidth * 0.35}`,
-            scrub: 0.3,
-          }
-        })
+      // 2. Bottle Rotation
+      gsap.to(bottleRef.current, {
+        rotate: 18,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: 'top top',
+          end: `+=${scrollWidth * 0.35}`,
+          scrub: 0.3,
+        }
+      });
 
-        // 3. Cinematic Background Crossfades
-        const bgs = gsap.utils.toArray('.process-bg')
-        
-        // Initial Background (Harvesting) fades in early
-        tl.to(bgs[0], { opacity: 0.3, duration: 0.1, ease: 'power2.inOut' }, 0)
-        
-        // Step 2 (Crushing) background
-        tl.to(bgs[1], { opacity: 0.3, duration: 0.15, ease: 'power2.inOut' }, 0.25)
-        
-        // Step 3 (Fermentation) background
-        tl.to(bgs[2], { opacity: 0.3, duration: 0.15, ease: 'power2.inOut' }, 0.55)
-        
-        // Step 4 (Bottling) background
-        tl.to(bgs[3], { opacity: 0.3, duration: 0.15, ease: 'power2.inOut' }, 0.85)
-
-      }
-    }, sectionRef)
+      // 3. Cinematic Background Crossfades
+      const bgs = gsap.utils.toArray('.process-bg');
+      
+      // Initial Background (Harvesting) fades in early
+      tl.to(bgs[0], { opacity: 0.3, duration: 0.1, ease: 'power2.inOut' }, 0);
+      
+      // Step 2 (Crushing) background
+      tl.to(bgs[1], { opacity: 0.3, duration: 0.15, ease: 'power2.inOut' }, 0.25);
+      
+      // Step 3 (Fermentation) background
+      tl.to(bgs[2], { opacity: 0.3, duration: 0.15, ease: 'power2.inOut' }, 0.55);
+      
+      // Step 4 (Bottling) background
+      tl.to(bgs[3], { opacity: 0.3, duration: 0.15, ease: 'power2.inOut' }, 0.85);
+    });
     
-    return () => context.revert()
-  }, [])
+    return () => mm.revert();
+  }, []);
 
   return (
     <section className="process-section" id="process" ref={sectionRef}>
       
       {/* Cinematic Background Layer */}
       <div className="process-bg-layer">
-        <img src="/assets/process-bg-1.jpg" alt="Vineyard at golden hour" className="process-bg" />
-        <img src="/assets/process-bg-2.jpg" alt="Macro photography of grapes being crushed" className="process-bg" />
-        <img src="/assets/process-bg-3.jpg" alt="French oak barrels in a dim wine cellar" className="process-bg" />
-        <img src="/assets/process-bg-4.jpg" alt="Golden sparkling wine bubbles" className="process-bg" />
+        <img src="/assets/process-bg-1.jpg" alt="Vineyard at golden hour" className="process-bg" loading="lazy" decoding="async" />
+        <img src="/assets/process-bg-2.jpg" alt="Macro photography of grapes being crushed" className="process-bg" loading="lazy" decoding="async" />
+        <img src="/assets/process-bg-3.jpg" alt="French oak barrels in a dim wine cellar" className="process-bg" loading="lazy" decoding="async" />
+        <img src="/assets/process-bg-4.jpg" alt="Golden sparkling wine bubbles" className="process-bg" loading="lazy" decoding="async" />
         <div className="process-bg-overlay" /> {/* Dark gradient overlay to ensure text readability */}
       </div>
 
@@ -91,7 +88,7 @@ export default function Process() {
         
         {/* Fixed Central Bottle */}
         <div className="process-bottle-fixed" ref={bottleRef}>
-          <img src="/assets/process-bottle.png" alt="Millionaires Collection premium sparkling wine bottle" />
+          <img src="/assets/process-bottle.png" alt="Millionaires Collection premium sparkling wine bottle" loading="lazy" decoding="async" />
         </div>
 
         {/* Moving Horizontal Track */}

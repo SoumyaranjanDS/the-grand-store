@@ -2,20 +2,20 @@
   position: relative;
   padding: clamp(58px, 6vw, 92px) max(6vw, calc((100% - 1320px) / 2));
   overflow: clip;
-  color: #eee5d8;
+  color: #2a2520;
   background:
-    radial-gradient(circle at 82% 15%, rgba(151, 95, 41, 0.2), transparent 31%),
-    linear-gradient(135deg, #0b0908 0%, #15100c 58%, #090807 100%);
-  border-block: 1px solid rgba(213, 181, 125, 0.18);
+    radial-gradient(circle at 82% 15%, rgba(213, 181, 125, 0.08), transparent 31%),
+    linear-gradient(135deg, #f9f7f3 0%, #f4f0e9 58%, #eae4da 100%);
+  border-block: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .mission-section::before {
   position: absolute;
   inset: 0;
-  opacity: 0.2;
+  opacity: 0.3;
   pointer-events: none;
   content: '';
-  background-image: repeating-linear-gradient(112deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 5px);
+  background-image: repeating-linear-gradient(112deg, rgba(0, 0, 0, 0.015) 0 1px, transparent 1px 5px);
 }
 
 .mission-section__grid {
@@ -64,37 +64,38 @@
 
 .mission-section__content h2 {
   margin: 0 0 24px;
-  color: #f4ede4;
+  color: #111;
   font-family: var(--serif);
   font-size: clamp(58px, 7vw, 104px);
-  font-weight: 400;
+  font-weight: 500;
   letter-spacing: -0.055em;
   line-height: 0.82;
 }
 
 .mission-section__content h2 em {
-  color: var(--brass-light);
-  font-weight: 400;
+  color: #92672b;
+  font-weight: 600;
 }
 
 .mission-section__content > p:not(.editorial-section__number) {
   max-width: 720px;
   margin: 0;
-  color: #bcb1a6;
+  color: #5c554e;
   font-family: var(--serif);
   font-size: clamp(22px, 1.75vw, 28px);
+  font-weight: 500;
   line-height: 1.42;
 }
 
 .mission-section .outline-link {
   margin-top: 26px;
-  color: #f1e8dd;
-  border-color: rgba(202, 153, 88, 0.72);
+  color: #2a2520;
+  border-color: rgba(202, 153, 88, 0.6);
 }
 
 .mission-section .outline-link:hover {
-  color: #15100c;
-  background: var(--brass-light);
+  color: #fff;
+  background: var(--brass);
 }
 
 .mission-section__image::before {
@@ -111,12 +112,12 @@
   aspect-ratio: 4 / 5;
   display: block;
   object-fit: cover;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
 }
 
 .mission-section__image figcaption {
   margin-top: 13px;
-  color: #86796c;
+  color: #7b7165;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.18em;

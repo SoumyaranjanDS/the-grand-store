@@ -2,22 +2,29 @@ import React, { useState, useEffect } from 'react';
 import './AgeGate.css';
 
 export default function AgeGate() {
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
   const [isDenied, setIsDenied] = useState(false);
 
   useEffect(() => {
+    const sessionVerified = sessionStorage.getItem('age_verified');
+    if (sessionVerified) {
+      return; // Already verified this session, keep isVisible false
+    }
+
     const stored = localStorage.getItem('ageVerified');
     if (stored) {
       try {
         const { expiry } = JSON.parse(stored);
         if (expiry > Date.now()) {
-          setIsVisible(false);
-          return;
+          return; // Still valid from a previous session, keep isVisible false
         }
       } catch (e) {
         // invalid stored format, ignore
       }
     }
+
+    // If we reach here, neither session nor local storage has a valid verification
+    setIsVisible(true);
   }, []);
 
   useEffect(() => {
@@ -32,6 +39,7 @@ export default function AgeGate() {
   const handleYes = () => {
     const expiry = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days
     localStorage.setItem('ageVerified', JSON.stringify({ verified: true, expiry }));
+    sessionStorage.setItem('age_verified', 'true');
     setIsVisible(false);
   };
 

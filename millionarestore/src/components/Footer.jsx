@@ -5,8 +5,11 @@ export default function Footer() {
     <footer className="footer-section">
       <div className="shell footer-top">
         <div className="footer-brand">
-          <a href="#home"><img src="/assets/logo.png" alt="Millionaires Collection" /></a>
-          <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ut elit tellus, luctus nec ullamcorper mattis.</p>
+          <a className="footer-brand-logo" href="#home" aria-label="Millionaires Collection home">
+            <img src="/assets/logo.png" alt="" />
+            <span><strong>Millionaires</strong>Collection</span>
+          </a>
+          <p>Timeless sophistication crafted for connoisseurs. Discover the artistry, patience, and meticulous attention to detail that defines our legacy in every pour.</p>
         </div>
 
         <div className="footer-column">
@@ -20,8 +23,8 @@ export default function Footer() {
         </div>
 
         <div className="footer-column footer-visit">
-          <h3>Visit Us</h3>
-          <p>KLJ G, No 99, Piu City, ID 28289</p><p>Sun - Fri : 06:00 - 18:00</p><a href="tel:0001555333">0001-555-333</a><a href="mailto:help@domain.com">help@domain.com</a>
+          <h3>Visit the Estate</h3>
+          <p>Hemel-en-Aarde Valley<br />Hermanus, South Africa</p><p>Mon - Sat : 09:00 - 17:00</p><a href="tel:+27210000000">+27 21 000 0000</a><a href="mailto:reserve@millionaires.com">reserve@millionaires.com</a>
         </div>
       </div>
 

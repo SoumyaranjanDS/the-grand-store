@@ -1,6 +1,7 @@
 .newsletter-section {
-  padding: 40px 5%;
-  background: var(--bg-color, #0d0c0c);
+  padding: 80px 5%;
+  background: radial-gradient(circle at 50% 0%, #201a15, #080706);
+  border-top: 1px solid rgba(198, 168, 124, 0.12);
   display: flex;
   justify-content: center;
   position: relative;

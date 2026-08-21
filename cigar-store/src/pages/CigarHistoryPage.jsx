@@ -96,11 +96,7 @@ function CigarHistoryPage() {
         <header className="history-page-hero">
           <div className="history-page-hero__ornament" aria-hidden="true">CC</div>
           <div className="history-page-hero__inner">
-            <div className="history-page-hero__breadcrumbs history-page-hero__reveal"><a href="/">Home</a><span>/</span><strong>Cigar history</strong></div>
-            <p className="history-page-hero__kicker history-page-hero__reveal">The connoisseur&apos;s journal</p>
-            <h1 className="history-page-hero__reveal">The ritual,<br /><em>through time.</em></h1>
-            <p className="history-page-hero__intro history-page-hero__reveal">Discover the origins, cultural character and meticulous craft behind one of the world&apos;s most enduring traditions.</p>
-            <a className="history-page-hero__cue history-page-hero__reveal" href="#cigar-history">Begin the story <ArrowDown size={16} /></a>
+            <h1 className="history-page-hero__reveal">The ritual, <em>through time.</em></h1>
           </div>
         </header>
 

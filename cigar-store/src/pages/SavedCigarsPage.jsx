@@ -21,18 +21,19 @@ function SavedCigarsPage() {
     <div className="saved-page site-shell" id="top">
       <main className="saved-page__main">
         <header className="saved-page__hero">
-          <div>
+          <div className="saved-page__hero-content">
             <p>Your private selection</p>
-            <h1>Your<br /><em>wishlist.</em></h1>
+            <h1>Your <em>wishlist</em></h1>
           </div>
-          <div className="saved-page__count"><span>{String(savedCount).padStart(2, '0')}</span><p>{savedCount === 1 ? 'selection' : 'selections'} in your collection</p></div>
         </header>
 
         {savedCount > 0 ? (
           <section className="saved-page__collection" aria-labelledby="saved-collection-title">
             <div className="saved-page__toolbar">
-              <div><p>Curated by you</p><h2 id="saved-collection-title">The shortlist</h2></div>
-              <button type="button" onClick={handleClear}><Trash2 size={16} /> Clear saved cigars</button>
+              <h2 id="saved-collection-title">The shortlist</h2>
+              <button type="button" onClick={handleClear} className="saved-page__clear-btn">
+                <Trash2 size={14} /> Clear list
+              </button>
             </div>
             <div className="saved-page__grid">
               {savedProducts.map((product, index) => <ProductCard key={product.id} product={product} index={index} />)}
@@ -40,11 +41,12 @@ function SavedCigarsPage() {
           </section>
         ) : (
           <section className="saved-page__empty">
-            <div className="saved-page__empty-mark"><Heart size={34} strokeWidth={1.15} /></div>
-            <p>Your private humidor is waiting.</p>
-            <h2>Save the cigars that<br /><em>catch your eye.</em></h2>
-            <span>Use the heart on any product card or detail page. Your wishlist will remain here when you return.</span>
-            <a href="/#new-arrivals">Explore the collection <ArrowRight size={17} /></a>
+            <div className="saved-page__empty-inner">
+              <div className="saved-page__empty-mark"><Heart size={32} strokeWidth={1} /></div>
+              <h2>Save the cigars that <em>catch your eye.</em></h2>
+              <p>Use the heart on any product card or detail page. Your wishlist will remain here when you return.</p>
+              <a href="/#new-arrivals" className="saved-page__explore-btn">Explore the collection</a>
+            </div>
           </section>
         )}
       </main>

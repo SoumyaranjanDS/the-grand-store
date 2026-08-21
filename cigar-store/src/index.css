@@ -10,7 +10,7 @@
   --line: rgba(213, 181, 125, 0.2);
   --serif: 'Cormorant Garamond', 'Times New Roman', serif;
   --sans: 'Manrope', 'Helvetica Neue', sans-serif;
-  --nav-height: 142px;
+  --nav-height: 108px;
   color: var(--paper);
   background: var(--ink);
   font-family: var(--sans);
@@ -96,15 +96,10 @@ video {
 }
 
 /* Scroll Reveal Animations */
-.reveal-left {
-  opacity: 0;
-  transform: translateX(-50px);
-  transition: opacity 0.8s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-
+.reveal-left,
 .reveal-right {
   opacity: 0;
-  transform: translateX(50px);
+  transform: translateY(40px);
   transition: opacity 0.8s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 

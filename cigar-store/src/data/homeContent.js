@@ -1,3 +1,30 @@
+export const mosiProducts = [
+  {
+    name: 'Robusto Habanos',
+    image: '/images/products/mot-robusto-habanos.webp',
+    href: '/product-details/mosi-oa-tunya-robusto-habanos',
+    brand: 'Mosi Oa Tunya',
+  },
+  {
+    name: 'Toro Connecticut',
+    image: '/images/products/mot-toro-connecticut.webp',
+    href: '/product-details/mosi-oa-tunya-toro-connecticut',
+    brand: 'Mosi Oa Tunya',
+  },
+  {
+    name: 'Torpedo Sumatra',
+    image: '/images/products/mot-torpedo-sumatra.webp',
+    href: '/product-details/mosi-oa-tunya-torpedo-sumatra',
+    brand: 'Mosi Oa Tunya',
+  },
+  {
+    name: 'Corona Habanos Strong',
+    image: '/images/products/mot-corona-habanos-strong.webp',
+    href: '/product-details/mosi-oa-tunya-corona-habanos-strong',
+    brand: 'Mosi Oa Tunya',
+  },
+];
+
 export const newArrivals = [
   {
     name: 'Arturo Feunte 8-5-8',
@@ -25,30 +52,30 @@ export const newArrivals = [
   },
 ];
 
-export const featuredProducts = [
+export const featuredMosiProducts = [
   {
-    name: 'Arturo Feunte Cubanitos',
-    image: '/images/products/arturo-fuente-cubanitos.png',
-    href: '/product-details/arturo-feunte-cubanitos',
-    brand: 'Arturo Fuente',
+    name: 'Robusto Zebra',
+    image: '/images/products/mot-robusto-zebra.webp',
+    href: '/product-details/mosi-oa-tunya-robusto-zebra',
+    brand: 'Mosi Oa Tunya',
   },
   {
-    name: 'Arturo Fuente Don Carlos Belicoso',
-    image: '/images/products/arturo-fuente-don-carlos.png',
-    href: '/product-details/arturo-fuente-don-carlos-belicoso',
-    brand: 'Arturo Fuente',
+    name: 'Torpedo Habanos',
+    image: '/images/products/mot-torpedo-habanos.webp',
+    href: '/product-details/mosi-oa-tunya-torpedo-habanos',
+    brand: 'Mosi Oa Tunya',
   },
   {
-    name: 'Bolivar Petit Coronas',
-    image: '/images/products/bolivar-petit-coronas.png',
-    href: '/product-details/bolivar-petit-coronas',
-    brand: 'Bolivar',
+    name: 'Corona Sumatra Mild',
+    image: '/images/products/mot-corona-sumatra-mild.webp',
+    href: '/product-details/mosi-oa-tunya-corona-sumatra-mild',
+    brand: 'Mosi Oa Tunya',
   },
   {
-    name: 'Cohiba Siglo II',
-    image: '/images/products/cohiba-siglo-ii.png',
-    href: '/product-details/cohiba-siglo-ii',
-    brand: 'Cohiba',
+    name: 'Mini Cigar',
+    image: '/images/products/mot-mini-cigar.webp',
+    href: '/product-details/mosi-oa-tunya-mini-cigar',
+    brand: 'Mosi Oa Tunya',
   },
 ];
 

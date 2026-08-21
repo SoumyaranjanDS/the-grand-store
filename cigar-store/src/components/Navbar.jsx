@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ChevronDown, Heart, Menu, Search, X } from 'lucide-react';
 import { useWishlist } from '../context/wishlistContext';
+import brandLogo from '../assets/cigar logo with roman number (1).png';
 import './Navbar.css';
 
 const mobileLinks = [
@@ -23,10 +24,18 @@ function Navbar() {
   const { savedCount } = useWishlist();
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 24);
-    handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    const updateHeader = () => {
+      const hero = document.querySelector('.scroll-film, .history-page-hero, .mosi-shop-hero, .saved-page__hero');
+      if (!hero) {
+        setScrolled(true);
+        return;
+      }
+      const threshold = hero.offsetHeight;
+      setScrolled(window.scrollY > (threshold > 50 ? threshold - 88 : 30));
+    };
+    updateHeader();
+    window.addEventListener('scroll', updateHeader, { passive: true });
+    return () => window.removeEventListener('scroll', updateHeader);
   }, []);
 
   useEffect(() => {
@@ -45,27 +54,10 @@ function Navbar() {
 
   return (
     <header className={`navbar ${scrolled ? 'navbar--scrolled' : ''} ${menuOpen ? 'navbar--open' : ''}`}>
-      <div className="navbar-utility">
-        <div className="navbar-utility__inner">
-          <div className="navbar-utility__selectors">
-            <button type="button">ZAR <ChevronDown size={11} /></button>
-            <label>
-              <span className="sr-only">Select language</span>
-              <select defaultValue="en" aria-label="Select language">
-                <option value="en">English</option>
-                <option value="af">Afrikaans</option>
-              </select>
-              <ChevronDown size={11} aria-hidden="true" />
-            </label>
-          </div>
-          <p>Premium cigars · Personal service · South Africa</p>
-        </div>
-      </div>
-
       <div className="navbar-main">
         <div className="navbar-main__inner">
           <a className="brand" href="/#top" aria-label="Cigar Connoisseur Club home">
-            <img className="brand-logo" src="/images/cigar-connoisseur-logo.png" alt="Cigar Connoisseur Club" />
+            <img className="brand-logo" src={brandLogo} alt="Cigar Connoisseur Club" />
           </a>
 
           <nav className="desktop-nav" aria-label="Primary navigation">
@@ -90,7 +82,7 @@ function Navbar() {
 
           <div className="nav-actions">
             <button className="nav-saved" type="button" onClick={() => navigate('/wishlist')} aria-label={`Wishlist, ${savedCount} saved ${savedCount === 1 ? 'cigar' : 'cigars'}`}>
-              <Heart size={17} strokeWidth={1.4} fill={savedCount ? 'currentColor' : 'none'} />
+              <Heart size={21} strokeWidth={1.4} fill={savedCount ? 'currentColor' : 'none'} />
               <b>Wishlist</b>
               <span aria-live="polite">{savedCount > 99 ? '99+' : savedCount}</span>
             </button>

@@ -11,17 +11,40 @@
   gap: clamp(32px, 5vw, 75px);
 }
 
-.footer-brand img {
-  width: 82px;
-  padding: 6px;
-  background: var(--cream);
-  mix-blend-mode: screen;
+.footer-brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.footer-brand-logo img {
+  width: 50px;
+  height: 64px;
+  object-fit: contain;
+}
+
+.footer-brand-logo span {
+  display: grid;
+  color: inherit;
+  font-size: 13px;
+  letter-spacing: 0.24em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.footer-brand-logo strong {
+  font-family: var(--serif);
+  font-size: 23px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
 }
 
 .footer-brand p {
-  max-width: 310px;
-  margin: 22px 0 0;
-  font-size: 18px;
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: 15px;
   line-height: 1.5;
 }
 

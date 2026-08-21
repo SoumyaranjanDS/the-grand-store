@@ -26,7 +26,13 @@ function App() {
       return undefined
     }
 
-    const lenis = new Lenis()
+    const lenis = new Lenis({
+      lerp: 0.08,
+      smoothWheel: true,
+      wheelMultiplier: 1.2,
+      normalizeWheel: true,
+      syncTouch: true,
+    })
     lenis.on('scroll', ScrollTrigger.update)
 
     const tick = (time) => {

@@ -1425,6 +1425,7 @@ main {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: 70% center;
   mix-blend-mode: luminosity;
   opacity: 0.8;
 }
@@ -1508,21 +1509,26 @@ main {
 
 .faq {
   display: grid;
-  grid-template-columns: minmax(320px, 0.72fr) minmax(500px, 1.28fr);
-  gap: clamp(60px, 9vw, 150px);
+  grid-template-columns: minmax(280px, 0.4fr) minmax(500px, 1fr);
+  gap: clamp(20px, 4vw, 50px);
   align-items: start;
   background: var(--cream);
+  padding: 40px 0 !important;
 }
 
 .faq-aside {
   position: sticky;
   top: 130px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .faq-illustration {
-  width: 210px;
-  height: 210px;
-  margin: 20px 0 30px;
+  width: 140px;
+  height: 140px;
+  margin: 15px 0 25px;
   border-radius: 50%;
   background: #e1d4bd;
   overflow: hidden;
@@ -1535,7 +1541,7 @@ main {
 }
 
 .faq-group {
-  margin-bottom: 34px;
+  margin-bottom: 24px;
 }
 
 .faq-group > h3 {
@@ -1557,7 +1563,7 @@ main {
 .faq-item > button {
   display: flex;
   width: 100%;
-  min-height: 74px;
+  min-height: 54px;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
@@ -1624,12 +1630,17 @@ main {
   content: '';
 }
 
+.benefits .section-heading {
+  max-width: 1260px;
+}
+
 .benefits .section-heading h2,
 .benefits .kicker {
   color: white;
 }
 
 .benefits .section-heading > p {
+  max-width: 1000px;
   color: rgba(255, 255, 255, 0.55);
 }
 
@@ -3062,8 +3073,8 @@ main {
   }
 
   .faq-illustration {
-    width: 165px;
-    height: 165px;
+    width: 120px;
+    height: 120px;
   }
 
   .benefits-grid {

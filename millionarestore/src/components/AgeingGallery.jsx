@@ -1,35 +1,42 @@
 import "./AgeingGallery.css";
 
+import img1 from '../assets/image.png'
+import img2 from '../assets/image copy.png'
+import img3 from '../assets/image copy 2.png'
+import img4 from '../assets/image copy 3.png'
+import img5 from '../assets/image copy 4.png'
+import img6 from '../assets/image copy 5.png'
+
 const gallery = [
   {
-    image: "/assets/gallery-1.jpg",
+    image: img4,
+    title: "The Vineyard",
+    subtitle: "Early Morning Harvest",
+  },
+  {
+    image: img6,
+    title: "The Press",
+    subtitle: "Traditional Methods",
+  },
+  {
+    image: img3,
+    title: "The Cellar",
+    subtitle: "Oak Barrel Ageing",
+  },
+  {
+    image: img2,
+    title: "Production",
+    subtitle: "Meticulous Craftsmanship",
+  },
+  {
+    image: img5,
+    title: "The Toast",
+    subtitle: "Intimate Social Gatherings",
+  },
+  {
+    image: img1,
     title: "The First Pour",
-    subtitle: "A Golden Moment",
-  },
-  {
-    image: "/assets/gallery-2.jpg",
-    title: "The Collection",
-    subtitle: "A Statement of Status",
-  },
-  {
-    image: "/assets/gallery-3.jpg",
-    title: "Crafted Intention",
-    subtitle: "French Oak Rest",
-  },
-  {
-    image: "/assets/gallery-4.jpg",
-    title: "Harvest Character",
-    subtitle: "From Vine to Bottle",
-  },
-  {
-    image: "/assets/gallery-5.jpg",
-    title: "A Celebration",
-    subtitle: "For Life’s Grandest Moments",
-  },
-  {
-    image: "/assets/gallery-6.jpg",
-    title: "A Finish That Lingers",
-    subtitle: "Sophisticated Evenings",
+    subtitle: "Golden Elegance",
   },
 ];
 
@@ -50,7 +57,7 @@ export default function AgeingGallery() {
       <div className="shell ageing-grid">
         {gallery.map((item, index) => (
           <figure className="ageing-card" key={item.image}>
-            <img src={item.image} alt={item.title} />
+            <img src={item.image} alt={item.title} loading="lazy" decoding="async" />
             <figcaption>
               <span>
                 0{index + 1} · {item.subtitle}
