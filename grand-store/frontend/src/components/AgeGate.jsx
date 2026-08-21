@@ -6,6 +6,21 @@ export default function AgeGate() {
   const [isDenied, setIsDenied] = useState(false);
 
   useEffect(() => {
+    const stored = localStorage.getItem('ageVerified');
+    if (stored) {
+      try {
+        const { expiry } = JSON.parse(stored);
+        if (expiry > Date.now()) {
+          setIsVisible(false);
+          return;
+        }
+      } catch (e) {
+        // invalid stored format, ignore
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     // Disable scrolling while the gate is open
     if (isVisible) {
       document.body.style.overflow = 'hidden';
@@ -15,6 +30,8 @@ export default function AgeGate() {
   }, [isVisible]);
 
   const handleYes = () => {
+    const expiry = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days
+    localStorage.setItem('ageVerified', JSON.stringify({ verified: true, expiry }));
     setIsVisible(false);
   };
 
