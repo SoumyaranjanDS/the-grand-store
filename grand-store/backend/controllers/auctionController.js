@@ -191,8 +191,15 @@ exports.submitLot = async (req, res) => {
   try {
     const { title, description, category, startingBid, reservePrice, condition, provenance, startDate, endDate } = req.body;
     
-    if (req.user.role !== 'vendor_active') {
-       return res.status(403).json({ message: 'Only active vendors can submit lots.' });
+    if (req.user.role !== 'vendor_active' && req.user.role !== 'auction_host') {
+       return res.status(403).json({ message: 'Only active vendors and auction hosts can submit lots.' });
+    }
+
+    if (req.user.role === 'auction_host') {
+      const currentLotsCount = await AuctionLot.countDocuments({ vendor: req.user._id });
+      if (currentLotsCount >= (req.user.allowedHostLimit || 0)) {
+        return res.status(403).json({ message: `You have reached your limit of ${req.user.allowedHostLimit || 0} auction lots. Contact support to increase it.` });
+      }
     }
 
     let images = [];
@@ -219,8 +226,8 @@ exports.submitLot = async (req, res) => {
 // VENDOR: Resubmit an unsold/closed lot
 exports.resubmitLot = async (req, res) => {
   try {
-    if (req.user.role !== 'vendor_active') {
-      return res.status(403).json({ message: 'Vendor access required' });
+    if (req.user.role !== 'vendor_active' && req.user.role !== 'auction_host') {
+      return res.status(403).json({ message: 'Vendor or auction host access required' });
     }
 
     const { startDate, endDate } = req.body;
@@ -339,8 +346,8 @@ exports.getUserBids = async (req, res) => {
 // VENDOR: Get all lots submitted by this vendor
 exports.getVendorLots = async (req, res) => {
   try {
-    if (req.user.role !== 'vendor_active') {
-      return res.status(403).json({ message: 'Vendor access required' });
+    if (req.user.role !== 'vendor_active' && req.user.role !== 'auction_host') {
+      return res.status(403).json({ message: 'Vendor or auction host access required' });
     }
     
     // Sort by newest first
