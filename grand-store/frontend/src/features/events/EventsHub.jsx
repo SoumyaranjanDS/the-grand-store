@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { Calendar, MapPin, Users, Filter } from 'lucide-react';
+import Price from '../../components/ui/Price';
 
 export default function EventsHub() {
   const [events, setEvents] = useState([]);
@@ -118,7 +119,7 @@ export default function EventsHub() {
                     <div>
                       <p className="text-[10px] uppercase tracking-widest text-[#918a7f]">From</p>
                       <p className="text-lg font-serif text-gold-gradient">
-                        R{Math.min(...event.ticketTiers.map(t => t.price))}
+                        <Price amount={Math.min(...event.ticketTiers.map(t => t.price))} />
                       </p>
                     </div>
                     <Link 
