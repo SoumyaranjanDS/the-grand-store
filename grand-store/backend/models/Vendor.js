@@ -122,7 +122,9 @@ const vendorSchema = new mongoose.Schema({
       street: String,
       city: String,
       postalCode: String,
-      country: { type: String, default: 'South Africa' }
+      country: { type: String, default: 'South Africa' },
+      lat: Number,
+      lng: Number
     },
     defaultDimensions: {
       length: { type: Number, default: 35 },
