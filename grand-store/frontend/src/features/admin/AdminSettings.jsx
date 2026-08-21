@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { Settings, Save, RefreshCw, Percent, Truck, ShieldCheck, ShoppingBag } from "lucide-react";
 import axios from "axios";
+import Price from '../../components/ui/Price';
 
 export default function AdminSettings() {
   const { user } = useAuth();
@@ -159,31 +160,31 @@ export default function AdminSettings() {
               return (
                 <div className="space-y-4 text-sm font-mono relative z-10">
                   <div className="flex justify-between text-gray-400">
-                    <span>Product Subtotal:</span><span className="text-white">R{subtotal.toFixed(2)}</span>
+                    <span>Product Subtotal:</span><span className="text-white"><Price amount={subtotal.toFixed(2)} /></span>
                   </div>
                   <div className="flex justify-between text-gray-400">
-                    <span>Shipping Fee:</span><span className="text-white">+ R{shipping.toFixed(2)}</span>
+                    <span>Shipping Fee:</span><span className="text-white">+ <Price amount={shipping.toFixed(2)} /></span>
                   </div>
                   <div className="flex justify-between font-bold text-white border-t border-white/10 pt-3">
-                    <span>CUSTOMER PAYS:</span><span>R{customerPays.toFixed(2)}</span>
+                    <span>CUSTOMER PAYS:</span><span><Price amount={customerPays.toFixed(2)} /></span>
                   </div>
                   
                   <div className="border-t border-white/10 my-4"></div>
                   
                   <div className="flex justify-between text-gray-400">
-                    <span>Gross Product Sales:</span><span className="text-white">R{subtotal.toFixed(2)}</span>
+                    <span>Gross Product Sales:</span><span className="text-white"><Price amount={subtotal.toFixed(2)} /></span>
                   </div>
                   <div className="flex justify-between text-gray-400">
-                    <span>VAT Deducted ({settings.vatPct}%):</span><span className="text-yellow-500/80">- R{vat.toFixed(2)}</span>
+                    <span>VAT Deducted ({settings.vatPct}%):</span><span className="text-yellow-500/80">- <Price amount={vat.toFixed(2)} /></span>
                   </div>
                   <div className="flex justify-between text-gray-400">
-                    <span>Marketplace Commission ({settings.marketplaceCommissionPct}%):</span><span className="text-red-400/80">- R{commission.toFixed(2)}</span>
+                    <span>Marketplace Commission ({settings.marketplaceCommissionPct}%):</span><span className="text-red-400/80">- <Price amount={commission.toFixed(2)} /></span>
                   </div>
                   <div className="flex justify-between text-gray-400">
-                    <span>Shipping Reimbursed:</span><span className="text-white">+ R{shipping.toFixed(2)}</span>
+                    <span>Shipping Reimbursed:</span><span className="text-white">+ <Price amount={shipping.toFixed(2)} /></span>
                   </div>
                   <div className="flex justify-between font-bold text-green-400 border-t border-white/10 pt-3">
-                    <span>VENDOR PAYOUT:</span><span>R{vendorGets.toFixed(2)}</span>
+                    <span>VENDOR PAYOUT:</span><span><Price amount={vendorGets.toFixed(2)} /></span>
                   </div>
                 </div>
               );
@@ -209,37 +210,37 @@ export default function AdminSettings() {
               return (
                 <div className="space-y-4 text-sm font-mono relative z-10">
                   <div className="flex justify-between text-gray-400">
-                    <span>Winning Bid:</span><span className="text-white">R{wb.toFixed(2)}</span>
+                    <span>Winning Bid:</span><span className="text-white"><Price amount={wb.toFixed(2)} /></span>
                   </div>
                   <div className="flex justify-between text-gray-400">
-                    <span>Buyer Premium ({settings.buyerPremiumPct}%):</span><span className="text-white">+ R{bp.toFixed(2)}</span>
+                    <span>Buyer Premium ({settings.buyerPremiumPct}%):</span><span className="text-white">+ <Price amount={bp.toFixed(2)} /></span>
                   </div>
                   <div className="flex justify-between text-gray-400">
-                    <span>BAR Charge ({settings.barChargePct}%):</span><span className="text-white">+ R{bar.toFixed(2)}</span>
+                    <span>BAR Charge ({settings.barChargePct}%):</span><span className="text-white">+ <Price amount={bar.toFixed(2)} /></span>
                   </div>
                   <div className="flex justify-between text-gray-400">
-                    <span>Shipping:</span><span className="text-white">+ R{ship.toFixed(2)}</span>
+                    <span>Shipping:</span><span className="text-white">+ <Price amount={ship.toFixed(2)} /></span>
                   </div>
                   <div className="flex justify-between text-gray-400">
-                    <span>VAT ({settings.vatPct}%):</span><span className="text-white">+ R{vat.toFixed(2)}</span>
+                    <span>VAT ({settings.vatPct}%):</span><span className="text-white">+ <Price amount={vat.toFixed(2)} /></span>
                   </div>
                   <div className="flex justify-between font-bold text-white border-t border-white/10 pt-3">
-                    <span>BUYER PAYS:</span><span>R{customerPays.toFixed(2)}</span>
+                    <span>BUYER PAYS:</span><span><Price amount={customerPays.toFixed(2)} /></span>
                   </div>
                   
                   <div className="border-t border-white/10 my-4"></div>
                   
                   <div className="flex justify-between text-gray-400">
-                    <span>Winning Bid:</span><span className="text-white">R{wb.toFixed(2)}</span>
+                    <span>Winning Bid:</span><span className="text-white"><Price amount={wb.toFixed(2)} /></span>
                   </div>
                   <div className="flex justify-between text-gray-400">
-                    <span>Auction Commission ({settings.auctionCommissionPct}%):</span><span className="text-red-400/80">- R{comm.toFixed(2)}</span>
+                    <span>Auction Commission ({settings.auctionCommissionPct}%):</span><span className="text-red-400/80">- <Price amount={comm.toFixed(2)} /></span>
                   </div>
                   <div className="flex justify-between text-gray-400">
-                    <span>VAT Deducted ({settings.vatPct}%):</span><span className="text-yellow-500/80">- R{vat.toFixed(2)}</span>
+                    <span>VAT Deducted ({settings.vatPct}%):</span><span className="text-yellow-500/80">- <Price amount={vat.toFixed(2)} /></span>
                   </div>
                   <div className="flex justify-between font-bold text-green-400 border-t border-white/10 pt-3">
-                    <span>VENDOR PAYOUT:</span><span>R{vendorGets.toFixed(2)}</span>
+                    <span>VENDOR PAYOUT:</span><span><Price amount={vendorGets.toFixed(2)} /></span>
                   </div>
                 </div>
               );
