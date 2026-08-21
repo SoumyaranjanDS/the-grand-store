@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import Price from '../components/ui/Price';
 import { Link } from "react-router-dom";
 import {
   ShoppingBag,
@@ -431,7 +432,7 @@ export default function VendorPortalPage() {
                                )}
                             </div>
                             <p className="text-white text-xs font-serif truncate mb-1">{p.name}</p>
-                            <p className="text-[#c9a35b] text-xs font-bold tracking-wider">R{p.price}</p>
+                            <p className="text-[#c9a35b] text-xs font-bold tracking-wider"><Price amount={p.price} /></p>
                           </div>
                         ))
                       )}
@@ -490,7 +491,7 @@ export default function VendorPortalPage() {
                                )}
                             </div>
                             <p className="text-white text-[9px] font-serif truncate mb-1">{p.name}</p>
-                            <p className="text-[#c9a35b] text-[9px] font-bold">R{p.price}</p>
+                            <p className="text-[#c9a35b] text-[9px] font-bold"><Price amount={p.price} /></p>
                           </div>
                         ))
                       )}
@@ -570,13 +571,13 @@ export default function VendorPortalPage() {
                 <span className="text-sm uppercase tracking-widest font-semibold text-gray-700">
                   Once-off Registration
                 </span>
-                <span className="font-serif font-bold text-black">R2,500</span>
+                <span className="font-serif font-bold text-black"><Price amount={2500} /></span>
               </div>
               <div className="flex justify-between items-center border-b border-gray-100 pb-4">
                 <span className="text-sm uppercase tracking-widest font-semibold text-gray-700">
                   Monthly Platform Fee
                 </span>
-                <span className="font-serif font-bold text-black">R500</span>
+                <span className="font-serif font-bold text-black"><Price amount={500} /></span>
               </div>
               <div className="flex justify-between items-center border-b border-gray-100 pb-4">
                 <span className="text-sm uppercase tracking-widest font-semibold text-gray-700">
