@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { Gavel, CheckCircle2 } from 'lucide-react';
+import Price from '../../components/ui/Price';
 
 export default function AdminAuctionPanel({ onNotify }) {
   const { user } = useAuth();
@@ -146,11 +147,11 @@ export default function AdminAuctionPanel({ onNotify }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 text-sm">
                       <div className="bg-white/[0.02] p-4 rounded-xl border border-white/[0.02]">
                         <span className="text-[var(--color-ivory-muted)] block text-[10px] uppercase tracking-widest mb-1 font-semibold">Requested Start Bid</span> 
-                        <span className="font-serif text-lg md:text-xl text-gold-gradient">R{lot.startingBid?.toLocaleString('en-ZA')}</span>
+                        <span className="font-serif text-lg md:text-xl text-gold-gradient"><Price amount={lot.startingBid?.toLocaleString('en-ZA')} /></span>
                       </div>
                       <div className="bg-white/[0.02] p-4 rounded-xl border border-white/[0.02]">
                         <span className="text-[var(--color-ivory-muted)] block text-[10px] uppercase tracking-widest mb-1 font-semibold">Reserve Price</span> 
-                        <span className="font-serif text-lg md:text-xl text-gold-gradient">R{lot.reservePrice?.toLocaleString('en-ZA')}</span>
+                        <span className="font-serif text-lg md:text-xl text-gold-gradient"><Price amount={lot.reservePrice?.toLocaleString('en-ZA')} /></span>
                       </div>
                       <div className="col-span-1 md:col-span-2 text-xs md:text-sm font-light mt-2">
                         <p className="mb-2"><span className="text-gold-gradient font-medium mr-2">Condition:</span> <span className="text-[var(--color-ivory)]">{lot.condition}</span></p>
@@ -229,7 +230,7 @@ export default function AdminAuctionPanel({ onNotify }) {
                          {lot.vendor?.name || 'Unknown'}
                       </td>
                       <td className="py-4 text-sm font-bold text-[var(--color-ivory)] font-serif">
-                        R{(lot.winningBid || lot.currentBid || 0).toLocaleString('en-ZA')}
+                        <Price amount={(lot.winningBid || lot.currentBid || 0).toLocaleString('en-ZA')} />
                       </td>
                       <td className="py-4 pr-6 text-sm">
                         {lot.status === 'sold' && (
@@ -250,18 +251,18 @@ export default function AdminAuctionPanel({ onNotify }) {
                             <div className="bg-[#0a0a0a] p-5 rounded-xl border border-white/10">
                                <h4 className="text-[var(--color-gold)] font-bold tracking-widest uppercase text-[10px] mb-4">Financial Breakdown</h4>
                                <div className="space-y-2 font-mono text-[var(--color-ivory-muted)]">
-                                  <div className="flex justify-between"><span>Winning Bid:</span> <span>R {lot.winningBid?.toLocaleString('en-ZA')}</span></div>
-                                  <div className="flex justify-between"><span>Buyer Premium ({(lot.buyerPremiumPct || 5)}%):</span> <span>+ R {lot.buyerPremiumAmount?.toLocaleString('en-ZA')}</span></div>
-                                  <div className="flex justify-between"><span>BAR Charge ({(lot.barChargePct || 2)}%):</span> <span>+ R {lot.barChargeAmount?.toLocaleString('en-ZA')}</span></div>
-                                  <div className="flex justify-between"><span>VAT ({(lot.vatPct || 15)}%):</span> <span>+ R {lot.vatAmount?.toLocaleString('en-ZA')}</span></div>
-                                  <div className="flex justify-between"><span>Shipping:</span> <span>+ R {lot.shippingCost?.toLocaleString('en-ZA')}</span></div>
+                                  <div className="flex justify-between"><span>Winning Bid:</span> <span><Price amount={lot.winningBid?.toLocaleString('en-ZA')} /></span></div>
+                                  <div className="flex justify-between"><span>Buyer Premium ({(lot.buyerPremiumPct || 5)}%):</span> <span>+ <Price amount={lot.buyerPremiumAmount?.toLocaleString('en-ZA')} /></span></div>
+                                  <div className="flex justify-between"><span>BAR Charge ({(lot.barChargePct || 2)}%):</span> <span>+ <Price amount={lot.barChargeAmount?.toLocaleString('en-ZA')} /></span></div>
+                                  <div className="flex justify-between"><span>VAT ({(lot.vatPct || 15)}%):</span> <span>+ <Price amount={lot.vatAmount?.toLocaleString('en-ZA')} /></span></div>
+                                  <div className="flex justify-between"><span>Shipping:</span> <span>+ <Price amount={lot.shippingCost?.toLocaleString('en-ZA')} /></span></div>
                                   <div className="flex justify-between border-t border-white/10 pt-2 mt-2 text-white font-bold">
                                      <span>Total Paid By Buyer:</span> 
-                                     <span className="text-[var(--color-gold)]">R {lot.totalPaidByBuyer?.toLocaleString('en-ZA')}</span>
+                                     <span className="text-[var(--color-gold)]"><Price amount={lot.totalPaidByBuyer?.toLocaleString('en-ZA')} /></span>
                                   </div>
                                   
-                                  <div className="flex justify-between border-t border-dashed border-white/10 pt-2 mt-2"><span>Commission Earned ({(lot.commissionPct || 15)}%):</span> <span className="text-green-400">R {lot.commissionAmount?.toLocaleString('en-ZA')}</span></div>
-                                  <div className="flex justify-between"><span>Vendor Payout Net:</span> <span className="text-yellow-400">R {lot.vendorPayable?.toLocaleString('en-ZA')}</span></div>
+                                  <div className="flex justify-between border-t border-dashed border-white/10 pt-2 mt-2"><span>Commission Earned ({(lot.commissionPct || 15)}%):</span> <span className="text-green-400"><Price amount={lot.commissionAmount?.toLocaleString('en-ZA')} /></span></div>
+                                  <div className="flex justify-between"><span>Vendor Payout Net:</span> <span className="text-yellow-400"><Price amount={lot.vendorPayable?.toLocaleString('en-ZA')} /></span></div>
                                </div>
                             </div>
                             <div className="bg-[#0a0a0a] p-5 rounded-xl border border-white/10">
