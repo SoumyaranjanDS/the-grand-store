@@ -93,7 +93,7 @@ export default function EventAttendees({ onNotify }) {
   };
 
   if (loading || authLoading) {
-    return <div className="p-8 text-gold-gradient">Loading attendees...</div>;
+    return <div className="p-8 text-[#e1bd70]">Loading attendees...</div>;
   }
 
   const totalTickets = attendees.reduce((acc, curr) => acc + curr.quantity, 0);
@@ -114,7 +114,7 @@ export default function EventAttendees({ onNotify }) {
           <div className="bg-[#11100d] border border-white/10 rounded-2xl p-6 shadow-xl sticky top-8">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <QrCode className="text-gold-gradient" size={24} />
+                <QrCode className="text-[#e1bd70]" size={24} />
                 <h2 className="text-xl font-serif text-white">Verify Ticket</h2>
               </div>
               <button 
@@ -152,7 +152,7 @@ export default function EventAttendees({ onNotify }) {
               <button
                 type="submit"
                 disabled={verifying || !ticketInput}
-                className="w-full bg-gold-gradient text-black font-bold uppercase tracking-wider py-3 rounded-xl hover:brightness-110 transition-all disabled:opacity-50"
+                className="w-full bg-[#c9a35b] text-black font-bold uppercase tracking-wider py-3 rounded-xl hover:brightness-110 transition-all disabled:opacity-50"
               >
                 {verifying ? 'Verifying...' : 'Check In Attendee'}
               </button>
@@ -198,7 +198,7 @@ export default function EventAttendees({ onNotify }) {
         <div className="lg:col-span-2">
           <div className="bg-[#11100d] border border-white/10 rounded-2xl p-6 shadow-xl">
             <h2 className="text-xl font-serif text-white mb-6 flex items-center gap-3">
-              <Users className="text-gold-gradient" size={24} />
+              <Users className="text-[#e1bd70]" size={24} />
               Guest List
             </h2>
 

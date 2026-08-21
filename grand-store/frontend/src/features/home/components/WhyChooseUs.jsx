@@ -72,7 +72,7 @@ export default function WhyChooseUs() {
 
   return (
     <section 
-      className="relative overflow-hidden border-t border-white/10 bg-[#0a0a0a] py-11 md:py-14"
+      className="relative overflow-hidden border-t border-white/10 bg-[#141414] py-11 md:py-14"
       ref={sectionRef} 
       id="why-us"
     >

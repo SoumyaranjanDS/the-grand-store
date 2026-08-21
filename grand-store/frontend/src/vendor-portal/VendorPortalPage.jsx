@@ -109,13 +109,13 @@ export default function VendorPortalPage() {
     "How long does it take for my vendor account to be approved?",
   ];
 
-  // Reusable Gold Text with Glow
+  // Reusable solid gold text
   const goldTextClass =
-    "text-[#c9a35b] drop-shadow-[0_0_12px_rgba(230,201,122,0.6)] px-4";
+    "text-[#c9a35b] px-4";
 
-  // Reusable Gold Button Class
+  // Reusable solid gold button
   const goldButtonClass =
-    "bg-[#c9a35b] shadow-[0_0_20px_rgba(230,201,122,0.5)] text-black font-bold uppercase tracking-widest text-xs px-10 py-5 hover:shadow-[0_0_30px_rgba(230,201,122,0.8)] transition-all";
+    "bg-[#c9a35b] text-black font-bold uppercase tracking-widest text-xs px-10 py-5 hover:bg-[#e1bd70] transition-colors";
 
   return (
     <main className="min-h-screen bg-white text-gray-900 font-sans pb-20">
@@ -390,7 +390,7 @@ export default function VendorPortalPage() {
                     {mockBanner && (
                       <img src={mockBanner} className="w-full h-full object-cover opacity-70" alt="Banner" />
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent opacity-80"></div>
+                    <div className="absolute inset-0 bg-black/45"></div>
                   </div>
                   {/* Store Header */}
                   <div className="flex px-10 -mt-16 relative z-10 items-end gap-6 mb-8 shrink-0">
@@ -452,7 +452,7 @@ export default function VendorPortalPage() {
                     {mockBanner && (
                       <img src={mockBanner} className="w-full h-full object-cover opacity-70" alt="Banner" />
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent opacity-80"></div>
+                    <div className="absolute inset-0 bg-black/45"></div>
                   </div>
                   {/* Store Header */}
                   <div className="flex flex-col items-center px-4 -mt-12 relative z-10 text-center shrink-0">
@@ -582,11 +582,11 @@ export default function VendorPortalPage() {
                 <span className="text-sm uppercase tracking-widest font-semibold text-gray-700">
                   Commission per sale
                 </span>
-                <span className="font-serif font-bold text-gold-gradient">15%</span>
+                <span className="font-serif font-bold text-[#c9a35b]">15%</span>
               </div>
             </div>
             <p className="text-[11px] text-gray-400 uppercase tracking-widest leading-relaxed flex gap-2">
-              <CheckCircle2 size={16} className="text-gold-gradient shrink-0" />
+              <CheckCircle2 size={16} className="text-[#c9a35b] shrink-0" />
               Secure payment processing system.
             </p>
           </div>
@@ -610,7 +610,7 @@ export default function VendorPortalPage() {
                 <li key={idx} className="flex items-center gap-4 text-gray-300">
                   <CheckCircle2
                     size={24}
-                    className="text-gold-gradient shrink-0"
+                    className="text-[#c9a35b] shrink-0"
                     strokeWidth={1.5}
                   />
                   <span className="text-base">{item}</span>
@@ -647,7 +647,7 @@ export default function VendorPortalPage() {
               >
                 <span className="font-semibold text-black">{q}</span>
                 {openFaq === idx ? (
-                  <Minus className="text-gold-gradient" size={20} />
+                  <Minus className="text-[#c9a35b]" size={20} />
                 ) : (
                   <Plus className="text-gray-400" size={20} />
                 )}

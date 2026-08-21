@@ -208,7 +208,7 @@ function Header() {
       </div>
       <header className="site-header">
         <a className="brand" href="/winefarm/#top" aria-label="The Grand Store wine farm home">
-          <img src="/assets/logo.webp" alt="The Grand Store — Rising Awareness" />
+          <img src="/grand-store-logo.png" alt="The Grand Store — Bar Accessories" />
         </a>
         <nav className={open ? 'site-nav open' : 'site-nav'} aria-label="Primary navigation">
           <a href="/winefarm/#top" onClick={closeMenu}>Home</a>
@@ -832,7 +832,7 @@ function Footer() {
       </div>
       <div className="footer-grid">
         <div className="footer-about">
-          <img src="/assets/logo.webp" alt="The Grand Store" />
+          <img src="/grand-store-logo.png" alt="The Grand Store — Bar Accessories" />
           <p>At South African Wine Farms Estate, we’ve teamed up with Grandstore to create a platform where wine farmers from around the world can easily showcase their vineyards and market their wines.</p>
           <div className="socials"><a href="#">Fb</a><a href="#">In</a><a href="#">X</a><a href="#">Pt</a></div>
         </div>

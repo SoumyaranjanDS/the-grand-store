@@ -93,7 +93,7 @@ export default function VendorOrders() {
   }, [vendorProfile, user.token]);
 
   const goldTextClass =
-    "text-[#c9a35b] drop-shadow-[0_0_12px_rgba(230,201,122,0.6)]";
+    "text-[#c9a35b] ";
   const filteredShipments = shipments.filter(
     (shp) =>
       (shp.shipmentId || shp._id)
@@ -108,7 +108,7 @@ export default function VendorOrders() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-6">
         <div>
           <h1 className="text-[var(--color-ivory)] font-serif text-4xl mb-2 flex items-center gap-4">
-            <div className="p-3 bg-[var(--color-gold)]/10 text-gold-gradient rounded-xl border border-[var(--color-gold)]/20 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
+            <div className="p-3 bg-[var(--color-gold)]/10 text-[#e1bd70] rounded-xl border border-[var(--color-gold)]/20 ">
               <ShoppingBag size={28} />
             </div>
             Fulfillment{" "}
@@ -137,7 +137,7 @@ export default function VendorOrders() {
       </div>
 
       {loading ? (
-        <div className="text-gold-gradient p-10 text-center">
+        <div className="text-[#e1bd70] p-10 text-center">
           Loading your shipments...
         </div>
       ) : filteredShipments.length === 0 ? (
@@ -158,13 +158,13 @@ export default function VendorOrders() {
               Locating nearest PostNet stores for drop-off...
             </div>
           ) : postnetStores && postnetStores.length === 0 ? (
-            <div className="bg-gradient-to-br from-black/80 to-[#111] border border-[var(--color-gold)]/20 rounded-2xl p-6 shadow-lg shadow-[var(--color-gold)]/5 flex items-center justify-center min-h-[100px]">
+            <div className="bg-[#0a0a0a] border border-[var(--color-gold)]/20 rounded-2xl p-6 shadow-lg shadow-[var(--color-gold)]/5 flex items-center justify-center min-h-[100px]">
               <p className="text-[var(--color-ivory-muted)] text-sm">No nearby PostNet stores found within 50km.</p>
             </div>
           ) : (
             postnetStores &&
             postnetStores.length > 0 && (
-              <div className="bg-gradient-to-br from-black/80 to-[#111] border border-[var(--color-gold)]/20 rounded-2xl p-6 shadow-lg shadow-[var(--color-gold)]/5 relative overflow-hidden">
+              <div className="bg-[#0a0a0a] border border-[var(--color-gold)]/20 rounded-2xl p-6 shadow-lg shadow-[var(--color-gold)]/5 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--color-gold)]/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
 
                 <div className="flex items-center gap-3 mb-6 relative z-10">
@@ -194,7 +194,7 @@ export default function VendorOrders() {
                         rel="noopener noreferrer"
                         className="flex justify-between items-start gap-2"
                       >
-                        <h4 className="text-sm font-bold text-[var(--color-ivory)] mb-1 group-hover:text-gold-gradient transition-colors">
+                        <h4 className="text-sm font-bold text-[var(--color-ivory)] mb-1 group-hover:text-[#e1bd70] transition-colors">
                           {store.store}
                         </h4>
                         <ExternalLink size={14} className="text-[var(--color-ivory-muted)] opacity-50 group-hover:text-[var(--color-gold)] transition-colors mt-0.5 flex-shrink-0" />
@@ -230,7 +230,7 @@ export default function VendorOrders() {
                       <div className="text-[10px] text-[var(--color-ivory-muted)] uppercase tracking-widest mb-1">
                         Shipment ID
                       </div>
-                      <div className="text-sm text-gold-gradient font-bold">
+                      <div className="text-sm text-[#e1bd70] font-bold">
                         {shp.shipmentId || shp._id}
                       </div>
                     </div>
@@ -261,7 +261,7 @@ export default function VendorOrders() {
                     <div className="text-[10px] text-[var(--color-ivory-muted)] uppercase tracking-widest mb-1">
                       Products Total
                     </div>
-                    <div className="text-xl font-serif text-gold-gradient">
+                    <div className="text-xl font-serif text-[#e1bd70]">
                       {formatCartPrice(shp.vendorTotal)}
                     </div>
                   </div>
@@ -272,7 +272,7 @@ export default function VendorOrders() {
                   {/* Customer Info */}
                   <div className="col-span-1 border-r border-white/5 pr-4">
                     <h4 className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-4 flex items-center gap-2">
-                      <MapPin size={14} className="text-gold-gradient" />{" "}
+                      <MapPin size={14} className="text-[#e1bd70]" />{" "}
                       Shipping Details
                     </h4>
                     <div className="space-y-1">
@@ -314,7 +314,7 @@ export default function VendorOrders() {
                   {/* Items List */}
                   <div className="col-span-1 md:col-span-2">
                     <h4 className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-4 flex items-center gap-2">
-                      <Package size={14} className="text-gold-gradient" />{" "}
+                      <Package size={14} className="text-[#e1bd70]" />{" "}
                       Products to Pack
                     </h4>
                     <div className="space-y-4">
@@ -346,7 +346,7 @@ export default function VendorOrders() {
                             <div className="text-sm text-[var(--color-ivory)]">
                               {item.quantity} × {formatCartPrice(item.price)}
                             </div>
-                            <div className="text-xs font-bold text-gold-gradient mt-1">
+                            <div className="text-xs font-bold text-[#e1bd70] mt-1">
                               {formatCartPrice(item.price * item.quantity)}
                             </div>
                           </div>

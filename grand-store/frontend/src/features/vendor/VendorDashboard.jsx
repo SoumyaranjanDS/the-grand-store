@@ -77,23 +77,20 @@ export default function VendorDashboard() {
     }
   };
 
-  const goldTextClass = "bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(230,201,122,0.6)]";
-  const scriptFont = { fontFamily: "'Dancing Script', cursive" };
-
   const totalRevenue = sales.reduce((sum, sale) => sum + sale.vendorTotal, 0);
   const totalOrders = sales.length;
   const unitsSold = sales.reduce((sum, sale) => sum + sale.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
   const netPayout = wallet ? (wallet.availableBalance + wallet.pendingBalance) : 0;
 
   return (
-    <div className="flex flex-col gap-10 w-full max-w-7xl mx-auto pb-10">
+    <div className="flex flex-col gap-10 w-full max-w-7xl mx-auto pb-10 font-sans">
       
       {/* Welcome & Store Health Section */}
       <section className="flex flex-col lg:flex-row gap-8 items-start">
         <div className="flex-1">
-          <h1 className="text-[var(--color-ivory)] font-serif text-5xl mb-4 leading-tight">
+          <h1 className="text-[var(--color-ivory)] font-serif text-[clamp(42px,5vw,64px)] font-medium tracking-[-0.035em] mb-4 leading-[1.02]">
             Welcome back, <br/>
-            <span className={goldTextClass} style={scriptFont}>{user?.name?.split(' ')[0] || 'Partner'}</span>
+            <span className="text-[#e1bd70]">{user?.name?.split(' ')[0] || 'Partner'}</span>
           </h1>
           <p className="text-[var(--color-ivory-muted)] text-lg max-w-2xl font-light leading-relaxed">
             Here is your daily business summary. You have {totalOrders > 0 ? totalOrders : 'no'} pending orders to fulfill and your store health is looking excellent.
@@ -101,7 +98,7 @@ export default function VendorDashboard() {
           <div className="flex flex-wrap items-center gap-3 mt-6">
             <button
               onClick={() => navigate('/vendor/event-add')}
-              className="flex items-center gap-2 px-6 py-3 bg-[#11100d] border border-[#c9a35b]/30 hover:bg-[#c9a35b]/10 text-gold-gradient font-semibold rounded-lg transition-colors"
+              className="flex items-center gap-2 px-6 py-3 bg-[#11100d] border border-[#c9a35b]/30 hover:bg-[#c9a35b]/10 text-[#e1bd70] font-semibold rounded-lg transition-colors"
             >
               <Calendar size={20} /> Create Event
             </button>
@@ -113,7 +110,7 @@ export default function VendorDashboard() {
             </button>
             <button
               onClick={() => navigate('/vendor/auction-submit')}
-              className="flex items-center gap-2 px-6 py-3 bg-gold-gradient hover:bg-[#e6c97a] text-black font-semibold rounded-lg transition-colors shadow-[0_0_15px_rgba(212,175,55,0.2)]"
+              className="flex items-center gap-2 px-6 py-3 bg-[#c9a35b] hover:bg-[#e1bd70] text-black font-semibold rounded-lg transition-colors"
             >
               <Package size={20} /> Add Auction Lot
             </button>
@@ -125,11 +122,11 @@ export default function VendorDashboard() {
           <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-gold)]/5 rounded-full blur-3xl"></div>
           <h3 className="text-[var(--color-ivory)] font-serif text-xl mb-4 flex items-center justify-between">
             Store Health 
-            <span className="text-gold-gradient text-2xl" style={scriptFont}>87%</span>
+            <span className="text-[#e1bd70] font-serif text-2xl">87%</span>
           </h3>
           
           <div className="w-full h-2 bg-black/50 rounded-full mb-6 overflow-hidden border border-white/5">
-            <div className="h-full bg-gradient-to-r from-[#b58b38] to-[#e6c97a] w-[87%] shadow-[0_0_10px_rgba(212,175,55,0.8)]"></div>
+            <div className="h-full bg-[#c9a35b] w-[87%]"></div>
           </div>
           
           <div className="space-y-3">
@@ -142,7 +139,7 @@ export default function VendorDashboard() {
               <span>Banking & Compliance verified.</span>
             </div>
           </div>
-          <Link to="/vendor/profile" className="mt-6 inline-block text-[10px] uppercase tracking-widest text-gold-gradient hover:text-white transition-colors font-bold">
+          <Link to="/vendor/profile" className="mt-6 inline-block text-[10px] uppercase tracking-widest text-[#e1bd70] hover:text-white transition-colors font-bold">
             Improve My Store &rarr;
           </Link>
         </div>
@@ -159,11 +156,11 @@ export default function VendorDashboard() {
           <div key={idx} className="p-6 border-b border-white/10 group transition-all">
             <div className="flex justify-between items-start mb-4">
               <div className="text-[var(--color-ivory-muted)] text-[10px] uppercase tracking-widest font-semibold">{kpi.title}</div>
-              <div className="p-2 rounded-lg bg-black/40 text-gold-gradient border border-white/[0.05]">
+              <div className="p-2 rounded-lg bg-black/40 text-[#e1bd70] border border-white/[0.05]">
                 <kpi.icon size={16} />
               </div>
             </div>
-            <div className="text-3xl font-serif text-[var(--color-ivory)] mb-2 group-hover:text-gold-gradient transition-colors">{loading ? '...' : kpi.value}</div>
+            <div className="text-3xl font-serif text-[var(--color-ivory)] mb-2 group-hover:text-[#e1bd70] transition-colors">{loading ? '...' : kpi.value}</div>
           </div>
         ))}
       </section>
@@ -173,12 +170,11 @@ export default function VendorDashboard() {
         
         {/* Growth Recommendations (Takes up 2 cols) */}
         <div className="lg:col-span-2 p-8 border-t border-white/10 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--color-gold)]/10 rounded-full blur-[100px] pointer-events-none"></div>
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-[var(--color-gold)]/20 text-gold-gradient rounded-lg border border-[var(--color-gold)]/30">
+            <div className="p-2 bg-[var(--color-gold)]/20 text-[#e1bd70] rounded-lg border border-[var(--color-gold)]/30">
               <Lightbulb size={20} />
             </div>
-            <h3 className="text-2xl font-serif text-[var(--color-ivory)]">Vendor Growth <span className="text-gold-gradient" style={scriptFont}>Insights</span></h3>
+            <h3 className="text-2xl font-serif font-medium tracking-[-0.02em] text-[var(--color-ivory)]">Vendor Growth <span className="text-[#e1bd70]">Insights</span></h3>
           </div>
           
           <div className="space-y-4">
@@ -188,8 +184,8 @@ export default function VendorDashboard() {
                 Your <strong>2022 Stellenbosch Cabernet Sauvignon</strong> has received 42 views this week but only 3 purchases. Consider adding tasting notes and food pairing information to increase buyer confidence.
               </p>
               <div className="flex gap-4">
-                <button className="text-[10px] uppercase tracking-widest font-bold text-gold-gradient hover:text-white transition-colors">Edit Product</button>
-                <button className="text-[10px] uppercase tracking-widest font-bold text-gold-gradient hover:text-white transition-colors">Run 10% Promo</button>
+                <button className="text-[10px] uppercase tracking-widest font-bold text-[#e1bd70] hover:text-white transition-colors">Edit Product</button>
+                <button className="text-[10px] uppercase tracking-widest font-bold text-[#e1bd70] hover:text-white transition-colors">Run 10% Promo</button>
               </div>
             </div>
             <div className="border-b border-white/5 py-5">
@@ -197,7 +193,7 @@ export default function VendorDashboard() {
               <p className="text-[var(--color-ivory-muted)] text-sm leading-relaxed mb-4">
                 MCC is selling 34% faster than your other sparkling wines across the platform. You have 0 MCC items in stock.
               </p>
-              <button className="text-[10px] uppercase tracking-widest font-bold text-gold-gradient hover:text-white transition-colors">Add MCC Product</button>
+              <button className="text-[10px] uppercase tracking-widest font-bold text-[#e1bd70] hover:text-white transition-colors">Add MCC Product</button>
             </div>
           </div>
         </div>
@@ -222,7 +218,7 @@ export default function VendorDashboard() {
               </div>
             ))}
           </div>
-          <Link to="/vendor/products" className="block mt-8 text-center text-[10px] uppercase tracking-widest text-[var(--color-ivory-muted)] hover:text-gold-gradient transition-colors">
+          <Link to="/vendor/products" className="block mt-8 text-center text-[10px] uppercase tracking-widest text-[var(--color-ivory-muted)] hover:text-[#e1bd70] transition-colors">
             View All Products &rarr;
           </Link>
         </div>
@@ -232,7 +228,7 @@ export default function VendorDashboard() {
       {/* Recent Vendor Orders */}
       <section className="mt-2 border-t border-white/10 pt-8">
         <h3 className="text-2xl font-serif text-[var(--color-ivory)] mb-6 flex items-center gap-3">
-          <div className="p-2 bg-[var(--color-gold)]/10 text-gold-gradient rounded-lg">
+          <div className="p-2 bg-[var(--color-gold)]/10 text-[#e1bd70] rounded-lg">
             <ShoppingBag size={20} />
           </div>
           Recent Sales
@@ -257,7 +253,7 @@ export default function VendorDashboard() {
               <tbody>
                 {sales.slice(0, 10).map((sale) => (
                   <tr key={sale._id} className="border-b border-white/5 hover:bg-white/[0.03] transition-colors">
-                    <td className="py-4 pl-6 font-bold text-xs text-gold-gradient">{sale.invoiceNumber || sale._id}</td>
+                    <td className="py-4 pl-6 font-bold text-xs text-[#e1bd70]">{sale.invoiceNumber || sale._id}</td>
                     <td className="py-4 text-xs text-[var(--color-ivory-muted)]">
                       {new Date(sale.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                     </td>
@@ -283,7 +279,7 @@ export default function VendorDashboard() {
       {/* Vendor Auction Lots */}
       <section className="mt-2 border-t border-white/10 pt-8">
         <h3 className="text-2xl font-serif text-[var(--color-ivory)] mb-6 flex items-center gap-3">
-          <div className="p-2 bg-[var(--color-gold)]/10 text-gold-gradient rounded-lg">
+          <div className="p-2 bg-[var(--color-gold)]/10 text-[#e1bd70] rounded-lg">
             <Gavel size={20} />
           </div>
           My Auction Lots
@@ -310,7 +306,7 @@ export default function VendorDashboard() {
                   <React.Fragment key={lot._id}>
                     <tr className="border-b border-white/5 hover:bg-white/[0.03] transition-colors">
                       <td className="py-4 pl-6 font-serif text-sm text-[var(--color-ivory)]">
-                        <Link to={`/auction/${lot._id}`} className="hover:text-gold-gradient transition-colors">
+                        <Link to={`/auction/${lot._id}`} className="hover:text-[#e1bd70] transition-colors">
                           {lot.title}
                         </Link>
                       </td>
@@ -336,12 +332,12 @@ export default function VendorDashboard() {
                               <input type="datetime-local" className="text-xs p-1 bg-black/50 border border-white/20 text-white rounded" onChange={e => setResubmitDates({...resubmitDates, startDate: e.target.value})} placeholder="Start Date" />
                               <input type="datetime-local" className="text-xs p-1 bg-black/50 border border-white/20 text-white rounded" onChange={e => setResubmitDates({...resubmitDates, endDate: e.target.value})} placeholder="End Date" />
                               <div className="flex gap-2">
-                                <button onClick={() => handleResubmit(lot._id)} className="text-[10px] bg-gold-gradient text-black px-2 py-1 rounded font-bold uppercase tracking-widest hover:scale-105 transition-transform">Save</button>
+                                <button onClick={() => handleResubmit(lot._id)} className="text-[10px] bg-[#c9a35b] hover:bg-[#e1bd70] text-black px-2 py-1 rounded font-bold uppercase tracking-widest transition-colors">Save</button>
                                 <button onClick={() => setResubmitLotId(null)} className="text-[10px] border border-white/20 text-white px-2 py-1 rounded hover:bg-white/10 transition-colors uppercase tracking-widest">Cancel</button>
                               </div>
                             </div>
                           ) : (
-                            <button onClick={() => setResubmitLotId(lot._id)} className="text-[10px] border border-[var(--color-gold)] text-gold-gradient hover:bg-[var(--color-gold)]/10 px-3 py-1.5 rounded uppercase tracking-widest font-bold transition-all">
+                            <button onClick={() => setResubmitLotId(lot._id)} className="text-[10px] border border-[var(--color-gold)] text-[#e1bd70] hover:bg-[var(--color-gold)]/10 px-3 py-1.5 rounded uppercase tracking-widest font-bold transition-all">
                               Resubmit Lot
                             </button>
                           )

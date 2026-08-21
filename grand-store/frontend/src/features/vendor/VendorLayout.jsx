@@ -16,7 +16,7 @@ export default function VendorLayout() {
   // Handle specific vendor states
   if (user.role === 'vendor_pending') {
     return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
+      <div className="vendor-theme min-h-screen bg-[#050505] flex items-center justify-center p-4">
         <div className="bg-[#0a0a0a] border border-gold/30 p-12 rounded-2xl max-w-md w-full text-center">
           <h2 className="text-2xl text-white font-light mb-4">Under Review</h2>
           <p className="text-white/60 mb-6">Your vendor application is currently being reviewed by our team. You will be notified via email once approved.</p>
@@ -28,7 +28,7 @@ export default function VendorLayout() {
 
   if (user.role === 'vendor_rejected') {
     return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
+      <div className="vendor-theme min-h-screen bg-[#050505] flex items-center justify-center p-4">
         <div className="bg-[#0a0a0a] border border-red-500/30 p-12 rounded-2xl max-w-md w-full text-center">
           <h2 className="text-2xl text-white font-light mb-4">Changes Required</h2>
           <p className="text-white/60 mb-6">Your application requires some adjustments before approval.</p>
@@ -60,18 +60,18 @@ export default function VendorLayout() {
   const navItemClass = (path) => {
     const baseClass = "flex items-center gap-4 px-4 py-3 rounded-xl text-xs uppercase tracking-widest transition-all text-left border";
     if (isActive(path)) {
-      return `${baseClass} bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] text-black shadow-[0_0_15px_rgba(212,175,55,0.5)] font-bold border-transparent`;
+      return `${baseClass} bg-[#c9a35b] text-black  font-bold border-transparent`;
     }
     return `${baseClass} text-[var(--color-ivory-muted)] hover:bg-white/[0.03] hover:text-[var(--color-ivory)] border-transparent`;
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-[var(--color-ivory)] flex flex-col font-sans">
+    <div className="vendor-theme min-h-screen bg-[#050505] text-[var(--color-ivory)] flex flex-col font-sans">
       
       {/* Standalone Dashboard Header */}
       <header className="h-20 bg-black/60 backdrop-blur-xl border-b border-white/[0.05] flex items-center justify-between px-8 sticky top-0 z-50">
         <div className="flex items-center gap-4">
-          <button className="md:hidden text-[var(--color-ivory)] hover:text-gold-gradient transition-colors" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          <button className="md:hidden text-[var(--color-ivory)] hover:text-[#e1bd70] transition-colors" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate('/')}>
@@ -79,7 +79,7 @@ export default function VendorLayout() {
               The Grand Store
             </div>
             <div className="hidden md:block h-4 w-px bg-white/20 mx-2"></div>
-            <div className="hidden md:block text-sm tracking-widest text-gold-gradient font-medium uppercase drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]">
+            <div className="hidden md:block text-sm tracking-widest text-[#e1bd70] font-medium uppercase ">
               {user?.role === 'admin' ? 'Admin Gateway' : 'Business Partner'}
             </div>
           </div>
@@ -88,11 +88,11 @@ export default function VendorLayout() {
           <div className="flex items-center gap-3">
             <div className="text-right hidden md:block">
               <div className="text-sm font-serif">{user.name}</div>
-              <div className="text-xs text-gold-gradient tracking-widest uppercase">{user?.role === 'admin' ? 'System Administrator' : 'Level 1 - New Vendor'}</div>
+              <div className="text-xs text-[#e1bd70] tracking-widest uppercase">{user?.role === 'admin' ? 'System Administrator' : 'Level 1 - New Vendor'}</div>
             </div>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--color-gold)] to-yellow-700 p-[1px]">
+            <div className="w-10 h-10 rounded-full bg-[#c9a35b] p-[1px]">
               <div className="w-full h-full bg-[#0a0a0a] rounded-full flex items-center justify-center">
-                <Building2 size={18} className="text-gold-gradient" />
+                <Building2 size={18} className="text-[#e1bd70]" />
               </div>
             </div>
           </div>
@@ -102,7 +102,6 @@ export default function VendorLayout() {
       <div className="flex flex-1 overflow-hidden relative">
         {/* Background glow effects */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-          <div className="absolute top-[10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[var(--color-gold)]/5 blur-[120px]"></div>
         </div>
 
         {/* Glassmorphic Sidebar */}
@@ -160,7 +159,7 @@ export default function VendorLayout() {
               <button onClick={() => handleNavigate('/vendor/shipping')} className={navItemClass('/vendor/shipping')}>
                 <Truck size={16} /> Shipping Profile
               </button>
-              <button onClick={() => handleNavigate('/vendor/profile')} className="flex items-center gap-4 px-4 py-3 mt-2 rounded-xl w-full text-[var(--color-ivory-muted)] hover:bg-[var(--color-gold)]/10 hover:text-gold-gradient transition-all text-left text-xs uppercase tracking-widest border border-transparent hover:border-[var(--color-gold)]/20">
+              <button onClick={() => handleNavigate('/vendor/profile')} className="flex items-center gap-4 px-4 py-3 mt-2 rounded-xl w-full text-[var(--color-ivory-muted)] hover:bg-[var(--color-gold)]/10 hover:text-[#e1bd70] transition-all text-left text-xs uppercase tracking-widest border border-transparent hover:border-[var(--color-gold)]/20">
                 <User size={16} /> Vendor Profile
               </button>
               <button onClick={() => { logout(); navigate('/login'); }} className="flex items-center gap-4 px-4 py-3 mt-2 rounded-xl w-full text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all text-left text-xs uppercase tracking-widest border border-transparent">

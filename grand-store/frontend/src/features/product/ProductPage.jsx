@@ -167,7 +167,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             </span>
           </div>
 
-          <div className="text-[42px] font-serif text-gold-gradient mb-8">
+          <div className="text-[42px] font-serif text-[#d8b76d] mb-8">
             {currency === 'ZAR' ? 'R' : (currency || '$')}{formattedPrice}
           </div>
 

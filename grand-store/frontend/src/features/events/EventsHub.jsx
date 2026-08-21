@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { Calendar, MapPin, Users, Filter } from 'lucide-react';
+import { Calendar, Filter, MapPin, Users } from 'lucide-react';
 
 export default function EventsHub() {
   const [events, setEvents] = useState([]);
@@ -22,118 +22,148 @@ export default function EventsHub() {
     fetchEvents();
   }, []);
 
-  const filteredEvents = filterType === 'All' 
-    ? events 
-    : events.filter(e => e.type === filterType || (filterType === 'Virtual' && e.format === 'Virtual'));
+  const filteredEvents = filterType === 'All'
+    ? events
+    : events.filter((event) => event.type === filterType || (filterType === 'Virtual' && event.format === 'Virtual'));
 
   const categories = ['All', 'Wine Tasting', 'Whisky Experience', 'Masterclass', 'Virtual'];
 
+  const getStartingPrice = (ticketTiers = []) => {
+    const prices = ticketTiers
+      .map((tier) => Number(tier.price))
+      .filter((price) => Number.isFinite(price));
+
+    return prices.length ? Math.min(...prices) : null;
+  };
+
   return (
-    <div className="min-h-screen bg-[#0a0907] pt-0 pb-20 px-4 text-[#eee8dd]">
-      <div className="max-w-7xl mx-auto">
-        
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12 relative">
-          <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[400px] h-[300px] bg-[#c9a35b]/10 blur-[120px] rounded-full pointer-events-none"></div>
-          
-          {/* Header Section */}
-          <div className="relative">
-            <h1 className="text-4xl md:text-5xl font-serif text-[#eee8dd] mb-2">
-              Grand Store <span className="text-[#c9a35b] drop-shadow-[0_0_12px_rgba(230,201,122,0.6)]">Events</span>
-            </h1>
-            <p className="text-[#918a7f] text-xs md:text-sm uppercase tracking-widest">
-              Taste. Discover. Experience.
-            </p>
-          </div>
-
-          {/* Filters */}
-          <div className="flex flex-wrap items-center gap-2 md:gap-3 relative">
-            {categories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setFilterType(cat)}
-                className={`px-4 md:px-6 py-2 rounded-full border text-[10px] md:text-xs font-semibold tracking-wider uppercase transition-colors ${
-                  filterType === cat 
-                  ? 'bg-gold-gradient border-[#c9a35b] text-black shadow-[0_0_15px_rgba(201,163,91,0.3)]' 
-                  : 'bg-white/[0.02] border-white/10 text-[#918a7f] hover:bg-white/[0.05] hover:text-white'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+    <main className="min-h-screen bg-[#0b0a08] text-[#eee8dd]">
+      <section className="border-b border-white/10 bg-[#11100d] px-5 py-10 md:px-8 md:py-12">
+        <div className="mx-auto max-w-7xl">
+          <h1 className="font-serif text-4xl leading-tight text-[#f4efe6] md:text-5xl">
+            Events
+          </h1>
+          <p className="mt-3 max-w-2xl text-base leading-7 text-[#aaa296]">
+            Intimate tastings, expert-led masterclasses and memorable evenings made for people who appreciate exceptional bottles.
+          </p>
         </div>
+      </section>
 
-        {/* Event Grid */}
-        {loading ? (
-          <div className="text-center py-20 text-gold-gradient">Loading experiences...</div>
-        ) : filteredEvents.length === 0 ? (
-          <div className="text-center py-20 bg-white/[0.02] border border-white/5 rounded-2xl">
-            <h3 className="text-2xl font-serif mb-2">No upcoming events</h3>
-            <p className="text-[#918a7f]">Check back later for new tastings and masterclasses.</p>
+      <section className="px-5 py-10 md:px-8 md:py-14">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-10 border-b border-white/10 pb-7">
+            <div className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-[#aaa296]">
+              <Filter size={15} className="text-[#d8b76d]" />
+              Browse by experience
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => setFilterType(category)}
+                  className={`border px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.16em] transition-colors md:px-5 ${
+                    filterType === category
+                      ? 'border-[#c9a35b] bg-[#c9a35b] text-[#0b0a08]'
+                      : 'border-white/15 bg-[#15130f] text-[#aaa296] hover:border-[#c9a35b]/70 hover:text-[#eee8dd]'
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredEvents.map(event => (
-              <div key={event._id} className="group relative bg-[#11100d] border border-white/5 rounded-2xl overflow-hidden hover:border-[#c9a35b]/30 transition-all hover:shadow-[0_0_30px_rgba(201,163,91,0.1)] flex flex-col">
-                <div className="aspect-[4/3] overflow-hidden relative">
-                  {event.image ? (
-                    <img src={`${import.meta.env.VITE_API_URL}${event.image}`} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                  ) : (
-                    <div className="w-full h-full bg-[#1a1814] flex items-center justify-center">
-                      <span className="text-[#918a7f] font-serif">Grand Store</span>
-                    </div>
-                  )}
-                  <div className="absolute top-4 left-4 bg-black/80 backdrop-blur-md px-3 py-1 rounded border border-white/10 text-xs font-bold uppercase tracking-wider text-gold-gradient">
-                    {event.type}
-                  </div>
-                  {event.format === 'Virtual' && (
-                    <div className="absolute top-4 right-4 bg-blue-500/80 backdrop-blur-md px-3 py-1 rounded border border-white/10 text-xs font-bold uppercase tracking-wider text-white">
-                      Virtual
-                    </div>
-                  )}
-                </div>
-                
-                <div className="p-6 flex flex-col flex-grow">
-                  <div className="text-[10px] uppercase tracking-widest text-[#918a7f] font-bold mb-2 flex justify-between items-center">
-                    <span>{new Date(event.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                    <span>{event.startTime}</span>
-                  </div>
-                  
-                  <h3 className="text-xl font-serif text-white mb-4 line-clamp-2">{event.title}</h3>
-                  
-                  <div className="space-y-2 mb-6 text-sm text-[#918a7f]">
-                    <div className="flex items-center gap-2">
-                      <MapPin size={16} className="text-gold-gradient shrink-0" />
-                      <span className="truncate">{event.format === 'Virtual' ? 'Online Experience' : `${event.city || 'Local'}, ${event.location}`}</span>
-                    </div>
-                    {event.capacity && (
-                      <div className="flex items-center gap-2">
-                        <Users size={16} className="text-gold-gradient shrink-0" />
-                        <span>Limited to {event.capacity} places</span>
+
+          {loading ? (
+            <div className="border border-white/10 bg-[#11100d] px-6 py-24 text-center text-sm uppercase tracking-[0.2em] text-[#d8b76d]">
+              Loading experiences...
+            </div>
+          ) : filteredEvents.length === 0 ? (
+            <div className="border border-white/10 bg-[#11100d] px-6 py-24 text-center">
+              <Calendar size={30} className="mx-auto mb-5 text-[#d8b76d]" />
+              <h2 className="font-serif text-3xl text-[#f4efe6]">No upcoming events</h2>
+              <p className="mt-3 text-[#aaa296]">Check back soon for new tastings and masterclasses.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-7 md:grid-cols-2 lg:grid-cols-3">
+              {filteredEvents.map((event) => {
+                const startingPrice = getStartingPrice(event.ticketTiers);
+
+                return (
+                  <article
+                    key={event._id}
+                    className="group flex flex-col overflow-hidden border border-white/10 bg-[#12110e] transition-colors hover:border-[#c9a35b]/60"
+                  >
+                    <div className="relative aspect-[16/10] overflow-hidden bg-[#1a1814]">
+                      {event.image ? (
+                        <img
+                          src={`${import.meta.env.VITE_API_URL}${event.image}`}
+                          alt={event.title}
+                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center border-b border-white/10">
+                          <span className="font-serif text-xl text-[#aaa296]">The Grand Store</span>
+                        </div>
+                      )}
+
+                      <div className="absolute left-4 top-4 border border-white/15 bg-[#0b0a08] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#d8b76d]">
+                        {event.type}
                       </div>
-                    )}
-                  </div>
-                  
-                  <div className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between">
-                    <div>
-                      <p className="text-[10px] uppercase tracking-widest text-[#918a7f]">From</p>
-                      <p className="text-lg font-serif text-gold-gradient">
-                        R{Math.min(...event.ticketTiers.map(t => t.price))}
-                      </p>
+                      {event.format === 'Virtual' && (
+                        <div className="absolute right-4 top-4 border border-[#d8b76d] bg-[#c9a35b] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#0b0a08]">
+                          Virtual
+                        </div>
+                      )}
                     </div>
-                    <Link 
-                      to={`/events/${event._id}`} 
-                      className="px-6 py-2 bg-white/5 hover:bg-gold-gradient hover:text-black text-white rounded font-bold uppercase tracking-wider text-sm transition-colors border border-white/10 hover:border-[#c9a35b]"
-                    >
-                      View
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+
+                    <div className="flex flex-grow flex-col p-6 md:p-7">
+                      <div className="mb-4 flex items-center justify-between gap-4 text-[11px] font-bold uppercase tracking-[0.16em] text-[#aaa296]">
+                        <span>{new Date(event.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                        <span>{event.startTime}</span>
+                      </div>
+
+                      <h2 className="line-clamp-2 font-serif text-2xl leading-tight text-[#f4efe6] md:text-[1.7rem]">
+                        {event.title}
+                      </h2>
+
+                      <div className="mt-6 space-y-3 text-sm text-[#aaa296]">
+                        <div className="flex items-center gap-3">
+                          <MapPin size={17} className="shrink-0 text-[#d8b76d]" />
+                          <span className="truncate">
+                            {event.format === 'Virtual' ? 'Online Experience' : `${event.city || 'Local'}, ${event.location}`}
+                          </span>
+                        </div>
+                        {event.capacity && (
+                          <div className="flex items-center gap-3">
+                            <Users size={17} className="shrink-0 text-[#d8b76d]" />
+                            <span>Limited to {event.capacity} places</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-8 flex items-end justify-between gap-5 border-t border-white/10 pt-5">
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#777066]">From</p>
+                          <p className="mt-1 font-serif text-2xl text-[#d8b76d]">
+                            {startingPrice === null ? 'Enquire' : `R${startingPrice.toLocaleString('en-ZA')}`}
+                          </p>
+                        </div>
+                        <Link
+                          to={`/events/${event._id}`}
+                          className="border border-[#c9a35b] bg-[#c9a35b] px-6 py-3 text-xs font-bold uppercase tracking-[0.16em] text-[#0b0a08] transition-colors hover:bg-[#e1bd70]"
+                        >
+                          View event
+                        </Link>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
+    </main>
   );
 }

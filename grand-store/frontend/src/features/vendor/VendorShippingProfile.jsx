@@ -185,11 +185,11 @@ const VendorShippingProfile = () => {
             {postnetLoading ? (
               <div className="text-sm text-white/60">Locating nearest PostNet stores for drop-off...</div>
             ) : postnetStores && postnetStores.length === 0 ? (
-              <div className="bg-gradient-to-br from-black/80 to-[#111] border border-gold/20 rounded-xl p-4 shadow-lg shadow-gold/5 flex items-center justify-center min-h-[80px]">
+              <div className="bg-[#0a0a0a] border border-gold/20 rounded-xl p-4 shadow-lg shadow-gold/5 flex items-center justify-center min-h-[80px]">
                 <p className="text-white/60 text-sm">No nearby PostNet stores found within 50km.</p>
               </div>
             ) : postnetStores && postnetStores.length > 0 && (
-              <div className="bg-gradient-to-br from-black/80 to-[#111] border border-gold/20 rounded-xl p-4 shadow-lg shadow-gold/5 relative overflow-hidden">
+              <div className="bg-[#0a0a0a] border border-gold/20 rounded-xl p-4 shadow-lg shadow-gold/5 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gold/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
                 
                 <div className="flex items-center gap-3 mb-4 relative z-10">

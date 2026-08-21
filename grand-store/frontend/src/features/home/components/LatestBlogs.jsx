@@ -1,10 +1,5 @@
-import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowUpRight, Calendar, Clock } from 'lucide-react'
-import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
-gsap.registerPlugin(ScrollTrigger)
 
 const blogPosts = [
   {
@@ -46,104 +41,10 @@ const blogPosts = [
 ]
 
 export default function LatestBlogs() {
-  const sectionRef = useRef(null)
-
-  useEffect(() => {
-    const section = sectionRef.current
-    if (!section) return undefined
-
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduceMotion) return undefined
-
-    const ctx = gsap.context(() => {
-      gsap.from('[data-journal-heading]', {
-        y: 30,
-        duration: 0.8,
-        ease: 'power3.out',
-        immediateRender: false,
-        clearProps: 'transform',
-        scrollTrigger: {
-          trigger: section,
-          start: 'top 84%',
-          once: true,
-        },
-      })
-
-      gsap.utils.toArray('[data-journal-row]').forEach((row, index) => {
-        const imageFrame = row.querySelector('[data-journal-image]')
-        const image = imageFrame?.querySelector('img')
-        const story = row.querySelector('[data-journal-story]')
-        const revealFrom = index % 2 === 0 ? 'inset(0 100% 0 0)' : 'inset(0 0 0 100%)'
-
-        gsap.fromTo(
-          imageFrame,
-          { clipPath: revealFrom },
-          {
-            clipPath: 'inset(0 0% 0 0)',
-            duration: 1.05,
-            ease: 'power4.out',
-            immediateRender: false,
-            scrollTrigger: {
-              trigger: row,
-              start: 'top 82%',
-              once: true,
-            },
-          }
-        )
-
-        gsap.from(image, {
-          scale: 1.08,
-          duration: 1.25,
-          ease: 'power3.out',
-          immediateRender: false,
-          clearProps: 'transform',
-          scrollTrigger: {
-            trigger: row,
-            start: 'top 82%',
-            once: true,
-          },
-        })
-
-        gsap.from(story, {
-          x: index % 2 === 0 ? 42 : -42,
-          filter: 'blur(5px)',
-          duration: 0.9,
-          delay: 0.08,
-          ease: 'power3.out',
-          immediateRender: false,
-          clearProps: 'transform,filter',
-          scrollTrigger: {
-            trigger: row,
-            start: 'top 82%',
-            once: true,
-          },
-        })
-
-        gsap.from(story.children, {
-          y: 16,
-          stagger: 0.06,
-          duration: 0.72,
-          delay: 0.14,
-          ease: 'power2.out',
-          immediateRender: false,
-          clearProps: 'transform',
-          scrollTrigger: {
-            trigger: row,
-            start: 'top 82%',
-            once: true,
-          },
-        })
-      })
-    }, section)
-
-    return () => ctx.revert()
-  }, [])
-
   return (
     <section
       className="relative overflow-hidden border-y border-white/10 bg-[#0b0907] py-7 text-[#f3ede2] md:py-9"
       id="journal"
-      ref={sectionRef}
       aria-labelledby="latest-blogs-title"
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[#d8b56c]/45" />
@@ -151,7 +52,6 @@ export default function LatestBlogs() {
       <div className="relative z-10 mx-auto max-w-[1390px] px-5 sm:px-8 xl:px-10">
         <header
           className="border-b border-[#d8b56c]/22 pb-4 md:pb-5"
-          data-journal-heading
         >
           <div>
             <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.23em] text-[#d8b56c]">
@@ -173,12 +73,10 @@ export default function LatestBlogs() {
             return (
               <article
                 className="group/story grid grid-cols-1 items-center gap-4 border-b border-[#d8b56c]/18 py-5 transition-colors duration-500 hover:bg-[#d8b56c]/[0.025] md:gap-5 md:py-6 lg:grid-cols-2 lg:gap-[clamp(28px,3.5vw,52px)]"
-                data-journal-row
                 key={post.slug}
               >
                 <Link
                   className={`relative block overflow-hidden bg-[#17130e] shadow-[0_20px_55px_rgba(0,0,0,0.28)] ring-1 ring-inset ring-[#e0be70]/10 transition-[box-shadow] duration-500 group-hover/story:shadow-[0_24px_70px_rgba(0,0,0,0.42)] ${imageFirst ? '' : 'lg:order-2'}`}
-                  data-journal-image
                   to={`/blog/${post.slug}`}
                   aria-label={`Read ${post.title}`}
                 >
@@ -196,7 +94,7 @@ export default function LatestBlogs() {
                   </span>
                 </Link>
 
-                <div className={`${imageFirst ? '' : 'lg:order-1'} relative text-left`} data-journal-story>
+                <div className={`${imageFirst ? '' : 'lg:order-1'} relative text-left`}>
                   <span
                     className="absolute -left-5 top-0 hidden h-14 w-px bg-[#d8b56c]/65 transition-all duration-500 group-hover/story:h-24 lg:block"
                     aria-hidden="true"

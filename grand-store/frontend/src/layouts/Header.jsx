@@ -81,7 +81,7 @@ export default function Header({ cartCount, compareCount, wishlistCount, onBagCl
           </button>
 
           <Link className="flex-shrink-0" to="/" aria-label="The Grand Store home">
-            <img src="/logo.png" alt="The Grand Store" className="h-10 w-auto max-w-[190px] object-contain object-left md:h-14 md:max-w-[260px]" />
+            <img src="/grand-store-logo.png" alt="The Grand Store" className="h-10 w-auto max-w-[190px] object-contain object-left md:h-14 md:max-w-[260px]" />
           </Link>
 
           <form className="hidden md:flex flex-1 max-w-xl mx-8 relative items-center" onSubmit={(event) => event.preventDefault()}>

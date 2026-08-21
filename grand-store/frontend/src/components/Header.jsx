@@ -86,7 +86,7 @@ export default function Header({
   };
 
   return (
-    <div className={`sticky top-0 left-0 right-0 z-[100] bg-[#0a0a0a] transition-transform duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+    <div className={`sticky top-0 left-0 right-0 bg-[#0a0a0a] ${mobileOpen ? 'z-[10000] transform-none' : `z-[100] transition-transform duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}`}>
       <div className="announcement-bar py-1.5 bg-[#c9a35b] text-black">
         <div className="shell announcement-inner">
           <p className="font-bold tracking-widest uppercase text-[10px]">
@@ -131,7 +131,7 @@ export default function Header({
               aria-label="The Grand Store home"
             >
               <img
-                src="/logo.png"
+                src="/grand-store-logo.png"
                 alt="The Grand Store"
                 className="h-9 w-auto max-w-[135px] object-contain object-left sm:h-12 sm:max-w-[190px] md:h-[62px] md:max-w-[270px]"
               />
@@ -348,7 +348,7 @@ export default function Header({
             <Link to="/auction">Auction</Link>
             <Link to="/events" className="font-bold text-[#f0cf76] hover:text-white transition-colors">Events</Link>
             <Link to="/vendor-portal">Sell on The Grand Store</Link>
-            <Link to="/bookatasting">Book a tasting</Link>
+            <Link to="/events">Book a tasting</Link>
             <Link to="/global-wines" className="font-bold text-[#f0cf76] hover:text-white transition-colors">🌍 GLOBAL WINES</Link>
           </div>
         </nav>
@@ -368,7 +368,7 @@ export default function Header({
           <div className="drawer-head flex items-center justify-between">
             <Link to="/" onClick={closeMenus} className="inline-flex items-center">
               <img 
-                src="/logo.png" 
+                src="/grand-store-logo.png" 
                 alt="The Grand Store" 
                 className="h-11 w-auto max-w-[185px] object-contain object-left"
               />
@@ -418,7 +418,7 @@ export default function Header({
             <Link to="/vendor-portal" onClick={closeMenus}>
               Sell on The Grand Store
             </Link>
-            <Link to="/bookatasting" onClick={closeMenus}>
+            <Link to="/events" onClick={closeMenus}>
               Book a tasting
             </Link>
             <Link to="/global-wines" onClick={closeMenus} className="text-[#f0cf76] font-bold">

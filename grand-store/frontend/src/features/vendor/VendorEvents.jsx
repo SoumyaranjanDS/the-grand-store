@@ -77,10 +77,10 @@ export default function VendorEvents() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-6">
         <div>
           <h1 className="text-[var(--color-ivory)] font-serif text-4xl mb-2 flex items-center gap-4">
-            <div className="p-3 bg-[var(--color-gold)]/10 text-[var(--color-gold)] rounded-xl border border-[var(--color-gold)]/20 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
+            <div className="p-3 bg-[var(--color-gold)]/10 text-[var(--color-gold)] rounded-xl border border-[var(--color-gold)]/20 ">
               <CalendarDays size={28} />
             </div>
-            My <span className="text-gold-gradient ml-2" >Events</span>
+            My <span className="text-[#e1bd70] ml-2" >Events</span>
           </h1>
           <p className="text-[var(--color-ivory-muted)] text-sm max-w-2xl font-light">
             Manage your tastings, masterclasses, and virtual experiences. 
@@ -89,7 +89,7 @@ export default function VendorEvents() {
         
         <button 
           onClick={() => navigate(user.role === 'event_host' ? '/event-manager/event-add' : '/vendor/event-add')}
-          className="bg-gold-gradient text-black font-bold uppercase tracking-widest text-xs px-6 py-3 rounded-full flex items-center gap-2 hover:scale-105 transition-transform"
+          className="bg-[#c9a35b] text-black font-bold uppercase tracking-widest text-xs px-6 py-3 rounded-full flex items-center gap-2 hover:scale-105 transition-transform"
         >
           <PlusCircle size={16} /> Create New Event
         </button>
@@ -114,7 +114,7 @@ export default function VendorEvents() {
           {events.map(event => (
             <div 
               key={event._id} 
-              className="bg-gradient-to-r from-white/[0.03] to-transparent backdrop-blur-2xl rounded-3xl border border-white/[0.05] shadow-[0_15px_40px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col lg:flex-row relative group hover:border-[var(--color-gold)]/30 transition-all"
+              className="bg-white/[0.03] backdrop-blur-2xl rounded-3xl border border-white/[0.05] shadow-[0_15px_40px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col lg:flex-row relative group hover:border-[var(--color-gold)]/30 transition-all"
             >
               {/* Event Image */}
               <div className="lg:w-1/3 xl:w-1/4 h-56 lg:h-auto relative shrink-0">
@@ -125,14 +125,14 @@ export default function VendorEvents() {
                     <Calendar size={32} className="text-white/20" />
                   </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                <div className="absolute inset-0 bg-black/60"></div>
                 
                 {/* Status Badge Over Image */}
                 <div className="absolute top-4 left-4 z-20">
                   <span className={`text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full ${
-                    event.approvalStatus === 'Approved' ? 'bg-green-500/80 text-white shadow-[0_0_10px_rgba(34,197,94,0.3)]' :
-                    event.approvalStatus === 'Pending' ? 'bg-yellow-500/80 text-white shadow-[0_0_10px_rgba(234,179,8,0.3)]' :
-                    'bg-red-500/80 text-white shadow-[0_0_10px_rgba(239,68,68,0.3)]'
+                    event.approvalStatus === 'Approved' ? 'bg-green-500/80 text-white ' :
+                    event.approvalStatus === 'Pending' ? 'bg-yellow-500/80 text-white ' :
+                    'bg-red-500/80 text-white '
                   }`}>
                     {event.approvalStatus}
                   </span>
@@ -149,7 +149,7 @@ export default function VendorEvents() {
               {/* Event Details (Middle Stub) */}
               <div className="p-6 md:p-8 flex-1 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-dashed border-white/20">
                 <div>
-                  <h3 className="text-2xl font-serif text-white mb-6 line-clamp-2 pr-4 group-hover:text-gold-gradient transition-colors cursor-pointer" onClick={() => navigate(`/events/${event._id}`)}>
+                  <h3 className="text-2xl font-serif text-white mb-6 line-clamp-2 pr-4 group-hover:text-[#e1bd70] transition-colors cursor-pointer" onClick={() => navigate(`/events/${event._id}`)}>
                     {event.title}
                   </h3>
                   
@@ -181,7 +181,7 @@ export default function VendorEvents() {
                 <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mt-8">
                   <button 
                     onClick={() => navigate(user.role === 'event_host' ? `/event-manager/events/${event._id}/attendees` : `/vendor/events/${event._id}/attendees`)}
-                    className="w-full sm:w-auto relative group overflow-hidden bg-[var(--color-gold)]/10 px-6 py-3 rounded-2xl border border-[var(--color-gold)]/20 hover:border-[var(--color-gold)]/50 transition-all flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(212,175,55,0.05)] hover:shadow-[0_0_30px_rgba(212,175,55,0.15)]"
+                    className="w-full sm:w-auto relative group overflow-hidden bg-[var(--color-gold)]/10 px-6 py-3 rounded-2xl border border-[var(--color-gold)]/20 hover:border-[var(--color-gold)]/50 transition-all flex items-center justify-center gap-3  "
                   >
                     <div className="absolute inset-0 w-0 bg-[var(--color-gold)]/20 transition-all duration-300 ease-out group-hover:w-full"></div>
                     <Users size={16} className="text-[var(--color-gold)] relative z-10" /> 
@@ -216,7 +216,7 @@ export default function VendorEvents() {
                  
                  <div className="flex-1 flex flex-col justify-center">
                    {activeScannerEvent === event._id && (
-                     <div className="mb-4 rounded-xl overflow-hidden border border-[var(--color-gold)]/30 shadow-[0_0_20px_rgba(212,175,55,0.15)] bg-black/50">
+                     <div className="mb-4 rounded-xl overflow-hidden border border-[var(--color-gold)]/30  bg-black/50">
                        <Scanner 
                          onScan={(result) => {
                            if (result && result.length > 0) {
@@ -253,7 +253,7 @@ export default function VendorEvents() {
                        <button 
                          onClick={() => handleVerify(event._id, ticketInput)}
                          disabled={verifying && activeVerifyEvent === event._id}
-                         className="bg-gold-gradient text-black font-bold uppercase tracking-widest text-[10px] rounded-lg px-3 hover:brightness-110 transition-all disabled:opacity-50 shadow-[0_0_15px_rgba(212,175,55,0.2)]"
+                         className="bg-[#c9a35b] text-black font-bold uppercase tracking-widest text-[10px] rounded-lg px-3 hover:brightness-110 transition-all disabled:opacity-50 "
                        >
                          {verifying && activeVerifyEvent === event._id ? '...' : 'Verify'}
                        </button>
@@ -262,7 +262,7 @@ export default function VendorEvents() {
 
                    {/* Verification Feedback */}
                    {activeVerifyEvent === event._id && verifyStatus && (
-                     <div className={`p-3 rounded-lg flex items-start gap-2 text-xs border ${verifyStatus.success ? 'bg-green-500/10 border-green-500/20 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.1)]' : 'bg-red-500/10 border-red-500/20 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.1)]'}`}>
+                     <div className={`p-3 rounded-lg flex items-start gap-2 text-xs border ${verifyStatus.success ? 'bg-green-500/10 border-green-500/20 text-green-400 ' : 'bg-red-500/10 border-red-500/20 text-red-400 '}`}>
                        {verifyStatus.success ? <CheckCircle2 size={14} className="shrink-0 mt-0.5" /> : <AlertCircle size={14} className="shrink-0 mt-0.5" />}
                        <span className="font-medium">{verifyStatus.message}</span>
                      </div>

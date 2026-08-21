@@ -113,7 +113,7 @@ export default function EventAdd({ onNotify }) {
       <div className="max-w-4xl mx-auto">
         <div className="mb-10">
           <h1 className="text-[var(--color-ivory)] font-serif text-5xl mb-4 leading-tight">
-            Create <span className="text-gold-gradient" >Event</span>
+            Create <span className="text-[#e1bd70]" >Event</span>
           </h1>
           <p className="text-[var(--color-ivory-muted)] text-lg max-w-2xl font-light leading-relaxed">Host a tasting, masterclass, or global experience.</p>
         </div>
@@ -160,14 +160,14 @@ export default function EventAdd({ onNotify }) {
               </div>
               <div>
                 <label className="block text-sm uppercase tracking-wider font-semibold text-[#918a7f] mb-2">Event Image *</label>
-                <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} required className="w-full bg-[#0a0907] border border-white/10 rounded-lg p-2 text-sm file:bg-gold-gradient file:text-black file:border-0 file:rounded file:px-4 file:py-1 file:mr-4 file:font-semibold hover:file:bg-[#e1bd70]" />
+                <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} required className="w-full bg-[#0a0907] border border-white/10 rounded-lg p-2 text-sm file:bg-[#c9a35b] file:text-black file:border-0 file:rounded file:px-4 file:py-1 file:mr-4 file:font-semibold hover:file:bg-[#e1bd70]" />
               </div>
             </div>
           </section>
 
           {/* Logistics */}
           <section className="space-y-6">
-            <h2 className="text-xl font-medium border-b border-white/10 pb-4 flex items-center gap-2"><Calendar className="text-gold-gradient" size={20}/> Date, Time & Location</h2>
+            <h2 className="text-xl font-medium border-b border-white/10 pb-4 flex items-center gap-2"><Calendar className="text-[#e1bd70]" size={20}/> Date, Time & Location</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
@@ -213,7 +213,7 @@ export default function EventAdd({ onNotify }) {
 
           {/* Tickets */}
           <section className="space-y-6">
-            <h2 className="text-xl font-medium border-b border-white/10 pb-4 flex items-center gap-2"><Tag className="text-gold-gradient" size={20}/> Ticket Tiers</h2>
+            <h2 className="text-xl font-medium border-b border-white/10 pb-4 flex items-center gap-2"><Tag className="text-[#e1bd70]" size={20}/> Ticket Tiers</h2>
             
             {ticketTiers.map((tier, index) => (
               <div key={index} className="bg-[#0a0907] border border-white/5 p-6 rounded-xl space-y-4">
@@ -248,7 +248,7 @@ export default function EventAdd({ onNotify }) {
               </div>
             ))}
             
-            <button type="button" onClick={addTicketTier} className="text-gold-gradient text-sm font-semibold uppercase tracking-wider flex items-center gap-2 hover:text-[#e1bd70]">
+            <button type="button" onClick={addTicketTier} className="text-[#e1bd70] text-sm font-semibold uppercase tracking-wider flex items-center gap-2 hover:text-[#e1bd70]">
               <Plus size={16} /> Add Ticket Tier
             </button>
           </section>
@@ -257,7 +257,7 @@ export default function EventAdd({ onNotify }) {
             <button 
               type="submit" 
               disabled={submitting}
-              className="w-full bg-gold-gradient hover:bg-[#e1bd70] text-black font-bold uppercase tracking-wider py-4 rounded-xl transition-colors disabled:opacity-50 flex justify-center items-center gap-2 shadow-[0_0_20px_rgba(201,163,91,0.2)]"
+              className="w-full bg-[#c9a35b] hover:bg-[#e1bd70] text-black font-bold uppercase tracking-wider py-4 rounded-xl transition-colors disabled:opacity-50 flex justify-center items-center gap-2 "
             >
               {submitting ? 'Creating Event...' : <><CheckCircle2 size={20} /> Publish Event</>}
             </button>

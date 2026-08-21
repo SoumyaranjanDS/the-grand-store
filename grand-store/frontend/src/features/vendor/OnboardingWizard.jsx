@@ -287,12 +287,12 @@ export default function OnboardingWizard() {
     </div>
   );
 
-  if (loading) return <div className="min-h-screen bg-[#0a0907] flex items-center justify-center text-gold-gradient">Loading...</div>;
+  if (loading) return <div className="vendor-theme min-h-screen bg-[#0a0907] flex items-center justify-center text-[#e1bd70]">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-[#0a0907] pt-8 pb-20 px-4 relative overflow-hidden">
+    <div className="vendor-theme min-h-screen bg-[#0a0907] pt-8 pb-20 px-4 relative overflow-hidden">
       {/* Massive subtle golden glow background */}
-      <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#c9a35b]/10 via-[#0a0907]/0 to-[#0a0907]/0 pointer-events-none rounded-full blur-3xl opacity-60"></div>
+      <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[#c9a35b]/5 pointer-events-none rounded-full blur-3xl opacity-60"></div>
       
       <div className="max-w-4xl mx-auto relative z-10">
         <div className="mb-6 text-center">
@@ -318,7 +318,7 @@ export default function OnboardingWizard() {
               <div key={step.id} className="flex items-center min-w-max">
                 <div 
                   onClick={() => setCurrentStep(step.id)}
-                  className={`flex flex-col items-center gap-2 transition-all cursor-pointer hover:scale-105 ${isActive ? 'text-gold-gradient' : isComplete ? 'text-green-500' : 'text-[#4a4740]'}`}
+                  className={`flex flex-col items-center gap-2 transition-all cursor-pointer hover:scale-105 ${isActive ? 'text-[#e1bd70]' : isComplete ? 'text-green-500' : 'text-[#4a4740]'}`}
                 >
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${isActive ? 'border-[#c9a35b] bg-[#c9a35b]/10' : isComplete ? 'border-green-500 bg-green-500/10' : 'border-[#4a4740] bg-transparent'}`}>
                     {isComplete ? <CheckCircle2 size={18} /> : <Icon size={18} />}
@@ -335,7 +335,7 @@ export default function OnboardingWizard() {
 
         <div className="bg-transparent mt-4 relative">
           {!canAccessStep(currentStep) && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-[#c9a35b]/10 text-gold-gradient border border-[#c9a35b]/20 px-4 py-2 rounded-full text-sm font-medium z-10">
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-[#c9a35b]/10 text-[#e1bd70] border border-[#c9a35b]/20 px-4 py-2 rounded-full text-sm font-medium z-10">
               🔒 Please complete all previous steps to unlock this section
             </div>
           )}
@@ -443,7 +443,7 @@ export default function OnboardingWizard() {
                 
                 {productCategories.includes('Wine') && (
                   <div className="animate-in fade-in bg-white/5 p-6 rounded-lg border border-[#c9a35b]/30">
-                    <h3 className="text-lg text-gold-gradient mb-4">Wine Selling Requirements</h3>
+                    <h3 className="text-lg text-[#e1bd70] mb-4">Wine Selling Requirements</h3>
                     <p className="text-[#918a7f] mb-4 text-sm">Because you selected Wine, you are required to upload a Wholesale Liquor Authority (WLA) document.</p>
                     <FileUploadField 
                       label="WLA Document *" 
@@ -551,7 +551,7 @@ export default function OnboardingWizard() {
               <button 
                 onClick={handleNext}
                 disabled={saving || !canAccessStep(currentStep)}
-                className={`px-8 py-4 text-xs font-bold uppercase tracking-widest text-black flex items-center gap-2 shadow-[0_0_20px_rgba(201,163,91,0.2)] transition-all ${saving || !canAccessStep(currentStep) ? 'bg-[#e1bd70]/50 cursor-not-allowed' : 'bg-[#c9a35b] hover:brightness-110'}`}
+                className={`px-8 py-4 text-xs font-bold uppercase tracking-widest text-black flex items-center gap-2  transition-all ${saving || !canAccessStep(currentStep) ? 'bg-[#e1bd70]/50 cursor-not-allowed' : 'bg-[#c9a35b] hover:brightness-110'}`}
               >
                 {saving ? 'Saving...' : 'Save & Continue'} <ChevronRight size={16} />
               </button>
@@ -559,7 +559,7 @@ export default function OnboardingWizard() {
               <button 
                 onClick={handleSubmit}
                 disabled={saving || !canAccessStep(currentStep) || !agreements.termsAccepted || !agreements.informationAccurate}
-                className="px-8 py-4 text-xs font-bold uppercase tracking-widest text-black flex items-center gap-2 shadow-[0_0_20px_rgba(201,163,91,0.2)] transition-all bg-[#c9a35b] hover:brightness-110 disabled:opacity-50"
+                className="px-8 py-4 text-xs font-bold uppercase tracking-widest text-black flex items-center gap-2  transition-all bg-[#c9a35b] hover:brightness-110 disabled:opacity-50"
               >
                 {saving ? 'Submitting...' : 'Submit Application'}
               </button>
