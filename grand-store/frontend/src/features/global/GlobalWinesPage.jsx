@@ -114,7 +114,7 @@ export default function GlobalWinesPage() {
           </p>
           <Link 
             to="/vendor/onboarding" 
-            className="inline-flex items-center justify-center gap-3 px-10 py-5 bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] text-black font-bold uppercase tracking-[0.2em] text-xs hover:brightness-110 transition-all rounded-sm shadow-[0_0_30px_rgba(201,163,91,0.3)] hover:shadow-[0_0_50px_rgba(201,163,91,0.5)]"
+            className="inline-flex items-center justify-center gap-3 px-10 py-5 bg-[#c9a35b] text-black font-bold uppercase tracking-[0.2em] text-xs hover:brightness-110 transition-all rounded-sm shadow-[0_0_30px_rgba(201,163,91,0.3)] hover:shadow-[0_0_50px_rgba(201,163,91,0.5)]"
           >
             Partner With Us <ArrowRight size={16} />
           </Link>
