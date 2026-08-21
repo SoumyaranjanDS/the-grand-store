@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Price from '../../components/ui/Price';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import {
@@ -419,7 +420,7 @@ export default function EstateDetail() {
                 {hospitality.accommodation?.priceFrom && (
                   <div>
                     <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1">Starting From</p>
-                    <p className="font-medium">R{hospitality.accommodation.priceFrom} / night</p>
+                    <p className="font-medium"><Price amount={hospitality.accommodation.priceFrom} /> / night</p>
                   </div>
                 )}
                 {hospitality.accommodation?.bookingEmail && (
@@ -475,7 +476,7 @@ export default function EstateDetail() {
                     {exp.price && (
                       <div className="col-span-2">
                         <p className="text-[10px] uppercase tracking-widest text-white/60 mb-1">Price</p>
-                        <p className="text-sm">R{exp.price} / person</p>
+                        <p className="text-sm"><Price amount={exp.price} /> / person</p>
                       </div>
                     )}
                   </div>
@@ -548,7 +549,7 @@ export default function EstateDetail() {
                     }
                   </div>
                   <h4 className="font-serif text-lg text-ink mb-1 group-hover:text-[#7b263c] transition-colors">{p.name}</h4>
-                  <p className="text-ink/60 text-xs">R{Number(p.price).toLocaleString()}</p>
+                  <p className="text-ink/60 text-xs"><Price amount={Number(p.price).toLocaleString()} /></p>
                 </Link>
              ))}
           </div>
