@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { SlidersHorizontal, Grid3X3, X } from 'lucide-react';
 import ProductCard from '../../components/ProductCard';
 import FilterGroup from './FilterGroup';
+import Price from '../../components/ui/Price';
 
 export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
   const { products } = useProducts();
@@ -21,9 +22,10 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
   const selectedCategories = searchParams.getAll('category')
   const selectedBrands = searchParams.getAll('brand')
   const selectedSizes = searchParams.getAll('size')
-  const categoryOptions = [...new Set(products.map((product) => product.category))]
-  const brandOptions = [...new Set(products.map((product) => product.brand))]
-  const sizeOptions = [...new Set(products.map((product) => product.size))]
+  const shopProducts = products.filter(product => product.type !== 'accessory');
+  const categoryOptions = [...new Set(shopProducts.map((product) => product.category))]
+  const brandOptions = [...new Set(shopProducts.map((product) => product.brand))]
+  const sizeOptions = [...new Set(shopProducts.map((product) => product.size))]
 
   const toggleFilter = (key, value) => {
     const nextParams = new URLSearchParams(searchParams)
@@ -42,7 +44,7 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
 
   const priceValue = (product) => Number(product.price.toString().replace(/[^0-9.]/g, ''))
   
-  let filteredProducts = products.filter((product) => {
+  let filteredProducts = shopProducts.filter((product) => {
 
     return (!selectedCategories.length || selectedCategories.includes(product.category))
     && (!selectedBrands.length || selectedBrands.includes(product.brand))
@@ -101,8 +103,8 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
                   className="w-full accent-[#b58b38] h-1 bg-white/20 rounded-full appearance-none cursor-pointer"
                 />
                 <div className="flex justify-between items-center mt-3 text-[10px] tracking-widest text-[#888] uppercase">
-                  <span>R500</span>
-                  <strong className="text-[#e6c97a]">Up to R{priceLimit.toLocaleString()}</strong>
+                  <span><Price amount={500} /></span>
+                  <strong className="text-[#e6c97a]">Up to <Price amount={priceLimit.toLocaleString()} /></strong>
                 </div>
               </div>
             </div>
