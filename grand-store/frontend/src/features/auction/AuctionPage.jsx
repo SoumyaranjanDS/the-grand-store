@@ -5,6 +5,7 @@ import axios from 'axios';
 import AuctionLotCard from './AuctionLotCard';
 import AuctionCountdown from './AuctionCountdown';
 import LuxuryAuctionHero from './LuxuryAuctionHero';
+import Price from '../../components/ui/Price';
 
 export default function AuctionPage({ onNotify }) {
   const [lots, setLots] = useState([]);
@@ -97,8 +98,8 @@ export default function AuctionPage({ onNotify }) {
             </select>
             <select className="bg-black/40 border border-white/[0.05] rounded-xl px-4 py-3 text-sm text-[var(--color-ivory)] focus:outline-none focus:border-[var(--color-gold)]/50 [color-scheme:dark]" value={filters.price} onChange={(event) => setFilters({ ...filters, price: event.target.value })} aria-label="Price range">
                <option value="all">All price ranges</option>
-               <option value="under-10000">Under R10,000</option>
-               <option value="over-10000">R10,000 and above</option>
+               <option value="under-10000">Under <Price amount={10000} /></option>
+               <option value="over-10000"><Price amount={10000} /> and above</option>
             </select>
             <button className="bg-gold-gradient text-black font-bold uppercase tracking-widest text-[10px] px-8 py-3 rounded-xl hover:shadow-[0_0_15px_rgba(212,175,55,0.4)] transition-shadow" type="submit">Apply</button>
           </form>
@@ -132,8 +133,8 @@ export default function AuctionPage({ onNotify }) {
                    <section>
                      <h3 className="group-hover:text-gold-gradient transition-colors">{lot.title}</h3>
                      <dl className="mt-4 space-y-2">
-                       <div className="flex justify-between text-sm"><dt className="text-[var(--color-ivory-muted)]">Base Price</dt><dd className="font-serif">R{(lot.startingBid || 0).toLocaleString('en-ZA')}</dd></div>
-                       <div className="flex justify-between text-sm"><dt className="text-[var(--color-ivory-muted)]">Highest Bid</dt><dd className="font-serif text-black font-bold">R{(lot.winningBid || lot.currentBid || 0).toLocaleString('en-ZA')}</dd></div>
+                       <div className="flex justify-between text-sm"><dt className="text-[var(--color-ivory-muted)]">Base Price</dt><dd className="font-serif"><Price amount={(lot.startingBid || 0).toLocaleString('en-ZA')} /></dd></div>
+                       <div className="flex justify-between text-sm"><dt className="text-[var(--color-ivory-muted)]">Highest Bid</dt><dd className="font-serif text-black font-bold"><Price amount={(lot.winningBid || lot.currentBid || 0).toLocaleString('en-ZA')} /></dd></div>
                        <div className="flex justify-between text-sm"><dt className="text-[var(--color-ivory-muted)]">Winner</dt><dd className="font-serif">{lot.winner ? lot.winner.name : (lot.status === 'unsold' ? 'Unsold' : 'TBD')}</dd></div>
                      </dl>
                    </section>
