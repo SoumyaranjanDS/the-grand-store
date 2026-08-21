@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { Building2, PlusCircle, Package, Clock, CheckCircle2, XCircle, User } from 'lucide-react';
+import Price from '../../components/ui/Price';
 
 export default function VendorProducts() {
   const { user } = useAuth();
@@ -125,7 +126,7 @@ export default function VendorProducts() {
                         </div>
                       </div>
                     </td>
-                    <td className="py-5 px-5 text-[var(--color-ivory)] font-sans font-medium tracking-wide">R{Number(product.price).toLocaleString('en-ZA')}</td>
+                    <td className="py-5 px-5 text-[var(--color-ivory)] font-sans font-medium tracking-wide"><Price amount={Number(product.price).toLocaleString('en-ZA')} /></td>
                     <td className="py-5 px-5 text-gold-gradient font-sans font-semibold tracking-wide">{product.stock} units</td>
                     <td className="py-5 px-5">{getStatusBadge(product.approvalStatus)}</td>
                     <td className="py-5 px-5 text-right">
