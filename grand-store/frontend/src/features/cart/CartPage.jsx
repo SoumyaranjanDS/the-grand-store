@@ -6,23 +6,25 @@ import { brandyBrands, brands, menuCategories, tequilaBrands, getProductPrice, f
 import { useWishlist } from '../../wishlistContext';
 import ProductCard from '../../components/ProductCard';
 import { useAuth } from '../../context/AuthContext';
+import Price from '../../components/ui/Price';
 
 export default function CartPage({ cartItems, onUpdateQuantity, onRemove, onClear, onNotify }) {
   const { products } = useProducts();
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const handleCheckoutClick = (e, vendorId) => {
+  const handleCheckoutClick = (e) => {
     if (user && user.role && user.role.startsWith('vendor')) {
       e.preventDefault();
       onNotify("Vendors cannot checkout. Please sign up as a customer.");
       navigate('/register');
       return;
     }
-    navigate(`/customer/checkout?vendor=${vendorId}`);
+    navigate(`/customer/checkout`);
   };
 
   const itemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const cartTotal = cartItems.reduce((total, item) => total + (getProductPrice(item.price) * item.quantity), 0);
 
   const groupedCart = cartItems.reduce((acc, item) => {
     const vId = item.storeId || item.vendorId || 'grand-store';
@@ -70,72 +72,74 @@ export default function CartPage({ cartItems, onUpdateQuantity, onRemove, onClea
           </div>
         </section>
       ) : (
-        <section className="cart-content-section" style={{ display: 'flex', flexDirection: 'column', gap: '4rem' }}>
-          {vendorGroups.map((group, index) => (
-            <div className="shell cart-layout" key={group.vendorId}>
-              <div className="cart-items-panel">
-                <div className="cart-panel-heading">
-                  <div>
-                    <p className="eyebrow">Shipment {index + 1} — {group.vendorName}</p>
-                    <h2>{group.count} {group.count === 1 ? 'item' : 'items'} in this shipment</h2>
+        <section className="cart-content-section pb-24">
+          <div className="shell cart-layout">
+            <div className="cart-items-panel" style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+              {vendorGroups.map((group, index) => (
+                <div key={group.vendorId}>
+                  <div className="cart-panel-heading">
+                    <div>
+                      <p className="eyebrow">Shipment {index + 1} – {group.vendorName}</p>
+                      <h2>{group.count} {group.count === 1 ? 'item' : 'items'} in this shipment</h2>
+                    </div>
+                  </div>
+
+                  <div className="cart-item-list">
+                    {group.items.map((item) => (
+                      <article className="cart-item" key={`${item.id}-${item.option}`}>
+                        <Link className="cart-item-image" to={`/product/${item.slug || item.id || item._id}`} aria-label={`View ${item.name}`}>
+                          <img src={item.image} alt={item.name} />
+                        </Link>
+                        <div className="cart-item-copy">
+                          <p>{item.brand} – {item.origin}</p>
+                          <h3><Link to={`/product/${item.slug || item.id || item._id}`}>{item.fullName || item.name}</Link></h3>
+                          <dl>
+                            <div><dt>Format</dt><dd>{item.option}</dd></div>
+                            <div><dt>SKU ID</dt><dd>{item.sku}</dd></div>
+                          </dl>
+                        </div>
+                        <div className="cart-item-purchase">
+                          <div className="cart-line-price">
+                            <span>Item total</span>
+                            <strong><Price amount={getProductPrice(item.price) * item.quantity} /></strong>
+                          </div>
+                          <div className="cart-item-controls">
+                            <div className="cart-quantity-picker" aria-label={`Quantity for ${item.name}`}>
+                              <button type="button" onClick={() => onUpdateQuantity(item.id, item.option, item.quantity - 1)} aria-label={`Decrease ${item.name} quantity`}><Minus size={15} /></button>
+                              <span>{item.quantity}</span>
+                              <button type="button" onClick={() => onUpdateQuantity(item.id, item.option, item.quantity + 1)} aria-label={`Increase ${item.name} quantity`}><Plus size={15} /></button>
+                            </div>
+                            <button className="cart-remove-button" type="button" onClick={() => onRemove(item)}><Trash2 size={15} /> Remove</button>
+                          </div>
+                        </div>
+                      </article>
+                    ))}
                   </div>
                 </div>
-
-                <div className="cart-item-list">
-                  {group.items.map((item) => (
-                    <article className="cart-item" key={`${item.id}-${item.option}`}>
-                      <Link className="cart-item-image" to={`/product/${item.slug || item.id || item._id}`} aria-label={`View ${item.name}`}>
-                        <img src={item.image} alt={item.name} />
-                      </Link>
-                      <div className="cart-item-copy">
-                        <p>{item.brand} · {item.origin}</p>
-                        <h3><Link to={`/product/${item.slug || item.id || item._id}`}>{item.fullName || item.name}</Link></h3>
-                        <dl>
-                          <div><dt>Format</dt><dd>{item.option}</dd></div>
-                          <div><dt>SKU ID</dt><dd>{item.sku}</dd></div>
-                        </dl>
-                      </div>
-                      <div className="cart-item-purchase">
-                        <div className="cart-line-price">
-                          <span>Item total</span>
-                          <strong>{formatCartPrice(getProductPrice(item.price) * item.quantity)}</strong>
-                        </div>
-                        <div className="cart-item-controls">
-                          <div className="cart-quantity-picker" aria-label={`Quantity for ${item.name}`}>
-                            <button type="button" onClick={() => onUpdateQuantity(item.id, item.option, item.quantity - 1)} aria-label={`Decrease ${item.name} quantity`}><Minus size={15} /></button>
-                            <span>{item.quantity}</span>
-                            <button type="button" onClick={() => onUpdateQuantity(item.id, item.option, item.quantity + 1)} aria-label={`Increase ${item.name} quantity`}><Plus size={15} /></button>
-                          </div>
-                          <button className="cart-remove-button" type="button" onClick={() => onRemove(item)}><Trash2 size={15} /> Remove</button>
-                        </div>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </div>
-
-              <aside className="cart-summary-card">
-                <p className="eyebrow">Shipment {index + 1} summary</p>
-                <h2>Order summary</h2>
-                <dl>
-                  <div><dt>Subtotal</dt><dd>{formatCartPrice(group.subtotal)}</dd></div>
-                  <div><dt>Delivery</dt><dd>Calculated at checkout</dd></div>
-                  <div className="cart-summary-total"><dt>Total</dt><dd>{formatCartPrice(group.subtotal)}</dd></div>
-                </dl>
-                <p className="cart-tax-note">Taxes included where applicable.</p>
-                <button className="cart-checkout-button block w-full text-center mt-6" onClick={(e) => handleCheckoutClick(e, group.vendorId)}>
-                  Checkout Shipment {index + 1} <ArrowRight size={17} className="inline ml-2" />
-                </button>
-                <Link className="cart-continue-link mt-4 inline-block" to="/shop"><ChevronLeft size={15} /> Continue Shopping</Link>
-                <div className="cart-assurance-list mt-6 pt-6 border-t border-white/10">
-                  <p><ShieldCheck size={17} /><span><strong>Secure checkout</strong>Your details stay protected.</span></p>
-                  <p><Truck size={17} /><span><strong>Considered delivery</strong>Complimentary over R1,500.</span></p>
-                  <p><PackageCheck size={17} /><span><strong>Cellar-safe packaging</strong>Prepared for a safe arrival.</span></p>
-                </div>
-              </aside>
+              ))}
             </div>
-          ))}
-          <div className="shell text-center">
+
+            <aside className="cart-summary-card">
+              <p className="eyebrow">Order summary</p>
+              <h2>Cart Total</h2>
+              <dl>
+                <div><dt>Subtotal</dt><dd><Price amount={cartTotal} /></dd></div>
+                <div><dt>Delivery</dt><dd>Calculated at checkout</dd></div>
+                <div className="cart-summary-total"><dt>Total</dt><dd><Price amount={cartTotal} /></dd></div>
+              </dl>
+              <p className="cart-tax-note">Taxes included where applicable.</p>
+              <button className="cart-checkout-button block w-full text-center mt-6" onClick={handleCheckoutClick}>
+                Proceed to Checkout <ArrowRight size={17} className="inline ml-2" />
+              </button>
+              <Link className="cart-continue-link mt-4 inline-block" to="/shop"><ChevronLeft size={15} /> Continue Shopping</Link>
+              <div className="cart-assurance-list mt-6 pt-6 border-t border-white/10">
+                <p><ShieldCheck size={17} /><span><strong>Secure checkout</strong>Your details stay protected.</span></p>
+                <p><Truck size={17} /><span><strong>Considered delivery</strong>Complimentary over R1,500.</span></p>
+                <p><PackageCheck size={17} /><span><strong>Cellar-safe packaging</strong>Prepared for a safe arrival.</span></p>
+              </div>
+            </aside>
+          </div>
+          <div className="shell text-center mt-8">
             <button type="button" onClick={onClear} className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] hover:text-white transition-colors">Clear Entire Cart</button>
           </div>
         </section>
