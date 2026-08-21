@@ -10,10 +10,17 @@ const { getNextSequence } = require("../utils/sequenceGenerator");
 // @access  Private (Vendor)
 const createEvent = async (req, res) => {
   try {
-    if (req.user.role !== "vendor_active") {
+    if (req.user.role !== "vendor_active" && req.user.role !== "event_host") {
       return res
         .status(403)
-        .json({ message: "Only approved vendors can create events" });
+        .json({ message: "Only approved vendors or event hosts can create events" });
+    }
+
+    if (req.user.role === "event_host") {
+      const currentEventsCount = await Event.countDocuments({ vendorId: req.user._id });
+      if (currentEventsCount >= (req.user.allowedHostLimit || 0)) {
+        return res.status(403).json({ message: `You have reached your limit of ${req.user.allowedHostLimit || 0} events. Contact support to increase it.` });
+      }
     }
 
     const {
