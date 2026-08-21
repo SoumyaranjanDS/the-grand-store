@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { Calendar, MapPin, Clock, Ticket, LogOut, User, Package, Heart, Building2, Gavel } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import Price from '../../components/ui/Price';
 
 export default function MyTickets() {
   const { user, logout } = useAuth();
@@ -155,8 +156,20 @@ export default function MyTickets() {
                    
                    <div className="mt-6 pt-4 border-t border-white/10 w-full text-center flex items-center justify-between lg:block">
                      <p className="text-[9px] text-[var(--color-ivory-muted)] uppercase tracking-widest lg:mb-1">Total Paid</p>
-                     <p className="text-2xl font-serif text-gold-gradient">R{ticket.totalPrice}</p>
+                     <p className="text-2xl font-serif text-gold-gradient"><Price amount={ticket.totalPrice} /></p>
                    </div>
+                   
+                   {ticket.event?.location && (
+                     <a 
+                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ticket.event.location)}`} 
+                       target="_blank" 
+                       rel="noopener noreferrer"
+                       className="mt-4 px-4 py-2 bg-white/5 border border-white/10 rounded hover:bg-white/10 hover:border-white/20 transition-all text-xs font-bold uppercase tracking-widest text-[#c9a35b] flex items-center gap-2"
+                     >
+                       <MapPin size={12} />
+                       Open Map
+                     </a>
+                   )}
                 </div>
               </motion.div>
             ))}
