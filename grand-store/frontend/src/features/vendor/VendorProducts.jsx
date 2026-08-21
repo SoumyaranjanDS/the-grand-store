@@ -56,7 +56,7 @@ export default function VendorProducts() {
       {/* Welcome Section */}
       <section className="mb-2">
         <h1 className="text-[var(--color-ivory)] font-serif text-4xl mb-4">
-          Retail <span className="font-script text-5xl text-gold-gradient font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Products</span>
+          Retail <span className="text-5xl text-gold-gradient font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Products</span>
         </h1>
         <p className="text-[var(--color-ivory-muted)] text-lg font-light">
           Manage your retail products, update stock and prices, and add new items to your store.

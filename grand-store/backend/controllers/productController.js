@@ -1,13 +1,33 @@
 const Product = require('../models/Product');
+const Vendor = require('../models/Vendor');
 
 // @desc    Fetch all products
 // @route   GET /api/products
 // @access  Public
 const getProducts = async (req, res) => {
   try {
-    const products = await Product.find({});
-    res.json(products);
+    const products = await Product.find({}).lean();
+    
+    const vendorIds = [...new Set(products.filter(p => p.vendorId).map(p => p.vendorId.toString()))];
+    const vendors = await Vendor.find({ userId: { $in: vendorIds } }).lean();
+    
+    const productsWithStore = products.map(product => {
+      if (!product.vendorId) return product;
+      
+      const vendor = vendors.find(v => v.userId.toString() === product.vendorId.toString());
+      if (vendor) {
+        return {
+          ...product,
+          storeId: vendor.userId,
+          storeName: vendor.businessInfo?.tradingName || vendor.businessInfo?.legalName || 'Unknown Store'
+        };
+      }
+      return product;
+    });
+
+    res.json(productsWithStore);
   } catch (error) {
+    console.error('Error fetching products:', error);
     res.status(500).json({ message: 'Server error fetching products' });
   }
 };

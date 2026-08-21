@@ -1,21 +1,44 @@
-const Event = require('../models/Event');
-const Booking = require('../models/Booking');
-const PlatformSettings = require('../models/PlatformSettings');
-const { getNextSequence } = require('../utils/sequenceGenerator');
+const Event = require("../models/Event");
+const Booking = require("../models/Booking");
+const PlatformSettings = require("../models/PlatformSettings");
+const Transaction = require("../models/Transaction");
+const Wallet = require("../models/Wallet");
+const { getNextSequence } = require("../utils/sequenceGenerator");
 
 // @desc    Create a new event (Vendor only)
 // @route   POST /api/events
 // @access  Private (Vendor)
 const createEvent = async (req, res) => {
   try {
-    if (req.user.role !== 'vendor_active') {
-      return res.status(403).json({ message: 'Only approved vendors can create events' });
+    if (req.user.role !== "vendor_active" && req.user.role !== "event_host") {
+      return res
+        .status(403)
+        .json({ message: "Only approved vendors or event hosts can create events" });
     }
 
-    const { 
-      title, type, format, date, startTime, endTime, 
-      location, city, description, hostName, hostTitle, 
-      capacity, ticketTiers, tastingJourney, tastingProducts 
+    if (req.user.role === "event_host") {
+      const currentEventsCount = await Event.countDocuments({ vendorId: req.user._id });
+      if (currentEventsCount >= (req.user.allowedHostLimit || 0)) {
+        return res.status(403).json({ message: `You have reached your limit of ${req.user.allowedHostLimit || 0} events. Contact support to increase it.` });
+      }
+    }
+
+    const {
+      title,
+      type,
+      format,
+      date,
+      startTime,
+      endTime,
+      location,
+      city,
+      description,
+      hostName,
+      hostTitle,
+      capacity,
+      ticketTiers,
+      tastingJourney,
+      tastingProducts,
     } = req.body;
 
     let image = null;
@@ -25,8 +48,12 @@ const createEvent = async (req, res) => {
 
     // Parse JSON strings back into objects/arrays if they come from FormData
     const parsedTicketTiers = ticketTiers ? JSON.parse(ticketTiers) : [];
-    const parsedTastingJourney = tastingJourney ? JSON.parse(tastingJourney) : [];
-    const parsedTastingProducts = tastingProducts ? JSON.parse(tastingProducts) : [];
+    const parsedTastingJourney = tastingJourney
+      ? JSON.parse(tastingJourney)
+      : [];
+    const parsedTastingProducts = tastingProducts
+      ? JSON.parse(tastingProducts)
+      : [];
 
     const newEvent = new Event({
       title,
@@ -46,14 +73,14 @@ const createEvent = async (req, res) => {
       tastingJourney: parsedTastingJourney,
       tastingProducts: parsedTastingProducts,
       vendorId: req.user._id,
-      approvalStatus: 'approved'
+      approvalStatus: "approved",
     });
 
     const savedEvent = await newEvent.save();
     res.status(201).json(savedEvent);
   } catch (error) {
-    console.error('Error creating event:', error);
-    res.status(500).json({ message: 'Server error creating event' });
+    console.error("Error creating event:", error);
+    res.status(500).json({ message: "Server error creating event" });
   }
 };
 
@@ -63,11 +90,13 @@ const createEvent = async (req, res) => {
 const getEvents = async (req, res) => {
   try {
     // Only return events that are approved
-    const events = await Event.find({ approvalStatus: 'approved' }).sort({ date: 1 }).populate('vendorId', 'name vendorProfile');
+    const events = await Event.find({ approvalStatus: "approved" })
+      .sort({ date: 1 })
+      .populate("vendorId", "name vendorProfile");
     res.json(events);
   } catch (error) {
-    console.error('Error fetching events:', error);
-    res.status(500).json({ message: 'Server error fetching events' });
+    console.error("Error fetching events:", error);
+    res.status(500).json({ message: "Server error fetching events" });
   }
 };
 
@@ -77,17 +106,17 @@ const getEvents = async (req, res) => {
 const getEventById = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id)
-      .populate('vendorId', 'name vendorProfile')
-      .populate('tastingProducts'); // Populate the actual products
+      .populate("vendorId", "name vendorProfile")
+      .populate("tastingProducts"); // Populate the actual products
 
     if (event) {
       res.json(event);
     } else {
-      res.status(404).json({ message: 'Event not found' });
+      res.status(404).json({ message: "Event not found" });
     }
   } catch (error) {
-    console.error('Error fetching event by ID:', error);
-    res.status(500).json({ message: 'Server error fetching event' });
+    console.error("Error fetching event by ID:", error);
+    res.status(500).json({ message: "Server error fetching event" });
   }
 };
 
@@ -96,11 +125,13 @@ const getEventById = async (req, res) => {
 // @access  Private (Vendor)
 const getVendorEvents = async (req, res) => {
   try {
-    const events = await Event.find({ vendorId: req.user._id }).sort({ date: -1 });
+    const events = await Event.find({ vendorId: req.user._id }).sort({
+      date: -1,
+    });
     res.json(events);
   } catch (error) {
-    console.error('Error fetching vendor events:', error);
-    res.status(500).json({ message: 'Server error fetching vendor events' });
+    console.error("Error fetching vendor events:", error);
+    res.status(500).json({ message: "Server error fetching vendor events" });
   }
 };
 
@@ -114,7 +145,7 @@ const bookEvent = async (req, res) => {
 
     const event = await Event.findById(eventId);
     if (!event) {
-      return res.status(404).json({ message: 'Event not found' });
+      return res.status(404).json({ message: "Event not found" });
     }
 
     // Generate a unique ticket ID
@@ -125,20 +156,26 @@ const bookEvent = async (req, res) => {
     if (!settings) settings = await PlatformSettings.create({});
 
     // Accounting calculations
-    const ticketTier = event.ticketTiers.find(t => t.name === ticketType);
-    const ticketUnitPrice = ticketTier ? ticketTier.price : (totalPrice / quantity);
+    const ticketTier = event.ticketTiers.find((t) => t.name === ticketType);
+    const ticketUnitPrice = ticketTier
+      ? ticketTier.price
+      : totalPrice / quantity;
     const subTotal = ticketUnitPrice * quantity;
     const commissionPct = settings.eventCommissionPct || 10;
-    const commissionAmount = parseFloat(((subTotal * commissionPct) / 100).toFixed(2));
+    const commissionAmount = parseFloat(
+      ((subTotal * commissionPct) / 100).toFixed(2),
+    );
     const vatPct = settings.vatPct || 15;
     const vatAmount = parseFloat(((subTotal * vatPct) / 100).toFixed(2));
-    const organizerPayable = parseFloat((subTotal - commissionAmount - vatAmount).toFixed(2));
-    const customerTotal = parseFloat((subTotal + vatAmount).toFixed(2));
+    const organizerPayable = parseFloat(
+      (subTotal - commissionAmount - vatAmount).toFixed(2),
+    );
+    const customerTotal = parseFloat(subTotal.toFixed(2));
 
     // GS Reference
     const year = new Date().getFullYear().toString().slice(-2);
-    const seqNum = await getNextSequence('eventBooking');
-    const gsReference = `GS-${year}-EVT-BKG-${seqNum.toString().padStart(6, '0')}`;
+    const seqNum = await getNextSequence("eventBooking");
+    const gsReference = `GS-${year}-EVT-BKG-${seqNum.toString().padStart(6, "0")}`;
 
     const booking = new Booking({
       user: req.user._id,
@@ -155,15 +192,83 @@ const bookEvent = async (req, res) => {
       totalPrice: customerTotal,
       gsReference,
       ticketId,
-      paymentStatus: 'Paid',
-      ticketStatus: 'Valid'
+      paymentStatus: "Paid",
+      ticketStatus: "Valid",
     });
 
     const savedBooking = await booking.save();
+
+    // === ACCOUNTING LEDGER INTEGRATION ===
+    const seqStr = seqNum.toString().padStart(6, "0");
+
+    // 1. Customer Payment
+    const paymentTxn = new Transaction({
+      gsReference: `GS-${year}-EVT-TXN-${seqStr}`,
+      type: "payment",
+      module: "events",
+      amount: customerTotal,
+      netAmount: customerTotal * 0.975, // mock 2.5% gateway fee
+      customer: req.user._id,
+      vendor: event.vendorId,
+      status: "cleared",
+      description: `Event Ticket Purchase - ${event.title}`,
+    });
+    await paymentTxn.save();
+
+    // 2. GS Commission
+    const commTxn = new Transaction({
+      gsReference: `GS-${year}-EVT-COM-${seqStr}`,
+      type: "commission",
+      module: "events",
+      amount: commissionAmount,
+      netAmount: commissionAmount,
+      customer: req.user._id,
+      vendor: event.vendorId,
+      status: "cleared",
+      description: `Event Commission - ${event.title}`,
+    });
+    await commTxn.save();
+
+    // 3. VAT Withheld
+    const vatTxn = new Transaction({
+      gsReference: `GS-${year}-EVT-VAT-${seqStr}`,
+      type: "vat",
+      module: "events",
+      amount: vatAmount,
+      netAmount: vatAmount,
+      customer: req.user._id,
+      vendor: event.vendorId,
+      status: "cleared",
+      description: `Event VAT - ${event.title}`,
+    });
+    await vatTxn.save();
+
+    // 4. Vendor Payable
+    const payoutTxn = new Transaction({
+      gsReference: `GS-${year}-EVT-PAYABLE-${seqStr}`,
+      type: "payout",
+      module: "events",
+      amount: organizerPayable,
+      netAmount: organizerPayable,
+      customer: req.user._id,
+      vendor: event.vendorId,
+      status: "pending",
+      description: `Event Vendor Payable - ${event.title}`,
+    });
+    await payoutTxn.save();
+
+    // 5. Update Vendor Wallet
+    let wallet = await Wallet.findOne({ vendorId: event.vendorId });
+    if (!wallet) {
+      wallet = new Wallet({ vendorId: event.vendorId });
+    }
+    wallet.pendingBalance += organizerPayable;
+    await wallet.save();
+
     res.status(201).json(savedBooking);
   } catch (error) {
-    console.error('Error booking event:', error);
-    res.status(500).json({ message: 'Server error booking event' });
+    console.error("Error booking event:", error);
+    res.status(500).json({ message: "Server error booking event" });
   }
 };
 
@@ -173,12 +278,12 @@ const bookEvent = async (req, res) => {
 const getUserBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({ user: req.user._id })
-      .populate('event', 'title date startTime location image')
+      .populate("event", "title date startTime location image")
       .sort({ bookingDate: -1 });
     res.json(bookings);
   } catch (error) {
-    console.error('Error fetching user bookings:', error);
-    res.status(500).json({ message: 'Server error fetching tickets' });
+    console.error("Error fetching user bookings:", error);
+    res.status(500).json({ message: "Server error fetching tickets" });
   }
 };
 
@@ -189,19 +294,21 @@ const getEventAttendees = async (req, res) => {
   try {
     const eventId = req.params.id;
     const event = await Event.findById(eventId);
-    
+
     if (!event || event.vendorId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized to view these attendees' });
+      return res
+        .status(403)
+        .json({ message: "Not authorized to view these attendees" });
     }
 
     const attendees = await Booking.find({ event: eventId })
-      .populate('user', 'name email')
+      .populate("user", "name email")
       .sort({ bookingDate: -1 });
-      
+
     res.json(attendees);
   } catch (error) {
-    console.error('Error fetching attendees:', error);
-    res.status(500).json({ message: 'Server error fetching attendees' });
+    console.error("Error fetching attendees:", error);
+    res.status(500).json({ message: "Server error fetching attendees" });
   }
 };
 
@@ -211,32 +318,42 @@ const getEventAttendees = async (req, res) => {
 const verifyTicket = async (req, res) => {
   try {
     const { ticketId } = req.body;
-    
-    const booking = await Booking.findOne({ ticketId }).populate('event', 'title date vendorId');
-    
+
+    const booking = await Booking.findOne({ ticketId }).populate(
+      "event",
+      "title date vendorId",
+    );
+
     if (!booking) {
-      return res.status(404).json({ message: 'Ticket not found' });
+      return res.status(404).json({ message: "Ticket not found" });
     }
 
     if (booking.event.vendorId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Ticket belongs to an event you do not manage' });
+      return res
+        .status(403)
+        .json({ message: "Ticket belongs to an event you do not manage" });
     }
 
-    if (booking.ticketStatus === 'Used') {
-      return res.status(400).json({ message: 'Ticket has already been used', booking });
-    }
-    
-    if (booking.ticketStatus === 'Cancelled') {
-      return res.status(400).json({ message: 'Ticket is cancelled', booking });
+    if (booking.ticketStatus === "Used") {
+      return res
+        .status(400)
+        .json({ message: "Ticket has already been used", booking });
     }
 
-    booking.ticketStatus = 'Used';
+    if (booking.ticketStatus === "Cancelled") {
+      return res.status(400).json({ message: "Ticket is cancelled", booking });
+    }
+
+    booking.ticketStatus = "Used";
     await booking.save();
 
-    res.json({ message: 'Ticket successfully verified and marked as used', booking });
+    res.json({
+      message: "Ticket successfully verified and marked as used",
+      booking,
+    });
   } catch (error) {
-    console.error('Error verifying ticket:', error);
-    res.status(500).json({ message: 'Server error verifying ticket' });
+    console.error("Error verifying ticket:", error);
+    res.status(500).json({ message: "Server error verifying ticket" });
   }
 };
 
@@ -249,25 +366,27 @@ const joinWaitlist = async (req, res) => {
     const event = await Event.findById(eventId);
 
     if (!event) {
-      return res.status(404).json({ message: 'Event not found' });
+      return res.status(404).json({ message: "Event not found" });
     }
 
     // Check if user is already on waitlist
     const alreadyOnWaitlist = event.waitlist.some(
-      (entry) => entry.user.toString() === req.user._id.toString()
+      (entry) => entry.user.toString() === req.user._id.toString(),
     );
 
     if (alreadyOnWaitlist) {
-      return res.status(400).json({ message: 'You are already on the waitlist for this event.' });
+      return res
+        .status(400)
+        .json({ message: "You are already on the waitlist for this event." });
     }
 
     event.waitlist.push({ user: req.user._id });
     await event.save();
 
-    res.status(200).json({ message: 'Successfully joined the waitlist!' });
+    res.status(200).json({ message: "Successfully joined the waitlist!" });
   } catch (error) {
-    console.error('Error joining waitlist:', error);
-    res.status(500).json({ message: 'Server error joining waitlist' });
+    console.error("Error joining waitlist:", error);
+    res.status(500).json({ message: "Server error joining waitlist" });
   }
 };
 
@@ -280,5 +399,5 @@ module.exports = {
   getUserBookings,
   getEventAttendees,
   verifyTicket,
-  joinWaitlist
+  joinWaitlist,
 };

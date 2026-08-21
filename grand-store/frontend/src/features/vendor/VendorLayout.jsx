@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Building2, Package, PlusCircle, User, LayoutDashboard, Wallet, Megaphone, GraduationCap, Menu, X, ShoppingBag, Calendar, Settings, Truck } from 'lucide-react';
+import { Building2, Package, PlusCircle, User, LayoutDashboard, Wallet, Megaphone, GraduationCap, Menu, X, ShoppingBag, Calendar, Settings, Truck, LogOut, Store, Gavel, MapPin } from 'lucide-react';
 
 export default function VendorLayout() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (!user) {
-    navigate('/login');
-    return null;
+    return <Navigate to="/login" replace />;
   }
 
   // Handle specific vendor states
@@ -137,11 +136,20 @@ export default function VendorLayout() {
             <button onClick={() => handleNavigate('/vendor/auction-submit')} className={navItemClass('/vendor/auction-submit')}>
               <PlusCircle size={16} /> Add Auction Lot
             </button>
+            <button onClick={() => handleNavigate('/auction')} className={navItemClass('/auction')}>
+              <Gavel size={16} /> Live Auctions
+            </button>
             <button onClick={() => handleNavigate('/vendor/events')} className={navItemClass('/vendor/events')}>
               <Calendar size={16} /> Events
             </button>
             
             <div className="text-[10px] text-[var(--color-ivory-muted)] uppercase tracking-widest mb-2 mt-4 pl-2">Growth & Support</div>
+            <button onClick={() => handleNavigate('/vendor/store')} className={navItemClass('/vendor/store')}>
+              <Store size={16} /> Store Management
+            </button>
+            <button onClick={() => handleNavigate('/vendor/estate-builder')} className={navItemClass('/vendor/estate-builder')}>
+              <MapPin size={16} /> Estate Profile
+            </button>
             <button onClick={() => handleNavigate('/vendor/marketing')} className={navItemClass('/vendor/marketing')}>
               <Megaphone size={16} /> Marketing Centre
             </button>
@@ -154,6 +162,9 @@ export default function VendorLayout() {
               </button>
               <button onClick={() => handleNavigate('/vendor/profile')} className="flex items-center gap-4 px-4 py-3 mt-2 rounded-xl w-full text-[var(--color-ivory-muted)] hover:bg-[var(--color-gold)]/10 hover:text-gold-gradient transition-all text-left text-xs uppercase tracking-widest border border-transparent hover:border-[var(--color-gold)]/20">
                 <User size={16} /> Vendor Profile
+              </button>
+              <button onClick={() => { logout(); navigate('/login'); }} className="flex items-center gap-4 px-4 py-3 mt-2 rounded-xl w-full text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all text-left text-xs uppercase tracking-widest border border-transparent">
+                <LogOut size={16} /> Logout
               </button>
             </div>
           </nav>

@@ -305,7 +305,14 @@ export default function OnboardingWizard() {
           {steps.map((step, idx) => {
             const Icon = step.icon;
             const isActive = currentStep === step.id;
-            const isComplete = step.id === 6 ? (currentStep > 6 || !!customsInfo.exportCode) : isStepComplete(step.id);
+            let isComplete = false;
+            if (isLocal && step.id === 6) {
+              isComplete = currentStep > 6 || !!customsInfo.exportCode;
+            } else if (!isLocal && step.id === 5) {
+              isComplete = currentStep > 5 || !!logisticsInfo.currentImporter || !!logisticsInfo.freightForwarder;
+            } else {
+              isComplete = isStepComplete(step.id);
+            }
             
             return (
               <div key={step.id} className="flex items-center min-w-max">
@@ -544,7 +551,7 @@ export default function OnboardingWizard() {
               <button 
                 onClick={handleNext}
                 disabled={saving || !canAccessStep(currentStep)}
-                className={`px-8 py-4 text-xs font-bold uppercase tracking-widest text-black flex items-center gap-2 shadow-[0_0_20px_rgba(201,163,91,0.2)] transition-all ${saving || !canAccessStep(currentStep) ? 'bg-[#e1bd70]/50 cursor-not-allowed' : 'bg-gradient-to-r from-[#c9a35b] to-[#e1bd70] hover:brightness-110'}`}
+                className={`px-8 py-4 text-xs font-bold uppercase tracking-widest text-black flex items-center gap-2 shadow-[0_0_20px_rgba(201,163,91,0.2)] transition-all ${saving || !canAccessStep(currentStep) ? 'bg-[#e1bd70]/50 cursor-not-allowed' : 'bg-[#c9a35b] hover:brightness-110'}`}
               >
                 {saving ? 'Saving...' : 'Save & Continue'} <ChevronRight size={16} />
               </button>
@@ -552,7 +559,7 @@ export default function OnboardingWizard() {
               <button 
                 onClick={handleSubmit}
                 disabled={saving || !canAccessStep(currentStep) || !agreements.termsAccepted || !agreements.informationAccurate}
-                className="px-8 py-4 text-xs font-bold uppercase tracking-widest text-black flex items-center gap-2 shadow-[0_0_20px_rgba(201,163,91,0.2)] transition-all bg-gradient-to-r from-[#c9a35b] to-[#e1bd70] hover:brightness-110 disabled:opacity-50"
+                className="px-8 py-4 text-xs font-bold uppercase tracking-widest text-black flex items-center gap-2 shadow-[0_0_20px_rgba(201,163,91,0.2)] transition-all bg-[#c9a35b] hover:brightness-110 disabled:opacity-50"
               >
                 {saving ? 'Submitting...' : 'Submit Application'}
               </button>

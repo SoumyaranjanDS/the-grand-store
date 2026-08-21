@@ -50,7 +50,7 @@ export default function VendorInventory() {
     <div className="flex flex-col gap-8 w-full max-w-7xl mx-auto">
       <section className="mb-2">
         <h1 className="text-[var(--color-ivory)] font-serif text-4xl mb-4">
-          Auction <span className="font-script text-5xl text-gold-gradient font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Inventory</span>
+          Auction <span className="text-5xl text-gold-gradient font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Inventory</span>
         </h1>
         <p className="text-[var(--color-ivory-muted)] text-lg font-light">
           Manage your luxury auction inventory and track your active sales with full visibility.
@@ -71,7 +71,7 @@ export default function VendorInventory() {
             </div>
             My Auction Lots
           </h3>
-          <button onClick={() => navigate('/vendor/auction-submit')} className="px-6 py-2.5 rounded-full bg-[var(--color-gold)]/10 text-gold-gradient border border-[var(--color-gold)]/30 font-semibold uppercase tracking-widest text-xs transition-all hover:bg-gold-gradient hover:text-black hover:shadow-[0_0_15px_rgba(212,175,55,0.4)]">
+          <button onClick={() => navigate(user.role === 'auction_host' ? '/auction-manager/auction-submit' : '/vendor/auction-submit')} className="px-6 py-2.5 rounded-full bg-[var(--color-gold)]/10 text-gold-gradient border border-[var(--color-gold)]/30 font-semibold uppercase tracking-widest text-xs transition-all hover:bg-gold-gradient hover:text-black hover:shadow-[0_0_15px_rgba(212,175,55,0.4)]">
             + New Lot
           </button>
         </div>
@@ -86,7 +86,7 @@ export default function VendorInventory() {
             <h3 className="text-[var(--color-ivory)] font-serif text-3xl mb-3">No Lots Found</h3>
             <p className="text-[var(--color-ivory-muted)] mb-10 max-w-md mx-auto font-light">You haven't submitted any items for auction yet. Start by submitting your first rare bottle to our curators.</p>
             <button
-              onClick={() => navigate('/vendor/auction-submit')}
+              onClick={() => navigate(user.role === 'auction_host' ? '/auction-manager/auction-submit' : '/vendor/auction-submit')}
               className="px-8 py-3 rounded-full bg-gold-gradient text-black font-bold uppercase tracking-widest text-sm hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all"
             >
               Submit your first item

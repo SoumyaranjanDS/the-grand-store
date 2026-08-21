@@ -61,7 +61,7 @@ export default function VendorProfile() {
       {/* Welcome Section */}
       <section className="mb-4">
         <h1 className="text-[var(--color-ivory)] font-serif text-5xl mb-4">
-          Vendor <span className="font-script text-6xl text-gold-gradient font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Profile</span>
+          Vendor <span className="text-6xl text-gold-gradient font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Profile</span>
         </h1>
         <p className="text-[var(--color-ivory-muted)] text-lg max-w-2xl font-light">
           View and manage your onboarding details, business documents, and verification status.

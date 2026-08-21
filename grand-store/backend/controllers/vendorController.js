@@ -257,3 +257,42 @@ exports.simulatePayment = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+exports.getStoreProfile = async (req, res) => {
+  try {
+    const vendor = await Vendor.findOne({ userId: req.user._id });
+    if (!vendor) {
+      return res.status(404).json({ message: 'Vendor application not found' });
+    }
+    res.json({
+      businessName: vendor.businessInfo?.legalName || '',
+      logoUrl: vendor.businessInfo?.logoUrl || '',
+      bannerUrl: vendor.businessInfo?.bannerUrl || '',
+      story: vendor.businessInfo?.story || '',
+      vendorId: vendor.userId
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+exports.updateStoreProfile = async (req, res) => {
+  try {
+    const { businessName, logoUrl, bannerUrl, story } = req.body;
+    let vendor = await Vendor.findOne({ userId: req.user._id });
+    if (!vendor) {
+      return res.status(404).json({ message: 'Vendor application not found' });
+    }
+
+    if (!vendor.businessInfo) vendor.businessInfo = {};
+    if (businessName !== undefined) vendor.businessInfo.legalName = businessName;
+    if (logoUrl !== undefined) vendor.businessInfo.logoUrl = logoUrl;
+    if (bannerUrl !== undefined) vendor.businessInfo.bannerUrl = bannerUrl;
+    if (story !== undefined) vendor.businessInfo.story = story;
+
+    await vendor.save();
+    res.json({ message: 'Store profile updated successfully', businessInfo: vendor.businessInfo });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};

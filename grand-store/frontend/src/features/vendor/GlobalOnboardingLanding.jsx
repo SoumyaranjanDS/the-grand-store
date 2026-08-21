@@ -46,7 +46,7 @@ export default function GlobalOnboardingLanding() {
               <Globe size={14} className="drop-shadow-[0_0_5px_rgba(201,163,91,0.8)]" /> International Partner Program
             </div>
             <h1 className="text-5xl md:text-7xl font-serif text-[#eee8dd] mb-8 leading-tight tracking-wide drop-shadow-lg">
-              Bring Your Estate to <span className="bg-gradient-to-r from-[#eee8dd] via-[#e6c97a] to-[#c9a35b] text-transparent bg-clip-text">The Grand Store</span>
+              Bring Your Estate to <span className="text-[#c9a35b]">The Grand Store</span>
             </h1>
             <p className="text-[#918a7f] text-xl font-light mb-12 max-w-xl leading-relaxed">
               We are actively sourcing exceptional international wines for our discerning clientele. Join a curated portfolio of the world's finest estates.
@@ -54,7 +54,7 @@ export default function GlobalOnboardingLanding() {
             <div className="flex flex-col sm:flex-row gap-6">
               <Link 
                 to="/vendor/onboarding" 
-                className="inline-flex justify-center items-center gap-3 px-10 py-5 bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] text-black font-bold uppercase tracking-[0.2em] text-xs hover:brightness-110 transition-all shadow-[0_0_30px_rgba(201,163,91,0.3)] hover:shadow-[0_0_50px_rgba(201,163,91,0.5)] rounded-sm"
+                className="inline-flex justify-center items-center gap-3 px-10 py-5 bg-[#c9a35b] text-black font-bold uppercase tracking-[0.2em] text-xs hover:brightness-110 transition-all shadow-[0_0_30px_rgba(201,163,91,0.3)] hover:shadow-[0_0_50px_rgba(201,163,91,0.5)] rounded-sm"
               >
                 Apply Now <ArrowRight size={16} />
               </Link>

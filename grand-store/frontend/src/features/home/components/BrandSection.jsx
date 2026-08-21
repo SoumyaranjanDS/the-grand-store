@@ -10,8 +10,8 @@ export default function BrandSection() {
         <h2 className="m-0 font-serif text-[clamp(40px,3.8vw,62px)] font-medium tracking-[-0.02em] leading-[1.05] text-[#eee8dd]">
           Top Whisky{' '}
           <span
-            className="gold-gradient-text inline-block pr-2 font-script text-[1.12em]"
-            style={{ fontFamily: "'Dancing Script', cursive" }}
+            className="gold-gradient-text inline-block pr-2 text-[1.12em]"
+            
           >
             Brands
           </span>

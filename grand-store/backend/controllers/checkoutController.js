@@ -1,4 +1,6 @@
 const Product = require('../models/Product');
+const Vendor = require('../models/Vendor');
+const PlatformSettings = require('../models/PlatformSettings');
 const { calculateTax } = require('../engines/taxEngine');
 const { getShippingQuotes } = require('../engines/shippingEngine');
 
@@ -7,6 +9,10 @@ const { getShippingQuotes } = require('../engines/shippingEngine');
 // @access  Private
 const generateQuote = async (req, res) => {
   try {
+    let settings = await PlatformSettings.findOne();
+    if (!settings) settings = await PlatformSettings.create({});
+    const platformVatPct = settings.vatPct !== undefined ? settings.vatPct : 15;
+
     const { cartItems, shippingAddress } = req.body;
 
     if (!cartItems || cartItems.length === 0) {
@@ -66,6 +72,14 @@ const generateQuote = async (req, res) => {
     for (const vId of Object.keys(vendorGroups)) {
       const group = vendorGroups[vId];
       
+      let vendorName = 'The Grand Store';
+      if (group.vendorId) {
+        const vendor = await Vendor.findOne({ userId: group.vendorId }).catch(() => null);
+        if (vendor) {
+          vendorName = vendor.businessInfo?.tradingName || vendor.businessInfo?.legalName || 'Unknown Vendor';
+        }
+      }
+
       const shippingData = await getShippingQuotes(
         group.vendorId, 
         shippingAddress, 
@@ -76,7 +90,7 @@ const generateQuote = async (req, res) => {
       if (shippingData.isInternational) hasInternational = true;
 
       // Calculate tax for this specific shipment based on origin and dest
-      const taxData = calculateTax(shippingData.originCountry, shippingData.destCountry, group.subtotal);
+      const taxData = calculateTax(shippingData.originCountry, shippingData.destCountry, group.subtotal, platformVatPct);
 
       let shipmentDuties = 0, shipmentTaxes = 0, shipmentCustoms = 0;
       if (shippingData.landedCostEstimates) {
@@ -91,6 +105,7 @@ const generateQuote = async (req, res) => {
 
       shipments.push({
         vendorId: group.vendorId,
+        vendorName: vendorName,
         items: group.items,
         subtotal: group.subtotal,
         originCountry: shippingData.originCountry,
@@ -110,7 +125,8 @@ const generateQuote = async (req, res) => {
     
     // Note: Duties/Taxes are usually DAP (Customer pays at customs). If we wanted DDP, we'd add it to total.
     // For now, we display them as estimates, but do NOT add them to the Grand Store total to pay at checkout.
-    const totalToPay = parseFloat((globalSubtotal + defaultShippingTotal + defaultVatTotal).toFixed(2));
+    // VAT is also deducted from the vendor's earnings, so it is NOT added to the customer's total to pay.
+    const totalToPay = parseFloat((globalSubtotal + defaultShippingTotal).toFixed(2));
 
     const quoteId = `QUOTE-${Date.now()}`;
     const expiresAt = new Date(Date.now() + 10 * 60000); // 10 minutes

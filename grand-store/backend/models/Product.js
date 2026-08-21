@@ -31,6 +31,23 @@ const productSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  // Social Proof Engine Metrics
+  badges: [{
+    type: String // e.g., 'GRAND_STORE_CHOICE', 'MOST_LOVED', 'TRENDING'
+  }],
+  averageRating: {
+    type: Number,
+    default: 0
+  },
+  reviewCount: {
+    type: Number,
+    default: 0
+  },
+  purchaseCount: {
+    type: Number,
+    default: 0
+  },
+
   vendorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'

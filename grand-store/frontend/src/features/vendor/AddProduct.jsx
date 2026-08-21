@@ -138,11 +138,21 @@ export default function AddProduct({ onNotify }) {
         {/* Welcome Section */}
         <section className="mb-4">
               <h1 className="text-[var(--color-ivory)] font-serif text-5xl mb-4">
-                Add <span className="font-script text-6xl text-gold-gradient font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Retail Product</span>
+                Add <span className="text-6xl text-gold-gradient font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Retail Product</span>
               </h1>
               <p className="text-[var(--color-ivory-muted)] text-lg max-w-2xl font-light">
                 List a standard product for direct sale in The Grand Store.
               </p>
+              
+              <div className="mt-6 flex items-center gap-3 p-4 bg-black/40 border border-white/10 rounded-xl inline-flex">
+                <Building2 size={20} className="text-gold-gradient" />
+                <div>
+                  <p className="text-xs text-[var(--color-ivory-muted)] uppercase tracking-widest font-bold">Listing Destination</p>
+                  <p className="text-sm text-white mt-1">
+                    This product will appear publicly in: <strong className="text-gold-gradient">{user.name}'s Store</strong>
+                  </p>
+                </div>
+              </div>
             </section>
 
             {error && (

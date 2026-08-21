@@ -38,7 +38,7 @@ export default function EventsHub() {
           {/* Header Section */}
           <div className="relative">
             <h1 className="text-4xl md:text-5xl font-serif text-[#eee8dd] mb-2">
-              Grand Store <span className="bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(230,201,122,0.6)]">Events</span>
+              Grand Store <span className="text-[#c9a35b] drop-shadow-[0_0_12px_rgba(230,201,122,0.6)]">Events</span>
             </h1>
             <p className="text-[#918a7f] text-xs md:text-sm uppercase tracking-widest">
               Taste. Discover. Experience.

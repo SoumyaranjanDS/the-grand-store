@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { Link } from 'react-router-dom'
 import wineFarmStyles from './wine-farm.css?inline'
 
 const liveBase = ''
@@ -51,7 +52,8 @@ const journeySteps = [
   },
 ]
 
-const farms = [
+// Fallback estates shown when no vendors have published profiles yet
+const FALLBACK_FARMS = [
   {
     name: 'Tesselaarsdal Wines',
     vendor: 'Ms. BERENE SAULS',
@@ -392,28 +394,70 @@ function Journey() {
 }
 
 function Farms() {
+  const [estates, setEstates] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URL}/api/estates`)
+      .then(r => r.json())
+      .then(data => setEstates(Array.isArray(data) ? data : []))
+      .catch(() => setEstates([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  // If no published estates yet, fall back to static placeholders
+  const showFallback = !loading && estates.length === 0;
+
   return (
     <section className="farms section-pad" id="farms">
       <div className="farms-heading">
         <SectionHeading kicker="Farm journal" title={<>Explore By <em>Cultivar</em></>} />
         <p>Two distinct stories shaped by soil, sea air, heritage and an unhurried devotion to craft.</p>
       </div>
-      <div className="farm-stack">
-        {farms.map((farm, index) => (
-          <article className="farm-card" key={farm.name}>
-            <div className="farm-image">
-              <img src={farm.image} alt={farm.name} />
-              <span>{String(index + 1).padStart(2, '0')} / Featured estate</span>
-            </div>
-            <div className="farm-copy">
-              <p className="farm-vendor">Vendor : {farm.vendor}</p>
-              <h3>{farm.name}</h3>
-              <p>{farm.copy}</p>
-              <a className="text-link" href="#farms">Read More <span>↗</span></a>
-            </div>
-          </article>
-        ))}
-      </div>
+      
+      {loading ? (
+        <div className="farm-stack" style={{ opacity: 0.5 }}>
+          {[1,2].map(i => <div key={i} style={{ height: '300px', background: 'var(--paper-deep)' }} />)}
+        </div>
+      ) : showFallback ? (
+        <div className="farm-stack">
+          {FALLBACK_FARMS.map((farm, index) => (
+            <article className="farm-card" key={farm.name}>
+              <div className="farm-image">
+                <img src={farm.image} alt={farm.name} />
+                <span>{String(index + 1).padStart(2, '0')} / Featured estate</span>
+              </div>
+              <div className="farm-copy">
+                <p className="farm-vendor">Vendor : {farm.vendor}</p>
+                <h3>{farm.name}</h3>
+                <p>{farm.copy}</p>
+                <a className="text-link" href="#farms">Read More <span>↗</span></a>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="farm-stack">
+          {estates.map((estate, index) => (
+            <article className="farm-card" key={estate._id}>
+              <div className="farm-image">
+                {estate.heroImageUrl ? (
+                  <img src={estate.heroImageUrl} alt={estate.estateName} />
+                ) : (
+                  <div style={{ width: '100%', height: '100%', background: 'var(--paper-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem' }}>🍷</div>
+                )}
+                <span>{String(index + 1).padStart(2, '0')} / {estate.region || 'Featured estate'}</span>
+              </div>
+              <div className="farm-copy">
+                <p className="farm-vendor">Vendor : {estate.estateName}</p>
+                <h3>{estate.estateName}</h3>
+                <p>{estate.tagline || 'Explore the exquisite wines of our featured estate, shaped by heritage and an unhurried devotion to craft.'}</p>
+                <Link className="text-link" to={`/estate/${estate.slug}`}>Explore <span>↗</span></Link>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
     </section>
   )
 }

@@ -173,7 +173,7 @@ export default function EditProduct({ onNotify }) {
       <div className="max-w-4xl w-full">
         <section className="mb-4">
               <h1 className="text-[var(--color-ivory)] font-serif text-5xl mb-4">
-                Edit <span className="font-script text-5xl md:text-7xl text-gold-gradient font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Retail Product</span>
+                Edit <span className="text-5xl md:text-7xl text-gold-gradient font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Retail Product</span>
               </h1>
               <p className="text-[var(--color-ivory-muted)] text-lg max-w-2xl font-light leading-relaxed">
                 Update the details of your retail product. The image and fact sheet will remain unchanged unless you upload new ones.

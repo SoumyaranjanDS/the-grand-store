@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { LayoutDashboard, Users, Building2, Gavel, Wallet, Settings, Menu, X, LogOut, ArrowLeft } from 'lucide-react';
+import { LayoutDashboard, Users, Building2, Gavel, Wallet, Settings, Menu, X, LogOut, ArrowLeft, Star } from 'lucide-react';
 
 export default function AdminLayout() {
   const { user, logout } = useAuth();
@@ -11,8 +11,7 @@ export default function AdminLayout() {
 
   // Strictly allow ONLY admin users
   if (!user || user.role !== 'admin') {
-    navigate('/login');
-    return null;
+    return <Navigate to="/login" replace />;
   }
 
   const handleNavigate = (path) => {
@@ -27,7 +26,7 @@ export default function AdminLayout() {
   const navItemClass = (path) => {
     const baseClass = "flex items-center gap-4 px-4 py-3 rounded-xl text-xs uppercase tracking-widest transition-all text-left border";
     if (isActive(path)) {
-      return `${baseClass} bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] text-black shadow-[0_0_15px_rgba(212,175,55,0.5)] font-bold border-transparent`;
+      return `${baseClass} bg-[#c9a35b] text-black shadow-[0_0_15px_rgba(212,175,55,0.5)] font-bold border-transparent`;
     }
     return `${baseClass} text-[var(--color-ivory-muted)] hover:bg-white/[0.03] hover:text-[var(--color-ivory)] border-transparent`;
   };
@@ -93,6 +92,15 @@ export default function AdminLayout() {
             <div className="text-[10px] text-[var(--color-ivory-muted)] uppercase tracking-widest mb-2 mt-4 pl-2">Operations</div>
             <button onClick={() => handleNavigate('/admin/auctions')} className={navItemClass('/admin/auctions')}>
               <Gavel size={16} /> Auctions Management
+            </button>
+            <button onClick={() => handleNavigate('/admin/expert-reviews')} className={navItemClass('/admin/expert-reviews')}>
+              <Star size={16} /> Expert Reviews
+            </button>
+            <button onClick={() => handleNavigate('/admin/host-applications')} className={navItemClass('/admin/host-applications')}>
+              <Building2 size={16} /> Host Applications
+            </button>
+            <button onClick={() => handleNavigate('/auction')} className={navItemClass('/auction')}>
+              <Gavel size={16} /> Live Auctions
             </button>
 
             <div className="text-[10px] text-[var(--color-gold)] uppercase tracking-widest mb-2 mt-4 pl-2 font-bold">System Control</div>

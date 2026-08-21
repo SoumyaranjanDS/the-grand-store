@@ -109,15 +109,13 @@ export default function VendorPortalPage() {
     "How long does it take for my vendor account to be approved?",
   ];
 
-  const scriptFont = { fontFamily: "'Dancing Script', cursive" };
-
   // Reusable Gold Text with Glow
   const goldTextClass =
-    "bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(230,201,122,0.6)] px-4";
+    "text-[#c9a35b] drop-shadow-[0_0_12px_rgba(230,201,122,0.6)] px-4";
 
   // Reusable Gold Button Class
   const goldButtonClass =
-    "bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] shadow-[0_0_20px_rgba(230,201,122,0.5)] text-black font-bold uppercase tracking-widest text-xs px-10 py-5 hover:shadow-[0_0_30px_rgba(230,201,122,0.8)] transition-all";
+    "bg-[#c9a35b] shadow-[0_0_20px_rgba(230,201,122,0.5)] text-black font-bold uppercase tracking-widest text-xs px-10 py-5 hover:shadow-[0_0_30px_rgba(230,201,122,0.8)] transition-all";
 
   return (
     <main className="min-h-screen bg-white text-gray-900 font-sans pb-20">
@@ -134,7 +132,7 @@ export default function VendorPortalPage() {
           <div className="max-w-4xl flex flex-col items-center">
             <h1 className="text-6xl md:text-7xl lg:text-8xl font-serif text-white mb-4 leading-tight">
               Elevate Your <br />
-              <span className={goldTextClass} style={scriptFont}>
+              <span className={goldTextClass} >
                 Brand
               </span>
             </h1>
@@ -166,7 +164,7 @@ export default function VendorPortalPage() {
             <h3 className="text-5xl md:text-6xl font-serif text-black mb-6 leading-tight">
               A Global <br />
               <span
-                style={scriptFont}
+                
                 className={`text-6xl md:text-7xl ${goldTextClass}`}
               >
                 Platform
@@ -194,7 +192,7 @@ export default function VendorPortalPage() {
             <h3 className="text-5xl md:text-6xl font-serif text-black mb-6 leading-tight">
               Reach Your <br />
               <span
-                style={scriptFont}
+                
                 className={`text-6xl md:text-7xl ${goldTextClass}`}
               >
                 Customers
@@ -264,7 +262,7 @@ export default function VendorPortalPage() {
             <h2 className="text-5xl md:text-6xl font-serif mb-4 text-black leading-tight">
               Preview Your <br />
               <span
-                style={scriptFont}
+                
                 className={`text-6xl md:text-7xl ${goldTextClass}`}
               >
                 Store
@@ -629,7 +627,7 @@ export default function VendorPortalPage() {
           <h2 className="text-5xl md:text-6xl font-serif mb-4 text-black leading-tight">
             Frequently Asked <br />
             <span
-              style={scriptFont}
+              
               className={`text-6xl md:text-7xl ${goldTextClass}`}
             >
               Questions
@@ -671,7 +669,7 @@ export default function VendorPortalPage() {
         <h2 className="text-5xl md:text-6xl font-serif mb-6 text-black leading-tight">
           Ready to <br />
           <span
-            style={scriptFont}
+            
             className={`text-7xl md:text-8xl ${goldTextClass}`}
           >
             Launch?

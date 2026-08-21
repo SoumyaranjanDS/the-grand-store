@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import LocationInput from '../../components/LocationInput';
+import { Navigation, ExternalLink } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 const VendorShippingProfile = () => {
+  const { user } = useAuth();
   const [profile, setProfile] = useState({
-    pickupAddress: { street: '', city: '', postalCode: '', country: 'South Africa' },
+    pickupAddress: { street: '', city: '', postalCode: '', country: 'South Africa', lat: null, lng: null },
     defaultDimensions: { length: 35, width: 25, height: 30, unit: 'cm' },
     defaultWeight: { value: 9, unit: 'kg' },
     shippingZones: [
@@ -19,11 +22,47 @@ const VendorShippingProfile = () => {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
 
+  const [postnetStores, setPostnetStores] = useState(null);
+  const [postnetLoading, setPostnetLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchPostnetStores = async () => {
+      if (!profile?.pickupAddress?.city) return;
+      const addr = profile.pickupAddress;
+      const addressString = `${addr.street || ""}, ${addr.city || ""}, ${addr.country || "South Africa"}`;
+
+      try {
+        setPostnetLoading(true);
+        const token = user?.token || localStorage.getItem('token');
+        let queryParams = `address=${encodeURIComponent(addressString)}`;
+        if (addr.lat && addr.lng) {
+            queryParams += `&lat=${addr.lat}&lng=${addr.lng}`;
+        }
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL || ''}/api/postnet/locator?${queryParams}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        const data = await res.json();
+        if (res.ok && data.stores) {
+          setPostnetStores(data.stores);
+        }
+      } catch (error) {
+        console.error("Failed to fetch PostNet stores:", error);
+      } finally {
+        setPostnetLoading(false);
+      }
+    };
+
+    fetchPostnetStores();
+  }, [profile?.pickupAddress?.street, profile?.pickupAddress?.city]);
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch('/api/vendor/shipping-profile', {
+        const token = user?.token || localStorage.getItem('token');
+        const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/vendor/shipping-profile`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -64,8 +103,8 @@ const VendorShippingProfile = () => {
     setSaving(true);
     setMessage('');
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('/api/vendor/shipping-profile', {
+      const token = user?.token || localStorage.getItem('token');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/vendor/shipping-profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -109,14 +148,16 @@ const VendorShippingProfile = () => {
               <LocationInput className="w-full bg-black border border-gold/30 rounded p-2 text-white focus:border-gold" 
                 value={profile.pickupAddress.street || ''} 
                 onChange={(e) => handleChange(e, 'pickupAddress', 'street')} 
-                onPlaceDetails={({ city, postalCode, country }) => {
+                onPlaceDetails={({ city, postalCode, country, lat, lng }) => {
                   setProfile(prev => ({
                     ...prev,
                     pickupAddress: {
                       ...prev.pickupAddress,
                       city: city || prev.pickupAddress.city,
                       postalCode: postalCode || prev.pickupAddress.postalCode,
-                      country: country || prev.pickupAddress.country
+                      country: country || prev.pickupAddress.country,
+                      lat: lat || prev.pickupAddress.lat,
+                      lng: lng || prev.pickupAddress.lng
                     }
                   }));
                 }}
@@ -137,6 +178,53 @@ const VendorShippingProfile = () => {
               <input type="text" className="w-full bg-black border border-gold/30 rounded p-2 text-white focus:border-gold" 
                 value={profile.pickupAddress.country || 'South Africa'} onChange={(e) => handleChange(e, 'pickupAddress', 'country')} required />
             </div>
+          </div>
+
+          {/* Nearest PostNet Stores */}
+          <div className="mt-6">
+            {postnetLoading ? (
+              <div className="text-sm text-white/60">Locating nearest PostNet stores for drop-off...</div>
+            ) : postnetStores && postnetStores.length === 0 ? (
+              <div className="bg-gradient-to-br from-black/80 to-[#111] border border-gold/20 rounded-xl p-4 shadow-lg shadow-gold/5 flex items-center justify-center min-h-[80px]">
+                <p className="text-white/60 text-sm">No nearby PostNet stores found within 50km.</p>
+              </div>
+            ) : postnetStores && postnetStores.length > 0 && (
+              <div className="bg-gradient-to-br from-black/80 to-[#111] border border-gold/20 rounded-xl p-4 shadow-lg shadow-gold/5 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gold/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+                
+                <div className="flex items-center gap-3 mb-4 relative z-10">
+                  <div className="p-2 bg-gold/10 text-gold rounded-lg">
+                    <Navigation size={16} />
+                  </div>
+                  <div>
+                    <h3 className="text-md font-serif text-white">Nearest PostNet Drop-off Locations</h3>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 relative z-10">
+                  {postnetStores.slice(0, 4).map((store, idx) => (
+                    <div key={idx} className="bg-white/[0.02] border border-white/10 hover:border-gold/30 rounded-lg p-3 group transition-colors">
+                      <a 
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.store + ' ' + store.address)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex justify-between items-start gap-2"
+                      >
+                        <h4 className="text-sm font-bold text-white mb-1 group-hover:text-gold transition-colors">{store.store}</h4>
+                        <ExternalLink size={14} className="text-white/40 opacity-50 group-hover:text-gold transition-colors mt-0.5 flex-shrink-0" />
+                      </a>
+                      <p className="text-xs text-white/60 mb-2 truncate">{store.address}</p>
+                      <div className="flex justify-between items-center border-t border-white/5 pt-2">
+                        <span className="text-xs font-mono text-gold">{store.telephone}</span>
+                        <span className="text-[10px] uppercase tracking-widest bg-gold/10 text-gold px-2 py-0.5 rounded">
+                          {store.distance ? store.distance.toFixed(1) : '?'} KM
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

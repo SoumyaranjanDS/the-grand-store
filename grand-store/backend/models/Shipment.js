@@ -28,12 +28,31 @@ const shipmentSchema = new mongoose.Schema({
     height: Number
   },
   
-  courierName: { type: String }, // e.g. "PostNet", "DHL", "The Courier Guy"
-  serviceLevel: { type: String }, // e.g. "Standard", "Express"
-  shippingCost: { type: Number, required: true },
+  // What the customer sees/pays for the whole journey
+  customerShippingCharge: { type: Number, required: true },
   
-  trackingNumber: { type: String },
-  trackingUrl: { type: String },
+  // Total cost paid by Grand Store to couriers (sum of leg costs)
+  actualShippingCost: { type: Number, default: 0 },
+  
+  // High-level customer tracking
+  mainTrackingNumber: { type: String },
+  mainTrackingUrl: { type: String },
+  
+  // Courier Legs (for multi-leg shipments)
+  legs: [{
+    courierName: String,
+    serviceLevel: String,
+    trackingNumber: String,
+    trackingUrl: String,
+    cost: Number, // Internal commercial pricing for this leg
+    origin: String,
+    destination: String,
+    status: {
+      type: String,
+      enum: ['Pending', 'In Transit', 'Completed', 'Failed'],
+      default: 'Pending'
+    }
+  }],
   
   status: {
     type: String,

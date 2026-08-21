@@ -1,13 +1,19 @@
 import { useProducts } from '../../context/ProductContext'
 import React, { useState, useEffect } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { ChevronRight, ChevronLeft, Minus, Plus, Heart, Mail, MessageCircle, Link2, Share2, ZoomIn, ArrowRight } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Minus, Plus, Heart, Link2, ArrowRight } from 'lucide-react';
 import { useWishlist } from '../../wishlistContext';
+import { useGeoLocation } from '../../context/LocationContext';
 import ProductCard from '../../components/ProductCard';
-
+import TrustBadges from '../../components/social/TrustBadges';
+import ReviewSection from '../../components/social/ReviewSection';
+import ProductQnA from '../../components/social/ProductQnA';
+import ExpertReviewCard from '../../components/social/ExpertReviewCard';
 export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
   const { products } = useProducts();
   const { slug } = useParams()
+  const { currency, country_name } = useGeoLocation();
+  
   const product = products.find((item) => item.slug === slug || item.id === slug || item.id === Number(slug) || item._id === slug)
   const { isWishlisted } = useWishlist()
   const wishlisted = product ? isWishlisted(product) : false
@@ -19,6 +25,15 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
   const [isZoomed, setIsZoomed] = useState(false)
   const [zoomOrigin, setZoomOrigin] = useState('50% 50%')
 
+  // Shipping Estimation
+  const [deliveryCountry, setDeliveryCountry] = useState('South Africa');
+  const [shippingEstimate, setShippingEstimate] = useState(null);
+
+  // Mock social proof data (to be replaced by API calls in the future)
+  const [reviews, setReviews] = useState([]);
+  const [qna, setQna] = useState([]);
+  const [expertReview, setExpertReview] = useState(null);
+
   useEffect(() => {
     if (!product) return
     setSelectedImage(product.image)
@@ -26,10 +41,31 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
     setSelectedOption(product.options?.[0] ?? 'Pack of 1')
     setIsZoomed(false)
     setZoomOrigin('50% 50%')
+    
+    // Mock data for demo purposes
+    setExpertReview({
+      expertName: 'James Sinclair',
+      expertTitle: 'Whisky Specialist',
+      ratings: { overall: 9.2, criteria: [{label: 'Aroma', score: 9}, {label: 'Palate', score: 9.5}, {label: 'Finish', score: 9}] },
+      verdict: 'Excellent for collectors and experienced whisky drinkers. A truly remarkable expression that showcases the distillery character.',
+    });
+    
     document.title = `${product.fullName || product.name} — The Grand Store`
     window.scrollTo({ top: 0, behavior: 'auto' })
     return () => { document.title = 'The Grand Store — Luxury Wines & Spirits' }
   }, [product])
+
+  // Mock shipping estimate effect
+  useEffect(() => {
+    if (!product) return;
+    const isDomestic = deliveryCountry === 'South Africa';
+    const localCurrencySymbol = currency === 'ZAR' ? 'R' : (currency || '$');
+    
+    setShippingEstimate({
+      cost: isDomestic ? `${localCurrencySymbol}150` : `${localCurrencySymbol}450`,
+      time: isDomestic ? '2-4 days' : '5-8 days'
+    });
+  }, [deliveryCountry, product, currency]);
 
   if (!product) return <Navigate to="/" replace />
 
@@ -69,7 +105,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
     <main className="min-h-screen bg-[#0a0907] pt-16 pb-12 px-4 md:px-8 lg:px-12 text-[#eee8dd] font-sans">
       
       {/* Top Breadcrumbs */}
-      <section className="max-w-7xl mx-auto mb-8 flex items-center text-[10px] text-[#918a7f] uppercase tracking-[0.2em] font-semibold gap-3">
+      <section className="max-w-7xl mx-auto mb-2 flex items-center text-[10px] text-[#918a7f] uppercase tracking-[0.2em] font-semibold gap-3">
         <Link to="/" className="hover:text-gold-gradient transition-colors">Home</Link>
         <span>/</span>
         <Link to={`/shop?category=${encodeURIComponent(product.category || product.type || '')}`} className="hover:text-gold-gradient transition-colors">{product.category || product.type || 'Shop'}</Link>
@@ -117,6 +153,8 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
 
         {/* Right: Product Info */}
         <div className="flex flex-col justify-center">
+          <TrustBadges badges={product.badges || ['GRAND_STORE_CHOICE']} className="mb-4" />
+          
           <h1 className="text-4xl md:text-5xl lg:text-[54px] font-serif leading-[1.1] mb-4 text-[#eee8dd]">
             {product.fullName || product.name}
           </h1>
@@ -130,7 +168,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
           </div>
 
           <div className="text-[42px] font-serif text-gold-gradient mb-8">
-            R{formattedPrice}
+            {currency === 'ZAR' ? 'R' : (currency || '$')}{formattedPrice}
           </div>
 
           {/* Details Grid */}
@@ -204,6 +242,53 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             >
               <Heart size={18} fill={wishlisted ? 'currentColor' : 'none'} />
             </button>
+          </div>
+
+          {/* Fulfilled By Widget */}
+          <div className="border border-white/10 p-5 mb-8 bg-white/5">
+            <h4 className="text-[10px] text-gold-gradient uppercase tracking-widest font-bold flex items-center gap-2 mb-3">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+              Delivery & Fulfillment
+            </h4>
+            <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+              <div>
+                <span className="block text-[#918a7f] text-[10px] uppercase tracking-wider mb-1">Fulfilled By</span>
+                <span className="font-medium">{product.vendorName || 'ABC Winery'}</span>
+              </div>
+              <div>
+                <span className="block text-[#918a7f] text-[10px] uppercase tracking-wider mb-1">Ships From</span>
+                <span className="font-medium">{product.origin || 'South Africa'}</span>
+              </div>
+            </div>
+            
+            <div className="border-t border-white/10 pt-4 mt-2">
+              <label className="block text-[#918a7f] text-[10px] uppercase tracking-wider mb-2">Estimate Delivery To</label>
+              <div className="flex gap-2">
+                <select 
+                  className="bg-[#0a0907] border border-white/20 text-[#eee8dd] text-sm p-2 flex-1 focus:border-[#c9a35b] outline-none"
+                  value={deliveryCountry}
+                  onChange={(e) => setDeliveryCountry(e.target.value)}
+                >
+                  <option value="South Africa">South Africa</option>
+                  <option value="United Arab Emirates">Dubai, UAE</option>
+                  <option value="France">France</option>
+                  <option value="United Kingdom">United Kingdom</option>
+                  <option value="United States">United States</option>
+                </select>
+              </div>
+              {shippingEstimate && (
+                <div className="mt-3 flex justify-between items-center text-sm bg-[#0a0907] p-3 border border-white/10">
+                  <div>
+                    <span className="text-[#918a7f] mr-2">Est. Time:</span> 
+                    <span className="font-medium">{shippingEstimate.time}</span>
+                  </div>
+                  <div>
+                    <span className="text-[#918a7f] mr-2">Cost:</span> 
+                    <span className="font-medium text-gold-gradient">{shippingEstimate.cost}</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Share Links */}
@@ -316,6 +401,25 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
           </div>
         </div>
 
+      </section>
+
+      {/* Social Proof Engine Components */}
+      <section className="max-w-7xl mx-auto my-16 px-4 md:px-0">
+        <div className="border-t border-white/10 pt-16">
+          <ExpertReviewCard expertReview={expertReview} />
+        </div>
+        
+        <div className="mt-16">
+          <ProductQnA questions={qna} productId={product.id || product._id} />
+        </div>
+        
+        <div className="mt-16">
+          <ReviewSection 
+            reviews={reviews} 
+            averageRating={product.averageRating || 4.8} 
+            reviewCount={product.reviewCount || 124} 
+          />
+        </div>
       </section>
 
       {/* Related Products */}

@@ -87,7 +87,7 @@ export default function Header({
 
   return (
     <div className={`sticky top-0 left-0 right-0 z-[100] bg-[#0a0a0a] transition-transform duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-      <div className="announcement-bar py-1.5 bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] text-black">
+      <div className="announcement-bar py-1.5 bg-[#c9a35b] text-black">
         <div className="shell announcement-inner">
           <p className="font-bold tracking-widest uppercase text-[10px]">
             <PackageCheck size={14} className="mr-2" /> Complimentary delivery
@@ -162,7 +162,11 @@ export default function Header({
                       ? "/admin/auctions"
                       : user.role === "vendor_active"
                         ? "/vendor/dashboard"
-                        : "/customer/profile",
+                        : user.role === "auction_host"
+                          ? "/auction-manager/dashboard"
+                          : user.role === "event_host"
+                            ? "/event-manager/dashboard"
+                            : "/customer/profile",
                   )
                 }
               >
@@ -339,22 +343,7 @@ export default function Header({
                 )}
               </AnimatePresence>
             </div>
-            <button
-              className="nav-dropdown-button"
-              type="button"
-              aria-expanded={megaOpen && megaTrigger === "wine"}
-              onClick={() => toggleMegaMenu("wine", "Wine")}
-            >
-              Wine <ChevronDown size={14} />
-            </button>
-            <button
-              className="nav-dropdown-button"
-              type="button"
-              aria-expanded={megaOpen && megaTrigger === "accessories"}
-              onClick={() => toggleMegaMenu("accessories", "Accessories")}
-            >
-              Accessories <ChevronDown size={14} />
-            </button>
+
             <a href="/#private-collection">Offers</a>
             <Link to="/auction">Auction</Link>
             <Link to="/events" className="font-bold text-[#f0cf76] hover:text-white transition-colors">Events</Link>
@@ -435,9 +424,7 @@ export default function Header({
             <Link to="/global-wines" onClick={closeMenus} className="text-[#f0cf76] font-bold">
               🌍 Global Wines
             </Link>
-            <Link to="/customer/compare" onClick={closeMenus}>
-              Compare
-            </Link>
+
             <Link to="/customer/wishlist" onClick={closeMenus}>
               Wishlist
             </Link>

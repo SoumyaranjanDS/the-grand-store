@@ -37,6 +37,8 @@ const vendorSchema = new mongoose.Schema({
     registrationNumber: String,
     businessType: String,
     address: String,
+    logoUrl: String,
+    bannerUrl: String,
   },
   
   // Step 3: KYC
@@ -120,7 +122,9 @@ const vendorSchema = new mongoose.Schema({
       street: String,
       city: String,
       postalCode: String,
-      country: { type: String, default: 'South Africa' }
+      country: { type: String, default: 'South Africa' },
+      lat: Number,
+      lng: Number
     },
     defaultDimensions: {
       length: { type: Number, default: 35 },
@@ -140,6 +144,22 @@ const vendorSchema = new mongoose.Schema({
     handlingTimeDays: { type: Number, default: 2 }
   },
   
+  // Social Proof Engine Metrics
+  trustScore: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: null // Null means not yet calculated
+  },
+  badges: [{
+    type: String // e.g., 'GRAND_STORE_VERIFIED', 'BEST_WINE_VENDOR'
+  }],
+  performanceMetrics: {
+    ordersFulfilledPercent: { type: Number, default: 0 },
+    averageResponseHours: { type: Number, default: 0 },
+    positiveExperiencePercent: { type: Number, default: 0 }
+  },
+
   // Step 10: Agreement
   agreements: {
     termsAccepted: { type: Boolean, default: false },

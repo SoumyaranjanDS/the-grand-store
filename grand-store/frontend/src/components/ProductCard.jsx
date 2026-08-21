@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { GitCompareArrows, Heart, Search, ShoppingBag } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { GitCompareArrows, Heart, Search, ShoppingBag, Plus, Store } from 'lucide-react'
 import IconButton from './IconButton'
 import { useWishlist } from '../wishlistContext'
 
@@ -223,13 +223,21 @@ export default function ProductCard({
       </div>
 
       <div className="product-info">
-        <p className="product-category">{category}</p>
+        <p className="product-category">{product.brand || category}</p>
         <h3><Link to={productPath}>{productName}</Link></h3>
         <p className="product-origin">{origin}</p>
+        
+        {product.storeName && product.storeId && (
+          <Link to={`/store/${product.storeId}`} onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--gold-bright)', marginTop: '4px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
+            <Store size={12} />
+            {product.storeName}
+          </Link>
+        )}
+
         <div className="product-buy-row">
           <strong>{formatPrice(product.price)}</strong>
           {onAdd && (
-            <button type="button" onClick={() => onAdd(product)} aria-label={`Add ${productName} to bag`}>
+            <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(product); }} aria-label={`Add ${productName} to bag`}>
               Add to bag <ShoppingBag size={16} />
             </button>
           )}
