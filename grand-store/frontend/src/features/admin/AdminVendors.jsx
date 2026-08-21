@@ -9,9 +9,7 @@ export default function AdminVendors() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  const goldText = "bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] bg-clip-text text-transparent";
-  const scriptFont = { fontFamily: "'Dancing Script', cursive" };
-
+  const goldText = "text-[#c9a35b]";
   const fetchVendors = async () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/vendors`, {
@@ -65,7 +63,7 @@ export default function AdminVendors() {
     <div className="flex flex-col gap-10 w-full max-w-7xl mx-auto pb-10">
       <section>
         <h1 className="text-[var(--color-ivory)] font-serif text-5xl mb-4 leading-tight">
-          Vendor <span className={goldText} style={scriptFont}>Management</span>
+          Vendor <span className={goldText} >Management</span>
         </h1>
         <p className="text-[var(--color-ivory-muted)] text-lg font-light">
           Review, approve, or reject vendor applications.
