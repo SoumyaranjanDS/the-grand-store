@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { Package, Clock, CheckCircle2, XCircle } from 'lucide-react';
+import Price from '../../components/ui/Price';
 
 export default function VendorInventory() {
   const { user } = useAuth();
@@ -120,8 +121,8 @@ export default function VendorInventory() {
                       </div>
                     </td>
                     <td className="py-5 px-5 text-[var(--color-ivory-muted)] font-sans">{lot.lotNumber || 'Pending'}</td>
-                    <td className="py-5 px-5 text-[var(--color-ivory)] font-sans font-medium tracking-wide">R{lot.reservePrice?.toLocaleString('en-ZA')}</td>
-                    <td className="py-5 px-5 text-gold-gradient font-sans font-semibold tracking-wide">R{lot.currentBid?.toLocaleString('en-ZA')}</td>
+                    <td className="py-5 px-5 text-[var(--color-ivory)] font-sans font-medium tracking-wide"><Price amount={lot.reservePrice?.toLocaleString('en-ZA')} /></td>
+                    <td className="py-5 px-5 text-gold-gradient font-sans font-semibold tracking-wide"><Price amount={lot.currentBid?.toLocaleString('en-ZA')} /></td>
                     <td className="py-5 px-5">{getStatusBadge(lot.status)}</td>
                     <td className="py-5 px-5 text-right">
                       <button
