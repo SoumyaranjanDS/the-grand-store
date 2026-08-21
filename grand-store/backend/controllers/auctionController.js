@@ -519,7 +519,7 @@ exports.closeAuction = async (req, res) => {
   }
 };
 
-// USER: Pay for winning auction
+// USER: Prepare lot for payment
 exports.payAuction = async (req, res) => {
   try {
     const lot = await AuctionLot.findById(req.params.id);
@@ -535,48 +535,71 @@ exports.payAuction = async (req, res) => {
 
     const { shippingAddress, calculatedShipping } = req.body;
     
-    // Find associated Order and Transaction
+    // Find associated Order
     const order = await Order.findOne({ 'orderItems.product': lot._id });
-    const transaction = order ? await Transaction.findOne({ order: order._id }) : null;
 
-    // Update lot
-    lot.paymentStatus = 'Paid';
+    // Update lot as Pending
+    lot.paymentStatus = 'Pending';
     lot.shippingCost = calculatedShipping || lot.shippingCost || 0;
     lot.totalPaidByBuyer = lot.winningBid + lot.buyerPremiumAmount + lot.barChargeAmount + lot.shippingCost;
     
     if (order) {
-      order.paymentStatus = 'Paid';
-      order.isPaid = true;
-      order.paidAt = new Date();
+      order.paymentStatus = 'Pending';
       if (shippingAddress) order.shippingAddress = shippingAddress;
       order.shippingCost = lot.shippingCost;
       order.totalPrice = lot.totalPaidByBuyer;
       await order.save();
     }
 
-    if (transaction) {
-      transaction.status = 'cleared';
-      transaction.amount = lot.totalPaidByBuyer;
-      transaction.netAmount = lot.totalPaidByBuyer - ((lot.totalPaidByBuyer * 2.5) / 100); // 2.5% mock gateway fee
-      await transaction.save();
-    }
-
-    // Update vendor wallet (pending balance until delivered)
-    if (lot.vendor) {
-      let wallet = await Wallet.findOne({ vendorId: lot.vendor });
-      if (!wallet) {
-         wallet = new Wallet({ vendorId: lot.vendor });
-      }
-      wallet.pendingBalance += lot.vendorPayable;
-      await wallet.save();
-    }
-
     await lot.save();
 
-    res.json({ message: 'Payment successful', lot, order });
+    res.json({ message: 'Shipping saved, pending payment', lot, order });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
+};
+
+/**
+ * Process the ledger transactions and wallet updates after a successful auction payment
+ * This function will be called by the PayFast ITN Webhook Controller
+ */
+exports.processAuctionPayment = async (lotId) => {
+  const lot = await AuctionLot.findById(lotId);
+  if (!lot) throw new Error('Lot not found');
+  if (lot.paymentStatus === 'Paid') return true;
+
+  const order = await Order.findOne({ 'orderItems.product': lot._id });
+  const transaction = order ? await Transaction.findOne({ order: order._id }) : null;
+
+  lot.paymentStatus = 'Paid';
+
+  if (order) {
+    order.paymentStatus = 'Paid';
+    order.isPaid = true;
+    order.paidAt = new Date();
+    await order.save();
+  }
+
+  if (transaction) {
+    transaction.status = 'cleared';
+    transaction.amount = lot.totalPaidByBuyer;
+    transaction.netAmount = lot.totalPaidByBuyer - ((lot.totalPaidByBuyer * 2.5) / 100); // 2.5% mock gateway fee
+    await transaction.save();
+  }
+
+  // Update vendor wallet (pending balance until delivered)
+  if (lot.vendor) {
+    let wallet = await Wallet.findOne({ vendorId: lot.vendor });
+    if (!wallet) {
+       wallet = new Wallet({ vendorId: lot.vendor });
+    }
+    wallet.pendingBalance += lot.vendorPayable;
+    wallet.totalEarned += lot.vendorPayable;
+    await wallet.save();
+  }
+
+  await lot.save();
+  return true;
 };
 
 // ADMIN: Get all lots (for admin financial view)
