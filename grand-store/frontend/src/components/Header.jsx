@@ -87,7 +87,7 @@ export default function Header({
 
   return (
     <div className={`sticky top-0 left-0 right-0 z-[100] bg-[#0a0a0a] transition-transform duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-      <div className="announcement-bar py-1.5 bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] text-black">
+      <div className="announcement-bar py-1.5 bg-[#c9a35b] text-black">
         <div className="shell announcement-inner">
           <p className="font-bold tracking-widest uppercase text-[10px]">
             <PackageCheck size={14} className="mr-2" /> Complimentary delivery
@@ -162,7 +162,11 @@ export default function Header({
                       ? "/admin/auctions"
                       : user.role === "vendor_active"
                         ? "/vendor/dashboard"
-                        : "/customer/profile",
+                        : user.role === "auction_host"
+                          ? "/auction-manager/dashboard"
+                          : user.role === "event_host"
+                            ? "/event-manager/dashboard"
+                            : "/customer/profile",
                   )
                 }
               >
