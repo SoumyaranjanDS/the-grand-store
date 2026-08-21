@@ -9,9 +9,7 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  const goldText = "bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] bg-clip-text text-transparent";
-  const scriptFont = { fontFamily: "'Dancing Script', cursive" };
-
+  const goldText = "text-[#c9a35b]";
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -47,7 +45,7 @@ export default function AdminUsers() {
     <div className="flex flex-col gap-10 w-full max-w-7xl mx-auto pb-10">
       <section>
         <h1 className="text-[var(--color-ivory)] font-serif text-5xl mb-4 leading-tight">
-          User <span className={goldText} style={scriptFont}>Directory</span>
+          User <span className={goldText} >Directory</span>
         </h1>
         <p className="text-[var(--color-ivory-muted)] text-lg font-light">
           Manage all registered users on the platform.
