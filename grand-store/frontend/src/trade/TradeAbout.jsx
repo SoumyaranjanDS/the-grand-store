@@ -12,7 +12,7 @@ export default function TradeAbout() {
         </div>
         <div className="trade-about-content">
           <span className="trade-sub-eyebrow">About Us</span>
-          <h1 className="trade-sub-title">Your Trusted Partner in Premium Wine & Liquor Trading</h1>
+          <h1 className="trade-sub-title">Your Trusted Partner in <span className="trade-script-accent">Premium Wine and Liquor Trading</span></h1>
           
           <div className="trade-about-text">
             <p>Welcome to our about us page, where we showcase our passion for the wine and liquor trade industry. Our story begins with a team of experienced and knowledgeable professionals who saw a need for a reliable and efficient platform to trade in high-quality wines and liquors. We came together with a shared vision to create a one-stop-shop for all your wine and liquor needs.</p>

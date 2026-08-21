@@ -99,13 +99,7 @@ export default function Testimonials() {
             id="testimonials-title" 
             className="m-0 font-serif text-[clamp(40px,3.8vw,62px)] font-medium tracking-[-0.02em] leading-[1.05] text-[#eee8dd]"
           >
-            Private{' '}
-            <span 
-              className="gold-gradient-text inline-block pr-2 text-[1.15em]"
-              
-            >
-              Notes
-            </span>
+            Private <span className="text-[#dfbd72]">Notes</span>
           </h2>
           
           <p className="mt-2.5 text-[rgba(244,238,224,0.76)] text-[15px] md:text-[16px] leading-[1.6] max-w-[620px] mx-auto">
@@ -149,7 +143,7 @@ export default function Testimonials() {
                         <Star key={i} size={14} fill="#f0cf76" stroke="none" />
                       ))}
                     </div>
-                    <span className="text-[10px] md:text-[11px] uppercase tracking-widest font-bold text-gold-gradient bg-[#c9a35b]/10 px-2.5 py-0.5 rounded-full border border-[#c9a35b]/20 truncate max-w-[190px]">
+                    <span className="text-[10px] md:text-[11px] uppercase tracking-widest font-bold text-[#dfbd72] bg-[#c9a35b]/10 px-2.5 py-0.5 rounded-full border border-[#c9a35b]/20 truncate max-w-[190px]">
                       {item.bottle}
                     </span>
                   </div>
@@ -162,7 +156,7 @@ export default function Testimonials() {
 
                 {/* Verified Author Row with Luxury Golden Avatar Ring */}
                 <div className="flex items-center gap-3.5 pt-3.5 mt-3 border-t border-white/10 relative z-10">
-                  <div className="w-11 h-11 md:w-12 md:h-12 rounded-full p-[1.5px] bg-gradient-to-tr from-[#b58b38] via-[#f5d77f] to-[#b58b38] shadow-md shrink-0 flex items-center justify-center">
+                  <div className="w-11 h-11 md:w-12 md:h-12 rounded-full border border-[#dfbd72]/70 bg-[#17130e] p-[2px] shadow-md shrink-0 flex items-center justify-center">
                     <img 
                       className="w-full h-full rounded-full object-cover bg-[#1c1913]" 
                       src={item.image} 
@@ -185,10 +179,6 @@ export default function Testimonials() {
                     </div>
                     <div className="text-xs uppercase tracking-widest text-[#918a7f] mt-0.5 flex items-center gap-1.5">
                       <span>{item.location}</span>
-                      <span>•</span>
-                      <span className="text-gold-gradient font-semibold flex items-center gap-1">
-                        <CheckCircle2 size={12} className="text-[#e6c97a]" /> Verified
-                      </span>
                     </div>
                   </div>
                 </div>
@@ -210,9 +200,6 @@ export default function Testimonials() {
             4.98 / 5.0 Rating • 350+ Verified Cellars Delivered
           </span>
         </div>
-        <span className="text-[11px] uppercase tracking-widest text-[#6e685f]">
-          Hover card to pause review
-        </span>
       </div>
     </section>
   )

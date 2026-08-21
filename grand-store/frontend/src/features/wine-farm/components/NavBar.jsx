@@ -40,7 +40,7 @@ export default function NavBar() {
               ABOUT US
               <span className={`absolute -bottom-[6px] left-1/2 -translate-x-1/2 h-[1px] w-0 transition-all duration-300 group-hover:w-full ${isScrolled ? 'bg-[#7b263c]' : 'bg-gold-bright'}`}></span>
             </a></li>
-            <li><a href="/wine-farm" className={`relative font-sans text-[11px] xl:text-[13px] font-bold uppercase tracking-[0.15em] transition-all duration-300 group ${isScrolled ? 'text-[#7b263c]' : 'text-white'}`}>
+            <li><a href="/winefarm" className={`relative font-sans text-[11px] xl:text-[13px] font-bold uppercase tracking-[0.15em] transition-all duration-300 group ${isScrolled ? 'text-[#7b263c]' : 'text-white'}`}>
               WINE FARM
               <span className={`absolute -bottom-[6px] left-1/2 -translate-x-1/2 h-[1px] w-full transition-all duration-300 ${isScrolled ? 'bg-[#7b263c]' : 'bg-gold-bright'}`}></span>
             </a></li>
@@ -92,7 +92,7 @@ export default function NavBar() {
           <ul className="flex flex-col gap-[15px] m-0 p-0 list-none">
             <li><a href="/" className="block text-ink font-bold text-[15px] tracking-[0.1em] p-[15px] border-b border-black/5 hover:text-[#7b263c] transition-colors">HOME</a></li>
             <li><a href="/about" className="block text-ink font-bold text-[15px] tracking-[0.1em] p-[15px] border-b border-black/5 hover:text-[#7b263c] transition-colors">ABOUT US</a></li>
-            <li><a href="/wine-farm" className="block text-[#7b263c] font-bold text-[15px] tracking-[0.1em] p-[15px] border-b border-black/5 transition-colors">WINE FARM</a></li>
+            <li><a href="/winefarm" className="block text-[#7b263c] font-bold text-[15px] tracking-[0.1em] p-[15px] border-b border-black/5 transition-colors">WINE FARM</a></li>
             <li><a href="/shop" className="block text-ink font-bold text-[15px] tracking-[0.1em] p-[15px] border-b border-black/5 hover:text-[#7b263c] transition-colors">SHOP WINES</a></li>
             <li><a href="/blogs" className="block text-ink font-bold text-[15px] tracking-[0.1em] p-[15px] border-b border-black/5 hover:text-[#7b263c] transition-colors">BLOGS</a></li>
             <li><a href="/contact" className="block text-ink font-bold text-[15px] tracking-[0.1em] p-[15px] border-b border-black/5 hover:text-[#7b263c] transition-colors">CONTACT US</a></li>

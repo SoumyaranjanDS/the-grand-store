@@ -10,6 +10,7 @@ import TradeExport from './trade/TradeExport'
 import TradeProcedures from './trade/TradeProcedures'
 import TradeContact from './trade/TradeContact'
 import TradePartnerEnquiry from './trade/TradePartnerEnquiry'
+import './trade/TradeProfessional.css'
 import WineFarmPage from './features/wine-farm/WineFarmPage'
 import Hero from './features/home/components/Hero'
 import Arrivals from './features/home/components/Arrivals'
@@ -272,6 +273,7 @@ function App() {
   }
 
   const isTradeRoute = location.pathname.startsWith('/trade')
+  const isWineFarmRoute = location.pathname.startsWith('/winefarm') || location.pathname.startsWith('/wine-farm')
   const isDashboardRoute = location.pathname.startsWith('/customer') || location.pathname.startsWith('/vendor') || location.pathname.startsWith('/admin')
   const isAuthRoute = location.pathname === '/login' || location.pathname === '/register'
   const isEstateRoute = location.pathname.startsWith('/estate')
@@ -283,7 +285,7 @@ function App() {
   return (
     <div className="app">
       <SiteMotion />
-      {!isTradeRoute && !isDashboardRoute && !isAuthRoute && !isEstateRoute && (
+      {!isTradeRoute && !isWineFarmRoute && !isDashboardRoute && !isAuthRoute && !isEstateRoute && (
         <Header
           cartCount={cartCount}
           compareCount={compareItems.length}
@@ -295,6 +297,7 @@ function App() {
       )}
       <Routes>
         <Route path="/winefarm/*" element={<WineFarmPage />} />
+        <Route path="/wine-farm/*" element={<Navigate to="/winefarm" replace />} />
         <Route path="/vendor-portal" element={<VendorPortalPage />} />
         
         <Route path="/trade" element={<TradeLayout />}>

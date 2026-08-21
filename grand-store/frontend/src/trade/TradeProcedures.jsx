@@ -50,7 +50,7 @@ export default function TradeProcedures() {
       <div className="shell">
         <div className="procedures-header">
           <span className="trade-sub-eyebrow">Trade Procedures</span>
-          <h1 className="trade-sub-title">Your Guide to Hassle-Free Wine Export Logistics</h1>
+          <h1 className="trade-sub-title">Your Guide to <span className="trade-script-accent">Hassle-Free Wine Export Logistics</span></h1>
           <p className="procedures-intro">
             I would like to take this opportunity to explain to you our company's process for wine exports. We understand that the logistics involved in exporting wine can be complex and require specialized expertise to ensure a smooth and efficient process. To ensure that our exports are handled with the utmost care and professionalism, we have partnered with a specialized logistic company that provides a comprehensive A to Z service for wine exports.
           </p>

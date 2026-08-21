@@ -1,48 +1,124 @@
 import React from 'react'
+import { ClipboardCheck, Grape, PackageCheck, Ship } from 'lucide-react'
 import './TradeExport.css'
+
+const exportSteps = [
+  {
+    icon: Grape,
+    number: '01',
+    title: 'Source',
+    text: 'Access selected vineyards and a broad range of South African wine styles.',
+  },
+  {
+    icon: ClipboardCheck,
+    number: '02',
+    title: 'Select',
+    text: 'Choose the wines, quantities and specifications suited to your market.',
+  },
+  {
+    icon: PackageCheck,
+    number: '03',
+    title: 'Prepare',
+    text: 'Coordinate secure packing, container preparation and export documentation.',
+  },
+  {
+    icon: Ship,
+    number: '04',
+    title: 'Deliver',
+    text: 'Track each shipment through to its final international destination.',
+  },
+]
 
 export default function TradeExport() {
   return (
     <main className="trade-subpage trade-export">
-      <div className="shell trade-export-container">
-        <div className="trade-export-content">
+      <section className="shell trade-export-hero">
+        <div className="trade-export-hero-copy">
           <span className="trade-sub-eyebrow">Trade Export</span>
-          <h1 className="trade-sub-title">Your Global Gateway to South Africa’s Finest Wines</h1>
-          
-          <div className="trade-export-text">
-            <p className="lead-paragraph">Our Company is a leading player in the wine industry, with a strong presence in South Africa's various wine growing regions. We have established excellent supply channels, allowing us to source the finest wines from the best vineyards in the region.</p>
-            
-            <p>Our close relationships with selected reputable vineyards have been built over many years, and these relationships are key to our ability to assist importers from around the world in selecting and shipping the wines of their choice. Our extensive network of supply channels, combined with our expertise in the wine industry, enables us to offer a comprehensive service to our clients.</p>
-            
-            <p>We are able to source a wide range of wine varieties, from classic red and white wines to more unique and specialty wines. Our focus is always on providing our clients with the best possible quality, and we work closely with our vineyard partners to ensure that the wines we offer meet the highest standards.</p>
-
-            <div className="trade-divider-gold"></div>
-
-            <h3 className="trade-section-heading">Logistics & Shipping Excellence</h3>
-            <p>In addition to our supply channels, we also have a highly skilled and experienced logistics team that handles all aspects of the shipping process, from securing the wine in shipment containers to tracking the shipment to its final destination. Our team has a deep understanding of the complexities involved in shipping wine, and we take great care to ensure that the wine arrives at its destination in the best possible condition.</p>
-            
-            <div className="trade-highlight-box">
-              <p>In conclusion, our Company is a trusted partner for importers from around the world who are looking for the finest South African wines. With our excellent supply channels, close relationships with reputable vineyards, and experienced logistics team, we are well-equipped to provide a comprehensive and reliable service to our clients.</p>
-            </div>
+          <h1 className="trade-sub-title">
+            Your Global Gateway to
+            <span className="trade-script-accent">South Africa’s Finest Wines</span>
+          </h1>
+          <p className="lead-paragraph">
+            Our Company is a leading player in the wine industry, with a strong presence in South Africa&apos;s various wine growing regions. We have established excellent supply channels, allowing us to source the finest wines from the best vineyards in the region.
+          </p>
+          <div className="trade-export-assurances" aria-label="Export service highlights">
+            <span>Vineyard sourcing</span>
+            <span>Export coordination</span>
+            <span>Shipment tracking</span>
           </div>
         </div>
-        <div className="trade-export-visuals">
-          <div className="export-image-stack">
-            <div className="export-img-wrapper main-img">
-              <img src="/assets/trade/maritime.jpeg" alt="Global Shipping and Logistics" />
-              <div className="export-img-overlay"></div>
-            </div>
-            <div className="export-stats-card">
-              <span className="stat-number">100+</span>
-              <span className="stat-label">Vineyard Partners</span>
-            </div>
-            <div className="export-stats-card bottom-card">
-              <span className="stat-number">Global</span>
-              <span className="stat-label">Shipping Destinations</span>
-            </div>
-          </div>
+
+        <figure className="trade-export-hero-visual">
+          <img src="/assets/trade/maritime.jpeg" alt="International freight network serving global wine importers" />
+          <figcaption>
+            <span>From South Africa</span>
+            <strong>To global markets</strong>
+          </figcaption>
+        </figure>
+      </section>
+
+      <section className="shell trade-export-process" aria-labelledby="export-process-title">
+        <div className="trade-export-process-heading">
+          <span className="trade-sub-eyebrow">One coordinated service</span>
+          <h2 id="export-process-title">A clear route from vineyard to destination.</h2>
         </div>
-      </div>
+        <div className="trade-export-process-grid">
+          {exportSteps.map(({ icon: Icon, number, title, text }) => (
+            <article className="trade-export-step" key={title}>
+              <div className="trade-export-step-top">
+                <Icon size={24} strokeWidth={1.7} />
+                <span>{number}</span>
+              </div>
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="shell trade-export-story">
+        <article className="trade-export-story-card trade-export-supply-card">
+          <span className="trade-sub-eyebrow">Supply relationships</span>
+          <h2>Connected to respected wine-growing regions.</h2>
+          <p>
+            Our close relationships with selected reputable vineyards have been built over many years, and these relationships are key to our ability to assist importers from around the world in selecting and shipping the wines of their choice.
+          </p>
+          <p>
+            Our extensive network of supply channels, combined with our expertise in the wine industry, enables us to offer a comprehensive service to our clients.
+          </p>
+          <div className="trade-export-facts">
+            <div><strong>100+</strong><span>Vineyard partners</span></div>
+            <div><strong>Global</strong><span>Shipping destinations</span></div>
+          </div>
+        </article>
+
+        <figure className="trade-export-team-visual">
+          <img src="/assets/trade/enquiry.jpeg" alt="Export specialists coordinating an international shipment" />
+          <figcaption>Experienced people coordinating every shipment.</figcaption>
+        </figure>
+
+        <article className="trade-export-story-card trade-export-range-card">
+          <span className="trade-sub-eyebrow">Wine selection</span>
+          <h2>Range, quality and market fit.</h2>
+          <p>
+            We are able to source a wide range of wine varieties, from classic red and white wines to more unique and specialty wines. Our focus is always on providing our clients with the best possible quality, and we work closely with our vineyard partners to ensure that the wines we offer meet the highest standards.
+          </p>
+        </article>
+
+        <article className="trade-export-story-card trade-export-logistics-card">
+          <span className="trade-sub-eyebrow">Logistics and shipping excellence</span>
+          <h2>Managed carefully through final delivery.</h2>
+          <p>
+            Our highly skilled and experienced logistics team handles all aspects of the shipping process, from securing the wine in shipment containers to tracking the shipment to its final destination. Our team understands the complexities involved in shipping wine and takes great care to ensure that it arrives in the best possible condition.
+          </p>
+          <div className="trade-highlight-box">
+            <p>
+              With excellent supply channels, close relationships with reputable vineyards and an experienced logistics team, Grand Store is equipped to provide importers with a comprehensive and reliable service.
+            </p>
+          </div>
+        </article>
+      </section>
     </main>
   )
 }

@@ -27,9 +27,13 @@ export default function TastingCampaign() {
           className="m-0 font-serif text-[42px] lg:text-[clamp(46px,4.5vw,72px)] font-medium tracking-[-0.02em] leading-[1.05] text-[#eee8dd]"
         >
           The Private<br />
-          <span 
-            className="gold-gradient-text inline-block pr-2 text-[1.12em]"
-            
+          <span
+            className="inline-block pr-2 text-[1em] text-[#eee8dd]"
+            style={{
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontStyle: 'normal',
+              fontWeight: 500,
+            }}
           >
             Tasting Room
           </span>

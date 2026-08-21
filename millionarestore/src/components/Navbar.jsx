@@ -7,7 +7,15 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
-    const updateHeader = () => setScrolled(window.scrollY > 30)
+    const updateHeader = () => {
+      const hero = document.getElementById('home')
+      const pinSpacer = hero?.closest('.pin-spacer')
+      // If the hero section is pinned by GSAP, its pin-spacer contains the total scroll duration
+      const threshold = pinSpacer ? pinSpacer.offsetHeight : (window.innerHeight || 0)
+      
+      // Turn solid right as we scroll past the hero section (minus navbar height)
+      setScrolled(window.scrollY > (threshold > 50 ? threshold - 88 : 30))
+    }
     updateHeader()
     window.addEventListener('scroll', updateHeader, { passive: true })
     return () => window.removeEventListener('scroll', updateHeader)

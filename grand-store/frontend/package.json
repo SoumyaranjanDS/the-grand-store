@@ -17,6 +17,7 @@
     "dotenv": "^17.4.2",
     "framer-motion": "^13.1.0",
     "gsap": "latest",
+    "lenis": "^1.3.26",
     "lucide-react": "latest",
     "mongoose": "^9.9.2",
     "qrcode.react": "^4.2.0",
