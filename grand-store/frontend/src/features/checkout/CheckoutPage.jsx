@@ -4,12 +4,14 @@ import { ChevronRight, ArrowRight, ShieldCheck, Lock, CreditCard, Loader2, Truck
 import { useAuth } from '../../context/AuthContext';
 import { formatCartPrice } from '../../data';
 import LocationInput from '../../components/LocationInput';
+import PaymentForm from './PaymentForm';
+import Price from '../../components/ui/Price';
 
 export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, onNotify }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const vendorId = searchParams.get('vendor');
-  const vendorCartItems = cartItems.filter(item => (item.storeId || item.vendorId || 'grand-store') === vendorId);
+  const vendorCartItems = vendorId ? cartItems.filter(item => (item.storeId || item.vendorId || 'grand-store') === vendorId) : cartItems;
 
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -27,11 +29,11 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
     address: '',
     city: '',
     postalCode: '',
-    country: '',
-    cardNumber: '',
-    expiry: '',
-    cvc: ''
+    country: ''
   });
+
+  const [paymentData, setPaymentData] = useState(null);
+  const [payfastUrl, setPayfastUrl] = useState(null);
 
   useEffect(() => {
     document.title = 'Checkout – The Grand Store';
@@ -44,7 +46,7 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
       return;
     }
 
-    if (!vendorId || vendorCartItems.length === 0) {
+    if (vendorCartItems.length === 0) {
       navigate('/customer/cart');
     }
   }, [vendorCartItems, navigate, user, onNotify, vendorId]);
@@ -155,14 +157,25 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
       if (!res.ok) {
         throw new Error(data.message || 'Error placing order');
       }
+      
+      // Order created (pending). Now request PayFast signature
+      const pfRes = await fetch(`${import.meta.env.VITE_API_URL}/api/payfast/generate-shop`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
+        body: JSON.stringify({ orderId: data._id })
+      });
 
-      if (clearVendorCart && vendorId) {
-        clearVendorCart(vendorId);
-      } else {
-        onClearCart();
+      const pfData = await pfRes.json();
+      
+      if (!pfRes.ok) {
+         throw new Error(pfData.message || 'Error generating payment');
       }
-      onNotify('Order placed successfully!');
-      navigate(`/customer/order/${data._id}`);
+
+      setPayfastUrl(pfData.url);
+      setPaymentData(pfData.data);
       
     } catch (error) {
       console.error(error);
@@ -274,7 +287,7 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                       {shp.items.map((item, i) => (
                         <div key={i} className="flex justify-between text-sm mb-2">
                           <span>{item.quantity} × {item.name}</span>
-                          <span>{formatCartPrice(item.price * item.quantity)}</span>
+                          <span><Price amount={item.price * item.quantity} /></span>
                         </div>
                       ))}
                     </div>
@@ -296,7 +309,7 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                               <div className="text-xs text-[var(--color-ivory-muted)]">{opt.estimatedDays}</div>
                             </div>
                           </div>
-                          <div className="font-medium text-gold">{opt.cost > 0 ? formatCartPrice(opt.cost) : 'FREE'}</div>
+                          <div className="font-medium text-gold">{opt.cost > 0 ? <Price amount={opt.cost} /> : 'FREE'}</div>
                         </label>
                       ))}
                     </div>
@@ -309,7 +322,7 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                     <p className="text-sm text-red-200/80 mb-4">
                       Import duties, customs charges, destination VAT/GST or other government charges may be payable by you upon arrival in {formData.country}. 
                       The delivery charge covers transportation only.
-                      Estimated duties/taxes: {formatCartPrice(quote.aggregatedTotals.estimatedImportDuties + quote.aggregatedTotals.estimatedImportTaxes)}.
+                      Estimated duties/taxes: <Price amount={quote.aggregatedTotals.estimatedImportDuties + quote.aggregatedTotals.estimatedImportTaxes} />.
                     </p>
                     <label className="flex items-start gap-3 cursor-pointer">
                       <input type="checkbox" className="mt-1 accent-red-500" checked={dutiesAccepted} onChange={(e) => setDutiesAccepted(e.target.checked)} required />
@@ -326,16 +339,9 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                   </h2>
                   <div className="bg-[#0a0a0a] border border-[var(--color-gold)]/30 rounded-2xl p-6 relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 opacity-10"><CreditCard size={100} /></div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
-                      <div className="md:col-span-2">
-                        <input type="text" name="cardNumber" value={formData.cardNumber} onChange={handleChange} required maxLength="19" placeholder="Card Number (Mock)" className="w-full bg-transparent border-b border-white/20 px-0 py-3 text-sm focus:border-[var(--color-gold)] focus:outline-none transition-colors placeholder:text-white/20" />
-                      </div>
-                      <div>
-                        <input type="text" name="expiry" value={formData.expiry} onChange={handleChange} required placeholder="MM / YY" className="w-full bg-transparent border-b border-white/20 px-0 py-3 text-sm focus:border-[var(--color-gold)] focus:outline-none transition-colors placeholder:text-white/20" />
-                      </div>
-                      <div>
-                        <input type="text" name="cvc" value={formData.cvc} onChange={handleChange} required placeholder="CVC" className="w-full bg-transparent border-b border-white/20 px-0 py-3 text-sm focus:border-[var(--color-gold)] focus:outline-none transition-colors placeholder:text-white/20" />
-                      </div>
+                    <div className="relative z-10">
+                      <p className="text-sm text-[var(--color-ivory-muted)] mb-2">You will be redirected to PayFast to securely complete your purchase.</p>
+                      <img src="https://payfast.io/images/payfast-logo.svg" alt="PayFast" className="h-8 mb-4 brightness-0 invert opacity-80" />
                     </div>
                   </div>
                 </section>
@@ -345,8 +351,10 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                   disabled={loading}
                   className="w-full mt-8 bg-[#c9a35b] text-black font-bold uppercase tracking-widest text-xs py-4 rounded-xl hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all flex items-center justify-center gap-2"
                 >
-                  {loading ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : <>Pay {formatCartPrice(quote?.aggregatedTotals.totalToPay || 0)} <ArrowRight size={16} /></>}
+                  {loading ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : <>Pay <Price amount={quote?.aggregatedTotals.totalToPay || 0} /> <ArrowRight size={16} /></>}
                 </button>
+                
+                <PaymentForm paymentData={paymentData} payfastUrl={payfastUrl} />
               </form>
             )}
             
@@ -375,15 +383,15 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                 <div className="border-t border-white/10 pt-6 flex flex-col gap-3 text-sm">
                   <div className="flex justify-between text-[var(--color-ivory-muted)]">
                     <span>Products Subtotal</span>
-                    <span>{formatCartPrice(quote.globalSubtotal)}</span>
+                    <span><Price amount={quote.globalSubtotal} /></span>
                   </div>
                   <div className="flex justify-between pb-4 border-b border-white/10 text-[var(--color-ivory-muted)]">
                     <span>Delivery (Total)</span>
-                    <span>{quote.aggregatedTotals.shipping > 0 ? formatCartPrice(quote.aggregatedTotals.shipping) : 'Free'}</span>
+                    <span>{quote.aggregatedTotals.shipping > 0 ? <Price amount={quote.aggregatedTotals.shipping} /> : 'Free'}</span>
                   </div>
                   <div className="flex justify-between text-lg font-serif mt-2">
                     <span>Total To Pay</span>
-                    <span className="text-gold-gradient">{formatCartPrice(quote.aggregatedTotals.totalToPay)}</span>
+                    <span className="text-gold-gradient"><Price amount={quote.aggregatedTotals.totalToPay} /></span>
                   </div>
                   <p className="text-[10px] text-white/30 italic mt-4">
                     Price locked for 10 minutes. 
