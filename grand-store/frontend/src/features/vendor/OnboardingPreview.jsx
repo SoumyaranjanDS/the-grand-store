@@ -1,3 +1,4 @@
+import Price from '../../components/ui/Price';
 import React, { useState } from 'react';
 import { UploadCloud, CheckCircle2, ChevronRight, PlayCircle, Store, Globe } from 'lucide-react';
 
@@ -201,7 +202,7 @@ export default function OnboardingPreview({ onNext, onBack }) {
                       <div className="p-8 text-center bg-black/40 backdrop-blur-md border-t border-white/5">
                         <p className="text-[10px] text-neutral-500 uppercase tracking-[0.3em] mb-3">{previewData.businessName || 'Estate'}</p>
                         <h3 className="text-white text-lg font-serif mb-4 group-hover:text-gold-gradient transition-colors">{previewData.productName || 'Signature Collection'}</h3>
-                        <p className="text-gold-gradient font-mono text-lg tracking-wider">R {previewData.productPrice || '1,250'}</p>
+                        <p className="text-gold-gradient font-mono text-lg tracking-wider"><Price amount={previewData.productPrice || '1,250'} /></p>
                       </div>
                     </div>
 
