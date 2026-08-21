@@ -1,3 +1,4 @@
+import Price from '../../components/ui/Price';
 import React from 'react';
 import { Store, TrendingUp, Smartphone, CreditCard, Truck, Globe, Presentation, Tag, Gavel } from 'lucide-react';
 
@@ -53,7 +54,7 @@ export default function OnboardingLanding({ onNext }) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10 relative z-10">
           <div className="text-center p-6 bg-neutral-950/50 rounded-xl border border-neutral-800">
             <p className="text-neutral-400 text-sm uppercase tracking-wider mb-2">Once-off Registration</p>
-            <p className="text-3xl font-serif text-white">R2,500</p>
+            <p className="text-3xl font-serif text-white"><Price amount={2500} /></p>
           </div>
           <div className="text-center p-6 bg-neutral-950/50 rounded-xl border border-[#c9a35b]/30">
             <p className="text-gold-gradient text-sm uppercase tracking-wider mb-2">Commission</p>
@@ -62,7 +63,7 @@ export default function OnboardingLanding({ onNext }) {
           </div>
           <div className="text-center p-6 bg-neutral-950/50 rounded-xl border border-neutral-800">
             <p className="text-neutral-400 text-sm uppercase tracking-wider mb-2">Monthly Fee</p>
-            <p className="text-3xl font-serif text-white">R500</p>
+            <p className="text-3xl font-serif text-white"><Price amount={500} /></p>
           </div>
         </div>
 
