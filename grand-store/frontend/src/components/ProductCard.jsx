@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { GitCompareArrows, Heart, Search, ShoppingBag, Plus, Store } from 'lucide-react'
 import IconButton from './IconButton'
 import { useWishlist } from '../wishlistContext'
+import Price from './ui/Price'
 
 const fallbackBadges = ['Just in', 'Limited', 'Cellar pick', 'New vintage', 'Sommelier pick']
 const trimmedUploadCache = new Map()
@@ -148,19 +149,6 @@ function VendorProductImage({ src, alt }) {
   )
 }
 
-function formatPrice(price) {
-  if (typeof price === 'number') return `R${price.toLocaleString('en-ZA')}`
-
-  const value = String(price ?? '').trim()
-  if (!value) return 'Price on request'
-  if (/^R/i.test(value)) return value.replace(/^R\s*/i, 'R')
-
-  const numericValue = Number(value.replace(/[^0-9.]/g, ''))
-  return Number.isFinite(numericValue) && numericValue > 0
-    ? `R${numericValue.toLocaleString('en-ZA')}`
-    : value
-}
-
 export default function ProductCard({
   product,
   index = 0,
@@ -235,7 +223,7 @@ export default function ProductCard({
         )}
 
         <div className="product-buy-row">
-          <strong>{formatPrice(product.price)}</strong>
+          <strong><Price amount={product.price} /></strong>
           {onAdd && (
             <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(product); }} aria-label={`Add ${productName} to bag`}>
               Add to bag <ShoppingBag size={16} />
