@@ -249,7 +249,7 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                 <button 
                   type="submit" 
                   disabled={quoteLoading}
-                  className="w-full bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] text-black font-bold uppercase tracking-widest text-xs py-4 rounded-xl hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all flex items-center justify-center gap-2"
+                  className="w-full bg-[#c9a35b] text-black font-bold uppercase tracking-widest text-xs py-4 rounded-xl hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all flex items-center justify-center gap-2"
                 >
                   {quoteLoading ? <><Loader2 size={16} className="animate-spin" /> Calculating Shipping...</> : <>Continue to Payment <ArrowRight size={16} /></>}
                 </button>
@@ -343,7 +343,7 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                 <button 
                   type="submit" 
                   disabled={loading}
-                  className="w-full mt-8 bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] text-black font-bold uppercase tracking-widest text-xs py-4 rounded-xl hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all flex items-center justify-center gap-2"
+                  className="w-full mt-8 bg-[#c9a35b] text-black font-bold uppercase tracking-widest text-xs py-4 rounded-xl hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all flex items-center justify-center gap-2"
                 >
                   {loading ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : <>Pay {formatCartPrice(quote?.aggregatedTotals.totalToPay || 0)} <ArrowRight size={16} /></>}
                 </button>
