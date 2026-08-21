@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['customer', 'vendor_pending', 'vendor_active', 'admin'],
+    enum: ['customer', 'vendor_pending', 'vendor_active', 'admin', 'auction_host', 'event_host'],
     default: 'customer',
   },
   wishlist: [{
@@ -45,7 +45,11 @@ const userSchema = new mongoose.Schema({
   auctionWatchlist: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'AuctionLot'
-  }]
+  }],
+  allowedHostLimit: {
+    type: Number,
+    default: 0
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
