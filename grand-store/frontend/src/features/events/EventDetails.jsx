@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Calendar, MapPin, Clock, Users, Tag, Check, ArrowLeft, ShoppingBag, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import PaymentForm from '../checkout/PaymentForm';
+import Price from '../../components/ui/Price';
 
 export default function EventDetails({ onNotify, onAdd }) {
   const { id } = useParams();
@@ -33,6 +35,9 @@ export default function EventDetails({ onNotify, onAdd }) {
   const [quantity, setQuantity] = useState(1);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [waitlistLoading, setWaitlistLoading] = useState(false);
+  
+  const [paymentData, setPaymentData] = useState(null);
+  const [payfastUrl, setPayfastUrl] = useState(null);
 
   const handleWaitlist = async () => {
     if (!user) {
@@ -67,6 +72,7 @@ export default function EventDetails({ onNotify, onAdd }) {
     setBookingLoading(true);
     try {
       const token = user.token;
+      // 1. Create Pending Booking
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/events/${id}/book`, {
         ticketType: selectedTicket.name,
         quantity,
@@ -75,12 +81,18 @@ export default function EventDetails({ onNotify, onAdd }) {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      if (onNotify) onNotify(`Successfully booked ${quantity} ${selectedTicket.name} ticket(s)!`);
-      navigate('/customer/tickets');
+      // 2. Request PayFast Signature
+      const pfRes = await axios.post(`${import.meta.env.VITE_API_URL}/api/payfast/generate-event`, {
+        bookingId: res.data._id
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setPayfastUrl(pfRes.data.url);
+      setPaymentData(pfRes.data.data);
     } catch (error) {
       console.error('Booking failed:', error);
       if (onNotify) onNotify(error.response?.data?.message || 'Booking failed. Please try again.', 'error');
-    } finally {
       setBookingLoading(false);
     }
   };
@@ -161,7 +173,7 @@ export default function EventDetails({ onNotify, onAdd }) {
                         <div>
                           <span className="text-lg text-[#eee8dd]">{item}</span>
                           {product && (
-                            <p className="text-xs text-[#918a7f] mt-1 line-clamp-1">{product.category} &bull; R{product.price}</p>
+                            <p className="text-xs text-[#918a7f] mt-1 line-clamp-1">{product.category} &bull; <Price amount={product.price} /></p>
                           )}
                         </div>
                       </div>
@@ -234,7 +246,7 @@ export default function EventDetails({ onNotify, onAdd }) {
                         <p className="text-xs text-[#918a7f] mt-1">{available} remaining</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-serif text-xl text-white">R{tier.price}</p>
+                        <p className="font-serif text-xl text-white"><Price amount={tier.price} /></p>
                       </div>
                     </div>
                     
@@ -270,7 +282,7 @@ export default function EventDetails({ onNotify, onAdd }) {
                 <div className="mt-4 flex flex-col pt-4 border-t border-white/10">
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-sm font-bold uppercase tracking-widest text-[#918a7f]">Total</span>
-                    <span className="text-2xl font-serif text-gold-gradient">R{selectedTicket.price * quantity}</span>
+                    <span className="text-2xl font-serif text-gold-gradient"><Price amount={selectedTicket.price * quantity} /></span>
                   </div>
                   <p className="text-[10px] text-[#918a7f] text-right italic">Service fee & VAT included</p>
                 </div>
@@ -306,6 +318,7 @@ export default function EventDetails({ onNotify, onAdd }) {
             <p className="text-center text-[10px] text-[#918a7f] mt-4 tracking-widest uppercase">
               Secure Checkout via Grand Store
             </p>
+            <PaymentForm paymentData={paymentData} payfastUrl={payfastUrl} />
           </div>
         </div>
 
