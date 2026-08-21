@@ -101,8 +101,8 @@ export default function Testimonials() {
           >
             Private{' '}
             <span 
-              className="gold-gradient-text inline-block pr-2 font-script text-[1.15em]"
-              style={{ fontFamily: "'Dancing Script', cursive" }}
+              className="gold-gradient-text inline-block pr-2 text-[1.15em]"
+              
             >
               Notes
             </span>
