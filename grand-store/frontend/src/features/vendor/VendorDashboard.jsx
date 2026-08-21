@@ -1,3 +1,4 @@
+import Price from '../../components/ui/Price';
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { TrendingUp, Package, DollarSign, Activity, AlertCircle, ShoppingBag, Lightbulb, Calendar, Gavel } from 'lucide-react';
@@ -151,8 +152,8 @@ export default function VendorDashboard() {
       {/* KPI Cards (Sales Intelligence) */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { title: "Net Payout", value: formatCartPrice(netPayout), icon: DollarSign },
-          { title: "Revenue", value: formatCartPrice(totalRevenue), icon: TrendingUp },
+          { title: "Net Payout", value: <Price amount={netPayout} />, icon: DollarSign },
+          { title: "Revenue", value: <Price amount={totalRevenue} />, icon: TrendingUp },
           { title: "Units Sold", value: unitsSold, icon: Package },
           { title: "Total Orders", value: totalOrders, icon: ShoppingBag },
         ].map((kpi, idx) => (
@@ -270,7 +271,7 @@ export default function VendorDashboard() {
                       ))}
                     </td>
                     <td className="py-4 pr-6 text-right text-sm font-bold text-[var(--color-ivory)] font-serif tracking-wide">
-                      {formatCartPrice(sale.vendorTotal)}
+                      <Price amount={sale.vendorTotal} />
                     </td>
                   </tr>
                 ))}
@@ -327,7 +328,7 @@ export default function VendorDashboard() {
                         <div>End: {new Date(lot.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
                       </td>
                       <td className="py-4 text-sm font-bold text-[var(--color-ivory)] font-serif">
-                        R{(lot.winningBid || lot.currentBid || 0).toLocaleString('en-ZA')}
+                        <Price amount={(lot.winningBid || lot.currentBid || 0).toLocaleString('en-ZA')} />
                       </td>
                       <td className="py-4 pr-6 text-sm flex items-center gap-2">
                         {(lot.status === 'unsold' || lot.status === 'closed') && (
@@ -364,12 +365,12 @@ export default function VendorDashboard() {
                             <div className="bg-[#0a0a0a] p-5 rounded-xl border border-white/10">
                                <h4 className="text-[var(--color-gold)] font-bold tracking-widest uppercase text-[10px] mb-4">Financial Breakdown</h4>
                                <div className="space-y-2 font-mono text-[var(--color-ivory-muted)]">
-                                  <div className="flex justify-between"><span>Winning Bid:</span> <span>R {lot.winningBid?.toLocaleString('en-ZA')}</span></div>
-                                  <div className="flex justify-between"><span>Auction Commission ({(lot.commissionPct || 15)}%):</span> <span className="text-red-400">- R {lot.commissionAmount?.toLocaleString('en-ZA')}</span></div>
-                                  <div className="flex justify-between"><span>VAT Deducted:</span> <span className="text-red-400">- R {lot.vatAmount?.toLocaleString('en-ZA')}</span></div>
+                                  <div className="flex justify-between"><span>Winning Bid:</span> <span><Price amount={lot.winningBid?.toLocaleString('en-ZA')} /></span></div>
+                                  <div className="flex justify-between"><span>Auction Commission ({(lot.commissionPct || 15)}%):</span> <span className="text-red-400">- <Price amount={lot.commissionAmount?.toLocaleString('en-ZA')} /></span></div>
+                                  <div className="flex justify-between"><span>VAT Deducted:</span> <span className="text-red-400">- <Price amount={lot.vatAmount?.toLocaleString('en-ZA')} /></span></div>
                                   <div className="flex justify-between border-t border-white/10 pt-2 mt-2 text-white font-bold">
                                      <span>Your Net Payable:</span> 
-                                     <span className="text-[var(--color-gold)]">R {lot.vendorPayable?.toLocaleString('en-ZA')}</span>
+                                     <span className="text-[var(--color-gold)]"><Price amount={lot.vendorPayable?.toLocaleString('en-ZA')} /></span>
                                   </div>
                                </div>
                             </div>
