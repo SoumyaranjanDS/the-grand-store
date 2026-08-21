@@ -59,6 +59,12 @@ import MyTickets from './features/customer/MyTickets'
 import VendorProducts from './features/vendor/VendorProducts'
 import EditProduct from './features/vendor/EditProduct'
 import VendorLayout from './features/vendor/VendorLayout'
+import EventHostLayout from './features/hosting/EventHostLayout'
+import EventHostDashboard from './features/hosting/EventHostDashboard'
+import EventHostWallet from './features/hosting/EventHostWallet'
+import AuctionHostLayout from './features/hosting/AuctionHostLayout'
+import AuctionHostDashboard from './features/hosting/AuctionHostDashboard'
+import AuctionHostWallet from './features/hosting/AuctionHostWallet'
 import VendorStore from './features/vendor/VendorStore'
 import EstateBuilder from './features/vendor/EstateBuilder'
 import EstateDetail from './features/wine-farm/EstateDetail'
@@ -82,6 +88,11 @@ import GlobalWinesPage from './features/global/GlobalWinesPage'
 import CountryPavilionPage from './features/global/CountryPavilionPage'
 import VendorPaymentGate from './features/vendor/VendorPaymentGate'
 import CommunityPage from './pages/CommunityPage'
+
+// Host Applications
+import HostAuctionPage from './features/hosting/HostAuctionPage'
+import HostEventPage from './features/hosting/HostEventPage'
+import AdminHostApplications from './features/admin/AdminHostApplications'
 
 import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
@@ -261,6 +272,7 @@ function App() {
   const isTradeRoute = location.pathname.startsWith('/trade')
   const isDashboardRoute = location.pathname.startsWith('/customer') || location.pathname.startsWith('/vendor') || location.pathname.startsWith('/admin')
   const isAuthRoute = location.pathname === '/login' || location.pathname === '/register'
+  const isEstateRoute = location.pathname.startsWith('/estate')
 
   if (loading) {
     return <div className="min-h-screen bg-[#0a0907] flex items-center justify-center text-[#e1bd70]">Loading...</div>
@@ -269,7 +281,7 @@ function App() {
   return (
     <div className="app">
       <SiteMotion />
-      {!isTradeRoute && !isDashboardRoute && !isAuthRoute && (
+      {!isTradeRoute && !isDashboardRoute && !isAuthRoute && !isEstateRoute && (
         <Header
           cartCount={cartCount}
           compareCount={compareItems.length}
@@ -359,11 +371,33 @@ function App() {
           <Route path="shipping" element={<VendorShippingProfile />} />
           <Route path="product-add" element={<AddProduct onNotify={showToast} />} />
           <Route path="product-edit/:id" element={<EditProduct onNotify={showToast} />} />
-          <Route path="event-add" element={<EventAdd onNotify={showToast} />} />
-          <Route path="events" element={<VendorEvents />} />
-          <Route path="events/:id/attendees" element={<EventAttendees onNotify={showToast} />} />
-          <Route path="auction-submit" element={<AuctionSubmission onNotify={showToast} />} />
           <Route path="estate-builder" element={<EstateBuilder />} />
+          <Route path="events" element={<VendorEvents />} />
+          <Route path="events/:id/attendees" element={<EventAttendees />} />
+          <Route path="event-add" element={<EventAdd />} />
+          <Route path="auction-submit" element={<AuctionSubmission />} />
+        </Route>
+
+        {/* Public Host Application Forms */}
+        <Route path="/host-auction" element={<HostAuctionPage />} />
+        <Route path="/host-event" element={<HostEventPage />} />
+
+
+        <Route path="/event-manager" element={<EventHostLayout />}>
+          <Route path="dashboard" element={<EventHostDashboard />} />
+          <Route path="wallet" element={<EventHostWallet />} />
+          <Route path="events" element={<VendorEvents />} />
+          <Route path="events/:id/attendees" element={<EventAttendees />} />
+          <Route path="event-add" element={<EventAdd />} />
+          <Route path="profile" element={<VendorProfile />} />
+        </Route>
+
+        <Route path="/auction-manager" element={<AuctionHostLayout />}>
+          <Route path="dashboard" element={<AuctionHostDashboard />} />
+          <Route path="wallet" element={<AuctionHostWallet />} />
+          <Route path="inventory" element={<VendorInventory />} />
+          <Route path="auction-submit" element={<AuctionSubmission />} />
+          <Route path="profile" element={<VendorProfile />} />
         </Route>
 
         <Route path="/admin" element={<AdminLayout />}>
@@ -371,6 +405,7 @@ function App() {
           <Route path="users" element={<AdminUsers />} />
           <Route path="vendors" element={<AdminVendors />} />
           <Route path="expert-reviews" element={<AdminExpertReviews />} />
+          <Route path="host-applications" element={<AdminHostApplications />} />
           <Route path="auctions" element={<AdminAuctionPanel onNotify={showToast} />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="financials" element={<AdminFinancials />} />
