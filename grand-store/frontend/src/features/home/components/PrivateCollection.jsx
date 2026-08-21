@@ -52,8 +52,8 @@ export default function PrivateCollection() {
             >
               Chosen with{' '}
               <span
-                className="gold-gradient-text inline-block pr-2 font-script text-[1.12em]"
-                style={{ fontFamily: "'Dancing Script', cursive" }}
+                className="gold-gradient-text inline-block pr-2 text-[1.12em]"
+                
               >
                 Intention
               </span>
