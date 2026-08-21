@@ -93,7 +93,7 @@ export default function OnboardingPreview({ onNext, onBack }) {
           <div className="mt-8 pt-6 flex flex-col gap-4 border-t border-white/5 sticky bottom-0 bg-[#0a0a0a]/90 backdrop-blur-md pb-4 z-20">
             <button 
               onClick={onNext}
-              className="w-full bg-gradient-to-r from-[#c9a35b] to-[#e1bd70] text-black px-6 py-4 rounded-none font-bold uppercase tracking-widest text-xs transition-all hover:brightness-110 shadow-[0_0_20px_rgba(201,163,91,0.2)] flex items-center justify-center space-x-2"
+              className="w-full bg-[#c9a35b] text-black px-6 py-4 rounded-none font-bold uppercase tracking-widest text-xs transition-all hover:brightness-110 shadow-[0_0_20px_rgba(201,163,91,0.2)] flex items-center justify-center space-x-2"
             >
               <span>Begin Registration</span>
               <ChevronRight size={16} />
