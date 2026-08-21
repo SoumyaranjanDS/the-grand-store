@@ -6,12 +6,15 @@ import CigarHistoryPage from './pages/CigarHistoryPage';
 import SearchPage from './pages/SearchPage';
 import SavedCigarsPage from './pages/SavedCigarsPage';
 import React from 'react';
+import { Agentation } from 'agentation';
 import Navbar from './components/Navbar';
+import AgeGate from './components/AgeGate';
 import './App.css';
 
 function App() {
   return (
     <>
+      <AgeGate />
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -23,6 +26,7 @@ function App() {
         <Route path="/saved-cigars" element={<Navigate to="/wishlist" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      {import.meta.env.DEV && <Agentation />}
     </>
   );
 }

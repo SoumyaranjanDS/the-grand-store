@@ -3,7 +3,6 @@ import './AgeGate.css';
 
 export default function AgeGate() {
   const [isVisible, setIsVisible] = useState(false);
-  const [isDenied, setIsDenied] = useState(false);
 
   useEffect(() => {
     // Check if verified this session
@@ -28,7 +27,7 @@ export default function AgeGate() {
   };
 
   const handleNo = () => {
-    setIsDenied(true);
+    window.location.href = 'https://google.com';
   };
 
   if (!isVisible) return null;
@@ -37,23 +36,15 @@ export default function AgeGate() {
     <div className="age-gate-overlay">
       <div className="age-gate-modal">
         <div className="age-gate-content">
-          <p className="age-gate-kicker">The Grand Store</p>
+          <p className="age-gate-kicker">Cigar Connoisseur Club</p>
           <h2>Are you 18 years or older?</h2>
-          {isDenied ? (
-            <div className="age-gate-denied-message">
-              <p>You cannot visit this site as you are under the legal smoking and drinking age.</p>
-            </div>
-          ) : (
-            <>
-              <p className="age-gate-desc">
-                You must be of legal smoking/drinking age to enter this site. By clicking "Yes", you confirm that you are 18 years of age or older.
-              </p>
-              <div className="age-gate-actions">
-                <button className="btn-yes" onClick={handleYes}>Yes, I am 18+</button>
-                <button className="btn-no" onClick={handleNo}>No, I am under 18</button>
-              </div>
-            </>
-          )}
+          <p className="age-gate-desc">
+            You must be of legal smoking age to enter this site. By clicking "Yes", you confirm that you are 18 years of age or older.
+          </p>
+          <div className="age-gate-actions">
+            <button className="btn-yes" onClick={handleYes}>Yes, I am 18+</button>
+            <button className="btn-no" onClick={handleNo}>No, I am under 18</button>
+          </div>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { ArrowUp, Mail, MapPin, Phone } from 'lucide-react';
 import { contactDetails } from '../data/homeContent';
 import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
+import brandLogo from '../assets/cigar logo with roman number (1).png';
 import './SiteFooter.css';
 
 function SiteFooter() {
@@ -19,7 +20,7 @@ function SiteFooter() {
         {/* Column 1: Logo & Socials */}
         <div className="site-footer__logo-col">
           <div className="site-footer__logo">
-            <img src="/images/cigar-connoisseur-logo.png" alt="Cigar Connoisseur Club" className="site-footer__logo-img" />
+            <img src={brandLogo} alt="Cigar Connoisseur Club" className="site-footer__logo-img" />
           </div>
           <div className="site-footer__socials">
             <a href="#" aria-label="Facebook">

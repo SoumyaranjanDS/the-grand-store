@@ -6,8 +6,8 @@
 
 .history-page-hero {
   position: relative;
-  min-height: 560px;
-  padding: calc(var(--nav-height) + 82px) 7vw 78px;
+  min-height: auto;
+  padding: calc(var(--nav-height) + 50px) 7vw 60px;
   display: grid;
   align-items: center;
   overflow: hidden;
@@ -89,8 +89,8 @@
 }
 
 .history-page-hero__intro {
-  max-width: 660px;
-  margin: 42px 0 0;
+  max-width: 880px;
+  margin: 20px 0 0;
   color: #aaa297;
   font-family: var(--serif);
   font-size: clamp(21px, 1.8vw, 28px);
@@ -222,6 +222,7 @@
 
 .history-chapter__eyebrow {
   color: #9c6e32;
+  font-weight: 700;
 }
 
 .history-chapter__copy h2 {
@@ -241,6 +242,7 @@
   border-left: 2px solid var(--brass);
   font-family: var(--serif);
   font-size: clamp(21px, 1.7vw, 26px);
+  font-weight: 600;
   line-height: 1.45;
 }
 
@@ -265,7 +267,7 @@
   color: #9b6c2d;
   font-family: var(--serif);
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 800;
   line-height: 1.25;
 }
 
@@ -274,7 +276,8 @@
   margin: 0;
   color: #3f372e;
   font-family: var(--serif);
-  font-size: 19px;
+  font-size: 22px;
+  font-weight: 500;
   line-height: 1.62;
 }
 
@@ -285,7 +288,7 @@
 
 .history-chapter__prose p:first-child {
   color: #2d251e;
-  font-size: 23px;
+  font-size: 26px;
   line-height: 1.55;
 }
 

@@ -18,8 +18,8 @@
 .site-footer__logo-col {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
+  align-items: flex-start;
+  text-align: left;
 }
 
 .site-footer__logo-img {
@@ -150,12 +150,12 @@
 @media (max-width: 640px) {
   .site-footer__main {
     grid-template-columns: 1fr;
-    text-align: center;
+    text-align: left;
   }
   
   .footer-contact p {
-    justify-content: center;
-    text-align: center;
+    justify-content: flex-start;
+    text-align: left;
   }
   
   .site-footer__scroll-top {

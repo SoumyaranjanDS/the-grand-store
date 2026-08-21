@@ -17,7 +17,6 @@ export default function EnquireForm() {
           <p className="eyebrow">A private conversation</p>
           <h2 className="section-title">Enquire <em>now.</em></h2>
           <p>For availability, private occasions, partnerships, or more about the 2021 limited edition, leave your details with our collection team.</p>
-          <div className="enquire-edition"><span>2021</span><p>Limited edition<br />Méthode Cap Classique</p></div>
         </div>
 
         <div className="enquire-form-card" data-reveal>
@@ -34,7 +33,7 @@ export default function EnquireForm() {
           )}
         </div>
       </div>
-      <img className="enquire-bottle" src="/assets/footer-bottle.png" alt="" aria-hidden="true" />
+      <img className="enquire-bottle" src="/assets/footer-bottle.png" alt="" aria-hidden="true" loading="lazy" decoding="async" />
     </section>
   )
 }

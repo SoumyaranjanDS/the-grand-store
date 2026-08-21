@@ -3,7 +3,7 @@ import SectionHeading from '../components/SectionHeading';
 import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
 import './ProductShowcase.css';
 
-function ProductShowcase({ id, eyebrow, title, intro, products, tone = 'dark' }) {
+function ProductShowcase({ id, eyebrow, title, intro, products, tone = 'dark', linkUrl = '/shop/mosi-oa-tunya' }) {
   const isDark = tone === 'dark';
   const [linkRef, linkVisible] = useIntersectionObserver({ threshold: 0.5 });
 
@@ -17,9 +17,7 @@ function ProductShowcase({ id, eyebrow, title, intro, products, tone = 'dark' })
         <a 
           ref={linkRef}
           className={`product-showcase__all reveal-right ${linkVisible ? 'is-visible' : ''}`} 
-          href="https://cigarconnoisseurclub.com/shop.php" 
-          target="_blank" 
-          rel="noreferrer"
+          href={linkUrl}
         >
           View the complete collection
         </a>

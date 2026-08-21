@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import SectionHeading from '../components/SectionHeading';
-import { featuredProducts, newArrivals } from '../data/homeContent';
+import { newArrivals, mosiProducts, featuredMosiProducts } from '../data/homeContent';
 import SiteFooter from '../sections/SiteFooter';
 import './SearchPage.css';
 
 // Combine all products to search through
-const allProducts = [...newArrivals, ...featuredProducts];
+const allProducts = [...newArrivals, ...mosiProducts, ...featuredMosiProducts];
 
 function SearchPage() {
   const [searchParams] = useSearchParams();

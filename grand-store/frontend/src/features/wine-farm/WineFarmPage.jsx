@@ -208,7 +208,7 @@ function Header() {
       </div>
       <header className="site-header">
         <a className="brand" href="/winefarm/#top" aria-label="The Grand Store wine farm home">
-          <img src="/grand-store-logo.png" alt="The Grand Store — Bar Accessories" />
+          <img src="/assets/logo.webp" alt="The Grand Store — Bar Accessories" />
         </a>
         <nav className={open ? 'site-nav open' : 'site-nav'} aria-label="Primary navigation">
           <a href="/winefarm/#top" onClick={closeMenu}>Home</a>
@@ -282,25 +282,7 @@ function Hero() {
         <i />
         <span>Harvest 2026</span>
       </div>
-      <div className="hero-controls">
-        <button type="button" onClick={() => goTo(active - 1)} aria-label="Previous slide"><Arrow direction="left" /></button>
-        <div className="hero-dots">
-          {heroSlides.map((slide, index) => (
-            <button
-              type="button"
-              key={slide.title}
-              className={index === active ? 'active' : ''}
-              onClick={() => goTo(index)}
-              aria-label={`Show slide ${index + 1}`}
-              aria-current={index === active ? 'true' : undefined}
-            >
-              <span>{String(index + 1).padStart(2, '0')}</span>
-              <i />
-            </button>
-          ))}
-        </div>
-        <button type="button" onClick={() => goTo(active + 1)} aria-label="Next slide"><Arrow /></button>
-      </div>
+
       <a href="#about" className="scroll-cue">Scroll to wander <span>↓</span></a>
     </section>
   )
@@ -333,7 +315,7 @@ function About() {
         <div className="about-arch">
           <div className="sun-disc" />
           <span className="vertical-note">Estate No. 01 • South Africa</span>
-          <img src="/assets/about-estate.png" alt="Wine bottle with botanical artwork" />
+          <img src="/assets/about_estate_new.jpg" alt="Wine bottle with botanical artwork" />
         </div>
         <blockquote>“Every bottle carries the landscape that raised it.”</blockquote>
       </div>
@@ -578,8 +560,8 @@ function NewsletterFaq() {
 
       <section className="faq section-pad" id="faq">
         <div className="faq-aside">
-          <SectionHeading kicker="Good to know" title={<>Frequently asked<br /><em>questions</em></>} />
-          <div className="faq-illustration"><img src="/assets/faq.png" alt="Wine questions illustration" /></div>
+          <SectionHeading kicker="Good to know" title={<>Frequently asked<br /><em>questions</em></>} align="center" />
+          <div className="faq-illustration"><img src="/assets/faq_wine_new.jpg" alt="Wine FAQ Illustration" /></div>
           <a className="text-link" href="#faq">Read All <span>↗</span></a>
         </div>
         <div className="faq-list">

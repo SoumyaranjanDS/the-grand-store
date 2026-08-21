@@ -1,7 +1,7 @@
 .enquire-section {
   position: relative;
-  min-height: 560px;
-  padding: clamp(72px, 7vw, 102px) 0;
+  min-height: 480px;
+  padding: clamp(45px, 5vw, 65px) 0; /* Reduced top/bottom section padding */
   overflow: hidden;
   background:
     linear-gradient(90deg, rgba(122, 38, 60, 0.05) 1px, transparent 1px) 0 0 / 10vw 100%,
@@ -14,7 +14,7 @@
   display: grid;
   grid-template-columns: minmax(0, 0.8fr) minmax(450px, 1.2fr);
   align-items: center;
-  gap: clamp(45px, 6vw, 85px);
+  gap: clamp(20px, 4vw, 50px); /* Reduced gap */
 }
 
 .enquire-copy {
@@ -22,16 +22,16 @@
 }
 
 .enquire-copy > p:not(.eyebrow) {
-  margin: 19px 0 0;
+  margin: 12px 0 0; /* Reduced margin */
   color: var(--muted);
-  font-size: 21px;
+  font-size: 18px; /* More professional, slightly smaller */
   line-height: 1.5;
 }
 
 .enquire-edition {
   display: flex;
   align-items: center;
-  margin-top: 25px;
+  margin-top: 15px; /* Reduced gap */
   gap: 17px;
 }
 
@@ -58,7 +58,7 @@
 }
 
 .enquire-form-card {
-  padding: clamp(29px, 3.4vw, 47px);
+  padding: clamp(24px, 2.5vw, 35px); /* Reduced card padding */
   border: 1px solid rgba(43, 55, 54, 0.18);
   background: rgba(255, 250, 240, 0.83);
   box-shadow: 0 26px 70px rgba(73, 54, 37, 0.12);
@@ -68,7 +68,7 @@
 .enquire-form-card form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 19px 20px;
+  gap: 14px 16px; /* Reduced gap */
 }
 
 .enquire-form-card label {
@@ -95,8 +95,9 @@
   outline: 0;
   color: var(--navy);
   background: transparent;
-  font-family: var(--serif);
-  font-size: 22px;
+  font-family: var(--sans); /* More professional font for inputs */
+  font-size: 16px;
+  transition: border-color 0.3s ease;
 }
 
 .enquire-form-card input:focus {

@@ -6,7 +6,7 @@ import MosiSection from '../sections/MosiSection';
 import TestimonialsSection from '../sections/TestimonialsSection';
 import NewsletterSection from '../sections/NewsletterSection';
 import SiteFooter from '../sections/SiteFooter';
-import { featuredProducts, newArrivals } from '../data/homeContent';
+import { mosiProducts, featuredMosiProducts } from '../data/homeContent';
 
 function HomePage() {
   return (
@@ -20,7 +20,7 @@ function HomePage() {
           eyebrow="Just landed"
           title="New arrival products"
           intro="Fresh additions to the humidor, selected from respected houses around the world."
-          products={newArrivals}
+          products={mosiProducts}
         />
         <MosiSection />
         <ProductShowcase
@@ -28,7 +28,7 @@ function HomePage() {
           eyebrow="From the humidor"
           title="Featured products"
           intro="Recently added to our store and chosen for character, construction, and provenance."
-          products={featuredProducts}
+          products={featuredMosiProducts}
           tone="light"
         />
         <TestimonialsSection />
