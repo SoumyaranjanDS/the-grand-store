@@ -6,7 +6,7 @@ const { getNextSequence } = require('../utils/sequenceGenerator');
 const Transaction = require('../models/Transaction');
 const Wallet = require('../models/Wallet');
 
-// @desc    Create new order
+// @desc    Create new order (Pending Payment)
 // @route   POST /api/orders
 // @access  Private
 const addOrderItems = async (req, res) => {
@@ -44,7 +44,6 @@ const addOrderItems = async (req, res) => {
     const gatewayFeePct = settings.gatewayFeePct || 2.5;
 
     // === RECONSTRUCT ACCOUNTING FROM QUOTE ===
-    // The quote contains the exact calculated values.
     const subTotal = quote.globalSubtotal;
     const shippingCost = quote.aggregatedTotals.shipping;
     const vatAmount = quote.aggregatedTotals.vat;
@@ -52,17 +51,14 @@ const addOrderItems = async (req, res) => {
     const importTaxes = quote.aggregatedTotals.estimatedImportTaxes;
     const customsFees = quote.aggregatedTotals.estimatedCustomsFees;
     
-    // Note: In DDP we might add duties to totalPrice. For now we assume DAP (Duties are paid at customs by customer)
-    // VAT is deducted from the vendor, so the customer ONLY pays Subtotal + Shipping.
     const calculatedTotal = parseFloat((subTotal + shippingCost).toFixed(2));
     const commissionAmount = parseFloat(((subTotal * commissionPct) / 100).toFixed(2));
     const gatewayFeeAmount = parseFloat((calculatedTotal * gatewayFeePct / 100).toFixed(2));
 
-    // Consolidate Order Items from Shipments for the Master Order
     let allOrderItems = [];
     let vendorPayables = [];
 
-    // Create the master order first (without shipments array yet, we'll push them)
+    // Create the master order with isPaid: false
     const order = new Order({
       user: req.user._id,
       shippingAddress,
@@ -82,9 +78,8 @@ const addOrderItems = async (req, res) => {
       orderId,
       paymentId,
       invoiceNumber,
-      isPaid: true,
-      paidAt: Date.now(),
-      paymentStatus: 'Paid',
+      isPaid: false, // Changed for PayFast integration
+      paymentStatus: 'Pending', // Changed for PayFast integration
       orderItems: [],
       shipments: [],
       vendorPayables: []
@@ -102,7 +97,6 @@ const addOrderItems = async (req, res) => {
       const vendorVat = shp.taxData.vatAmount;
       const shippingCostVendorGets = shp.selectedCourier ? shp.selectedCourier.cost : 0;
       
-      // Vendor gets: Subtotal - Commission - VAT + Shipping
       const vendorNet = parseFloat((vendorGross - vendorCommission - vendorVat + shippingCostVendorGets).toFixed(2));
 
       vendorPayables.push({
@@ -113,11 +107,9 @@ const addOrderItems = async (req, res) => {
         netPayable: vendorNet
       });
 
-      // Create Shipment Record
       const shipmentSeqString = `${sequence}-${shipmentSeqCounter.toString().padStart(2, '0')}`;
       const shipmentId = `GS-${year}-${moduleCode}-SHP-${shipmentSeqString}`;
 
-      // Calculate actual internal cost
       let internalLegs = [];
       let actualCost = 0;
       if (shp.selectedCourier && shp.selectedCourier.legs) {
@@ -137,12 +129,12 @@ const addOrderItems = async (req, res) => {
         orderRef: order.orderId,
         vendorId: shp.vendorId,
         customerId: req.user._id,
-        pickupAddress: { country: shp.originCountry }, // Expanded later from Vendor profile
+        pickupAddress: { country: shp.originCountry },
         deliveryAddress: shippingAddress,
         customerShippingCharge: shp.selectedCourier ? shp.selectedCourier.cost : 0,
         actualShippingCost: actualCost,
         legs: internalLegs,
-        status: 'Order Confirmed'
+        status: 'Order Confirmed' // We keep it Confirmed, or could change to 'Payment Pending'
       });
 
       await newShipment.save();
@@ -155,82 +147,6 @@ const addOrderItems = async (req, res) => {
 
     const createdOrder = await order.save();
 
-    // === GENERATE ACCOUNTING LEDGER ===
-    
-    // 1. Customer Payment Transaction
-    const customerPaymentTxn = new Transaction({
-      gsReference: transactionId,
-      type: 'payment',
-      module: 'shop',
-      amount: calculatedTotal,
-      netAmount: parseFloat((calculatedTotal - gatewayFeeAmount).toFixed(2)),
-      customer: req.user._id,
-      order: createdOrder._id,
-      status: 'cleared',
-      description: 'Customer order payment'
-    });
-    await customerPaymentTxn.save();
-
-    // 2. Grand Store Commission Transaction
-    if (commissionAmount > 0) {
-      const gsCommSeqNum = await getNextSequence('shopOrder');
-      const commissionTxn = new Transaction({
-        gsReference: `GS-${year}-${moduleCode}-COM-${gsCommSeqNum.toString().padStart(6, '0')}`,
-        type: 'commission',
-        module: 'shop',
-        amount: commissionAmount,
-        netAmount: commissionAmount,
-        order: createdOrder._id,
-        status: 'cleared',
-        description: 'Marketplace commission from order'
-      });
-      await commissionTxn.save();
-    }
-
-    // 2.5 VAT Transaction
-    if (vatAmount > 0) {
-      const gsVatSeqNum = await getNextSequence('shopOrder');
-      const vatTxn = new Transaction({
-        gsReference: `GS-${year}-${moduleCode}-VAT-${gsVatSeqNum.toString().padStart(6, '0')}`,
-        type: 'vat',
-        module: 'shop',
-        amount: vatAmount,
-        netAmount: vatAmount,
-        order: createdOrder._id,
-        status: 'cleared',
-        description: 'VAT collected from order'
-      });
-      await vatTxn.save();
-    }
-
-    // 3. Vendor Payable Transactions & Wallet Updates
-    for (const payable of vendorPayables) {
-      if (!payable.vendorId) continue; // Skip admin-owned items
-
-      const vendorSeqNum = await getNextSequence('shopOrder');
-      const payableTxn = new Transaction({
-        gsReference: `GS-${year}-${moduleCode}-PAYABLE-${vendorSeqNum.toString().padStart(6, '0')}`,
-        type: 'payout',
-        module: 'shop',
-        amount: payable.netPayable,
-        netAmount: payable.netPayable,
-        vendor: payable.vendorId,
-        order: createdOrder._id,
-        status: 'pending', // Pending until payout is cleared
-        description: 'Vendor payable from order'
-      });
-      await payableTxn.save();
-
-      // Update Vendor Wallet
-      let wallet = await Wallet.findOne({ vendorId: payable.vendorId });
-      if (!wallet) {
-        wallet = new Wallet({ vendorId: payable.vendorId });
-      }
-      wallet.pendingBalance += payable.netPayable;
-      wallet.totalEarned += payable.netPayable; // Total earned tracks gross earnings
-      await wallet.save();
-    }
-
     res.status(201).json(createdOrder);
   } catch (error) {
     console.error('Add Order Error:', error);
@@ -238,6 +154,102 @@ const addOrderItems = async (req, res) => {
   }
 };
 
+/**
+ * Process the ledger transactions and wallet updates after a successful payment
+ * This function will be called by the PayFast ITN Webhook Controller
+ */
+const processOrderPayment = async (orderId) => {
+  const order = await Order.findById(orderId);
+  if (!order) throw new Error('Order not found');
+  if (order.isPaid) return true; // Already paid, idempotent
+
+  // Update order status
+  order.isPaid = true;
+  order.paidAt = Date.now();
+  order.paymentStatus = 'Paid';
+  await order.save();
+
+  // === GENERATE ACCOUNTING LEDGER ===
+  const shopCodeDoc = await SystemCode.findOne({ code: 'SHP' });
+  const moduleCode = shopCodeDoc ? shopCodeDoc.code : 'SHP';
+  const year = new Date().getFullYear().toString().slice(-2);
+
+  // 1. Customer Payment Transaction
+  const customerPaymentTxn = new Transaction({
+    gsReference: order.transactionId,
+    type: 'payment',
+    module: 'shop',
+    amount: order.totalPrice,
+    netAmount: parseFloat((order.totalPrice - order.gatewayFeeAmount).toFixed(2)),
+    customer: order.user,
+    order: order._id,
+    status: 'cleared',
+    description: 'Customer order payment'
+  });
+  await customerPaymentTxn.save();
+
+  // 2. Grand Store Commission Transaction
+  if (order.commissionAmount > 0) {
+    const gsCommSeqNum = await getNextSequence('shopOrder');
+    const commissionTxn = new Transaction({
+      gsReference: `GS-${year}-${moduleCode}-COM-${gsCommSeqNum.toString().padStart(6, '0')}`,
+      type: 'commission',
+      module: 'shop',
+      amount: order.commissionAmount,
+      netAmount: order.commissionAmount,
+      order: order._id,
+      status: 'cleared',
+      description: 'Marketplace commission from order'
+    });
+    await commissionTxn.save();
+  }
+
+  // 2.5 VAT Transaction
+  if (order.vatAmount > 0) {
+    const gsVatSeqNum = await getNextSequence('shopOrder');
+    const vatTxn = new Transaction({
+      gsReference: `GS-${year}-${moduleCode}-VAT-${gsVatSeqNum.toString().padStart(6, '0')}`,
+      type: 'vat',
+      module: 'shop',
+      amount: order.vatAmount,
+      netAmount: order.vatAmount,
+      order: order._id,
+      status: 'cleared',
+      description: 'VAT collected from order'
+    });
+    await vatTxn.save();
+  }
+
+  // 3. Vendor Payable Transactions & Wallet Updates
+  for (const payable of order.vendorPayables) {
+    if (!payable.vendorId) continue; // Skip admin-owned items
+
+    const vendorSeqNum = await getNextSequence('shopOrder');
+    const payableTxn = new Transaction({
+      gsReference: `GS-${year}-${moduleCode}-PAYABLE-${vendorSeqNum.toString().padStart(6, '0')}`,
+      type: 'payout',
+      module: 'shop',
+      amount: payable.netPayable,
+      netAmount: payable.netPayable,
+      vendor: payable.vendorId,
+      order: order._id,
+      status: 'pending', // Pending until payout is cleared
+      description: 'Vendor payable from order'
+    });
+    await payableTxn.save();
+
+    // Update Vendor Wallet
+    let wallet = await Wallet.findOne({ vendorId: payable.vendorId });
+    if (!wallet) {
+      wallet = new Wallet({ vendorId: payable.vendorId });
+    }
+    wallet.pendingBalance += payable.netPayable;
+    wallet.totalEarned += payable.netPayable; // Total earned tracks gross earnings
+    await wallet.save();
+  }
+
+  return true;
+};
 
 // @desc    Get logged in user orders
 // @route   GET /api/orders/myorders
@@ -318,5 +330,6 @@ module.exports = {
   addOrderItems,
   getOrderById,
   getVendorOrders,
-  getMyOrders
+  getMyOrders,
+  processOrderPayment // Exported for ITN webhook
 };
