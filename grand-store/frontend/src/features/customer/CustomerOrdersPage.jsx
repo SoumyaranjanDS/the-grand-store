@@ -60,7 +60,7 @@ export default function CustomerOrdersPage() {
                   <div className="p-3 bg-[var(--color-gold)]/10 text-gold-gradient rounded-xl border border-[var(--color-gold)]/20 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
                     <Package size={28} />
                   </div>
-                  Order <span className="text-gold-gradient ml-2 font-script text-5xl font-normal drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">History</span>
+                  Order <span className="text-gold-gradient ml-2 text-5xl font-normal drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">History</span>
                 </h1>
                 <p className="text-[var(--color-ivory-muted)] text-sm max-w-2xl font-light mt-4">
                   Review all your past purchases and trace your private collection history.
