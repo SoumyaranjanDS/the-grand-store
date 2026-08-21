@@ -28,7 +28,7 @@ export default function AuctionSubmission({ onNotify }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  if (!user || (user.role !== 'vendor_active' && user.role !== 'admin')) {
+  if (!user || (user.role !== 'vendor_active' && user.role !== 'admin' && user.role !== 'auction_host')) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
         <div className="p-8 border border-red-500/20 bg-red-950/10 text-[var(--color-ivory)] max-w-md w-full flex items-center gap-4">
@@ -101,7 +101,7 @@ export default function AuctionSubmission({ onNotify }) {
       if (onNotify) onNotify('Auction lot submitted successfully for review!');
       
       setTimeout(() => {
-        navigate('/vendor/dashboard');
+        navigate(user.role === 'auction_host' ? '/auction-manager/dashboard' : '/vendor/dashboard');
       }, 2000);
       
     } catch (err) {
@@ -118,7 +118,7 @@ export default function AuctionSubmission({ onNotify }) {
         {/* Welcome Section */}
         <section className="mb-4">
           <h1 className="text-[var(--color-ivory)] font-serif text-5xl mb-4">
-            Submit <span className="font-script text-6xl text-gold-gradient font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Auction Lot</span>
+            Submit <span className="text-6xl text-gold-gradient font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Auction Lot</span>
           </h1>
           <p className="text-[var(--color-ivory-muted)] text-lg max-w-2xl font-light">
             Submit your rare and collectible items for review by our expert curators.
