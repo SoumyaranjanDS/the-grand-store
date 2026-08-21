@@ -56,6 +56,7 @@ import EventAdd from './features/vendor/EventAdd'
 import VendorEvents from './features/vendor/VendorEvents'
 import EventsHub from './features/events/EventsHub'
 import EventDetails from './features/events/EventDetails'
+import EventSuccessPage from './features/events/EventSuccessPage'
 import MyTickets from './features/customer/MyTickets'
 import VendorProducts from './features/vendor/VendorProducts'
 import EditProduct from './features/vendor/EditProduct'
@@ -338,7 +339,8 @@ function App() {
         )} />
         <Route path="/cart" element={<Navigate to="/customer/cart" replace />} />
         <Route path="/customer/checkout" element={<CheckoutPage cartItems={cartItems} onClearCart={clearCart} clearVendorCart={clearVendorCart} onNotify={showToast} />} />
-        <Route path="/customer/order/:id" element={<OrderSuccessPage />} />
+        <Route path="/customer/order/:id" element={<OrderSuccessPage onClearCart={clearCart} />} />
+        <Route path="/customer/event-order/:id" element={<EventSuccessPage />} />
         <Route path="/customer/compare" element={<ComparePage compareItems={compareItems} onCompare={addToCompare} onRemove={removeFromCompare} onClear={() => { setCompareItems([]); showToast('Comparison cleared') }} onAdd={addToCart} />} />
         <Route path="/compare" element={<Navigate to="/customer/compare" replace />} />
         <Route path="/wishlist" element={<Navigate to="/customer/wishlist" replace />} />
