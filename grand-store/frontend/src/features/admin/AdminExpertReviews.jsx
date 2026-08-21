@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Star, Search, Edit2, CheckCircle, XCircle } from 'lucide-react';
 import { useProducts } from '../../context/ProductContext';
+import Price from '../../components/ui/Price';
 
 export default function AdminExpertReviews() {
   const { products } = useProducts();
@@ -109,7 +110,7 @@ export default function AdminExpertReviews() {
                       </div>
                     </td>
                     <td className="px-4 py-4 text-[var(--color-ivory-muted)]">{product.category}</td>
-                    <td className="px-4 py-4 font-mono text-[var(--color-gold)]">R{product.price}</td>
+                    <td className="px-4 py-4 font-mono text-[var(--color-gold)]"><Price amount={product.price} /></td>
                     <td className="px-4 py-4">
                       <button 
                         onClick={() => handleSelectProduct(product)}
