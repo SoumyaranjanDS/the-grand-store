@@ -94,7 +94,7 @@ export default function AdminAuctionPanel({ onNotify }) {
       {/* Welcome Section */}
       <section className="mb-4">
         <h1 className="text-[var(--color-ivory)] font-serif text-3xl md:text-5xl mb-4">
-          Auction <span className="font-script text-4xl md:text-6xl text-gold-gradient font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Management</span>
+          Auction <span className="text-4xl md:text-6xl text-gold-gradient font-normal ml-2 tracking-wide drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">Management</span>
         </h1>
         <p className="text-[var(--color-ivory-muted)] text-base md:text-lg max-w-2xl font-light">
           Review vendor submissions, assign lot numbers, and track sold auction lots and financials.
