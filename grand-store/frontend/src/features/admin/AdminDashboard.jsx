@@ -9,8 +9,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const goldText = "bg-gradient-to-r from-[#b58b38] via-[#e6c97a] to-[#b58b38] bg-clip-text text-transparent";
-  const scriptFont = { fontFamily: "'Dancing Script', cursive" };
+  const goldText = "text-[#c9a35b]";
   const formatR = (v) => `R${Number(v || 0).toLocaleString("en-ZA", { minimumFractionDigits: 2 })}`;
 
   useEffect(() => {
@@ -44,7 +43,7 @@ export default function AdminDashboard() {
     <div className="flex flex-col gap-10 w-full max-w-7xl mx-auto pb-10">
       <section>
         <h1 className="text-[var(--color-ivory)] font-serif text-5xl mb-4 leading-tight">
-          Platform <span className={goldText} style={scriptFont}>Overview</span>
+          Platform <span className={goldText} >Overview</span>
         </h1>
         <p className="text-[var(--color-ivory-muted)] text-lg font-light">
           Real-time metrics and financial pulse of The Grand Store.
