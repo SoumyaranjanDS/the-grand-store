@@ -134,8 +134,9 @@ export default function OnboardingWizard() {
     
     setSaving(true);
     try {
-      const res = await fetch('/api/vendor/upload-public', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/vendor/upload-public`, {
         method: 'POST',
+        headers: { Authorization: `Bearer ${user?.token}` },
         body: formData
       });
       const data = await res.json();
@@ -246,7 +247,7 @@ export default function OnboardingWizard() {
         }
       }
 
-      const res = await fetch('/api/vendor/register-full', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/vendor/register-full`, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify(payload)
