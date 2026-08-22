@@ -1,4 +1,4 @@
-import Price from './ui/Price';
+import Price from "./ui/Price";
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -87,7 +87,9 @@ export default function Header({
   };
 
   return (
-    <div className={`sticky top-0 left-0 right-0 bg-[#0a0a0a] ${mobileOpen ? 'z-[10000] transform-none' : `z-[100] transition-transform duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}`}>
+    <div
+      className={`sticky top-0 left-0 right-0 bg-[#0a0a0a] ${mobileOpen ? "z-[10000] transform-none" : `z-[100] transition-transform duration-300 ease-in-out ${isVisible ? "translate-y-0" : "-translate-y-full"}`}`}
+    >
       <div className="announcement-bar py-1.5 bg-[#c9a35b] text-black">
         <div className="shell announcement-inner">
           <p className="font-bold tracking-widest uppercase text-[10px]">
@@ -99,18 +101,16 @@ export default function Header({
           </p>
           <div className="announcement-actions font-bold tracking-widest uppercase text-[10px]">
             <span className="flex items-center gap-1">
-              {country_name || 'South Africa'}
+              {country_name || "South Africa"}
             </span>
             <span className="top-rule bg-black/20 mx-2" />
-            <span className="flex items-center gap-1">
-              {currency}
-            </span>
+            <span className="flex items-center gap-1">{currency}</span>
           </div>
         </div>
       </div>
 
       <header
-        className="site-header"
+        className="site-header relative"
         ref={headerRef}
         onMouseLeave={() => setMegaOpen(false)}
       >
@@ -132,7 +132,7 @@ export default function Header({
               aria-label="The Grand Store home"
             >
               <img
-                src="/grand-store-logo.png"
+                src="/logo.png"
                 alt="The Grand Store"
                 className="h-9 w-auto max-w-[135px] object-contain object-left sm:h-12 sm:max-w-[190px] md:h-[62px] md:max-w-[270px]"
               />
@@ -236,32 +236,93 @@ export default function Header({
 
         <nav className="desktop-nav" aria-label="Main navigation">
           <div className="shell nav-inner">
-            <Link className="active" to="/">
+            <Link
+              className="active"
+              to="/"
+              onMouseEnter={() => setMegaOpen(false)}
+            >
               Home
             </Link>
             <div
-              className="relative nav-shop-control"
+              className="nav-shop-control"
               onMouseEnter={() => {
-                setActiveCategory(-1);
+                setActiveCategory(0);
                 setMegaTrigger("shop");
                 setMegaOpen(true);
               }}
-              onMouseLeave={() => setMegaOpen(false)}
             >
-              <Link className="nav-shop-link" to="/shop">
-                Shop
+              <Link
+                className="nav-shop-link font-bold text-[#f0cf76] hover:text-white transition-colors"
+                to="/shop"
+              >
+                SHOP
               </Link>
-              
-              <AnimatePresence>
-                {megaOpen && megaTrigger === "shop" && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute top-full left-0 pt-4 z-50 flex items-start"
-                  >
-                    <div className="w-56 bg-[#222222] shadow-[0_4px_20px_rgba(0,0,0,0.8)] rounded-l-sm h-96 overflow-y-auto custom-scrollbar relative">
+            </div>
+
+            <a
+              href="/#private-collection"
+              onMouseEnter={() => setMegaOpen(false)}
+            >
+              Offers
+            </a>
+            <Link to="/auction" onMouseEnter={() => setMegaOpen(false)}>
+              Auction
+            </Link>
+            <div
+              className="nav-accessories-control"
+              onMouseEnter={() => {
+                setActiveCategory(0);
+                setMegaTrigger("accessories");
+                setMegaOpen(true);
+              }}
+            >
+              <Link
+                to="/accessories"
+                className="nav-dropdown-button hover:text-[#f0cf76] transition-colors"
+              >
+                Accessories
+              </Link>
+            </div>
+            <Link
+              to="/events"
+              className="font-bold text-[#f0cf76] hover:text-white transition-colors"
+              onMouseEnter={() => setMegaOpen(false)}
+            >
+              Events
+            </Link>
+            <Link to="/vendor-portal" onMouseEnter={() => setMegaOpen(false)}>
+              Sell on The Grand Store
+            </Link>
+            <Link to="/events" onMouseEnter={() => setMegaOpen(false)}>
+              Book a tasting
+            </Link>
+            <Link
+              to="/global-wines"
+              className="font-bold text-[#f0cf76] hover:text-white transition-colors"
+              onMouseEnter={() => setMegaOpen(false)}
+            >
+              🌍 GLOBAL WINES
+            </Link>
+          </div>
+        </nav>
+
+        <AnimatePresence>
+          {megaOpen && megaTrigger === "shop" && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="absolute top-[100%] left-0 w-full pt-0 z-50 border-t border-white/5"
+            >
+              <div className="w-full bg-[#0a0a0a] shadow-[0_20px_40px_rgba(0,0,0,0.9)] relative flex justify-center">
+                <div className="w-full max-w-[1500px] mx-auto flex h-[450px]">
+                  {/* Categories Column */}
+                  <div className="w-1/4 bg-[#111] border-r border-white/5 py-6 flex flex-col">
+                    <div className="px-8 pb-4 text-xs font-bold tracking-widest text-[#888] uppercase">
+                      Explore
+                    </div>
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
                       {storeCategories.map((category, index) => (
                         <div
                           key={category}
@@ -269,146 +330,162 @@ export default function Header({
                           onMouseEnter={() => setActiveCategory(index)}
                         >
                           <div
-                            className={`px-5 py-4 flex items-center justify-between text-sm font-medium cursor-pointer transition-colors border-b border-dashed border-white/10 ${activeCategory === index ? "text-[#e6c97a]" : "text-white hover:text-[#e6c97a]"}`}
+                            className={`px-8 py-3 flex items-center justify-between text-sm cursor-pointer transition-colors ${activeCategory === index ? "text-[#e6c97a] bg-white/5" : "text-[#ccc] hover:text-white hover:bg-white/5"}`}
                           >
                             {category}
-                            <ChevronRight size={14} />
+                            <ChevronRight
+                              size={14}
+                              className={
+                                activeCategory === index
+                                  ? "opacity-100"
+                                  : "opacity-0 group-hover/category:opacity-50 transition-opacity"
+                              }
+                            />
                           </div>
                         </div>
                       ))}
                     </div>
+                  </div>
 
-                    <AnimatePresence mode="wait">
-                      {activeCategory >= 0 &&
-                        storeCategories[activeCategory] && (
-                          <motion.div
-                            key={activeCategory}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="w-72 bg-[#1a1a1a] shadow-[0_4px_20px_rgba(0,0,0,0.8)] rounded-r-sm h-96 overflow-y-auto custom-scrollbar"
-                          >
-                            <div className="flex flex-col">
-                              {products
-                                .filter((p) =>
-                                  (p.category || p.type || "")
-                                    .toLowerCase()
-                                    .includes(
-                                      storeCategories[
-                                        activeCategory
-                                      ].toLowerCase(),
-                                    ),
-                                )
-                                .map((product, i) => (
-                                  <Link
-                                    key={product.id}
-                                    to={`/product/${product.slug || product.id}`}
-                                    onClick={closeMenus}
-                                    className="block px-6 py-4 text-sm font-medium text-white border-b border-dashed border-white/10 hover:text-[#e6c97a] transition-all"
-                                  >
-                                    {product.name}
-                                  </Link>
-                                ))}
-                              {products.filter((p) =>
-                                (p.category || p.type || "")
+                  {/* Products Grid */}
+                  <div className="flex-1 bg-[#0a0a0a] py-6 px-8 flex flex-col">
+                    <div className="pb-4 text-xs font-bold tracking-widest text-[#888] uppercase">
+                      {activeCategory >= 0 && storeCategories[activeCategory]
+                        ? storeCategories[activeCategory]
+                        : "Featured"}
+                    </div>
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3 pr-4">
+                        {products
+                          .filter((p) =>
+                            activeCategory >= 0
+                              ? (p.category || p.type || "")
                                   .toLowerCase()
                                   .includes(
                                     storeCategories[
                                       activeCategory
                                     ].toLowerCase(),
-                                  ),
-                              ).length === 0 && (
-                                <div className="px-6 py-4 text-sm font-medium text-[#888] border-b border-dashed border-white/10">
-                                  New allocations arriving soon.
-                                </div>
+                                  )
+                              : true,
+                          )
+                          .slice(0, 30)
+                          .map((product) => (
+                            <Link
+                              key={product.id}
+                              to={`/product/${product.slug || product.id}`}
+                              onClick={closeMenus}
+                              className="text-sm text-[#ccc] hover:text-[#e6c97a] transition-colors truncate block py-1"
+                            >
+                              {product.name}
+                              {product.vintage && (
+                                <span className="ml-2 text-xs text-[#888]">
+                                  {product.vintage}
+                                </span>
                               )}
-                            </div>
-                          </motion.div>
-                        )}
-                    </AnimatePresence>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            <a href="/#private-collection">Offers</a>
-            <Link to="/auction">Auction</Link>
-            <div
-              className="relative nav-accessories-control"
-              onMouseEnter={() => {
-                setActiveCategory(-1);
-                setMegaTrigger("accessories");
-                setMegaOpen(true);
-              }}
-              onMouseLeave={() => setMegaOpen(false)}
-            >
-              <Link to="/accessories" className="nav-shop-link text-[#f0cf76] hover:text-white transition-colors">
-                Accessories
-              </Link>
-
-              <AnimatePresence>
-                {megaOpen && megaTrigger === "accessories" && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute top-full left-0 pt-4 z-50 flex items-start"
-                  >
-                    <div className="w-56 bg-[#222222] shadow-[0_4px_20px_rgba(0,0,0,0.8)] rounded-l-sm h-auto relative">
-                      {Object.keys(accessoryCategories).map((category, index) => (
-                        <div
-                          key={category}
-                          className="relative group/category"
-                          onMouseEnter={() => setActiveCategory(index)}
-                        >
-                          <div
-                            className={`px-5 py-4 flex items-center justify-between text-sm font-medium cursor-pointer transition-colors border-b border-dashed border-white/10 ${activeCategory === index ? "text-[#e6c97a]" : "text-white hover:text-[#e6c97a]"}`}
-                          >
-                            {category}
-                            <ChevronRight size={14} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <AnimatePresence mode="wait">
+                            </Link>
+                          ))}
+                      </div>
                       {activeCategory >= 0 &&
-                        Object.keys(accessoryCategories)[activeCategory] && (
-                          <motion.div
-                            key={activeCategory}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="w-64 bg-[#1a1a1a] shadow-[0_4px_20px_rgba(0,0,0,0.8)] rounded-r-sm h-auto"
-                          >
-                            <div className="flex flex-col">
-                              {accessoryCategories[Object.keys(accessoryCategories)[activeCategory]].map((subcategory, i) => (
-                                <Link
-                                  key={subcategory}
-                                  to={`/accessories?category=${encodeURIComponent(Object.keys(accessoryCategories)[activeCategory])}&subcategory=${encodeURIComponent(subcategory)}`}
-                                  onClick={closeMenus}
-                                  className="block px-6 py-4 text-sm font-medium text-white border-b border-dashed border-white/10 hover:text-[#e6c97a] transition-all"
-                                >
-                                  {subcategory}
-                                </Link>
-                              ))}
-                            </div>
-                          </motion.div>
+                        products.filter((p) =>
+                          (p.category || p.type || "")
+                            .toLowerCase()
+                            .includes(
+                              storeCategories[activeCategory].toLowerCase(),
+                            ),
+                        ).length === 0 && (
+                          <div className="h-full flex items-center justify-center text-[#888] text-sm italic">
+                            New allocations arriving soon.
+                          </div>
                         )}
-                    </AnimatePresence>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-            <Link to="/events" className="font-bold text-[#f0cf76] hover:text-white transition-colors">Events</Link>
-            <Link to="/vendor-portal">Sell on The Grand Store</Link>
-            <Link to="/events">Book a tasting</Link>
-            <Link to="/global-wines" className="font-bold text-[#f0cf76] hover:text-white transition-colors">🌍 GLOBAL WINES</Link>
-          </div>
-        </nav>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <AnimatePresence>
+          {megaOpen && megaTrigger === "accessories" && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="absolute top-[100%] left-0 w-full pt-0 z-50 border-t border-white/5"
+            >
+              <div className="w-full bg-[#0a0a0a] shadow-[0_20px_40px_rgba(0,0,0,0.9)] relative flex justify-center">
+                <div className="w-full max-w-[1500px] mx-auto flex h-[450px]">
+                  {/* Categories Column */}
+                  <div className="w-1/4 bg-[#111] border-r border-white/5 py-6 flex flex-col">
+                    <div className="px-8 pb-4 text-xs font-bold tracking-widest text-[#888] uppercase">
+                      Categories
+                    </div>
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                      {Object.keys(accessoryCategories).map(
+                        (category, index) => (
+                          <div
+                            key={category}
+                            className="relative group/category"
+                            onMouseEnter={() => setActiveCategory(index)}
+                          >
+                            <div
+                              className={`px-8 py-3 flex items-center justify-between text-sm cursor-pointer transition-colors ${activeCategory === index ? "text-[#e6c97a] bg-white/5" : "text-[#ccc] hover:text-white hover:bg-white/5"}`}
+                            >
+                              {category}
+                              <ChevronRight
+                                size={14}
+                                className={
+                                  activeCategory === index
+                                    ? "opacity-100"
+                                    : "opacity-0 group-hover/category:opacity-50 transition-opacity"
+                                }
+                              />
+                            </div>
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Products Grid */}
+                  <div className="flex-1 bg-[#0a0a0a] py-6 px-8 flex flex-col">
+                    <div className="pb-4 text-xs font-bold tracking-widest text-[#888] uppercase">
+                      {activeCategory >= 0 &&
+                      Object.keys(accessoryCategories)[activeCategory]
+                        ? Object.keys(accessoryCategories)[activeCategory]
+                        : "Featured"}
+                    </div>
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                      <div className="grid grid-cols-3 xl:grid-cols-4 gap-6 pr-4">
+                        {activeCategory >= 0 &&
+                          accessoryCategories[
+                            Object.keys(accessoryCategories)[activeCategory]
+                          ]?.map((subcat) => (
+                            <div
+                              key={subcat}
+                              className="flex flex-col gap-2 p-4 rounded-md bg-[#111] border border-white/5 hover:border-[#c9a35b]/30 transition-colors"
+                            >
+                              <div className="text-sm font-medium text-[#e6c97a] mb-2">
+                                {subcat}
+                              </div>
+                              {/* Dummy product representation for subcategory */}
+                              <Link
+                                to={`/accessories?category=${encodeURIComponent(Object.keys(accessoryCategories)[activeCategory])}&subcategory=${encodeURIComponent(subcat)}`}
+                                onClick={closeMenus}
+                                className="text-xs text-[#888] hover:text-white transition-colors"
+                              >
+                                View collection &rarr;
+                              </Link>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
       <div
@@ -423,11 +500,15 @@ export default function Header({
         />
         <div className="drawer-panel">
           <div className="drawer-head flex items-center justify-between">
-            <Link to="/" onClick={closeMenus} className="inline-flex items-center">
-              <img 
-                src="/grand-store-logo.png" 
-                alt="The Grand Store" 
-                className="h-11 w-auto max-w-[185px] object-contain object-left"
+            <Link
+              to="/"
+              onClick={closeMenus}
+              className="inline-flex items-center"
+            >
+              <img
+                src="/logo.png"
+                alt="The Grand Store"
+                className="h-8 w-auto object-contain sm:h-10 md:h-[46px]"
               />
             </Link>
             <IconButton label="Close menu" onClick={closeMenus}>
@@ -487,7 +568,11 @@ export default function Header({
                 ))}
               </div>
             </details>
-            <Link to="/events" onClick={closeMenus} className="font-bold text-[#f0cf76]">
+            <Link
+              to="/events"
+              onClick={closeMenus}
+              className="font-bold text-[#f0cf76]"
+            >
               Events
             </Link>
             <Link to="/vendor-portal" onClick={closeMenus}>
@@ -496,7 +581,11 @@ export default function Header({
             <Link to="/events" onClick={closeMenus}>
               Book a tasting
             </Link>
-            <Link to="/global-wines" onClick={closeMenus} className="text-[#f0cf76] font-bold">
+            <Link
+              to="/global-wines"
+              onClick={closeMenus}
+              className="text-[#f0cf76] font-bold"
+            >
               🌍 Global Wines
             </Link>
 
