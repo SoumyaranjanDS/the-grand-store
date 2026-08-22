@@ -1,14 +1,20 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { products as catalogProducts } from '../data';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { products as catalogProducts } from "../data";
 
 const ProductContext = createContext();
-const catalogProductsById = new Map(catalogProducts.map((product) => [String(product.id), product]));
+const catalogProductsById = new Map(
+  catalogProducts.map((product) => [String(product.id), product]),
+);
 
 const hydrateProductMetadata = (product) => {
   const catalogProduct = catalogProductsById.get(String(product.id));
-  const hydratedProduct = catalogProduct ? { ...catalogProduct, ...product } : product;
+  const hydratedProduct = catalogProduct
+    ? { ...catalogProduct, ...product }
+    : product;
   const firstOption = Array.isArray(hydratedProduct.options)
-    ? hydratedProduct.options.find((option) => typeof option === 'string' && option.trim())
+    ? hydratedProduct.options.find(
+        (option) => typeof option === "string" && option.trim(),
+      )
     : null;
 
   return {
@@ -27,8 +33,10 @@ export const ProductProvider = ({ children }) => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch('/api/products');
-        if (!res.ok) throw new Error('Failed to fetch products');
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL || ""}/api/products`,
+        );
+        if (!res.ok) throw new Error("Failed to fetch products");
         const data = await res.json();
         // The API's legacy products only contain the fields in the database schema.
         // Restore their catalog metadata and normalize newer vendor product fields.
