@@ -2,13 +2,13 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../../context/ProductContext';
 import ProductCard from '../../components/ProductCard';
-import { ArrowRight, RotateCcw } from 'lucide-react';
+import { ArrowRight, RotateCcw, Flame, Crown, Leaf, Apple } from 'lucide-react';
 
 const FLAVOR_PROFILES = [
-  { id: 'smoky', label: 'Smoky & Peaty', emoji: '💨', keywords: ['Peat', 'Smoky', 'Islay', 'Lagavulin', 'Laphroaig', 'Smoke'] },
-  { id: 'rich', label: 'Rich & Sherried', emoji: '🍫', keywords: ['Sherry', 'Rich', 'Dark Chocolate', 'Macallan', 'Fruitcake', 'Spice'] },
-  { id: 'light', label: 'Light & Floral', emoji: '🌸', keywords: ['Light', 'Floral', 'Lowland', 'Delicate', 'Vanilla', 'Citrus'] },
-  { id: 'fruity', label: 'Fruity & Spicy', emoji: '🍎', keywords: ['Fruity', 'Spicy', 'Speyside', 'Highland', 'Apple', 'Honey'] }
+  { id: 'smoky', label: 'Smoky & Peaty', icon: Flame, keywords: ['Peat', 'Smoky', 'Islay', 'Lagavulin', 'Laphroaig', 'Smoke'] },
+  { id: 'rich', label: 'Rich & Sherried', icon: Crown, keywords: ['Sherry', 'Rich', 'Dark Chocolate', 'Macallan', 'Fruitcake', 'Spice'] },
+  { id: 'light', label: 'Light & Floral', icon: Leaf, keywords: ['Light', 'Floral', 'Lowland', 'Delicate', 'Vanilla', 'Citrus'] },
+  { id: 'fruity', label: 'Fruity & Spicy', icon: Apple, keywords: ['Fruity', 'Spicy', 'Speyside', 'Highland', 'Apple', 'Honey'] }
 ];
 
 export default function WhiskyFinder() {
@@ -67,14 +67,19 @@ export default function WhiskyFinder() {
                   <button
                     key={profile.id}
                     onClick={() => setSelectedProfile(profile.id)}
-                    className="flex flex-col items-center justify-center p-8 bg-[#151310] border border-[#2a261f] rounded-lg hover:border-[#d8b76d] hover:bg-[#1a1714] transition-all group"
+                    className="relative flex flex-col items-center justify-center p-8 bg-gradient-to-b from-[#1a1714] to-[#0f0e0c] border border-white/5 rounded-2xl overflow-hidden hover:border-[#d8b76d]/50 transition-all duration-500 group shadow-lg hover:shadow-[#d8b76d]/20 hover:-translate-y-2"
                   >
-                    <div className="w-20 h-20 rounded-full bg-[#1a1714] group-hover:bg-[#d8b76d]/10 flex items-center justify-center mb-6 transition-colors">
-                      <span className="text-4xl">{profile.emoji}</span>
+                    {/* Hover Glow Effect */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#d8b76d]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    
+                    <div className="relative w-24 h-24 rounded-full bg-gradient-to-tr from-[#1a1714] to-[#2a261f] border border-white/5 group-hover:border-[#d8b76d]/30 flex items-center justify-center mb-6 transition-all duration-500 shadow-inner group-hover:scale-110">
+                      <profile.icon className="w-10 h-10 text-white group-hover:text-[#d8b76d] filter drop-shadow-lg group-hover:drop-shadow-[0_0_15px_rgba(216,183,109,0.5)] transition-all duration-500" strokeWidth={1.5} />
                     </div>
-                    <span className="font-semibold text-lg text-center mb-2">{profile.label}</span>
-                    <span className="text-sm text-gray-500 text-center px-4">
-                      {profile.keywords.slice(0, 3).join(', ')}...
+                    
+                    <span className="relative font-serif text-xl text-[#eee8dd] text-center mb-3 group-hover:text-[#d8b76d] transition-colors duration-300">{profile.label}</span>
+                    
+                    <span className="relative text-[10px] uppercase tracking-widest text-gray-500 text-center group-hover:text-gray-300 transition-colors duration-300">
+                      {profile.keywords.slice(0, 3).join(' • ')}
                     </span>
                   </button>
                 )
