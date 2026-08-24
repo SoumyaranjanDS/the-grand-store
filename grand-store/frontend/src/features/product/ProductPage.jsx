@@ -1,5 +1,6 @@
 import { useProducts } from "../../context/ProductContext";
 import React, { useState, useEffect } from "react";
+import SEO from "../../components/SEO";
 import { Link, Navigate, useParams } from "react-router-dom";
 import {
   ChevronRight,
@@ -76,12 +77,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
       verdict:
         "Excellent for collectors and experienced whisky drinkers. A truly remarkable expression that showcases the distillery character.",
     });
-
-    document.title = `${product.fullName || product.name} — The Grand Store`;
     window.scrollTo({ top: 0, behavior: "auto" });
-    return () => {
-      document.title = "The Grand Store — Luxury Wines & Spirits";
-    };
   }, [product]);
 
   // Mock shipping estimate effect
@@ -130,8 +126,38 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
     ...detailEntries.map(([k, v]) => ({ label: k, value: v })),
   ];
 
+  // Define Product Schema for SEO
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": product.fullName || product.name,
+    "image": product.image,
+    "description": product.description || `Buy ${product.name} at The Grand Store.`,
+    "sku": product.sku || product._id,
+    "brand": {
+      "@type": "Brand",
+      "name": product.brand || "The Grand Store"
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": typeof window !== 'undefined' ? window.location.href : '',
+      "priceCurrency": "ZAR",
+      "price": product.price,
+      "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      "itemCondition": "https://schema.org/NewCondition"
+    }
+  };
+
   return (
     <main className="min-h-screen bg-[#0a0907] pt-16 pb-12 px-4 md:px-8 lg:px-12 text-[#eee8dd] font-sans">
+      <SEO 
+        title={product.fullName || product.name}
+        description={product.description?.substring(0, 160) || `Buy ${product.name} at The Grand Store.`}
+        image={product.image}
+        url={`/product/${product.slug || product._id}`}
+        type="product"
+        schema={productSchema}
+      />
       {/* Top Breadcrumbs */}
       <section className="max-w-7xl mx-auto mb-2 flex items-center text-[10px] text-[#918a7f] uppercase tracking-[0.2em] font-semibold gap-3">
         <Link to="/" className="hover:text-gold-gradient transition-colors">
