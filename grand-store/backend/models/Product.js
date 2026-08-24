@@ -33,6 +33,8 @@ const productSchema = new mongoose.Schema({
   options: [String],
   tags: [String],
   tastingNotes: [String],
+  flavorProfile: [String],
+  foodPairing: [String],
   stock: {
     type: Number,
     default: 0

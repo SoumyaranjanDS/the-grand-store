@@ -59,6 +59,7 @@ import VendorEvents from './features/vendor/VendorEvents'
 import EventsHub from './features/events/EventsHub'
 import EventDetails from './features/events/EventDetails'
 import EventSuccessPage from './features/events/EventSuccessPage'
+import NotFound from './pages/NotFound'
 import MyTickets from './features/customer/MyTickets'
 import VendorProducts from './features/vendor/VendorProducts'
 import EditProduct from './features/vendor/EditProduct'
@@ -103,6 +104,8 @@ import CocktailsPage from './pages/CocktailsPage'
 import ContactUsPage from './pages/ContactUsPage'
 import ReferEarnPage from './pages/ReferEarnPage'
 import GlossaryPage from './pages/GlossaryPage'
+import WinePairingTool from './features/tools/WinePairingTool'
+import WhiskyFinder from './features/tools/WhiskyFinder'
 
 // Host Applications
 import HostAuctionPage from './features/hosting/HostAuctionPage'
@@ -375,6 +378,10 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         
+        {/* Tools & Finders */}
+        <Route path="/tools/wine-pairing" element={<WinePairingTool />} />
+        <Route path="/tools/whisky-finder" element={<WhiskyFinder />} />
+        
         {/* Global Wines */}
         <Route path="/global-wines" element={<GlobalWinesPage />} />
         <Route path="/global-wines/:country" element={<CountryPavilionPage onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />} />
@@ -475,7 +482,7 @@ function App() {
         <Route path="/blog/top-10-must-try-premium-liquors-available-at-the-grand-store" element={<PremiumLiquorsBlogPage />} />
         <Route path="/blog/top-10-whiskey-brands-you-can-buy-online-in-south-africa" element={<WhiskeyBlogPage />} />
         <Route path="/blog/:slug" element={<Navigate to="/#journal" replace />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       <div className={`toast ${toast ? 'show' : ''}`} role="status"><ShoppingBag size={18} />{toast}</div>
       {!isTradeRoute && !isDashboardRoute && !isWineFarmRoute && (

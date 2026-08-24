@@ -77,7 +77,7 @@ const createProduct = async (req, res) => {
       return res.status(403).json({ message: 'Only approved vendors or admins can add products' });
     }
 
-    const { name, type, description, price, options, tags, tastingNotes, stock } = req.body;
+    const { name, type, description, price, options, tags, tastingNotes, stock, flavorProfile, foodPairing } = req.body;
     let { image, gallery } = req.body; // Allows passing image links from frontend for admins
 
     // Check if type is whisky and ensure fact sheet is provided
@@ -119,6 +119,8 @@ const createProduct = async (req, res) => {
       options: options && typeof options === 'string' ? JSON.parse(options) : options || [],
       tags: tags && typeof tags === 'string' ? JSON.parse(tags) : tags || [],
       tastingNotes: tastingNotes && typeof tastingNotes === 'string' ? JSON.parse(tastingNotes) : tastingNotes || [],
+      flavorProfile: flavorProfile && typeof flavorProfile === 'string' ? JSON.parse(flavorProfile) : flavorProfile || [],
+      foodPairing: foodPairing && typeof foodPairing === 'string' ? JSON.parse(foodPairing) : foodPairing || [],
       stock: Number(stock) || 0,
       vendorId: req.user.role === 'admin' ? null : req.user._id,
       approvalStatus: 'approved'
@@ -159,7 +161,7 @@ const updateProduct = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to edit this product' });
     }
 
-    const { name, type, description, price, options, tags, tastingNotes, stock, image: imageLink, gallery: galleryLinks } = req.body;
+    const { name, type, description, price, options, tags, tastingNotes, stock, image: imageLink, gallery: galleryLinks, flavorProfile, foodPairing } = req.body;
 
     product.name = name || product.name;
     product.type = type || product.type;
@@ -168,6 +170,8 @@ const updateProduct = async (req, res) => {
     product.options = options && typeof options === 'string' ? JSON.parse(options) : options || product.options;
     product.tags = tags && typeof tags === 'string' ? JSON.parse(tags) : tags || product.tags;
     product.tastingNotes = tastingNotes && typeof tastingNotes === 'string' ? JSON.parse(tastingNotes) : tastingNotes || product.tastingNotes;
+    product.flavorProfile = flavorProfile && typeof flavorProfile === 'string' ? JSON.parse(flavorProfile) : flavorProfile || product.flavorProfile;
+    product.foodPairing = foodPairing && typeof foodPairing === 'string' ? JSON.parse(foodPairing) : foodPairing || product.foodPairing;
     product.stock = stock !== undefined ? Number(stock) : product.stock;
 
     if (imageLink) product.image = imageLink;

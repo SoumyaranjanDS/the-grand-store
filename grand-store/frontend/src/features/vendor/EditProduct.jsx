@@ -18,6 +18,8 @@ export default function EditProduct({ onNotify }) {
     stock: '',
     tags: '',
     tastingNotes: '',
+    flavorProfile: [],
+    foodPairing: [],
     options: 'Pack of 1',
     tradePrice: '',
     minOrderQuantity: '',
@@ -49,6 +51,8 @@ export default function EditProduct({ onNotify }) {
             options: product.options ? product.options.join(', ') : '',
             tags: product.tags ? product.tags.join(', ') : '',
             tastingNotes: product.tastingNotes ? product.tastingNotes.join(', ') : '',
+            flavorProfile: product.flavorProfile || [],
+            foodPairing: product.foodPairing || [],
             stock: product.stock !== undefined ? product.stock.toString() : '0',
             tradePrice: product.tradePrice || '',
             minOrderQuantity: product.minOrderQuantity || '',
@@ -86,6 +90,28 @@ export default function EditProduct({ onNotify }) {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  };
+
+  const handleFoodPairingChange = (e) => {
+    const { value, checked } = e.target;
+    setFormData(prev => {
+      if (checked) {
+        return { ...prev, foodPairing: [...prev.foodPairing, value] };
+      } else {
+        return { ...prev, foodPairing: prev.foodPairing.filter(item => item !== value) };
+      }
+    });
+  };
+
+  const handleFlavorProfileChange = (e) => {
+    const { value, checked } = e.target;
+    setFormData(prev => {
+      if (checked) {
+        return { ...prev, flavorProfile: [...prev.flavorProfile, value] };
+      } else {
+        return { ...prev, flavorProfile: prev.flavorProfile.filter(item => item !== value) };
+      }
+    });
   };
 
   const handleImageChange = (e) => {
@@ -134,6 +160,13 @@ export default function EditProduct({ onNotify }) {
       
       const notesArray = formData.tastingNotes.split(',').map(t => t.trim()).filter(Boolean);
       payload.append('tastingNotes', JSON.stringify(notesArray));
+      
+      if (formData.flavorProfile && formData.flavorProfile.length > 0) {
+        payload.append('flavorProfile', JSON.stringify(formData.flavorProfile));
+      }
+      if (formData.foodPairing && formData.foodPairing.length > 0) {
+        payload.append('foodPairing', JSON.stringify(formData.foodPairing));
+      }
       
       payload.append('options', JSON.stringify([formData.options]));
 
@@ -304,6 +337,48 @@ export default function EditProduct({ onNotify }) {
                       placeholder=" " 
                     />
                     <label className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[#e1bd70] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Tasting Notes (Comma separated)</label>
+                  </div>
+                </div>
+
+                {/* Dynamic SEO Filters UI */}
+                <div className="grid grid-cols-1 mt-10">
+                  <label className="text-xs uppercase tracking-widest text-[#e1bd70] mb-4">Flavor Profile (Whisky Finder)</label>
+                  <div className="flex flex-wrap gap-4">
+                    {['smoky', 'rich', 'light', 'fruity'].map((flavor) => (
+                      <label key={flavor} className="flex items-center gap-2 cursor-pointer border border-white/10 px-4 py-2 rounded-full hover:border-[#e1bd70] transition-colors">
+                        <input 
+                          type="checkbox" 
+                          value={flavor} 
+                          checked={formData.flavorProfile.includes(flavor)} 
+                          onChange={handleFlavorProfileChange} 
+                          className="w-4 h-4 text-[#d6a03f] bg-transparent border-white/20 rounded focus:ring-0 focus:ring-offset-0 cursor-pointer" 
+                        />
+                        <span className="text-[var(--color-ivory)] capitalize">
+                          {flavor === 'smoky' ? 'Smoky & Peaty' : 
+                           flavor === 'rich' ? 'Rich & Sherried' : 
+                           flavor === 'light' ? 'Light & Floral' : 
+                           'Fruity & Spicy'}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 mt-10">
+                  <label className="text-xs uppercase tracking-widest text-[#e1bd70] mb-4">Food Pairing (Wine Pairing Tool)</label>
+                  <div className="flex flex-wrap gap-4">
+                    {['beef', 'seafood', 'poultry', 'vegetarian', 'cheese'].map((food) => (
+                      <label key={food} className="flex items-center gap-2 cursor-pointer border border-white/10 px-4 py-2 rounded-full hover:border-[#e1bd70] transition-colors">
+                        <input 
+                          type="checkbox" 
+                          value={food} 
+                          checked={formData.foodPairing.includes(food)} 
+                          onChange={handleFoodPairingChange} 
+                          className="w-4 h-4 text-[#d6a03f] bg-transparent border-white/20 rounded focus:ring-0 focus:ring-offset-0 cursor-pointer" 
+                        />
+                        <span className="text-[var(--color-ivory)] capitalize">{food === 'beef' ? 'Beef & Steak' : food === 'poultry' ? 'Poultry & Pork' : food}</span>
+                      </label>
+                    ))}
                   </div>
                 </div>
               </div>
