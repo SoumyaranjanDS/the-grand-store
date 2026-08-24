@@ -23,7 +23,7 @@ export default function AdminTestimonials() {
   const fetchTestimonials = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/testimonials/admin', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/testimonials/admin`, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       const data = await res.json();
@@ -79,7 +79,7 @@ export default function AdminTestimonials() {
     e.preventDefault();
     try {
       const method = editMode ? 'PUT' : 'POST';
-      const url = editMode ? `/api/testimonials/${currentId}` : '/api/testimonials';
+      const url = editMode ? `${import.meta.env.VITE_API_URL || ''}/api/testimonials/${currentId}` : `${import.meta.env.VITE_API_URL || ''}/api/testimonials`;
       
       const res = await fetch(url, {
         method,
@@ -104,7 +104,7 @@ export default function AdminTestimonials() {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this testimonial?')) {
       try {
-        const res = await fetch(`/api/testimonials/${id}`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/testimonials/${id}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${user.token}` }
         });
@@ -119,7 +119,7 @@ export default function AdminTestimonials() {
 
   const toggleVisibility = async (t) => {
     try {
-      const res = await fetch(`/api/testimonials/${t._id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/testimonials/${t._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
