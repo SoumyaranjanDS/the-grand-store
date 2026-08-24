@@ -1,5 +1,4 @@
 import { ArrowDown, ArrowUpRight } from 'lucide-react';
-import newHeroVideo from '../assets/2efe7f3d-ee23-480e-924e-6345797c4f9b.mp4';
 import './ScrollVideoHero.css';
 
 function ScrollVideoHero() {
@@ -22,7 +21,7 @@ function ScrollVideoHero() {
           preload="auto" 
           aria-label="Cigar smoke film"
         >
-          <source src={newHeroVideo} type="video/mp4" />
+          <source src="/media/cigar-main-video.mp4" type="video/mp4" />
         </video>
         <div className="scroll-film__shade" aria-hidden="true" />
         <div className="scroll-film__grain" aria-hidden="true" />
