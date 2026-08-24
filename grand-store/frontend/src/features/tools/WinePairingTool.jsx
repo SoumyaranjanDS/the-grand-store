@@ -2,14 +2,14 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../../context/ProductContext';
 import ProductCard from '../../components/ProductCard';
-import { Wine, ArrowRight, RotateCcw } from 'lucide-react';
+import { Wine, ArrowRight, RotateCcw, Beef, Fish, Drumstick, Leaf, ChefHat } from 'lucide-react';
 
 const MEAL_TYPES = [
-  { id: 'beef', label: 'Beef & Steak', emoji: '🥩', keywords: ['Red Wine', 'Cabernet Sauvignon', 'Shiraz', 'Pinotage', 'Merlot', 'Bordeaux'] },
-  { id: 'seafood', label: 'Seafood', emoji: '🐟', keywords: ['White Wine', 'Sauvignon Blanc', 'Chardonnay', 'Chenin Blanc'] },
-  { id: 'poultry', label: 'Poultry & Pork', emoji: '🍗', keywords: ['Chardonnay', 'Pinot Noir', 'White Wine', 'Rose'] },
-  { id: 'vegetarian', label: 'Vegetarian', emoji: '🥗', keywords: ['Pinot Noir', 'Sauvignon Blanc', 'White Wine', 'Rose'] },
-  { id: 'cheese', label: 'Cheese & Dessert', emoji: '🧀', keywords: ['Dessert Wine', 'Port', 'Shiraz', 'Red Wine'] }
+  { id: 'beef', label: 'Beef & Steak', icon: Beef, keywords: ['Red Wine', 'Cabernet Sauvignon', 'Shiraz', 'Pinotage', 'Merlot', 'Bordeaux'] },
+  { id: 'seafood', label: 'Seafood', icon: Fish, keywords: ['White Wine', 'Sauvignon Blanc', 'Chardonnay', 'Chenin Blanc'] },
+  { id: 'poultry', label: 'Poultry & Pork', icon: Drumstick, keywords: ['Chardonnay', 'Pinot Noir', 'White Wine', 'Rose'] },
+  { id: 'vegetarian', label: 'Vegetarian', icon: Leaf, keywords: ['Pinot Noir', 'Sauvignon Blanc', 'White Wine', 'Rose'] },
+  { id: 'cheese', label: 'Cheese & Dessert', icon: ChefHat, keywords: ['Dessert Wine', 'Port', 'Shiraz', 'Red Wine'] }
 ];
 
 export default function WinePairingTool() {
@@ -68,12 +68,16 @@ export default function WinePairingTool() {
                   <button
                     key={meal.id}
                     onClick={() => setSelectedMeal(meal.id)}
-                    className="flex flex-col items-center justify-center p-6 bg-[#151310] border border-[#2a261f] rounded-lg hover:border-[#d8b76d] hover:bg-[#1a1714] transition-all group"
+                    className="relative flex flex-col items-center justify-center p-6 bg-gradient-to-b from-[#1a1714] to-[#0f0e0c] border border-white/5 rounded-2xl overflow-hidden hover:border-[#d8b76d]/50 transition-all duration-500 group shadow-lg hover:shadow-[#d8b76d]/20 hover:-translate-y-2"
                   >
-                    <div className="w-16 h-16 rounded-full bg-[#1a1714] group-hover:bg-[#d8b76d]/10 flex items-center justify-center mb-4 transition-colors">
-                      <span className="text-3xl">{meal.emoji}</span>
+                    {/* Hover Glow Effect */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#d8b76d]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    
+                    <div className="relative w-20 h-20 rounded-full bg-gradient-to-tr from-[#1a1714] to-[#2a261f] border border-white/5 group-hover:border-[#d8b76d]/30 flex items-center justify-center mb-4 transition-all duration-500 shadow-inner group-hover:scale-110">
+                      <meal.icon className="w-8 h-8 text-white group-hover:text-[#d8b76d] filter drop-shadow-lg group-hover:drop-shadow-[0_0_15px_rgba(216,183,109,0.5)] transition-all duration-500" strokeWidth={1.5} />
                     </div>
-                    <span className="font-semibold text-center">{meal.label}</span>
+                    
+                    <span className="relative font-serif text-lg text-[#eee8dd] text-center group-hover:text-[#d8b76d] transition-colors duration-300">{meal.label}</span>
                   </button>
                 )
               })}
