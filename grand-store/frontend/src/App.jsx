@@ -445,7 +445,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <div className={`toast ${toast ? 'show' : ''}`} role="status"><ShoppingBag size={18} />{toast}</div>
-      {!isTradeRoute && !isDashboardRoute && (
+      {!isTradeRoute && !isDashboardRoute && !isWineFarmRoute && (
         <>
           <Footer />
           {/* SocialRail removed */}

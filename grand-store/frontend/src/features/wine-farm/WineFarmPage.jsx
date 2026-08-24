@@ -208,7 +208,7 @@ function Header() {
       </div>
       <header className="site-header">
         <a className="brand" href="/winefarm/#top" aria-label="The Grand Store wine farm home">
-          <img src="/assets/logo.webp" alt="The Grand Store — Bar Accessories" />
+          <img src="/winefarm-logo.webp" alt="The Grand Store Wine Farm" />
         </a>
         <nav className={open ? 'site-nav open' : 'site-nav'} aria-label="Primary navigation">
           <a href="/winefarm/#top" onClick={closeMenu}>Home</a>
@@ -217,11 +217,11 @@ function Header() {
           <a href={sectionLink('#categories')} onClick={closeMenu}>Shop Wines</a>
           <a href="https://grandstore.co.za/winefarm/blogs" target="_blank" rel="noreferrer">Blogs</a>
           <a href="/winefarm/contact" onClick={closeMenu}>Contact Us</a>
-          <a className="mobile-vendor" href={`${liveBase}/vendor-portal`}>Become A Vendor</a>
+          <Link className="mobile-vendor" to="/vendor-portal">Become A Vendor</Link>
         </nav>
-        <a className="header-cta" href={`${liveBase}/vendor-portal`}>
+        <Link className="header-cta" to="/vendor-portal">
           Become A Vendor <Arrow />
-        </a>
+        </Link>
         <button
           className={open ? 'menu-button active' : 'menu-button'}
           type="button"
@@ -316,6 +316,8 @@ function About() {
           <div className="sun-disc" />
           <span className="vertical-note">Estate No. 01 • South Africa</span>
           <img src="/assets/about_estate_new.jpg" alt="Wine bottle with botanical artwork" />
+          <div className="corner-accent bottom-left" />
+          <div className="corner-accent bottom-right" />
         </div>
         <blockquote>“Every bottle carries the landscape that raised it.”</blockquote>
       </div>
@@ -451,7 +453,7 @@ function VendorCta() {
       <span>For growers • makers • visionaries</span>
       <h2>Your journey to success<br /><em>starts here</em></h2>
       <p>Forge unforgettable memories and seize business opportunities with our custom wine experiences.</p>
-      <a className="button button-light" href={`${liveBase}/vendor-portal`}>Become A Vendor <Arrow /></a>
+      <Link className="button button-light" to="/vendor-portal">Become A Vendor <Arrow /></Link>
     </section>
   )
 }
@@ -654,7 +656,7 @@ function AboutPage() {
       <section className="about-market">
         <div className="about-market-heading">
           <span>One platform • Two markets</span>
-          <h2>B2C <i>&</i><br />B2B</h2>
+          <h2>B2C and B2B</h2>
         </div>
         <div className="about-market-copy">
           <article>
@@ -674,7 +676,7 @@ function AboutPage() {
 
       <section className="about-join">
         <div><span>Your next vintage starts here</span><h2>Sign up today and start sharing the fruits of your vineyard with a global audience!</h2></div>
-        <a className="button button-light" href={`${liveBase}/vendor-portal`}>Join Now <Arrow /></a>
+        <Link className="button button-light" to="/vendor-portal">Join Now <Arrow /></Link>
       </section>
 
       <section className="about-process section-pad">
@@ -810,11 +812,11 @@ function Footer() {
           <span>Ready to take your place?</span>
           <h2>Bring your vineyard<br /><em>to a wider world.</em></h2>
         </div>
-        <a className="button button-light" href={`${liveBase}/vendor-portal`}>Become A Vendor <Arrow /></a>
+        <Link className="button button-light" to="/vendor-portal">Become A Vendor <Arrow /></Link>
       </div>
       <div className="footer-grid">
         <div className="footer-about">
-          <img src="/grand-store-logo.png" alt="The Grand Store — Bar Accessories" />
+          <img src="/winefarm-logo.webp" alt="The Grand Store Wine Farm" />
           <p>At South African Wine Farms Estate, we’ve teamed up with Grandstore to create a platform where wine farmers from around the world can easily showcase their vineyards and market their wines.</p>
           <div className="socials"><a href="#">Fb</a><a href="#">In</a><a href="#">X</a><a href="#">Pt</a></div>
         </div>
@@ -827,10 +829,10 @@ function Footer() {
         </div>
         <div className="footer-links">
           <h3>Important Links</h3>
-          <a href={`${liveBase}/vendor-portal`}>Become A Vendor</a>
-          <a href={`${liveBase}/vendor-admin`}>Vendor Login</a>
-          <a href={`${liveBase}/shop/wine`}>Shop Wine</a>
-          <a href={`${liveBase}/offers`}>Exclusive Offers</a>
+          <Link to="/vendor-portal">Become A Vendor</Link>
+          <Link to="/vendor-admin">Vendor Login</Link>
+          <Link to="/shop/wine">Shop Wine</Link>
+          <Link to="/offers">Exclusive Offers</Link>
         </div>
         <address>
           <h3>Contact Us</h3>
