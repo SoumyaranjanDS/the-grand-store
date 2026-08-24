@@ -25,11 +25,12 @@ function MosiSection() {
         ref={imgRef}
         className={`mosi-section__image reveal-right ${imgVisible ? 'is-visible' : ''}`}
       >
-        <img src="/images/mosi-oa-tunya.jpeg" alt="Mosi Oa Tunya cigar resting on a whisky glass" loading="lazy" />
-        <figcaption>Hand-rolled · African tobacco · Victoria Falls</figcaption>
+        <img src="/cigar-product.webp" alt="Mosi Oa Tunya cigar resting on a whisky glass" loading="lazy" />
+        <figcaption>Hand-rolled &middot; African tobacco &middot; Victoria Falls</figcaption>
       </figure>
     </section>
   );
 }
+
 
 export default MosiSection;

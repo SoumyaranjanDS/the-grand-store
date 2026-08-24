@@ -102,6 +102,12 @@ export default function AdminLayout() {
             <button onClick={() => handleNavigate('/admin/host-applications')} className={navItemClass('/admin/host-applications')}>
               <Building2 size={16} /> Host Applications
             </button>
+            <button onClick={() => handleNavigate('/admin/testimonials')} className={navItemClass('/admin/testimonials')}>
+              <Star size={16} /> Wine Farm Testimonials
+            </button>
+            <button onClick={() => handleNavigate('/admin/trade-enquiries')} className={navItemClass('/admin/trade-enquiries')}>
+              <Building2 size={16} /> Trade Enquiries
+            </button>
             <button onClick={() => handleNavigate('/auction')} className={navItemClass('/auction')}>
               <Gavel size={16} /> Live Auctions
             </button>
@@ -109,6 +115,9 @@ export default function AdminLayout() {
             <div className="text-[10px] text-[var(--color-gold)] uppercase tracking-widest mb-2 mt-4 pl-2 font-bold">System Control</div>
             <button onClick={() => handleNavigate('/admin/financials')} className={navItemClass('/admin/financials')}>
               <Wallet size={16} /> Financial Control
+            </button>
+            <button onClick={() => handleNavigate('/admin/bank-transfers')} className={navItemClass('/admin/bank-transfers')}>
+              <Wallet size={16} /> Bank Transfers
             </button>
             <button onClick={() => handleNavigate('/admin/settings')} className={navItemClass('/admin/settings')}>
               <Settings size={16} /> Platform Settings

@@ -42,6 +42,7 @@ import AdminAuctionPanel from './features/admin/AdminAuctionPanel'
 import TastingPage from './features/tasting/TastingPage'
 import PremiumLiquorsBlogPage from './features/blog/PremiumLiquorsBlogPage'
 import BrandyBlogPage from './features/blog/BrandyBlogPage'
+import WhiskeyBlogPage from './features/blog/WhiskeyBlogPage'
 import LoginPage from './features/auth/LoginPage'
 import RegisterPage from './features/auth/RegisterPage'
 import ProfilePage from './features/customer/ProfilePage'
@@ -82,8 +83,11 @@ import AdminUsers from './features/admin/AdminUsers'
 import AdminVendors from './features/admin/AdminVendors'
 import AdminExpertReviews from './features/admin/AdminExpertReviews'
 import AdminSettings from './features/admin/AdminSettings'
+import AdminTestimonials from './features/admin/AdminTestimonials'
 import AdminFinancials from './features/admin/AdminFinancials'
+import AdminBankTransfers from './features/admin/AdminBankTransfers'
 import AdminAccessories from './features/admin/AdminAccessories'
+import AdminTradeEnquiries from './features/admin/AdminTradeEnquiries'
 import AccessoriesPage from './features/shop/AccessoriesPage'
 import VendorMarketing from './features/vendor/VendorMarketing'
 import VendorAcademy from './features/vendor/VendorAcademy'
@@ -93,11 +97,22 @@ import GlobalWinesPage from './features/global/GlobalWinesPage'
 import CountryPavilionPage from './features/global/CountryPavilionPage'
 import VendorPaymentGate from './features/vendor/VendorPaymentGate'
 import CommunityPage from './pages/CommunityPage'
+import AboutPage from './pages/AboutPage'
+import BlogsPage from './pages/BlogsPage'
+import CocktailsPage from './pages/CocktailsPage'
+import ContactUsPage from './pages/ContactUsPage'
+import ReferEarnPage from './pages/ReferEarnPage'
+import GlossaryPage from './pages/GlossaryPage'
 
 // Host Applications
 import HostAuctionPage from './features/hosting/HostAuctionPage'
 import HostEventPage from './features/hosting/HostEventPage'
 import AdminHostApplications from './features/admin/AdminHostApplications'
+
+import TermsConditions from './features/legal/TermsConditions'
+import TermsOfService from './features/legal/TermsOfService'
+import PrivacyPolicy from './features/legal/PrivacyPolicy'
+import FAQPage from './features/legal/FAQPage'
 
 import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
@@ -419,7 +434,10 @@ function App() {
           <Route path="host-applications" element={<AdminHostApplications />} />
           <Route path="auctions" element={<AdminAuctionPanel onNotify={showToast} />} />
           <Route path="settings" element={<AdminSettings />} />
+          <Route path="testimonials" element={<AdminTestimonials />} />
+          <Route path="trade-enquiries" element={<AdminTradeEnquiries />} />
           <Route path="financials" element={<AdminFinancials />} />
+          <Route path="bank-transfers" element={<AdminBankTransfers />} />
         </Route>
         
         <Route path="/auction" element={<AuctionPage onNotify={showToast} />} />
@@ -439,8 +457,23 @@ function App() {
             onNotify={showToast}
           />
         )} />
+        
+        {/* Legal & Policies */}
+        <Route path="/terms-and-conditions" element={<TermsConditions />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/faq" element={<FAQPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/blogs" element={<BlogsPage />} />
+        <Route path="/cocktail" element={<CocktailsPage />} />
+        <Route path="/cocktails" element={<Navigate to="/cocktail" replace />} />
+        <Route path="/contact-us" element={<ContactUsPage />} />
+        <Route path="/refer-and-earn" element={<ReferEarnPage />} />
+        <Route path="/glossary" element={<GlossaryPage />} />
+
         <Route path="/blog/top-south-african-brandy-brands-you-can-order-online" element={<BrandyBlogPage />} />
         <Route path="/blog/top-10-must-try-premium-liquors-available-at-the-grand-store" element={<PremiumLiquorsBlogPage />} />
+        <Route path="/blog/top-10-whiskey-brands-you-can-buy-online-in-south-africa" element={<WhiskeyBlogPage />} />
         <Route path="/blog/:slug" element={<Navigate to="/#journal" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -5,6 +5,12 @@ import MosiShopPage from "./pages/MosiShopPage";
 import CigarHistoryPage from "./pages/CigarHistoryPage";
 import SearchPage from "./pages/SearchPage";
 import SavedCigarsPage from "./pages/SavedCigarsPage";
+import AboutPage from "./pages/AboutPage";
+import ContactPage from "./pages/ContactPage";
+import TermsConditionsPage from "./pages/TermsConditionsPage";
+import TermsServicePage from "./pages/TermsServicePage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import CookiesPolicyPage from "./pages/CookiesPolicyPage";
 import React from "react";
 import { Agentation } from "agentation";
 import Navbar from "./components/Navbar";
@@ -23,6 +29,12 @@ function App() {
         <Route path="/cigar-history" element={<CigarHistoryPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/wishlist" element={<SavedCigarsPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/terms-conditions" element={<TermsConditionsPage />} />
+        <Route path="/terms-service" element={<TermsServicePage />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="/cookies-policy" element={<CookiesPolicyPage />} />
         <Route
           path="/saved-cigars"
           element={<Navigate to="/wishlist" replace />}

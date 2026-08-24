@@ -29,7 +29,13 @@ const orderSchema = new mongoose.Schema({
     postalCode: { type: String, required: true },
     country: { type: String, required: true },
   },
+  
+  isGift: { type: Boolean, default: false },
+  giftRecipientName: { type: String, default: "" },
+  giftMessage: { type: String, default: "" },
+
   paymentMethod: { type: String, required: true },
+  proofUrl: { type: String },
 
   // === ACCOUNTING BREAKDOWN ===
   subTotal: { type: Number, default: 0 },          // Products total before any fees
@@ -67,7 +73,7 @@ const orderSchema = new mongoose.Schema({
   // Payment status
   paymentStatus: {
     type: String,
-    enum: ['Pending', 'Authorised', 'Paid', 'Allocated', 'Settled', 'Failed', 'Cancelled', 'Refunded', 'Disputed'],
+    enum: ['Pending', 'Awaiting_Approval', 'Authorised', 'Paid', 'Allocated', 'Settled', 'Failed', 'Cancelled', 'Refunded', 'Disputed'],
     default: 'Pending'
   },
   isPaid: { type: Boolean, required: true, default: false },

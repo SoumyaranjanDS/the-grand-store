@@ -101,6 +101,27 @@ export const testimonials = [
     initial: 'R',
     color: '#B0205D'
   },
+  {
+    quote: "Exceptional quality and flavor. These cigars have become a staple in my humidor. The rich aroma and smooth draw make them perfect for any occasion.",
+    name: 'Michael T.',
+    location: 'Johannesburg',
+    initial: 'M',
+    color: '#5C4B51'
+  },
+  {
+    quote: "A truly premium experience from start to finish. The customer service was outstanding, and the cigars arrived in perfect condition. Highly recommended!",
+    name: 'Sarah K.',
+    location: 'Durban',
+    initial: 'S',
+    color: '#8C6D46'
+  },
+  {
+    quote: "I've tried many different brands, but the selection here is unmatched. The flavor profiles are complex and deeply satisfying. Will definitely order again.",
+    name: 'James L.',
+    location: 'Gqeberha',
+    initial: 'J',
+    color: '#2A363B'
+  },
 ];
 
 export const contactDetails = {

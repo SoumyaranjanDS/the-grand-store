@@ -1,40 +1,33 @@
 import "./AgeingGallery.css";
 
-import img1 from '../assets/image.png'
-import img2 from '../assets/image copy.png'
-import img3 from '../assets/image copy 2.png'
-import img4 from '../assets/image copy 3.png'
-import img5 from '../assets/image copy 4.png'
-import img6 from '../assets/image copy 5.png'
-
 const gallery = [
   {
-    image: img4,
+    image: '/assets/gallery_vineyard.jpg',
     title: "The Vineyard",
     subtitle: "Early Morning Harvest",
   },
   {
-    image: img6,
+    image: '/assets/gallery_press.jpg',
     title: "The Press",
     subtitle: "Traditional Methods",
   },
   {
-    image: img3,
+    image: '/assets/gallery_cellar.jpg',
     title: "The Cellar",
     subtitle: "Oak Barrel Ageing",
   },
   {
-    image: img2,
+    image: '/assets/gallery_production.jpg',
     title: "Production",
     subtitle: "Meticulous Craftsmanship",
   },
   {
-    image: img5,
+    image: '/assets/gallery_toast.jpg',
     title: "The Toast",
     subtitle: "Intimate Social Gatherings",
   },
   {
-    image: img1,
+    image: '/assets/gallery_pour.jpg',
     title: "The First Pour",
     subtitle: "Golden Elegance",
   },

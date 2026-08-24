@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import './Footer.css'
 
 export default function Footer() {
@@ -5,21 +6,23 @@ export default function Footer() {
     <footer className="footer-section">
       <div className="shell footer-top">
         <div className="footer-brand">
-          <a className="footer-brand-logo" href="#home" aria-label="Millionaires Collection home">
-            <img src="/assets/logo.png" alt="" />
+          <Link className="footer-brand-logo" to="/" aria-label="Millionaires Collection home">
+            <div className="logo-icon">
+              <img src="/assets/logo.png" alt="" />
+            </div>
             <span><strong>Millionaires</strong>Collection</span>
-          </a>
+          </Link>
           <p>Timeless sophistication crafted for connoisseurs. Discover the artistry, patience, and meticulous attention to detail that defines our legacy in every pour.</p>
         </div>
 
         <div className="footer-column">
           <h3>Navigations</h3>
-          <a href="#story">About Us</a><a href="#collection">Our Team</a><a href="#process">Services</a><a href="#collection">Pricing</a><a href="#enquire">FAQ</a>
+          <a href="/#story">About Us</a><a href="/#collection">Our Team</a><a href="/#process">Services</a><a href="/#collection">Pricing</a><a href="/#enquire">FAQ</a>
         </div>
 
         <div className="footer-column">
           <h3>Useful Links</h3>
-          <a href="#terms">Terms &amp; Conditions</a><a href="#privacy">Privacy Policy</a><a href="#disclaimer">Disclaimer</a><a href="#enquire">Support</a><a href="#enquire">Contact</a>
+          <Link to="/terms">Terms &amp; Conditions</Link><Link to="/privacy">Privacy Policy</Link><Link to="/disclaimer">Disclaimer</Link><a href="/#enquire">Support</a><a href="/#enquire">Contact</a>
         </div>
 
         <div className="footer-column footer-visit">

@@ -159,10 +159,7 @@
 }
 
 .mosi-section__image::before {
-  position: absolute;
-  inset: -12px 12px 12px -12px;
-  border: 1px solid var(--brass);
-  content: '';
+  display: none;
 }
 
 .mosi-section__image img {
@@ -170,7 +167,7 @@
   width: 100%;
   aspect-ratio: 0.8;
   object-fit: cover;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+  box-shadow: none;
 }
 
 .mosi-section__image figcaption {
@@ -179,6 +176,9 @@
   font-size: 14px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
+  text-align: center;
+  line-height: 1.6;
+  display: block;
 }
 
 @media (max-width: 900px) {
@@ -221,3 +221,4 @@
     right: -15px;
   }
 }
+

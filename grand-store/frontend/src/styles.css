@@ -10210,3 +10210,17 @@ video {
 .vendor-theme [class*="radial-gradient"] {
   background-image: none !important;
 }
+
+@media print {
+  @page {
+    margin: 1cm;
+    size: auto;
+  }
+  body, main {
+    background-color: white !important;
+    color: black !important;
+  }
+  .print-receipt-container {
+    page-break-inside: avoid !important;
+  }
+}

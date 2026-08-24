@@ -14,104 +14,132 @@ const steps = [
 
 export default function Process() {
   const sectionRef = useRef(null)
+
   const trackRef = useRef(null)
-  const bottleRef = useRef(null)
 
   useEffect(() => {
-    let mm = gsap.matchMedia();
+    const isMobile = window.innerWidth < 768
 
-    mm.add("(min-width: 768px)", () => {
-      const scrollWidth = trackRef.current.scrollWidth - window.innerWidth;
-
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top top',
-          end: `+=${scrollWidth * 0.35}`, // Fast scroll
-          scrub: 0.3, // Snappy
-          pin: true,
-          invalidateOnRefresh: true,
-        }
-      });
-
-      // 1. Horizontal Scroll Animation
-      tl.to(trackRef.current, {
-        x: -scrollWidth,
-        ease: 'none',
-        duration: 1 // Baseline duration for the timeline
-      }, 0);
-
-      // 2. Bottle Rotation
-      gsap.to(bottleRef.current, {
-        rotate: 18,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top top',
-          end: `+=${scrollWidth * 0.35}`,
-          scrub: 0.3,
-        }
-      });
-
-      // 3. Cinematic Background Crossfades
-      const bgs = gsap.utils.toArray('.process-bg');
+    const context = gsap.context(() => {
+      const bgs = gsap.utils.toArray('.process-bg')
+      const panels = gsap.utils.toArray('.process-panel')
       
-      // Initial Background (Harvesting) fades in early
-      tl.to(bgs[0], { opacity: 0.3, duration: 0.1, ease: 'power2.inOut' }, 0);
-      
-      // Step 2 (Crushing) background
-      tl.to(bgs[1], { opacity: 0.3, duration: 0.15, ease: 'power2.inOut' }, 0.25);
-      
-      // Step 3 (Fermentation) background
-      tl.to(bgs[2], { opacity: 0.3, duration: 0.15, ease: 'power2.inOut' }, 0.55);
-      
-      // Step 4 (Bottling) background
-      tl.to(bgs[3], { opacity: 0.3, duration: 0.15, ease: 'power2.inOut' }, 0.85);
-    });
+      if (!isMobile) {
+        // Horizontal scroll logic
+        const scrollWidth = trackRef.current.scrollWidth - (window.innerWidth * 0.7) // 70vw is the viewport for the track
+        const endScrollDistance = scrollWidth + (window.innerWidth * 0.5) // Extra scrolling space to keep last panel pinned
+        
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top top',
+            end: `+=${endScrollDistance}`, 
+            scrub: 1, 
+            pin: true,
+            invalidateOnRefresh: true,
+          }
+        })
+
+        // Move the track horizontally
+        tl.to(trackRef.current, {
+          x: -scrollWidth,
+          ease: 'none',
+          duration: 1
+        }, 0)
+
+        // Background crossfades tied to timeline progress
+        // bgs[0] is initial (covers Intro and Step 1).
+        tl.to(bgs[0], { opacity: 0.3, duration: 0.1, ease: 'power1.inOut' }, 0)
+        
+        // Step 2 starts around progress 0.5
+        tl.to(bgs[0], { opacity: 0, duration: 0.15, ease: 'power1.inOut' }, 0.4)
+        tl.to(bgs[1], { opacity: 0.3, duration: 0.15, ease: 'power1.inOut' }, 0.4)
+        
+        // Step 3 starts around progress 0.75
+        tl.to(bgs[1], { opacity: 0, duration: 0.15, ease: 'power1.inOut' }, 0.65)
+        tl.to(bgs[2], { opacity: 0.3, duration: 0.15, ease: 'power1.inOut' }, 0.65)
+        
+        // Step 4 starts around progress 1.0
+        tl.to(bgs[2], { opacity: 0, duration: 0.15, ease: 'power1.inOut' }, 0.9)
+        tl.to(bgs[3], { opacity: 0.3, duration: 0.15, ease: 'power1.inOut' }, 0.9)
+
+        // Add dummy padding to the timeline so the last step stays pinned for a moment
+        tl.to({}, { duration: 0.2 })
+
+        // Now bind text animations to the horizontal timeline container
+        panels.forEach((panel) => {
+          const content = panel.querySelector('.step-content') || panel.querySelector('.process-intro-content')
+          if (content) {
+            gsap.fromTo(content, 
+              { x: -50, opacity: 0 },
+              { 
+                x: 0, opacity: 1, 
+                duration: 1,
+                ease: 'power3.out',
+                scrollTrigger: {
+                  trigger: panel,
+                  containerAnimation: tl, // This makes it track horizontal scroll!
+                  start: 'left 85%',
+                  toggleActions: 'play none none reverse'
+                }
+              }
+            )
+          }
+        })
+      }
+    }, sectionRef)
     
-    return () => mm.revert();
-  }, []);
+    return () => context.revert()
+  }, [])
 
   return (
     <section className="process-section" id="process" ref={sectionRef}>
-      
-      {/* Cinematic Background Layer */}
-      <div className="process-bg-layer">
-        <img src="/assets/process-bg-1.jpg" alt="Vineyard at golden hour" className="process-bg" loading="lazy" decoding="async" />
-        <img src="/assets/process-bg-2.jpg" alt="Macro photography of grapes being crushed" className="process-bg" loading="lazy" decoding="async" />
-        <img src="/assets/process-bg-3.jpg" alt="French oak barrels in a dim wine cellar" className="process-bg" loading="lazy" decoding="async" />
-        <img src="/assets/process-bg-4.jpg" alt="Golden sparkling wine bubbles" className="process-bg" loading="lazy" decoding="async" />
-        <div className="process-bg-overlay" /> {/* Dark gradient overlay to ensure text readability */}
-      </div>
-
-      <div className="process-pin-wrapper">
+      <div className="process-container">
         
-        {/* Fixed Central Bottle */}
-        <div className="process-bottle-fixed" ref={bottleRef}>
-          <img src="/assets/process-bottle.png" alt="Millionaires Collection premium sparkling wine bottle" loading="lazy" decoding="async" />
-        </div>
-
-        {/* Moving Horizontal Track */}
-        <div className="process-horizontal-track" ref={trackRef}>
-          
-          <div className="process-panel process-intro-panel">
-            <div className="process-intro-content">
-              <p className="eyebrow">Discover the process</p>
-              <h2 className="section-title">Crafted in silence—<br /><em>a cellar’s devotion to detail.</em></h2>
-              <p className="intro-text">Four measured movements transform hand-selected fruit into an elegant Méthode Cap Classique.</p>
-            </div>
+        {/* Left 30% Sticky Column */}
+        <div className="process-left">
+          <div className="process-bg-layer">
+            <img src="/assets/process-bg-1.jpg" alt="Vineyard at golden hour" className="process-bg" />
+            <img src="/assets/process-bg-2.jpg" alt="Macro photography of grapes being crushed" className="process-bg" />
+            <img src="/assets/process-bg-3.jpg" alt="French oak barrels in a dim wine cellar" className="process-bg" />
+            <img src="/assets/process-bg-4.jpg" alt="Golden sparkling wine bubbles" className="process-bg" />
+            <div className="process-bg-overlay" />
           </div>
 
-          {steps.map((step, index) => (
-            <div className="process-panel process-step-panel" key={step.title}>
-              <div className="step-content">
-                <span className="step-number">0{index + 1}</span>
-                <h3>{step.title}</h3>
-                <p>{step.description}</p>
+          <div className="process-bottle-fixed">
+            <img src="/assets/process-bottle.png" alt="Millionaires Collection premium sparkling wine bottle" />
+          </div>
+        </div>
+
+        {/* Right 70% Scrolling Window */}
+        <div className="process-right">
+          
+          {/* The track that moves horizontally */}
+          <div className="process-horizontal-track" ref={trackRef}>
+            
+            <div className="process-panel">
+              <div className="process-intro-content">
+                <div className="intro-title-wrapper">
+                  <p className="eyebrow">Discover the process</p>
+                  <h2 className="section-title">Crafted in silence—<br /><em>a cellar’s devotion to detail.</em></h2>
+                </div>
+                <div className="intro-desc-wrapper">
+                  <p className="intro-text">Four measured movements transform hand-selected fruit into an elegant Méthode Cap Classique.</p>
+                </div>
               </div>
             </div>
-          ))}
 
+            {steps.map((step, index) => (
+              <div className="process-panel" key={step.title}>
+                <div className="step-content">
+                  <span className="step-number">0{index + 1}</span>
+                  <h3>{step.title}</h3>
+                  <p>{step.description}</p>
+                </div>
+              </div>
+            ))}
+
+          </div>
         </div>
       </div>
     </section>

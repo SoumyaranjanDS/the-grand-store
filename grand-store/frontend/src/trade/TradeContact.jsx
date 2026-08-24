@@ -6,13 +6,33 @@ export default function TradeContact() {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' })
   const [submitted, setSubmitted] = useState(false)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    setSubmitted(true)
-    setTimeout(() => {
-      setFormData({ name: '', email: '', message: '' })
-      setSubmitted(false)
-    }, 3000)
+    try {
+      const response = await fetch('/api/trade-enquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullname: formData.name,
+          email: formData.email,
+          message: formData.message,
+          source: 'contact'
+        })
+      });
+
+      if (response.ok) {
+        setSubmitted(true)
+        setTimeout(() => {
+          setFormData({ name: '', email: '', message: '' })
+          setSubmitted(false)
+        }, 5000)
+      } else {
+        alert('There was a problem sending your message. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('There was a problem sending your message. Please try again.');
+    }
   }
 
   return (

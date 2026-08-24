@@ -34,16 +34,36 @@
   gap: 12px;
 }
 
-.nav-brand img {
-  width: 50px;
-  height: 64px;
+.nav-brand .logo-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1.5px solid var(--gold-bright);
+  flex-shrink: 0;
+  transition: border-color 0.4s ease;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-brand .logo-icon img {
+  width: 75%;
+  height: 75%;
   object-fit: contain;
+  image-rendering: high-quality;
+}
+
+/* Scrolled state for the circle logo container */
+.is-scrolled .nav-brand .logo-icon {
+  border-color: var(--wine);
 }
 
 .nav-brand span {
   display: grid;
   color: inherit;
-  font-size: 13px;
+  font-size: 14px;
   letter-spacing: 0.24em;
   line-height: 1.3;
   text-transform: uppercase;
@@ -51,7 +71,7 @@
 
 .nav-brand strong {
   font-family: var(--serif);
-  font-size: 23px;
+  font-size: 26px;
   font-weight: 400;
   letter-spacing: 0.08em;
 }

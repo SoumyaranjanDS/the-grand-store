@@ -1,19 +1,10 @@
-import { Quote } from 'lucide-react';
 import SectionHeading from '../components/SectionHeading';
 import { testimonials } from '../data/homeContent';
-import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
 import './TestimonialsSection.css';
 
-function TestimonialCard({ testimonial, index }) {
-  const [ref, isVisible] = useIntersectionObserver({ threshold: 0.1 });
-  const animationClass = index % 2 === 0 ? 'reveal-left' : 'reveal-right';
-  
+function TestimonialCard({ testimonial }) {
   return (
-    <article 
-      ref={ref}
-      className={`testimonial-card ${animationClass} ${isVisible ? 'is-visible' : ''}`}
-      style={{ transitionDelay: `${index * 0.1}s` }}
-    >
+    <article className="testimonial-card">
       <div 
         className="testimonial-avatar" 
         style={{ backgroundColor: testimonial.color }}
@@ -29,11 +20,20 @@ function TestimonialCard({ testimonial, index }) {
 function TestimonialsSection() {
   return (
     <section className="testimonials-section" id="testimonials">
-      <SectionHeading eyebrow="Welcome to my personal presentation" title="What our clients say" align="center" light={true} />
-      <div className="testimonials-section__grid">
-        {testimonials.map((testimonial, index) => (
-          <TestimonialCard key={testimonial.name} testimonial={testimonial} index={index} />
-        ))}
+      <div className="testimonials-section__heading-wrapper">
+        <SectionHeading eyebrow="Welcome to my personal presentation" title="What our clients say" align="center" light={true} />
+      </div>
+      
+      <div className="testimonials-marquee-wrapper">
+        <div className="testimonials-marquee">
+          {testimonials.map((testimonial) => (
+            <TestimonialCard key={testimonial.name} testimonial={testimonial} />
+          ))}
+          {/* Duplicate for infinite scroll */}
+          {testimonials.map((testimonial) => (
+            <TestimonialCard key={`${testimonial.name}-dup`} testimonial={testimonial} />
+          ))}
+        </div>
       </div>
     </section>
   );

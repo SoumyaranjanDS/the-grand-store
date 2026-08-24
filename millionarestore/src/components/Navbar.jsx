@@ -27,7 +27,9 @@ export default function Navbar() {
     <header className={`navbar ${scrolled ? 'is-scrolled' : ''}`}>
       <div className="nav-shell">
         <a className="nav-brand" href="#home" onClick={closeMenu} aria-label="Millionaires Collection home">
-          <img src="/assets/logo.png" alt="" />
+          <div className="logo-icon">
+            <img src="/assets/logo.png" alt="" />
+          </div>
           <span><strong>Millionaires</strong>Collection</span>
         </a>
 

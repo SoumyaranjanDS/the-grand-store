@@ -1,119 +1,36 @@
-import { useLayoutEffect } from 'react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import Lenis from 'lenis'
+import { useEffect } from 'react'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import { Agentation } from 'agentation'
 
 import Navbar from './components/Navbar'
-import HeroScrollVideo from './components/HeroScrollVideo'
-import WinemakerMessage from './components/WinemakerMessage'
-import ExperienceCollection from './components/ExperienceCollection'
-import Process from './components/Process'
-import AgeingGallery from './components/AgeingGallery'
-import Newsletter from './components/Newsletter'
-import EnquireForm from './components/EnquireForm'
 import Footer from './components/Footer'
 
-gsap.registerPlugin(ScrollTrigger)
+import Home from './pages/Home'
+import TermsPage from './pages/TermsPage'
+import PrivacyPage from './pages/PrivacyPage'
+import DisclaimerPage from './pages/DisclaimerPage'
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
 
 function App() {
-  useLayoutEffect(() => {
-    document.title = 'Millionaires Collection — Premium Sparkling Wine'
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-    if (reducedMotion) {
-      gsap.set('main > section, [data-reveal]', { clearProps: 'all' })
-      return undefined
-    }
-
-    const lenis = new Lenis({
-      lerp: 0.08,
-      smoothWheel: true,
-      wheelMultiplier: 1.2,
-      normalizeWheel: true,
-      syncTouch: true,
-    })
-    lenis.on('scroll', ScrollTrigger.update)
-
-    const tick = (time) => {
-      lenis.raf(time * 1000)
-    }
-    gsap.ticker.add(tick)
-    gsap.ticker.lagSmoothing(0)
-
-    const context = gsap.context(() => {
-      const sections = gsap.utils.toArray('main > section:not(.hero-scroll)')
-
-      sections.forEach((section) => {
-        const content = gsap.utils.toArray(section.querySelectorAll('[data-reveal]'))
-
-        gsap.set(section, {
-          y: 72,
-          autoAlpha: 0,
-          clipPath: 'inset(7% 0 0 0)',
-          willChange: 'transform, opacity, clip-path',
-        })
-        gsap.set(content, { y: 46, autoAlpha: 0, willChange: 'transform, opacity' })
-
-        const revealSection = () => {
-          const timeline = gsap.timeline()
-
-          timeline.to(section, {
-            y: 0,
-            autoAlpha: 1,
-            clipPath: 'inset(0% 0 0 0)',
-            duration: 1.05,
-            ease: 'power3.out',
-            clearProps: 'transform,opacity,visibility,clipPath,willChange',
-          })
-
-          if (content.length) {
-            timeline.to(
-              content,
-              {
-                y: 0,
-                autoAlpha: 1,
-                duration: 0.82,
-                stagger: 0.13,
-                ease: 'power3.out',
-                clearProps: 'transform,opacity,visibility,willChange',
-              },
-              '-=0.7',
-            )
-          }
-        }
-
-        ScrollTrigger.create({
-          trigger: section,
-          start: 'top 84%',
-          once: true,
-          invalidateOnRefresh: true,
-          onEnter: revealSection,
-        })
-      })
-
-      window.requestAnimationFrame(() => ScrollTrigger.refresh())
-    })
-
-    return () => {
-      context.revert()
-      gsap.ticker.remove(tick)
-      lenis.destroy()
-    }
-  }, [])
-
   return (
     <div className="site-frame">
+      <ScrollToTop />
       <Navbar />
-      <main>
-        <HeroScrollVideo />
-        <WinemakerMessage />
-        <ExperienceCollection />
-        <Process />
-        <AgeingGallery />
-        <Newsletter />
-        <EnquireForm />
-      </main>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/disclaimer" element={<DisclaimerPage />} />
+      </Routes>
       <Footer />
       {import.meta.env.DEV && <Agentation />}
     </div>

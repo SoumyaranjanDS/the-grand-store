@@ -84,19 +84,19 @@ const videos = [
   { id: 'YVVEMdJ_sZY', title: 'The Grand Store | Shop Wine Online in South Africa #southafrica' },
 ]
 
-const testimonials = [
+const initialTestimonials = [
   {
-    name: 'Douglas Lyphe',
+    name: 'Eleanor Sterling',
     image: '/assets/testimonial-1.jpg',
-    quote: 'We’re thrilled with the exposure we’ve gained from being listed on this platform. The detailed profiles and easy navigation have helped us attract new customers who are genuinely interested in our wines. It\'s been an excellent investment for our business.',
+    quote: 'Selling our wines on this platform has been a game changer. The process is incredibly simple, and we’ve seen a significant increase in our sales. It’s wonderful to share our heritage with such a broad and appreciative audience.',
   },
   {
-    name: 'Emily White',
-    image: '/assets/testimonial-2.png',
-    quote: 'This platform has provided us with an incredible opportunity to showcase our wine farm to a broader audience. The professional presentation and marketing tools have enhanced our online presence and driven more traffic to our site.',
+    name: 'James Harcourt',
+    image: '/assets/testimonial-2.jpg',
+    quote: 'As a small family-run vineyard, reaching new customers used to be a challenge. This portal has not only given us a beautiful space to showcase our wines but has also connected us with buyers we wouldn’t have reached otherwise. Highly recommended!',
   },
   {
-    name: 'Michael Brown',
+    name: 'Alistair Montgomery',
     image: '/assets/testimonial-3.jpg',
     quote: 'We’re very pleased with how this platform has represented our wine farm. The quality of the listings and the visibility we’ve gained have exceeded our expectations. It’s been a great way to connect with wine enthusiasts and grow our customer base.',
   },
@@ -245,7 +245,7 @@ function Hero() {
     if (paused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined
     const timer = window.setInterval(() => {
       setActive((current) => (current + 1) % heroSlides.length)
-    }, 5200)
+    }, 3000)
     return () => window.clearInterval(timer)
   }, [paused])
 
@@ -283,7 +283,6 @@ function Hero() {
         <span>Harvest 2026</span>
       </div>
 
-      <a href="#about" className="scroll-cue">Scroll to wander <span>↓</span></a>
     </section>
   )
 }
@@ -308,16 +307,25 @@ function Privileges() {
   )
 }
 
+const FloralDecoration = () => (
+  <svg className="floral-decor" viewBox="0 0 200 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M100 400 C100 300 150 200 50 50" stroke="#17372d" strokeWidth="2" opacity="0.15" strokeLinecap="round" />
+    <path d="M90 320 C140 300 170 250 130 220 C100 200 80 250 90 320" fill="#17372d" opacity="0.08" />
+    <path d="M110 240 C170 200 180 130 140 120 C100 110 90 170 110 240" fill="#17372d" opacity="0.08" />
+    <path d="M80 150 C30 120 10 50 60 30 C100 10 110 80 80 150" fill="#17372d" opacity="0.08" />
+    <circle cx="50" cy="50" r="10" fill="#d7ad69" opacity="0.4" />
+    <circle cx="130" cy="220" r="8" fill="#d7ad69" opacity="0.4" />
+    <circle cx="140" cy="120" r="12" fill="#d7ad69" opacity="0.3" />
+  </svg>
+)
+
 function About() {
   return (
     <section className="about section-pad" id="about">
       <div className="about-art">
-        <div className="about-arch">
-          <div className="sun-disc" />
-          <span className="vertical-note">Estate No. 01 • South Africa</span>
-          <img src="/assets/about_estate_new.jpg" alt="Wine bottle with botanical artwork" />
-          <div className="corner-accent bottom-left" />
-          <div className="corner-accent bottom-right" />
+        <FloralDecoration />
+        <div className="about-full-image-wrapper">
+          <img src="/assets/about_wine_bottle_new.jpg" alt="Wine bottle with botanical artwork" />
         </div>
         <blockquote>“Every bottle carries the landscape that raised it.”</blockquote>
       </div>
@@ -510,6 +518,23 @@ function VideoSection() {
 
 function Testimonials() {
   const [active, setActive] = useState(0)
+  const [testimonials, setTestimonials] = useState(initialTestimonials)
+
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/settings/testimonials`);
+        const data = await response.json();
+        if (data && data.length > 0) {
+          setTestimonials(data);
+        }
+      } catch (error) {
+        console.error('Error fetching testimonials:', error);
+      }
+    };
+    fetchTestimonials();
+  }, []);
+
   return (
     <section className="testimonials section-pad">
       <div className="testimonial-intro">
@@ -526,7 +551,7 @@ function Testimonials() {
           <span className="quote-mark">“</span>
           <blockquote>{testimonials[active].quote}</blockquote>
           <p>{testimonials[active].name}</p>
-          <small>Wine farm partner</small>
+          <small>{testimonials[active].role || 'Wine farm partner'}</small>
         </div>
       </article>
     </section>

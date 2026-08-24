@@ -1,4 +1,4 @@
-﻿const PlatformSettings = require("../models/PlatformSettings");
+const PlatformSettings = require("../models/PlatformSettings");
 
 // @desc  Get platform settings (public - fees only)
 // @route GET /api/settings/public
@@ -18,6 +18,7 @@ const getPublicSettings = async (req, res) => {
       eventCommissionPct: settings.eventCommissionPct,
       vatPct: settings.vatPct,
       gatewayFeePct: settings.gatewayFeePct,
+      bankDetails: settings.bankDetails,
     });
   } catch (error) {
     console.error("Get Settings Error:", error);
@@ -42,6 +43,7 @@ const updateSettings = async (req, res) => {
       eventCommissionPct,
       vatPct,
       gatewayFeePct,
+      bankDetails,
     } = req.body;
 
     let settings = await PlatformSettings.findOne();
@@ -57,6 +59,7 @@ const updateSettings = async (req, res) => {
     if (eventCommissionPct !== undefined) settings.eventCommissionPct = eventCommissionPct;
     if (vatPct !== undefined) settings.vatPct = vatPct;
     if (gatewayFeePct !== undefined) settings.gatewayFeePct = gatewayFeePct;
+    if (bankDetails !== undefined) settings.bankDetails = bankDetails;
 
     await settings.save();
     res.json({ message: "Settings updated successfully", settings });

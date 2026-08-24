@@ -3,7 +3,6 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { ArrowDown } from 'lucide-react'
 import './HeroScrollVideo.css'
-import heroPromoVideo from '../assets/Creating_luxury_promo_video_1080p_202608211141.mp4'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -85,7 +84,7 @@ export default function HeroScrollVideo() {
 
         <div className="hero-desktop-only">
           <div className="hero-media" ref={mediaRef}>
-            <video src={heroPromoVideo} autoPlay loop muted playsInline preload="auto" aria-label="Millionaires Collection sparkling wine film sequence" />
+            <video src="/assets/Horse_and_wine_bottle_animation_202608241417.mp4" autoPlay loop muted playsInline preload="auto" aria-label="Millionaires Collection sparkling wine film sequence" />
             <div className="hero-film-shade" />
           </div>
 

@@ -30,6 +30,16 @@ export default function AdminSettings() {
     setSettings(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
   };
 
+  const handleBankChange = (field, value) => {
+    setSettings(prev => ({
+      ...prev,
+      bankDetails: {
+        ...(prev.bankDetails || {}),
+        [field]: value
+      }
+    }));
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -124,6 +134,29 @@ export default function AdminSettings() {
             <div className="space-y-6">
               <FeeRow label="Event Ticket Commission" field="eventCommissionPct" note="Deducted from event organizer payouts" />
               <FeeRow label="Payment Gateway Fee" field="gatewayFeePct" note="Internal cost tracking (not shown to customers)" />
+            </div>
+          </div>
+
+          <div className="bg-[#111] border border-white/10 rounded-xl p-6">
+            <h2 className="text-white font-serif text-xl mb-6 border-b border-white/10 pb-4">Manual Bank Transfer Details</h2>
+            <p className="text-[10px] text-white/30 italic mb-4">These details will be displayed to customers when they select "Bank Transfer" at checkout.</p>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Bank Name</label>
+                <input type="text" value={settings.bankDetails?.bankName || ''} onChange={e => handleBankChange('bankName', e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--color-gold)]/50 transition-colors" />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Account Name</label>
+                <input type="text" value={settings.bankDetails?.accountName || ''} onChange={e => handleBankChange('accountName', e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--color-gold)]/50 transition-colors" />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Account Number</label>
+                <input type="text" value={settings.bankDetails?.accountNumber || ''} onChange={e => handleBankChange('accountNumber', e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--color-gold)]/50 transition-colors" />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Branch Code</label>
+                <input type="text" value={settings.bankDetails?.branchCode || ''} onChange={e => handleBankChange('branchCode', e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--color-gold)]/50 transition-colors" />
+              </div>
             </div>
           </div>
 

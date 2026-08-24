@@ -5,7 +5,7 @@ export default function TradePartnerEnquiry() {
   const [formData, setFormData] = useState({ fullname: '', email: '', phone: '', companyname: '', website: '' })
   const [submitted, setSubmitted] = useState(false)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     // Simulate honeypot
     if (formData.website) {
@@ -13,11 +13,27 @@ export default function TradePartnerEnquiry() {
       return
     }
     
-    setSubmitted(true)
-    setTimeout(() => {
-      setFormData({ fullname: '', email: '', phone: '', companyname: '', website: '' })
-      setSubmitted(false)
-    }, 3000)
+    try {
+      const response = await fetch('/api/trade-enquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+
+      if (response.ok) {
+        setSubmitted(true)
+        setTimeout(() => {
+          setFormData({ fullname: '', email: '', phone: '', companyname: '', website: '' })
+          setSubmitted(false)
+        }, 5000)
+      } else {
+        console.error('Failed to submit enquiry');
+        alert('There was a problem submitting your enquiry. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('There was a problem submitting your enquiry. Please try again.');
+    }
   }
 
   return (
