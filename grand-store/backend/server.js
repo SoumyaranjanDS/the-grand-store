@@ -1,9 +1,9 @@
-require('dotenv').config();
-const dns = require('dns');
-dns.setServers(['8.8.8.8', '8.8.4.4']);
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
+require("dotenv").config();
+const dns = require("dns");
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
 
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
@@ -11,14 +11,49 @@ const productRoutes = require("./routes/productRoutes");
 const app = express();
 
 // Middleware
-app.use(cors());
+// Parse allowed origins from .env or fallback to localhost
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+  : ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175"];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      if (
+        allowedOrigins.indexOf(origin) !== -1 ||
+        allowedOrigins.includes("*")
+      ) {
+        callback(null, true);
+      } else {
+        callback(
+          new Error(
+            "The CORS policy for this site does not allow access from the specified Origin.",
+          ),
+        );
+      }
+    },
+    credentials: true,
+  }),
+);
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
 // Database Connection
+const startAuctionCronJobs = require("./jobs/auctionJobs");
+const startVendorTrustJobs = require("./jobs/vendorTrustJob");
+
+// Database Connection
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected successfully"))
+  .then(() => {
+    console.log("MongoDB connected successfully");
+    // Start jobs ONLY after successful DB connection to avoid Mongoose buffering timeouts
+    startAuctionCronJobs();
+    startVendorTrustJobs();
+  })
   .catch((err) => console.error("MongoDB connection error:", err));
 
 // Routes
@@ -58,12 +93,6 @@ app.use("/api/config", configRoutes);
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "OK", message: "API is running" });
 });
-
-const startAuctionCronJobs = require("./jobs/auctionJobs");
-startAuctionCronJobs();
-
-const startVendorTrustJobs = require("./jobs/vendorTrustJob");
-startVendorTrustJobs();
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

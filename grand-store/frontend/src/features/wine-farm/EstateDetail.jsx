@@ -6,7 +6,7 @@ import {
   MapPin, Phone, Mail, Globe, Heart,
   Wine, Utensils, Bed, Star, Users, Clock,
   ArrowLeft, ShoppingCart, ChevronRight, CheckCircle,
-  ExternalLink, ArrowDown, Play
+  ExternalLink, ArrowDown, Play, Download
 } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL;
@@ -193,6 +193,82 @@ export default function EstateDetail() {
               )}
             </div>
 
+          </div>
+        </section>
+      )}
+
+      {/* ════════════════════════════════════════════
+          SHOP WINES (Card Layout)
+      ════════════════════════════════════════════ */}
+      {products.length > 0 && (
+        <section className="py-24 bg-[#fcf9f2] relative border-t border-ink/5">
+          <div className="max-w-7xl mx-auto px-4">
+            
+            {/* Header */}
+            <div className="text-center mb-16 max-w-3xl mx-auto">
+              <h4 className="text-xs font-bold uppercase tracking-widest text-ink/40 mb-4">From the Cellar</h4>
+              <h2 className="font-serif text-[40px] md:text-[48px] text-ink font-normal leading-[1.1] mb-4">
+                Shop Our Wines
+              </h2>
+              <p className="text-ink/60 text-lg">
+                Discover our exceptional selection of handcrafted wines.
+              </p>
+            </div>
+
+            {/* Product Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {products.map(p => (
+                <div key={p._id} className="flex flex-col bg-white border border-ink/10 group h-full">
+                  
+                  {/* Top Image Area */}
+                  <Link to={`/product/${p.id || p._id}`} className="block w-full h-72 relative overflow-hidden bg-ink/5 p-4">
+                    {p.image || p.images?.[0] ? (
+                      <img 
+                        src={`${API}${p.image || p.images[0]}`} 
+                        alt={p.name}
+                        className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105 drop-shadow-md"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Wine size={48} className="text-ink/20" />
+                      </div>
+                    )}
+                  </Link>
+                  
+                  {/* Content Area */}
+                  <div className="p-6 md:p-8 flex flex-col flex-1">
+                    <div className="flex justify-between items-start gap-4 mb-4">
+                      <Link to={`/product/${p.id || p._id}`}>
+                        <h3 className="font-serif text-2xl text-ink font-medium hover:text-[#7b263c] transition-colors">
+                          {p.name}
+                        </h3>
+                      </Link>
+                    </div>
+                    
+                    <p className="text-sm text-ink/70 leading-relaxed mb-8 flex-1">
+                      {p.description || "Experience the finest selection of our handcrafted wines. Each bottle reflects our dedication to quality and terroir."}
+                    </p>
+                    
+                    {/* Footer Details */}
+                    {p.factSheetPdf && (
+                      <div className="pt-6 border-t border-ink/10 mt-auto">
+                        <a 
+                          href={`${API}${p.factSheetPdf}`} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="flex items-center justify-center gap-2 w-full py-3 bg-ink text-white hover:bg-black transition-colors text-xs uppercase tracking-widest font-medium"
+                        >
+                          <Download size={14} />
+                          Factsheet
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                  
+                </div>
+              ))}
+            </div>
+            
           </div>
         </section>
       )}
@@ -488,81 +564,7 @@ export default function EstateDetail() {
         </section>
       )}
 
-      {/* ════════════════════════════════════════════
-          SHOP WINES (Matches "Experience Award-Winning")
-      ════════════════════════════════════════════ */}
-      {products.length > 0 && (
-        <section className="py-24 md:py-32 bg-[#fcf9f2] relative overflow-hidden border-t border-ink/5">
-          
-          {/* Top Header */}
-          <div className="text-center mb-16 relative z-10 px-4">
-            <h4 className="text-xs font-bold uppercase tracking-widest text-ink/40 mb-4">From the Cellar</h4>
-            <h2 className="font-serif text-[40px] md:text-[56px] text-ink font-normal leading-[1.1]">
-              Shop Our Wines
-            </h2>
-          </div>
 
-          {/* Massive Masked Text & Overlapping Bottle */}
-          <div className="relative w-full max-w-7xl mx-auto flex justify-center items-center h-[300px] md:h-[500px] mb-24">
-            
-            {/* Massive Text */}
-            <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-              <h1 
-                className="font-serif font-black text-[clamp(100px,25vw,400px)] leading-[0.8] uppercase select-none opacity-90"
-                style={{
-                  backgroundImage: `url('https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  backgroundAttachment: 'fixed',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  color: 'transparent'
-                }}
-              >
-                CELLAR
-              </h1>
-            </div>
-
-            {/* Highlighted Wine Bottle */}
-            <div className="relative z-20 h-[120%] md:h-[140%]">
-              {/* If first product has an image, use it, else ask user for bottle image */}
-              <Link to={`/product/${products[0]._id}`}>
-                <img 
-                  src={products[0].images?.[0] ? `${API}${products[0].images[0]}` : "https://images.unsplash.com/photo-1584916201218-f4242ceb4809?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"} 
-                  alt={products[0].name}
-                  className="h-full w-auto object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
-                  style={{ mixBlendMode: 'multiply' }}
-                />
-              </Link>
-            </div>
-          </div>
-
-          {/* Bottom Content Grid (Products) */}
-          <div className="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-8 relative z-10 mt-20">
-             {products.slice(0, 4).map(p => (
-                <Link key={p._id} to={`/product/${p._id}`} className="group text-center">
-                  <div className="relative bg-[#f5f0e8] aspect-[3/4] mb-4 overflow-hidden border border-ink/5">
-                    {p.images?.[0]
-                      ? <img src={`${API}${p.images[0]}`} alt={p.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                      : <div className="w-full h-full flex items-center justify-center"><Wine size={40} className="text-ink/10" /></div>
-                    }
-                  </div>
-                  <h4 className="font-serif text-lg text-ink mb-1 group-hover:text-[#7b263c] transition-colors">{p.name}</h4>
-                  <p className="text-ink/60 text-xs"><Price amount={Number(p.price).toLocaleString()} /></p>
-                </Link>
-             ))}
-          </div>
-          
-          {products.length > 4 && (
-            <div className="flex justify-center mt-16 relative z-10">
-              <a href="#" className="inline-block px-10 py-5 border border-ink/20 text-ink text-xs uppercase tracking-widest hover:bg-ink hover:text-white transition-colors">
-                See all {products.length} wines
-              </a>
-            </div>
-          )}
-        </section>
-      )}
 
       {/* ════════════════════════════════════════════
           CONTACT & FOOTER (Matches Dark Footer)

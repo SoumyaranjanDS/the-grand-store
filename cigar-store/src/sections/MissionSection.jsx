@@ -31,7 +31,7 @@ function MissionSection() {
 
         <figure className="mission-section__image">
           <img
-            src="/images/history-making.png"
+            src="/cigar-lux.png"
             width="600"
             height="750"
             alt="A premium cigar resting beside an ashtray"

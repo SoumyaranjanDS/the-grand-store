@@ -144,6 +144,7 @@ const generateQuote = async (req, res) => {
         estimatedCustomsFees: globalCustomsFees,
         totalToPay // The amount to charge the card
       },
+      bankDetails: settings.bankDetails,
       shipments
     });
 

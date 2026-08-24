@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   Globe,
@@ -36,6 +37,7 @@ const NAV = [
   { id: "accommodation", label: "Accommodation", icon: Bed },
   { id: "experiences", label: "Experiences", icon: Star },
   { id: "contact", label: "Contact & Social", icon: Phone },
+  { id: "products", label: "Estate Products", icon: Wine },
 ];
 
 /* ─── Field components ─── */
@@ -222,12 +224,22 @@ export default function EstateBuilder() {
   const [activeSection, setActiveSection] = useState("core");
   const contentRef = useRef(null);
 
+  const [products, setProducts] = useState([]);
+  const navigate = useNavigate();
+
   useEffect(() => {
+    // Fetch profile
     axios
       .get(`${API}/api/estates/vendor/my-profile`, { headers: headers() })
       .then((res) => setProfile(res.data || {}))
       .catch(() => setProfile({}))
       .finally(() => setLoading(false));
+
+    // Fetch products
+    axios
+      .get(`${API}/api/products/vendor/me`, { headers: headers() })
+      .then((res) => setProducts(res.data || []))
+      .catch(console.error);
   }, []);
 
   const set = (path, value) => {
@@ -784,6 +796,45 @@ export default function EstateBuilder() {
               <Save size={15} /> Save Estate Profile
             </button>
           </div>
+          <Section id="products" title="Estate Products" isActive={activeSection === "products"}>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-white/60 text-sm">
+                Wine products you add to the store automatically sync to your Estate Profile.
+              </p>
+              <button 
+                onClick={() => navigate('/vendor/product-add')}
+                className="px-4 py-2 bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 border border-amber-500/30 text-xs uppercase tracking-widest font-medium transition-colors rounded flex items-center gap-2"
+              >
+                <Plus size={14} /> Add Product
+              </button>
+            </div>
+            
+            {products.length === 0 ? (
+              <div className="border border-white/10 bg-white/[0.03] p-10 text-center rounded">
+                <Wine size={48} className="mx-auto text-amber-500/30 mb-4" />
+                <h3 className="text-white text-lg font-medium mb-2">No Products Yet</h3>
+                <p className="text-white/50 text-sm max-w-md mx-auto">
+                  You haven't added any products to the store yet. Add some wines to see them listed on your Estate Profile!
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {products.filter(p => (p.category === 'Wine' || (p.type && p.type.toLowerCase() === 'wine'))).map(product => (
+                  <div key={product.id} className="border border-white/10 bg-white/[0.03] p-4 rounded text-center group relative">
+                    <div className="aspect-[3/4] bg-black/40 mb-3 overflow-hidden rounded">
+                      {product.image ? (
+                        <img src={`${API}${product.image}`} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-white/10"><Wine size={32} /></div>
+                      )}
+                    </div>
+                    <p className="text-white font-medium text-sm truncate">{product.name}</p>
+                    <p className="text-amber-500/80 text-xs">R {product.price}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Section>
         </div>
       </div>
     </div>

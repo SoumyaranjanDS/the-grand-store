@@ -13,5 +13,6 @@ router.get('/vendors', adminController.getAllVendors);
 router.put('/vendors/:id/status', adminController.updateVendorStatus);
 
 router.get('/finance', financeController.getAdminFinanceOverview);
+router.get('/bank-transfers', adminController.getPendingBankTransfers);
 
 module.exports = router;

@@ -54,19 +54,19 @@ const getShippingQuotes = async (vendorId, customerAddress, shipmentItemsSubtota
       }
 
       quotes.push({
-        courierName: 'GS Domestic Logistics',
-        serviceLevel: 'Standard',
+        courierName: 'Courier Guy',
+        serviceLevel: 'Home Delivery',
         cost: standardCost, // What customer sees
         estimatedDays: '2-4 business days',
         legs: [
           {
-            courierName: 'GS Primary',
+            courierName: 'Courier Guy Primary',
             origin: originCountry,
             destination: destCountry,
             cost: standardCost > 0 ? standardCost * 0.6 : 80 // Internal commercial cost
           },
           {
-            courierName: 'Local Partner',
+            courierName: 'Local Courier Guy Partner',
             origin: 'Local Hub',
             destination: customerAddress.city || 'Customer',
             cost: standardCost > 0 ? standardCost * 0.2 : 30 // Internal commercial cost
@@ -76,13 +76,13 @@ const getShippingQuotes = async (vendorId, customerAddress, shipmentItemsSubtota
       
       if (standardCost > 0) {
         quotes.push({
-          courierName: 'GS Domestic Express',
-          serviceLevel: 'Express',
+          courierName: 'PostNet',
+          serviceLevel: 'PostNet to PostNet',
           cost: expressCost,
-          estimatedDays: '1-2 business days',
+          estimatedDays: '1-3 business days',
           legs: [
             {
-              courierName: 'GS Express Primary',
+              courierName: 'PostNet Express',
               origin: originCountry,
               destination: customerAddress.city || 'Customer',
               cost: expressCost * 0.8
@@ -136,7 +136,7 @@ const getShippingQuotes = async (vendorId, customerAddress, shipmentItemsSubtota
       isInternational = true;
       let baseRate = 2500;
       quotes.push({
-        courierName: 'Global Logistics',
+        courierName: 'DHL Express',
         serviceLevel: 'International Priority',
         cost: baseRate,
         estimatedDays: '7-14 business days',

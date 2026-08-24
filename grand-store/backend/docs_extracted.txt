@@ -1,0 +1,2842 @@
+
+
+--- ../../docs/GS Check out flow.docx ---
+
+Yes. I would make the checkout specification very structured, because this is one of the areas where a small mistake in tax, shipping, currency or duties can create accounting and customer-service problems.
+
+One important correction first: 15% VAT should not simply be applied to every Grand Store sale in every circumstance. SARS currently states that the standard VAT rate is 15%, but certain supplies are zero-rated or exempt, and export treatment has specific rules. The system should therefore determine VAT from the vendor's VAT status, product/tax classification, seller location, customer location and delivery/export circumstances, rather than hard-coding "15% on everything." 
+
+GRAND STORE — CHECKOUT FLOW & DEVELOPER SPECIFICATION
+
+We want the Grand Store checkout to be designed as a clear, transparent and automated calculation system. The customer should know exactly what they are paying for before pressing PAY NOW, while all tax, courier, international shipping and accounting calculations happen automatically in the background.
+
+The checkout should work as follows.
+
+
+
+1. CUSTOMER CART
+
+When the customer clicks Checkout, first display:
+
+YOUR ORDER
+
+Product: Premium WineVendor: ABC WineryQuantity: 2Product price: R2,000
+
+If there are products from different vendors, separate them clearly:
+
+Shipment 1 — Vendor A
+
+Shipment 2 — Vendor B
+
+The customer must understand that different vendors may result in different shipments and delivery charges.
+
+
+
+2. CUSTOMER DELIVERY COUNTRY
+
+Before calculating delivery, ask:
+
+Where would you like your order delivered?
+
+Country: South Africa ▼
+
+Province: Gauteng ▼
+
+City: Johannesburg
+
+Postcode: ______
+
+Delivery address: ______
+
+This information must be captured before the final tax and courier calculation.
+
+
+
+3. DETERMINE WHETHER IT IS A LOCAL OR INTERNATIONAL ORDER
+
+The system should automatically determine:
+
+A. South African vendor → South African customer
+
+DOMESTIC
+
+B. South African vendor → international customer
+
+EXPORT / INTERNATIONAL
+
+C. International vendor → customer in same country
+
+Example:
+
+France → France
+
+DOMESTIC INTERNATIONAL-VENDOR SHIPMENT
+
+D. International vendor → another international country
+
+Example:
+
+France → Dubai, UAE
+
+INTERNATIONAL CROSS-BORDER SHIPMENT
+
+This distinction is extremely important.
+
+
+
+4. SOUTH AFRICAN VAT CALCULATION
+
+For a South African taxable sale, the checkout should show VAT separately.
+
+For example:
+
+PRODUCT
+
+R1,000.00
+
+VAT @ 15%
+
+R150.00
+
+PRODUCT TOTAL
+
+R1,150.00
+
+However, the system must determine whether VAT is actually applicable rather than assuming every product is standard-rated. The VAT engine should use the tax classification assigned to the product/vendor and the transaction circumstances. 
+
+Developer requirement:
+
+Create a Tax/VAT Engine rather than manually adding 15% to the checkout.
+
+This allows Grand Store to handle:
+
+Standard-rated 
+
+Zero-rated 
+
+Exempt where applicable 
+
+Export transactions 
+
+Vendor VAT status 
+
+Future tax-rate changes 
+
+
+
+5. THEN SHOW DELIVERY OPTIONS
+
+After the customer enters the address, show:
+
+HOW WOULD YOU LIKE TO RECEIVE YOUR ORDER?
+
+🚚 HOME DELIVERY
+
+Courier delivery to your address
+
+R150
+
+Estimated:
+
+2–3 business days
+
+
+
+📦 POSTNET COLLECTION
+
+Collect from your selected PostNet branch
+
+R100
+
+Estimated:
+
+2–4 business days
+
+SELECT BRANCH
+
+The customer selects their preferred option.
+
+PostNet already provides a courier rate-calculation facility, so the developer should investigate the appropriate PostNet integration/rate mechanism rather than manually maintaining rates. 
+
+
+
+6. IMPORTANT — SHIPPING MUST BE CALCULATED AFTER THE ADDRESS
+
+The system should not simply say:
+
+Shipping = R150
+
+The shipping engine should calculate the charge using:
+
+Vendor location
+
+
+
+Customer location
+
+
+
+Delivery method
+
+
+
+Product weight
+
+
+
+Package dimensions
+
+
+
+Number of products
+
+
+
+Courier service
+
+
+
+Destination
+
+=
+
+ACTUAL SHIPPING QUOTE
+
+This becomes particularly important for wine, whisky and other products where weight and packaging can materially affect the shipping price.
+
+
+
+7. INTERNATIONAL ORDER — FRANCE → DUBAI EXAMPLE
+
+This is where I would make the system particularly sophisticated.
+
+Customer purchases:
+
+Vendor: French Winery
+
+Origin: France
+
+Destination: Dubai, UAE
+
+The checkout recognises:
+
+International shipment — France → United Arab Emirates
+
+The system then sends the shipment information to the selected international courier API.
+
+For example:
+
+Origin: France
+
+Destination: UAE
+
+Product: Wine
+
+Quantity: 6 bottles
+
+Weight: 10 kg
+
+Dimensions: XX × XX × XX
+
+Declared value: €500
+
+HS Code: Product's applicable HS code
+
+The courier API returns the available services and applicable shipping quotation.
+
+International courier APIs such as DHL's MyDHL API can provide rates, available services, estimated delivery information and shipment capabilities; DHL also provides a landed-cost function that can estimate duties and taxes where the required customs data is supplied. 
+
+
+
+8. INTERNATIONAL CHECKOUT SHOULD LOOK LIKE THIS
+
+PRODUCT
+
+€500
+
+INTERNATIONAL SHIPPING
+
+DHL Express
+
+€120
+
+ESTIMATED DUTIES & TAXES
+
+€___
+
+OTHER APPLICABLE IMPORT CHARGES
+
+€___
+
+TOTAL
+
+€____
+
+The customer should never have to leave Grand Store to obtain a courier quotation.
+
+The API should calculate it automatically.
+
+
+
+9. VERY IMPORTANT — HS CODE
+
+For international shipments, every product that can be exported should have the appropriate customs information stored in the product/vendor database.
+
+At minimum:
+
+HS code 
+
+Product description 
+
+Country of manufacture/origin 
+
+Quantity 
+
+Unit value 
+
+Currency 
+
+Weight 
+
+Alcohol/product classification where relevant 
+
+DHL's current API documentation specifically uses HS codes for determining applicable import duty rates in landed-cost calculations. 
+
+This information should not be manually entered by the customer at checkout.
+
+It should come from the product database.
+
+
+
+10. IMPORT DUTIES POP-UP
+
+For every international order, I would have a mandatory information pop-up.
+
+🌍 IMPORTANT INTERNATIONAL DELIVERY INFORMATION
+
+Your order is being imported into another country.
+
+The destination country may impose customs duties, import taxes, VAT/GST, excise duties, customs clearance fees or other government charges.
+
+Where available, Grand Store will display an estimated amount before payment. However, actual charges may differ because final duties and taxes are determined by the destination country's customs authorities.
+
+The customer is responsible for any applicable import duties, taxes or charges unless Grand Store specifically states that these are included in the checkout total.
+
+Please ensure that the product is legally permitted to be imported into your country.
+
+Then:
+
+☑ I understand the international import conditions.
+
+CONTINUE TO PAYMENT
+
+This is particularly important for alcohol because destination-country restrictions can be significant.
+
+
+
+11. BETTER STILL — USE TWO INTERNATIONAL SHIPPING MODELS
+
+The system should support:
+
+DAP — Duties/Taxes paid by customer
+
+Checkout:
+
+Product
+
+Shipping
+
+Estimated duties/taxes
+
+But the customer may still be responsible for destination charges depending on the shipping arrangement.
+
+DDP — Duties/Taxes included
+
+Checkout:
+
+Product
+
+Shipping
+
+Import duties/taxes
+
+TOTAL — NOTHING FURTHER EXPECTED FOR THOSE INCLUDED CHARGES
+
+The exact Incoterm and what is included must be clearly stated.
+
+The developer should not assume that a courier quote automatically means all import costs are included. DHL itself notes that quoted rates may not include duties, taxes, customs charges or all surcharges. 
+
+
+
+12. INTERNATIONAL DUTY CALCULATION
+
+Where the courier API supports it, Grand Store should request:
+
+LANDed COST
+
+Product value
+
+
+
+Freight
+
+
+
+Insurance where applicable
+
+
+
+Import duty
+
+
+
+Import taxes
+
+
+
+Applicable fees
+
+=
+
+ESTIMATED LANDED COST
+
+DHL's duty/tax API documentation describes exactly this checkout use case: obtain a quote based on shipment contents and value and display duties, taxes and other fees to the customer. 
+
+
+
+13. FINAL CHECKOUT PAGE
+
+Before payment, the customer must see one very clear summary:
+
+ORDER SUMMARY
+
+PRODUCTS
+
+Wine — R2,000
+
+VAT
+
+R300
+
+DELIVERY
+
+Home Delivery — R150
+
+DUTIES & TAXES
+
+R0
+
+OTHER CHARGES
+
+R0
+
+
+
+TOTAL TO PAY
+
+R2,450
+
+PAYMENT METHOD
+
+○ Credit/Debit Card○ Other approved payment method
+
+[ PAY NOW ]
+
+
+
+14. BEFORE "PAY NOW"
+
+The system should perform a final automatic validation.
+
+CHECKOUT VALIDATION
+
+✓ Product still available✓ Correct quantity✓ Correct product price✓ Vendor active✓ Vendor permitted to sell product✓ Customer address valid✓ Delivery method available✓ Courier quotation still valid✓ Correct VAT treatment✓ International restrictions checked✓ Duties/taxes calculated where applicable✓ Currency conversion confirmed✓ Final total calculated✓ Payment amount matches order total
+
+Only then should PAY NOW become available.
+
+This is an important protection against pricing and shipping errors.
+
+
+
+15. PRICE SHOULD BE LOCKED BEFORE PAYMENT
+
+Once the customer reaches the final payment screen:
+
+Quote valid for: 10 minutes
+
+The system should not suddenly change the courier price while the customer is paying.
+
+If the courier quote expires:
+
+Your delivery quotation has expired. We are obtaining an updated quotation.
+
+Then recalculate.
+
+
+
+16. AFTER PAYMENT
+
+Create:
+
+GRAND STORE ORDER
+
+GS-ORD-000125
+
+Then automatically create:
+
+PAYMENT
+
+GS-PAY-000125
+
+Then:
+
+SHIPMENT
+
+GS-SHP-000125
+
+The shipment may contain multiple courier legs.
+
+For example:
+
+France
+
+   ↓
+
+International Courier
+
+   ↓
+
+Dubai Customs
+
+   ↓
+
+Dubai Local Courier
+
+   ↓
+
+Customer
+
+All remain under:
+
+GS-SHP-000125
+
+
+
+17. VERY IMPORTANT — DON'T MIX PRODUCT PRICE, TAX AND SHIPPING
+
+For accounting purposes, every order should have separate fields:
+
+PRODUCT SUBTOTAL
+
+VAT
+
+SHIPPING
+
+IMPORT DUTY
+
+IMPORT TAX
+
+CUSTOMS/CLEARANCE FEES
+
+OTHER FEES
+
+DISCOUNTS
+
+TOTAL
+
+CURRENCY
+
+This will make your accounting and vendor settlement much cleaner.
+
+
+
+18. MULTI-VENDOR CART
+
+Suppose the customer buys:
+
+Vendor A — South Africa
+
+Product: R1,000
+
+Vendor B — France
+
+Product: €500
+
+The system must not simply calculate one generic courier charge.
+
+It should create:
+
+SHIPMENT 1
+
+South Africa → Customer
+
+SHIPMENT 2
+
+France → Customer
+
+Each shipment gets its own:
+
+Origin 
+
+Destination 
+
+Courier 
+
+Shipping price 
+
+Tracking 
+
+Tax treatment 
+
+Duties 
+
+Shipment ID 
+
+But the customer can still pay for everything in one checkout transaction.
+
+
+
+19. THE ACCOUNTING STRUCTURE
+
+For every order, the backend should create a financial breakdown such as:
+
+ORDER
+
+│
+
+├── PRODUCT VALUE
+
+├── VAT
+
+├── SHIPPING
+
+├── IMPORT DUTIES
+
+├── IMPORT TAXES
+
+├── OTHER FEES
+
+├── DISCOUNT
+
+│
+
+└── CUSTOMER TOTAL
+
+Then separately:
+
+CUSTOMER PAYMENT
+
+       ↓
+
+GRAND STORE
+
+       ↓
+
+VENDOR SETTLEMENT
+
+       ↓
+
+GRAND STORE COMMISSION
+
+       ↓
+
+COURIER COST
+
+       ↓
+
+TAX / DUTY
+
+       ↓
+
+OTHER FEES
+
+This prevents shipping, VAT, vendor revenue and Grand Store commission from being mixed together.
+
+
+
+20. THE DEVELOPER SHOULD BUILD A "CHECKOUT ENGINE"
+
+I strongly recommend that you do not hard-code this logic into the checkout page.
+
+Build separate engines:
+
+1. TAX ENGINE
+
+Determines VAT/tax treatment.
+
+2. SHIPPING ENGINE
+
+Determines delivery options and cost.
+
+3. COURIER API ENGINE
+
+Gets live courier quotations.
+
+4. DUTY & TAX ENGINE
+
+Calculates estimated international landed costs where supported.
+
+5. CURRENCY ENGINE
+
+Handles exchange rates.
+
+6. PROMOTION ENGINE
+
+Handles discounts/free shipping.
+
+7. ORDER ENGINE
+
+Creates the final order.
+
+8. PAYMENT ENGINE
+
+Collects the exact final amount.
+
+9. SETTLEMENT ENGINE
+
+Calculates what the vendor is owed.
+
+This architecture will make Grand Store far easier to maintain and much harder to break.
+
+
+
+21. THE COMPLETE CUSTOMER JOURNEY
+
+The entire checkout should effectively be:
+
+ADD TO CART
+
+      ↓
+
+CHECKOUT
+
+      ↓
+
+LOGIN / GUEST CHECKOUT
+
+      ↓
+
+DELIVERY COUNTRY
+
+      ↓
+
+DELIVERY ADDRESS
+
+      ↓
+
+SYSTEM IDENTIFIES:
+
+LOCAL / EXPORT / INTERNATIONAL
+
+      ↓
+
+TAX ENGINE
+
+      ↓
+
+DELIVERY OPTIONS
+
+      ↓
+
+COURIER API
+
+      ↓
+
+DUTIES & TAXES API
+
+(IF INTERNATIONAL)
+
+      ↓
+
+FINAL CALCULATION
+
+      ↓
+
+CUSTOMER SEES COMPLETE BREAKDOWN
+
+      ↓
+
+INTERNATIONAL WARNING POP-UP
+
+(IF APPLICABLE)
+
+      ↓
+
+CUSTOMER CONFIRMS
+
+      ↓
+
+PAYMENT
+
+      ↓
+
+ORDER CREATED
+
+      ↓
+
+SHIPMENT CREATED
+
+      ↓
+
+VENDOR NOTIFIED
+
+      ↓
+
+COURIER BOOKED
+
+      ↓
+
+TRACKING
+
+      ↓
+
+DELIVERY
+
+      ↓
+
+VENDOR SETTLEMENT
+
+The most important instruction to your developer
+
+The checkout must have one single source of truth for the final amount. The customer must never see one amount on the product page, another amount at checkout and another amount at payment. The system must calculate product price, applicable VAT/taxes, shipping, courier charges, international duties/taxes, discounts and currency conversion before payment, validate everything again immediately before payment, and store the exact calculation used for accounting and auditing.
+
+And for international orders:
+
+Never tell the customer that "shipping is €120" and leave it at that. Clearly identify whether duties, taxes, customs clearance and other import charges are included, estimated or payable separately.
+
+That approach gives Grand Store a checkout that is simple for the customer but sophisticated enough behind the scenes to handle South African sales, PostNet collection, domestic courier delivery, international vendors, France → Dubai shipments, live courier APIs, VAT, customs, duties, currencies and multi-vendor orders without having to redesign the checkout later.
+
+
+
+
+
+--- ../../docs/Payment flow.docx ---
+
+For Grand Store, I would make the supplier/vendor payment system very simple on the surface, while keeping the accounting complexity in the background.
+
+The basic rule should be:
+
+Grand Store collects the customer's money → the goods are delivered → the delivery is confirmed → the vendor becomes payable → Grand Store pays the vendor according to the agreed settlement terms.
+
+1. THE SIMPLE PAYMENT FLOW
+
+CUSTOMER ORDERS
+
+       ↓
+
+CUSTOMER PAYS GRAND STORE
+
+       ↓
+
+MONEY HELD / RECORDED
+
+       ↓
+
+VENDOR SHIPS GOODS
+
+       ↓
+
+CUSTOMER RECEIVES GOODS
+
+       ↓
+
+DELIVERY CONFIRMED
+
+       ↓
+
+RETURN / DISPUTE PERIOD
+
+       ↓
+
+VENDOR PAYMENT BECOMES DUE
+
+       ↓
+
+CURRENCY + BANK FEES CALCULATED
+
+       ↓
+
+VENDOR PAYMENT APPROVED
+
+       ↓
+
+VENDOR PAID
+
+       ↓
+
+STATEMENT UPDATED
+
+This removes the biggest confusion:
+
+The vendor does not get paid simply because an order was placed.
+
+They get paid once the order has reached the agreed payment release point.
+
+
+
+2. WHAT THE CUSTOMER SEES
+
+The customer should not see all the accounting machinery.
+
+At checkout:
+
+ORDER TOTAL
+
+Product: €1,000
+
+Delivery: €100
+
+Taxes/other applicable charges: €___
+
+TOTAL PAID
+
+€1,100
+
+The customer pays Grand Store.
+
+That's it.
+
+
+
+3. WHAT GRAND STORE RECORDS
+
+Grand Store creates one financial transaction:
+
+ORDER
+
+GS-ORD-2026-004821
+
+Item
+
+Amount
+
+Product
+
+€1,000
+
+Delivery
+
+€100
+
+Customer paid
+
+€1,100
+
+Then the system identifies:
+
+Vendor: French Winery ABC
+
+Vendor product value: €1,000
+
+Grand Store commission: 15%
+
+Vendor gross amount: €1,000
+
+Grand Store commission: €150
+
+Vendor balance before other adjustments: €850
+
+
+
+4. THEN WAIT FOR DELIVERY
+
+The vendor sends the product.
+
+The courier updates:
+
+Delivered ✓
+
+The system now changes:
+
+PAYMENT STATUS
+
+Pending delivery
+
+to:
+
+Delivered — Awaiting Settlement
+
+This is an important status.
+
+
+
+5. HAVE A CLEAR RELEASE PERIOD
+
+I would recommend that Grand Store's terms specify something such as:
+
+Vendor payments are released after successful delivery and expiry of the applicable return/dispute period, subject to the platform's settlement terms.
+
+For example:
+
+Delivered: 20 August
+
+Settlement review: 21–23 August
+
+Payment release: 24 August
+
+The exact period should be set in your vendor agreement and adapted to the product/transaction type.
+
+
+
+6. THE VENDOR DASHBOARD SHOULD BE VERY SIMPLE
+
+Give the vendor a page:
+
+💰 MY PAYMENTS
+
+AVAILABLE
+
+R85,450
+
+PENDING
+
+R24,800
+
+PAID THIS MONTH
+
+R142,300
+
+Then:
+
+NEXT PAYMENT
+
+24 August 2026
+
+R18,450
+
+
+
+7. EVERY SALE SHOULD HAVE A PAYMENT BREAKDOWN
+
+Vendor clicks:
+
+ORDER GS-ORD-004821
+
+Product sale: €1,000
+
+Grand Store commission: -€150
+
+Refunds: €0
+
+Other adjustments: €0
+
+Vendor amount: €850
+
+Then currency:
+
+Sale currency: EUR
+
+Vendor settlement currency: ZAR
+
+Exchange rate used: ___
+
+Currency conversion cost: ___
+
+Bank/payment fee: ___
+
+FINAL AMOUNT TO VENDOR
+
+R_____
+
+This is what prevents disputes.
+
+
+
+8. CURRENCY IS WHERE YOU NEED A VERY CLEAR RULE
+
+I would establish a standard settlement currency for each vendor.
+
+For example:
+
+South African vendor
+
+Settlement currency: ZAR
+
+French vendor
+
+Could be:
+
+Settlement currency: EUR
+
+or, if Grand Store operates from South Africa:
+
+Settlement currency: ZAR
+
+The vendor chooses their settlement currency during onboarding, subject to Grand Store approval.
+
+
+
+9. WHO PAYS THE CURRENCY CONVERSION COST?
+
+This needs to be agreed before the vendor starts selling.
+
+I recommend making the rule extremely simple:
+
+OPTION A — VENDOR PAYS
+
+If:
+
+Customer pays EUR
+
+and vendor wants:
+
+ZAR
+
+then the currency conversion cost is deducted from the vendor settlement.
+
+This is generally the cleanest marketplace arrangement when the vendor chooses to receive a different currency.
+
+
+
+10. EXAMPLE
+
+Customer purchases:
+
+€1,000
+
+Grand Store commission:
+
+15% = €150
+
+Vendor's gross entitlement:
+
+€850
+
+Suppose the conversion produces:
+
+R17,000
+
+and the actual currency conversion/bank charge is:
+
+R170
+
+Then:
+
+Vendor settlement:
+
+R17,000
+
+less currency conversion fee:
+
+R170
+
+Vendor receives:
+
+R16,830
+
+The vendor sees every line.
+
+
+
+11. BUT WHAT IF THE VENDOR WANTS EUR?
+
+This is even simpler.
+
+Customer pays:
+
+€1,000
+
+Grand Store commission:
+
+€150
+
+Vendor:
+
+€850
+
+Vendor receives:
+
+€850
+
+No conversion is necessary if Grand Store's payment infrastructure can settle in EUR.
+
+There may still be payment/bank fees, which should be separately identified.
+
+
+
+12. WHO PAYS BANK FEES?
+
+Again, don't leave this ambiguous.
+
+I would create a standard policy:
+
+CUSTOMER PAYMENT FEES
+
+Grand Store pays / absorbs standard payment gateway charges, or incorporates them into its commercial pricing.
+
+VENDOR PAYOUT FEES
+
+Vendor pays any bank or currency-conversion charges specifically associated with paying the vendor in a different currency or to a destination requiring additional banking charges.
+
+But you should confirm the commercial and legal structure with your accountant/payment provider.
+
+
+
+13. DON'T HIDE FEES
+
+Never show:
+
+Vendor receives R16,830
+
+without explanation.
+
+Show:
+
+VENDOR SETTLEMENT
+
+Product sales: R17,000
+
+Grand Store commission: -R2,550
+
+Currency conversion: -R170
+
+Bank payout fee: -R50
+
+Refund adjustment: R0
+
+NET PAYABLE
+
+R14,230
+
+Then the vendor knows exactly why they received R14,230.
+
+
+
+14. USE ONE "VENDOR STATEMENT"
+
+This is extremely important.
+
+Every vendor should have:
+
+GRAND STORE VENDOR STATEMENT
+
+Vendor: ABC Winery
+
+Statement period: 1–31 August 2026
+
+Description
+
+Amount
+
+Gross sales
+
+R100,000
+
+Grand Store commission
+
+-R15,000
+
+Refunds
+
+-R2,000
+
+Currency charges
+
+-R500
+
+Bank fees
+
+-R100
+
+Net payable
+
+R82,400
+
+Then:
+
+Paid: R60,000
+
+Balance pending: R22,400
+
+
+
+15. GIVE EVERY PAYMENT A UNIQUE REFERENCE
+
+For example:
+
+Order
+
+GS-ORD-0004821
+
+Vendor settlement
+
+GS-SET-0004821
+
+Payment
+
+GS-PAY-0004821
+
+Courier
+
+GS-SHP-0004821
+
+Now the accountant can search one reference and see the complete transaction.
+
+
+
+16. MULTIPLE VENDORS IN ONE CUSTOMER ORDER
+
+This is particularly important for Grand Store.
+
+Customer buys:
+
+Vendor A: €500
+
+Vendor B: €300
+
+Vendor C: €200
+
+Customer pays Grand Store:
+
+€1,000
+
+The system automatically splits the transaction internally:
+
+Vendor A
+
+€500 sale
+
+→ commission
+
+→ vendor balance
+
+Vendor B
+
+€300 sale
+
+→ commission
+
+→ vendor balance
+
+Vendor C
+
+€200 sale
+
+→ commission
+
+→ vendor balance
+
+The customer doesn't need to know about the internal split.
+
+
+
+17. DELIVERY AND PAYMENT MUST BE LINKED
+
+The system should have:
+
+ORDER
+
+   ↓
+
+PAYMENT RECEIVED
+
+   ↓
+
+VENDOR FULFILS
+
+   ↓
+
+SHIPMENT
+
+   ↓
+
+DELIVERED
+
+   ↓
+
+RETURN/DISPUTE PERIOD
+
+   ↓
+
+SETTLEMENT CREATED
+
+   ↓
+
+SETTLEMENT APPROVED
+
+   ↓
+
+VENDOR PAID
+
+If delivery hasn't happened:
+
+Vendor status
+
+PAYMENT PENDING
+
+If delivered:
+
+AWAITING SETTLEMENT
+
+If approved:
+
+READY FOR PAYMENT
+
+If paid:
+
+PAID
+
+
+
+18. WHAT HAPPENS IF THE CUSTOMER COMPLAINS?
+
+Don't pay the disputed amount automatically.
+
+For example:
+
+Customer reports:
+
+Bottle damaged.
+
+System changes:
+
+SETTLEMENT
+
+🔴 ON HOLD — CUSTOMER DISPUTE
+
+The vendor sees:
+
+R2,500 temporarily on hold pending resolution.
+
+Once resolved:
+
+Release to vendor
+
+or
+
+Refund customer
+
+or
+
+Partial settlement
+
+This protects both Grand Store and the vendor.
+
+
+
+19. WHAT ABOUT THE COURIER MONEY?
+
+Keep it separate from the product settlement.
+
+Example:
+
+Customer paid
+
+Product: €1,000
+
+Shipping: €100
+
+Total: €1,100
+
+Vendor settlement should not automatically treat the €100 courier charge as vendor revenue.
+
+Instead:
+
+PRODUCT
+
+€1,000
+
+SHIPPING
+
+€100
+
+GRAND STORE COMMISSION
+
+Calculated according to your vendor agreement.
+
+COURIER COST
+
+Recorded separately.
+
+This gives your accountant a clean audit trail.
+
+
+
+20. INTERNATIONAL PAYMENT SCREEN
+
+For an international vendor, I would show:
+
+🌍 INTERNATIONAL VENDOR SETTLEMENT
+
+Sale value: €1,000
+
+Grand Store commission: -€150
+
+Vendor balance: €850
+
+Settlement currency: ZAR
+
+Exchange rate: 1 EUR = R___
+
+Converted value: R____
+
+Currency conversion fee: -R___
+
+International bank fee: -R___
+
+NET PAYMENT
+
+R_____
+
+Then:
+
+PAYMENT STATUS
+
+🟢 Scheduled
+
+Payment date: 24 August 2026
+
+
+
+21. WHO SHOULD PAY WHAT?
+
+I'd make a simple Grand Store Payment Responsibility Matrix:
+
+Cost
+
+Customer
+
+Vendor
+
+Grand Store
+
+Product
+
+✓
+
+
+
+
+
+Standard delivery
+
+✓*
+
+
+
+
+
+Grand Store commission
+
+
+
+✓
+
+
+
+Vendor currency conversion
+
+
+
+✓*
+
+
+
+Vendor bank payout fee
+
+
+
+✓*
+
+
+
+Customer refund
+
+
+
+Depends
+
+Depends
+
+Payment gateway fee
+
+
+
+
+
+✓*
+
+Customs/destination taxes
+
+✓*
+
+
+
+
+
+Courier insurance
+
+✓*
+
+✓*
+
+✓*
+
+* = depends on the specific commercial arrangement.
+
+But do not leave the asterisks ambiguous in the live system. The vendor contract should determine the actual responsibility, and the system should apply that rule automatically.
+
+
+
+22. MAKE THE VENDOR SIGN THIS DURING ONBOARDING
+
+A simple section:
+
+💳 VENDOR PAYMENT TERMS
+
+Settlement currency:EUR / USD / GBP / ZAR / Other
+
+Payment frequency:Weekly / Bi-weekly / Monthly
+
+Settlement trigger:After delivery + applicable dispute/return period
+
+Grand Store commission:15%
+
+Currency conversion fees:☐ Vendor☐ Grand Store
+
+Bank payout fees:☐ Vendor☐ Grand Store
+
+Refunds/chargebacks:As per Grand Store Vendor Agreement
+
+Then:
+
+✓ I understand and accept the Grand Store settlement terms.
+
+
+
+23. MY RECOMMENDED GRAND STORE MODEL
+
+For simplicity, I would make the system operate like this:
+
+CUSTOMER
+
+Pays Grand Store
+
+↓
+
+GRAND STORE
+
+Records the full transaction
+
+↓
+
+VENDOR
+
+Ships product
+
+↓
+
+COURIER
+
+Confirms delivery
+
+↓
+
+GRAND STORE
+
+Waits for applicable dispute/return period
+
+↓
+
+SYSTEM
+
+Calculates vendor settlement automatically
+
+↓
+
+SYSTEM
+
+Deducts agreed commission + applicable vendor charges
+
+↓
+
+CURRENCY ENGINE
+
+Converts currency if required
+
+↓
+
+PAYMENT
+
+Vendor receives net amount
+
+↓
+
+STATEMENT
+
+Vendor sees exactly how the amount was calculated
+
+
+
+The golden rule for the developer
+
+I would put this into the Grand Store specification exactly:
+
+"The vendor must never have to calculate what Grand Store owes them. The system must automatically calculate the vendor's gross sales, Grand Store commission, refunds, currency conversion, applicable banking/payout charges and net settlement. The vendor must be able to open any settlement and see exactly how the final payment was calculated."
+
+And the vendor's screen should ultimately be as simple as:
+
+YOUR AUGUST SETTLEMENT
+
+Sales: R100,000Grand Store commission: -R15,000Refunds: -R2,000Currency charges: -R500Bank fees: -R100
+
+YOU WILL RECEIVE
+
+R82,400
+
+Payment date: 31 AugustStatus: 🟢 Scheduled
+
+That is the level of simplicity I would aim for: the accounting can be sophisticated behind the scenes, but the vendor should see five or six understandable lines and one final number.
+
+
+
+
+
+--- ../../docs/Courier Service setup..docx ---
+
+Absolutely. For Grand Store, I would make the courier/shipping process a completely transparent part of the buying journey, especially because you will have vendors shipping directly to customers and potentially selling to different countries.
+
+The customer should never reach the final payment page and suddenly discover an unexpected courier charge.
+
+Below is the structure I recommend giving your developer.
+
+GRAND STORE — COURIER & DELIVERY SYSTEM
+
+Simple. Transparent. Trackable.
+
+The product price and delivery cost are shown separately before you pay.
+
+Delivery charges are calculated according to the vendor's location, customer's delivery country/area, product quantity/weight, package dimensions and selected delivery service.
+
+
+
+1. HOW THE SYSTEM SHOULD WORK
+
+The basic process should be:
+
+CUSTOMER
+
+   ↓
+
+SELECTS PRODUCT
+
+   ↓
+
+VENDOR LOCATION IDENTIFIED
+
+   ↓
+
+CUSTOMER ENTERS DELIVERY COUNTRY / ADDRESS
+
+   ↓
+
+SYSTEM CALCULATES SHIPPING
+
+   ↓
+
+DELIVERY OPTIONS DISPLAYED
+
+   ↓
+
+CUSTOMER SELECTS DELIVERY METHOD
+
+   ↓
+
+PRODUCT + SHIPPING + TAXES/FEES
+
+   ↓
+
+TOTAL DISPLAYED
+
+   ↓
+
+CUSTOMER PAYS
+
+   ↓
+
+ORDER SENT TO VENDOR
+
+   ↓
+
+VENDOR PACKS PRODUCT
+
+   ↓
+
+COURIER COLLECTS
+
+   ↓
+
+TRACKING NUMBER GENERATED
+
+   ↓
+
+CUSTOMER TRACKS DELIVERY
+
+   ↓
+
+DELIVERED
+
+
+
+2. SHOW DELIVERY INFORMATION BEFORE CHECKOUT
+
+On every product page, have a section:
+
+🚚 DELIVERY
+
+Deliver to:
+
+🇿🇦 South Africa
+
+Enter your postcode
+
+[ 2001 ]
+
+CALCULATE DELIVERY
+
+Then immediately show:
+
+Estimated delivery: 2–4 business days
+
+Delivery from: Stellenbosch, South Africa
+
+Shipping calculated based on your location and order.
+
+This gives the customer confidence before they add the item to their cart.
+
+
+
+3. DON'T FORCE THE CUSTOMER TO KNOW THE VENDOR'S LOCATION
+
+The system should automatically know:
+
+Vendor: ABC Winery
+
+Vendor warehouse: Stellenbosch
+
+Customer: Johannesburg
+
+Then calculate the courier charge.
+
+The customer simply sees:
+
+🚚 DELIVERY TO JOHANNESBURG
+
+Standard Delivery — R120
+
+Express Delivery — R220
+
+They don't need to understand how the system calculated it.
+
+
+
+4. CUSTOMER'S COUNTRY MUST BE CLEAR
+
+For international customers:
+
+🌍 DELIVER TO
+
+Country:
+
+South Africa ▼
+
+or
+
+United Kingdom ▼
+
+United States ▼
+
+Australia ▼
+
+etc.
+
+Then:
+
+Delivery availability and charges will be calculated for your selected country.
+
+
+
+5. INTERNATIONAL SHIPPING
+
+This is particularly important for Grand Store.
+
+If someone in London buys from a South African winery:
+
+PRODUCT
+
+Wine — R1,500
+
+INTERNATIONAL DELIVERY
+
+South Africa → United Kingdom
+
+Courier: R1,850
+
+ESTIMATED DELIVERY
+
+5–8 business days
+
+TOTAL BEFORE TAXES/DUTIES
+
+R3,350
+
+Then clearly state:
+
+Important: Import duties, customs charges, VAT/GST or other government charges in the destination country may be payable by the customer unless explicitly stated as included.
+
+This prevents the customer from assuming that the courier charge includes every possible government charge.
+
+
+
+6. SHOW "WHO PAYS"
+
+This should be explicit.
+
+On the product page:
+
+DELIVERY PAID BY
+
+Customer
+
+or, where applicable:
+
+Free delivery — paid by vendor
+
+or:
+
+Free delivery over R1,500
+
+The customer should never have to guess.
+
+
+
+7. THREE POSSIBLE SHIPPING MODELS
+
+Grand Store can support three models.
+
+MODEL A — CUSTOMER PAYS
+
+Product: R1,000
+
+Delivery: R150
+
+Customer pays: R1,150
+
+
+
+MODEL B — VENDOR PAYS
+
+Product: R1,000
+
+Delivery: FREE
+
+Customer pays: R1,000
+
+The vendor absorbs the courier cost.
+
+
+
+MODEL C — GRAND STORE PROMOTION
+
+Product: R1,000
+
+Delivery: R150
+
+Grand Store delivery promotion: -R150
+
+CUSTOMER PAYS
+
+R1,000
+
+This allows Grand Store to run free-delivery campaigns.
+
+
+
+8. MULTIPLE VENDORS IN ONE ORDER
+
+This is extremely important for your marketplace.
+
+Suppose the customer buys:
+
+Vendor A
+
+Wine — R1,000
+
+Delivery — R150
+
+Vendor B
+
+Whisky — R2,000
+
+Delivery — R180
+
+Vendor C
+
+Gin — R800
+
+Delivery — R120
+
+The customer should see:
+
+YOUR ORDER
+
+
+
+Product
+
+Delivery
+
+Vendor A
+
+R1,000
+
+R150
+
+Vendor B
+
+R2,000
+
+R180
+
+Vendor C
+
+R800
+
+R120
+
+Products: R3,800
+
+Delivery: R450
+
+TOTAL
+
+R4,250
+
+And explain:
+
+Your order contains products from three vendors. Each vendor will ship their products separately, so you may receive multiple deliveries.
+
+This is extremely important.
+
+
+
+9. DON'T CALL IT ONE DELIVERY
+
+If products are coming from different vendors, don't simply say:
+
+Delivery: R450
+
+Instead:
+
+DELIVERY BREAKDOWN
+
+Shipment 1 — ABC Winery
+
+Stellenbosch → Johannesburg
+
+R150
+
+Shipment 2 — XYZ Whisky
+
+Cape Town → Johannesburg
+
+R180
+
+Shipment 3 — ABC Gin
+
+Pretoria → Johannesburg
+
+R120
+
+This makes the charge completely understandable.
+
+
+
+10. CUSTOMER CHECKOUT
+
+At checkout:
+
+DELIVERY & SHIPPING
+
+SHIPMENT 1
+
+ABC Winery
+
+Delivering from Stellenbosch
+
+Standard:
+
+R150
+
+2–4 business days
+
+🔘 Select
+
+Express:
+
+R250
+
+1–2 business days
+
+○ Select
+
+
+
+SHIPMENT 2
+
+XYZ Distillery
+
+Delivering from Cape Town
+
+Standard:
+
+R180
+
+3–5 business days
+
+
+
+Then:
+
+PRODUCT TOTAL
+
+R3,800
+
+DELIVERY
+
+R330
+
+TAXES
+
+R____
+
+GRAND TOTAL
+
+R4,130
+
+This is much better than showing an unexplained R330 shipping charge.
+
+
+
+11. SHIPPING METHOD
+
+Give the customer options where available:
+
+🚚 STANDARD
+
+2–5 business days
+
+R150
+
+⚡ EXPRESS
+
+1–2 business days
+
+R250
+
+🏪 COLLECTION
+
+Free
+
+Collect from vendor
+
+The actual options should depend on what the vendor/courier supports.
+
+
+
+12. VENDOR'S RESPONSIBILITY
+
+The vendor dashboard should clearly state:
+
+YOUR SHIPPING RESPONSIBILITIES
+
+Once an order is received:
+
+1. Accept order
+
+↓
+
+2. Prepare product
+
+↓
+
+3. Package securely
+
+↓
+
+4. Print Grand Store shipping label
+
+↓
+
+5. Courier collection
+
+↓
+
+6. Tracking activated
+
+↓
+
+7. Customer notified
+
+
+
+13. VENDOR SHOULD NOT HAVE TO CALCULATE SHIPPING MANUALLY
+
+This is important.
+
+The vendor should enter their shipping profile once.
+
+VENDOR SHIPPING PROFILE
+
+Pickup address
+
+Warehouse address
+
+Product weight
+
+Package dimensions
+
+Number of bottles per package
+
+Packaging type
+
+Countries served
+
+Courier options
+
+Lead time
+
+Then the system calculates shipping automatically.
+
+
+
+14. SHIPPING PROFILE FOR A WINE VENDOR
+
+Example:
+
+ABC WINERY
+
+Pickup: Stellenbosch
+
+Standard Carton
+
+6 bottles
+
+Weight: 9kg
+
+Dimensions:
+
+35 × 25 × 30cm
+
+Shipping zones
+
+Cape Town — R100
+
+Johannesburg — R150
+
+Durban — R170
+
+Pretoria — R160
+
+Other areas — calculated
+
+International — courier quote/API
+
+The vendor shouldn't have to enter shipping every time an order arrives.
+
+
+
+15. SHIPPING BY BOTTLE / CARTON
+
+For wine and spirits, I'd strongly recommend supporting:
+
+1 bottle
+
+2 bottles
+
+3 bottles
+
+6 bottles
+
+12 bottles
+
+Because shipping six bottles is not necessarily six times the cost of shipping one.
+
+For example:
+
+1–2 bottles: R120
+
+3–6 bottles: R150
+
+7–12 bottles: R220
+
+The vendor can define their packaging rules.
+
+
+
+16. FREE DELIVERY THRESHOLD
+
+Allow vendors to set:
+
+FREE DELIVERY ABOVE
+
+R1,500
+
+or:
+
+FREE DELIVERY ABOVE
+
+6 bottles
+
+or:
+
+FREE DELIVERY ABOVE
+
+R2,500
+
+This can be displayed prominently:
+
+🎉 FREE DELIVERY ON ORDERS OVER R1,500
+
+
+
+17. SHIPPING RESTRICTIONS
+
+Before payment, the system should check whether the product can actually be shipped to the destination.
+
+For example:
+
+⚠️ This product cannot currently be delivered to your selected country.
+
+or:
+
+⚠️ This product is available for delivery within South Africa only.
+
+Don't allow the customer to pay and only discover this afterward.
+
+
+
+18. INTERNATIONAL DUTIES
+
+I would make this extremely clear.
+
+INTERNATIONAL DELIVERY
+
+Your delivery charge covers:
+
+✓ Courier transportation
+
+✓ Tracking
+
+✓ Collection from vendor
+
+But it may not cover:
+
+Import duty 
+
+Customs charges 
+
+Destination-country VAT/GST 
+
+Excise taxes 
+
+Customs clearance 
+
+Storage fees 
+
+Other government charges 
+
+Then:
+
+The customer is responsible for any destination-country taxes, duties or customs charges unless the checkout explicitly states that these are included.
+
+Your exact legal wording should be reviewed for the countries you intend to serve.
+
+
+
+19. DDP vs DDU/DAP
+
+For international shipping, Grand Store should eventually allow the system to identify:
+
+DDP
+
+Delivered Duty Paid
+
+Customer sees the applicable landed cost upfront where the courier/service supports it.
+
+OR
+
+DAP / DDU-type arrangement
+
+Customer pays applicable destination duties/taxes when required.
+
+Don't use confusing terminology alone. Explain it in plain English.
+
+For example:
+
+Taxes & duties not included. You may be contacted by customs or the courier before delivery.
+
+
+
+20. TRACKING
+
+Once the vendor hands the parcel to the courier:
+
+YOUR DELIVERY
+
+Order: GS-26-SHP-004821
+
+Vendor: ABC Winery
+
+Courier: XYZ Couriers
+
+Tracking: TRK839284
+
+STATUS
+
+✓ Order confirmed✓ Vendor preparing order✓ Courier collected✓ In transit✓ Out for delivery✓ Delivered
+
+
+
+21. CUSTOMER NOTIFICATIONS
+
+Automatically send:
+
+ORDER CONFIRMED
+
+Your order has been confirmed.
+
+VENDOR PROCESSING
+
+ABC Winery is preparing your order.
+
+COURIER COLLECTED
+
+Your order has been collected by the courier.
+
+IN TRANSIT
+
+Your order is on its way.
+
+OUT FOR DELIVERY
+
+Your order is scheduled for delivery today.
+
+DELIVERED
+
+Your Grand Store order has been delivered.
+
+
+
+22. DELIVERY TRACKING PAGE
+
+Customer should have:
+
+TRACK MY ORDER
+
+GS-26-SHP-004821
+
+ABC WINERY
+
+Stellenbosch → Johannesburg
+
+Expected delivery: 19 August
+
+TRACKING
+
+[Track Shipment]
+
+
+
+23. WHAT HAPPENS IF THERE IS A DELAY?
+
+Don't leave the customer guessing.
+
+If courier API reports a delay:
+
+⚠️ Delivery delayed
+
+Your shipment was delayed due to a courier operational issue.
+
+New estimated delivery: 20 August
+
+Customer should receive an automatic notification.
+
+
+
+24. DAMAGED PACKAGE
+
+Create:
+
+REPORT A DELIVERY PROBLEM
+
+Customer selects:
+
+☐ Damaged bottle☐ Wrong product☐ Missing product☐ Package damaged☐ Delivery not received☐ Other
+
+Allow:
+
+📷 Upload photographs
+
+Then:
+
+SUBMIT CLAIM
+
+This creates a case linked to:
+
+Order ID
+
+Shipment ID
+
+Vendor
+
+Courier
+
+Product
+
+
+
+25. LOST PACKAGE
+
+The system should automatically create:
+
+DELIVERY INVESTIGATION
+
+If courier status indicates lost/missing.
+
+Grand Store admin sees:
+
+Customer
+
+Vendor
+
+Courier
+
+Tracking
+
+Value
+
+Insurance
+
+Status
+
+This prevents customers from having to chase multiple parties.
+
+
+
+26. SHIPPING INSURANCE
+
+For high-value products, particularly your auction and collector products:
+
+🛡️ SHIPPING PROTECTION
+
+Allow:
+
+Standard
+
+or
+
+Insured
+
+For example:
+
+This shipment includes insurance up to R50,000.
+
+The actual coverage must be confirmed with the courier/insurer.
+
+
+
+27. AUCTION SHIPPING
+
+Auction purchases should have their own flow.
+
+After winning:
+
+AUCTION WON
+
+Lot 027
+
+Winning bid: R50,000
+
+Buyer premium: R____
+
+Shipping:
+
+Calculated based on destination
+
+ENTER DELIVERY ADDRESS
+
+↓
+
+CALCULATE SHIPPING
+
+↓
+
+Insured courier — R850
+
+↓
+
+TOTAL
+
+Then pay.
+
+For expensive auction items, I would not automatically use normal marketplace shipping rules.
+
+
+
+28. ACCOUNTING LINK
+
+This also connects directly to the transaction-reference system we discussed earlier.
+
+For example:
+
+ORDER
+
+GS-26-SHP-ORD-004821
+
+PAYMENT
+
+GS-26-SHP-PAY-004821
+
+SHIPMENT
+
+GS-26-SHP-DEL-004821
+
+COURIER TRACKING
+
+TRK839284
+
+VENDOR
+
+VND-00127
+
+Therefore accounting can see:
+
+Customer paid R1,150Product = R1,000Shipping = R150Vendor = ABC WineryCourier = XYZShipment = TRK839284
+
+Everything is linked.
+
+
+
+29. IMPORTANT: SEPARATE PRODUCT PRICE FROM SHIPPING
+
+This should be a Grand Store design rule.
+
+Never show:
+
+Total: R1,150
+
+without explanation.
+
+Show:
+
+YOUR ORDER
+
+WineR1,000
+
+DeliveryR150
+
+TaxR___
+
+TOTAL
+
+R1,150
+
+The customer knows exactly what they're paying for.
+
+
+
+30. THE CUSTOMER-FACING SHIPPING MESSAGE
+
+I would use something like this throughout Grand Store:
+
+🚚 DELIVERY INFORMATION
+
+Your product is shipped directly from the participating vendor. Delivery charges are calculated based on the vendor's location, your delivery address, package size/weight and the delivery service selected.
+
+The delivery charge is shown separately before you make payment.
+
+If your order contains products from different vendors, each vendor may ship separately and separate delivery charges may apply.
+
+For international orders, destination-country customs duties, taxes and other government charges may apply unless specifically stated as included at checkout.
+
+You will receive a tracking number once your order has been collected by the courier.
+
+
+
+31. THE MOST IMPORTANT CHECKOUT DISPLAY
+
+I would make this almost impossible to misunderstand:
+
+🛒 YOUR ORDER
+
+ABC Winery — Stellenbosch
+
+Wine AR1,000
+
+🚚 DeliveryR150
+
+Shipment 1 Total: R1,150
+
+
+
+XYZ Distillery — Cape Town
+
+Whisky BR2,000
+
+🚚 DeliveryR180
+
+Shipment 2 Total: R2,180
+
+
+
+PRODUCTS
+
+R3,000
+
+DELIVERY
+
+R330
+
+TAXES / DUTIES
+
+R___
+
+TOTAL TO PAY
+
+R3,330 + applicable destination charges
+
+And immediately below:
+
+You will not be charged an additional Grand Store delivery fee for these shipments after payment. Any destination-country customs, tax or government charges that are not included above may be payable separately.
+
+That last sentence is particularly useful for international customers.
+
+
+
+32. DEVELOPER'S CORE SHIPPING SYSTEM
+
+I would tell your developer to build these as separate objects:
+
+CUSTOMER
+
+   ↓
+
+ORDER
+
+   ↓
+
+ORDER ITEMS
+
+   ↓
+
+VENDOR
+
+   ↓
+
+SHIPMENT
+
+   ↓
+
+COURIER
+
+   ↓
+
+TRACKING
+
+   ↓
+
+DELIVERY
+
+Every shipment should have:
+
+Shipment ID 
+
+Order ID 
+
+Vendor ID 
+
+Customer ID 
+
+Pickup address 
+
+Delivery address 
+
+Package weight 
+
+Dimensions 
+
+Courier 
+
+Service level 
+
+Shipping price 
+
+Insurance 
+
+Tracking number 
+
+Estimated delivery 
+
+Actual delivery 
+
+Status 
+
+Customs information where applicable 
+
+
+
+33. THE BEST MODEL FOR GRAND STORE
+
+I would ultimately make the experience:
+
+1. Customer chooses product
+
+↓
+
+2. Customer enters location
+
+↓
+
+3. Grand Store calculates delivery
+
+↓
+
+4. Customer sees all available courier options
+
+↓
+
+5. Customer selects delivery
+
+↓
+
+6. Exact shipping cost is added
+
+↓
+
+7. Customer pays the complete Grand Store checkout amount
+
+↓
+
+8. Vendor receives order
+
+↓
+
+9. Vendor prints shipping label
+
+↓
+
+10. Courier collects
+
+↓
+
+11. Customer gets tracking
+
+↓
+
+12. Customer receives product
+
+This makes the system feel professional, transparent and simple, while the complexity of courier pricing, vendor locations, packaging, multiple shipments and international destinations happens behind the scenes.
+
+One important point: because Grand Store is dealing with alcohol, the developer should also make the shipping engine capable of applying country/state/province restrictions, age-verification requirements, prohibited destinations and courier-specific alcohol rules before allowing an order to be completed. Those rules vary significantly by destination and should be configured rather than assumed.
+

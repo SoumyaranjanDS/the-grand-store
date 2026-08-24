@@ -11,7 +11,7 @@ const Wallet = require('../models/Wallet');
 // @access  Private
 const addOrderItems = async (req, res) => {
   try {
-    const { quote, shippingAddress, paymentMethod } = req.body;
+    const { quote, shippingAddress, paymentMethod, isGift, giftRecipientName, giftMessage } = req.body;
 
     if (!quote || !quote.shipments || quote.shipments.length === 0) {
       return res.status(400).json({ message: 'Valid quote with shipments is required' });
@@ -63,6 +63,9 @@ const addOrderItems = async (req, res) => {
       user: req.user._id,
       shippingAddress,
       paymentMethod,
+      isGift: isGift || false,
+      giftRecipientName: giftRecipientName || "",
+      giftMessage: giftMessage || "",
       subTotal,
       shippingCost,
       vatAmount,
@@ -146,6 +149,34 @@ const addOrderItems = async (req, res) => {
     order.vendorPayables = vendorPayables;
 
     const createdOrder = await order.save();
+    
+    // === EVENT SOURCING: Log the initial sequence of events ===
+    const CheckoutEngine = require('../services/CheckoutEngine');
+    
+    await CheckoutEngine.appendEvent(createdOrder._id.toString(), 'CheckoutInitiated', {
+      customer: req.user._id,
+      items: allOrderItems
+    }, req.user._id);
+
+    await CheckoutEngine.appendEvent(createdOrder._id.toString(), 'DeliveryCalculated', {
+      shipments: quote.shipments,
+      totalShippingCost: shippingCost
+    }, req.user._id);
+
+    await CheckoutEngine.appendEvent(createdOrder._id.toString(), 'PaymentMethodSelected', {
+      method: paymentMethod
+    }, req.user._id);
+
+    await CheckoutEngine.appendEvent(createdOrder._id.toString(), 'OrderPlaced', {
+      orderId: createdOrder.orderId,
+      transactionId: createdOrder.transactionId,
+      totals: {
+        subTotal,
+        shippingCost,
+        vatAmount,
+        totalPrice: calculatedTotal
+      }
+    }, req.user._id);
 
     res.status(201).json(createdOrder);
   } catch (error) {
@@ -168,6 +199,13 @@ const processOrderPayment = async (orderId) => {
   order.paidAt = Date.now();
   order.paymentStatus = 'Paid';
   await order.save();
+  
+  // === EVENT SOURCING: Append PaymentVerified Event ===
+  const CheckoutEngine = require('../services/CheckoutEngine');
+  await CheckoutEngine.appendEvent(order._id.toString(), 'PaymentVerified', {
+    method: 'PayFast / Gateway',
+    timestamp: new Date()
+  }, null);
 
   // === GENERATE ACCOUNTING LEDGER ===
   const shopCodeDoc = await SystemCode.findOne({ code: 'SHP' });
@@ -296,12 +334,15 @@ const getVendorOrders = async (req, res) => {
       .populate('customerId', 'name email');
 
     // Attach items from the master order
-    const populatedShipments = await Promise.all(shipments.map(async (shp) => {
+    const populatedShipmentsRaw = await Promise.all(shipments.map(async (shp) => {
       const masterOrder = await Order.findById(shp.orderId);
-      let items = [];
-      if (masterOrder) {
-        items = masterOrder.orderItems.filter(item => item.vendorId && item.vendorId.toString() === req.user._id.toString());
+      
+      // === EVENT SOURCING: Filter out unapproved / unpaid orders ===
+      if (!masterOrder || !masterOrder.isPaid) {
+        return null;
       }
+
+      let items = masterOrder.orderItems.filter(item => item.vendorId && item.vendorId.toString() === req.user._id.toString());
       
       return {
         _id: shp._id,
@@ -318,6 +359,9 @@ const getVendorOrders = async (req, res) => {
         vendorTotal: items.reduce((acc, item) => acc + (item.price * item.quantity), 0)
       };
     }));
+
+    // Remove nulls (unpaid/unapproved orders)
+    const populatedShipments = populatedShipmentsRaw.filter(shp => shp !== null);
 
     res.json(populatedShipments);
   } catch (error) {

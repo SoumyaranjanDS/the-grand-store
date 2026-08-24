@@ -83,6 +83,7 @@ import AdminVendors from './features/admin/AdminVendors'
 import AdminExpertReviews from './features/admin/AdminExpertReviews'
 import AdminSettings from './features/admin/AdminSettings'
 import AdminFinancials from './features/admin/AdminFinancials'
+import AdminBankTransfers from './features/admin/AdminBankTransfers'
 import AdminAccessories from './features/admin/AdminAccessories'
 import AccessoriesPage from './features/shop/AccessoriesPage'
 import VendorMarketing from './features/vendor/VendorMarketing'
@@ -420,6 +421,7 @@ function App() {
           <Route path="auctions" element={<AdminAuctionPanel onNotify={showToast} />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="financials" element={<AdminFinancials />} />
+          <Route path="bank-transfers" element={<AdminBankTransfers />} />
         </Route>
         
         <Route path="/auction" element={<AuctionPage onNotify={showToast} />} />

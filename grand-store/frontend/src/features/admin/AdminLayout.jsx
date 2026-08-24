@@ -110,6 +110,9 @@ export default function AdminLayout() {
             <button onClick={() => handleNavigate('/admin/financials')} className={navItemClass('/admin/financials')}>
               <Wallet size={16} /> Financial Control
             </button>
+            <button onClick={() => handleNavigate('/admin/bank-transfers')} className={navItemClass('/admin/bank-transfers')}>
+              <Wallet size={16} /> Bank Transfers
+            </button>
             <button onClick={() => handleNavigate('/admin/settings')} className={navItemClass('/admin/settings')}>
               <Settings size={16} /> Platform Settings
             </button>

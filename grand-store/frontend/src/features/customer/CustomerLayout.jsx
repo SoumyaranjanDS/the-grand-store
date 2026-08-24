@@ -106,20 +106,6 @@ export default function CustomerLayout() {
           </button>
         </div>
       )}
-
-      {user?.role !== "vendor_active" && user?.role !== "admin" && (
-        <div className="mt-8 pt-8 border-t border-white/[0.05]">
-          <button
-            onClick={() => {
-              navigate("/vendor/onboarding");
-              setMobileMenuOpen(false);
-            }}
-            className="flex items-center gap-4 px-4 py-3 rounded-xl w-full text-[var(--color-ivory-muted)] hover:bg-[var(--color-gold)]/10 hover:text-gold-gradient transition-all text-left text-xs uppercase tracking-widest border border-transparent hover:border-[var(--color-gold)]/20"
-          >
-            <Building2 size={16} /> Become Vendor
-          </button>
-        </div>
-      )}
     </>
   );
 

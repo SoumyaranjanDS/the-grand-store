@@ -9,6 +9,12 @@ const platformSettingsSchema = new mongoose.Schema({
   eventCommissionPct: { type: Number, default: 10 },
   vatPct: { type: Number, default: 15 },
   gatewayFeePct: { type: Number, default: 2.5 },
+  bankDetails: {
+    bankName: { type: String, default: 'Standard Bank' },
+    accountName: { type: String, default: 'The Grand Store PTY LTD' },
+    accountNumber: { type: String, default: '0123456789' },
+    branchCode: { type: String, default: '051001' }
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model("PlatformSettings", platformSettingsSchema);

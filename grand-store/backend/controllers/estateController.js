@@ -27,8 +27,15 @@ exports.getEstate = async (req, res) => {
       .lean();
     if (!estate) return res.status(404).json({ message: 'Estate not found' });
 
-    // Also return this vendor's products from the shop
-    const products = await Product.find({ vendor: estate.vendorId._id }).lean();
+    // Also return this vendor's wine products from the shop
+    // Note: Vendor added products use the 'type' field, while seeded products might use 'category'
+    const products = await Product.find({ 
+      vendorId: estate.vendorId._id,
+      $or: [
+        { category: 'Wine' },
+        { type: { $regex: /^wine$/i } }
+      ]
+    }).lean();
 
     res.json({ estate, products });
   } catch (err) {
