@@ -100,7 +100,7 @@ app.use("/api/config", configRoutes);
 app.use("/api/trade-enquiries", require("./routes/tradeEnquiryRoutes"));
 app.use("/api/newsletter", newsletterRoutes);
 
-// Health check endpoint
+// Health check endpoint  
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "OK", message: "API is running" });
 });
