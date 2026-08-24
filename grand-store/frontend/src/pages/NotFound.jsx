@@ -18,29 +18,19 @@ export default function NotFound() {
           The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
           <Link to="/" className="flex items-center justify-center gap-2 border border-[#d8b76d] text-[#d8b76d] hover:bg-[#d8b76d] hover:text-black py-3 px-6 rounded-full transition-all">
             <ArrowLeft size={18} />
             Return Home
           </Link>
-          <Link to="/tools/wine-pairing" className="flex items-center justify-center gap-2 border border-white/20 text-white hover:border-white py-3 px-6 rounded-full transition-all">
+          <Link to="/shop" className="flex items-center justify-center gap-2 border border-white/20 text-white hover:border-white py-3 px-6 rounded-full transition-all">
             <Search size={18} />
-            Wine Pairing Tool
+            Shop All
           </Link>
-        </div>
-
-        <div className="border-t border-white/10 pt-8 mt-4">
-          <h3 className="text-sm uppercase tracking-widest text-gray-500 mb-6">Explore Our Collections</h3>
-          <div className="flex justify-center gap-6">
-            <Link to="/wine" className="flex flex-col items-center gap-2 text-gray-400 hover:text-[#d8b76d] transition-colors">
-              <Wine size={24} />
-              <span className="text-xs uppercase tracking-wider">Wines</span>
-            </Link>
-            <Link to="/whisky" className="flex flex-col items-center gap-2 text-gray-400 hover:text-[#d8b76d] transition-colors">
-              <GlassWater size={24} />
-              <span className="text-xs uppercase tracking-wider">Whiskies</span>
-            </Link>
-          </div>
+          <Link to="/shop?category=Accessories" className="flex items-center justify-center gap-2 border border-white/20 text-white hover:border-white py-3 px-6 rounded-full transition-all">
+            <Search size={18} />
+            Accessories
+          </Link>
         </div>
       </div>
     </div>
