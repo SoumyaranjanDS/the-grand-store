@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { Building2, Package, UploadCloud, CheckCircle2, AlertCircle, PlusCircle, User } from 'lucide-react';
 import { storeCategories } from '../../data';
+import DynamicIcon from '../../components/DynamicIcon';
 
 export default function AddProduct({ onNotify }) {
   const { user } = useAuth();
@@ -31,6 +32,23 @@ export default function AddProduct({ onNotify }) {
   
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  
+  const [attributes, setAttributes] = useState([]);
+
+  useEffect(() => {
+    const fetchAttributes = async () => {
+      try {
+        const res = await fetch('/api/attributes');
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setAttributes(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch attributes', err);
+      }
+    };
+    fetchAttributes();
+  }, []);
 
   if (!user || user.role !== 'vendor_active') {
     return (
@@ -347,20 +365,17 @@ export default function AddProduct({ onNotify }) {
                 <div className="grid grid-cols-1 mt-10">
                   <label className="text-xs uppercase tracking-widest text-[#e1bd70] mb-4">Flavor Profile (Whisky Finder)</label>
                   <div className="flex flex-wrap gap-4">
-                    {['smoky', 'rich', 'light', 'fruity'].map((flavor) => (
-                      <label key={flavor} className="flex items-center gap-2 cursor-pointer border border-white/10 px-4 py-2 rounded-full hover:border-[#e1bd70] transition-colors">
+                    {attributes.filter(a => a.type === 'flavor').map((flavor) => (
+                      <label key={flavor._id} className="flex items-center gap-2 cursor-pointer border border-white/10 px-4 py-2 rounded-full hover:border-[#e1bd70] transition-colors">
                         <input 
                           type="checkbox" 
-                          value={flavor} 
-                          checked={formData.flavorProfile.includes(flavor)} 
+                          value={flavor.value} 
+                          checked={formData.flavorProfile.includes(flavor.value)} 
                           onChange={handleFlavorProfileChange} 
                           className="w-4 h-4 text-[#d6a03f] bg-transparent border-white/20 rounded focus:ring-0 focus:ring-offset-0 cursor-pointer" 
                         />
-                        <span className="text-[var(--color-ivory)] capitalize">
-                          {flavor === 'smoky' ? 'Smoky & Peaty' : 
-                           flavor === 'rich' ? 'Rich & Sherried' : 
-                           flavor === 'light' ? 'Light & Floral' : 
-                           'Fruity & Spicy'}
+                        <span className="text-[var(--color-ivory)] capitalize flex items-center gap-1.5">
+                          <DynamicIcon name={flavor.icon} size={14} className="opacity-70" /> {flavor.name}
                         </span>
                       </label>
                     ))}
@@ -370,16 +385,18 @@ export default function AddProduct({ onNotify }) {
                 <div className="grid grid-cols-1 mt-10">
                   <label className="text-xs uppercase tracking-widest text-[#e1bd70] mb-4">Food Pairing (Wine Pairing Tool)</label>
                   <div className="flex flex-wrap gap-4">
-                    {['beef', 'seafood', 'poultry', 'vegetarian', 'cheese'].map((food) => (
-                      <label key={food} className="flex items-center gap-2 cursor-pointer border border-white/10 px-4 py-2 rounded-full hover:border-[#e1bd70] transition-colors">
+                    {attributes.filter(a => a.type === 'pairing').map((food) => (
+                      <label key={food._id} className="flex items-center gap-2 cursor-pointer border border-white/10 px-4 py-2 rounded-full hover:border-[#e1bd70] transition-colors">
                         <input 
                           type="checkbox" 
-                          value={food} 
-                          checked={formData.foodPairing.includes(food)} 
+                          value={food.value} 
+                          checked={formData.foodPairing.includes(food.value)} 
                           onChange={handleFoodPairingChange} 
                           className="w-4 h-4 text-[#d6a03f] bg-transparent border-white/20 rounded focus:ring-0 focus:ring-offset-0 cursor-pointer" 
                         />
-                        <span className="text-[var(--color-ivory)] capitalize">{food === 'beef' ? 'Beef & Steak' : food === 'poultry' ? 'Poultry & Pork' : food}</span>
+                        <span className="text-[var(--color-ivory)] capitalize flex items-center gap-1.5">
+                          <DynamicIcon name={food.icon} size={14} className="opacity-70" /> {food.name}
+                        </span>
                       </label>
                     ))}
                   </div>

@@ -90,6 +90,25 @@ exports.rejectPayment = async (req, res) => {
     order.paymentStatus = 'Failed';
     await order.save();
 
+    try {
+      const { sendEmail } = require('../utils/emailService');
+      const { genericNotificationTemplate } = require('../utils/emailTemplates');
+      const User = require('../models/User');
+      const user = await User.findById(order.user);
+      if (user) {
+        await sendEmail({
+          to: user.email,
+          subject: `Payment Rejected - Order #${order._id}`,
+          html: genericNotificationTemplate(
+            'Payment Rejected',
+            `Your bank transfer payment for Order #${order._id} was rejected. Reason: ${reason}. Please contact support or try a different payment method.`
+          )
+        });
+      }
+    } catch (err) {
+      console.error('Failed to send rejection email:', err);
+    }
+
     res.json({ message: 'Payment rejected' });
   } catch (error) {
     console.error('Error rejecting payment:', error);

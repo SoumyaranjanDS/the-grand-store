@@ -12,6 +12,7 @@ import {
   Gavel,
   Building2,
   LogOut,
+  Trash2,
 } from "lucide-react";
 
 export default function CustomerLayout() {
@@ -23,6 +24,28 @@ export default function CustomerLayout() {
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  const handleDeleteAccount = async () => {
+    if (window.confirm("Are you sure you want to permanently delete your account? This action cannot be undone.")) {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/auth/profile`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${user.token}`
+          }
+        });
+        if (response.ok) {
+          logout();
+          navigate("/");
+        } else {
+          alert("Failed to delete account");
+        }
+      } catch (error) {
+        console.error("Error deleting account:", error);
+        alert("An error occurred while deleting your account");
+      }
+    }
   };
 
   const NavLinks = () => (
@@ -174,12 +197,18 @@ export default function CustomerLayout() {
           <nav className="flex flex-col flex-1 p-6 gap-2 mt-4">
             <NavLinks />
           </nav>
-          <div className="p-6">
+          <div className="p-6 flex flex-col gap-3">
             <button
               onClick={handleLogout}
               className="flex items-center justify-center gap-3 px-4 py-3 rounded-xl w-full text-red-400/70 hover:bg-red-500/10 hover:text-red-400 transition-all text-xs uppercase tracking-widest border border-transparent hover:border-red-500/20"
             >
               <LogOut size={16} /> Sign Out
+            </button>
+            <button
+              onClick={handleDeleteAccount}
+              className="flex items-center justify-center gap-3 px-4 py-3 rounded-xl w-full text-red-700/70 hover:bg-red-900/20 hover:text-red-500 transition-all text-xs uppercase tracking-widest border border-transparent hover:border-red-900/30"
+            >
+              <Trash2 size={16} /> Delete Account
             </button>
           </div>
         </aside>
@@ -213,12 +242,18 @@ export default function CustomerLayout() {
                 <nav className="flex flex-col flex-1 p-6 gap-2">
                   <NavLinks />
                 </nav>
-                <div className="p-6 border-t border-white/5">
+                <div className="p-6 border-t border-white/5 flex flex-col gap-3">
                   <button
                     onClick={handleLogout}
                     className="flex items-center justify-center gap-3 px-4 py-3 rounded-xl w-full text-red-400/70 bg-red-500/5 hover:bg-red-500/10 hover:text-red-400 transition-all text-xs uppercase tracking-widest border border-red-500/10 hover:border-red-500/20"
                   >
                     <LogOut size={16} /> Sign Out
+                  </button>
+                  <button
+                    onClick={handleDeleteAccount}
+                    className="flex items-center justify-center gap-3 px-4 py-3 rounded-xl w-full text-red-700/70 bg-red-900/10 hover:bg-red-900/20 hover:text-red-500 transition-all text-xs uppercase tracking-widest border border-red-900/20 hover:border-red-900/30"
+                  >
+                    <Trash2 size={16} /> Delete Account
                   </button>
                 </div>
               </motion.div>

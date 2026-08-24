@@ -127,7 +127,7 @@ export default function LoginPage() {
             <p className="text-sm text-[var(--color-ivory-muted)]">
               Not a member yet?{' '}
               <Link to={`/register${searchParams.get('redirect') ? `?redirect=${searchParams.get('redirect')}` : ''}`} className="font-bold text-[#d8b76d] hover:text-white transition-colors inline-flex items-center gap-1">
-                Request an invitation <ArrowRight size={14} />
+                Create an Account <ArrowRight size={14} />
               </Link>
             </p>
           </div>

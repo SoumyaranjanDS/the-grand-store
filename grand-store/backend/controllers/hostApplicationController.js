@@ -5,42 +5,15 @@ const HostApplication = require('../models/HostApplication');
 const User            = require('../models/User');
 
 // ── Email helper ──────────────────────────────────────────────────────────────
+const { sendEmail } = require('../utils/emailService');
+const { hostApplicationApprovalTemplate, hostApplicationRejectionTemplate } = require('../utils/emailTemplates');
+
 const sendCredentialsEmail = async (to, name, username, password, type) => {
-  // Only attempt if SMTP env vars are present
-  if (!process.env.SMTP_HOST) return;
   try {
-    const transporter = nodemailer.createTransport({
-      host:   process.env.SMTP_HOST,
-      port:   Number(process.env.SMTP_PORT) || 587,
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
-
-    const portalPath = type === 'auction' ? '/host/auction' : '/host/event';
-    const featureLabel = type === 'auction' ? 'Auction Host' : 'Event Host';
-
-    await transporter.sendMail({
-      from:    `"The Grand Store" <${process.env.SMTP_USER}>`,
+    await sendEmail({
       to,
-      subject: `Your Grand Store ${featureLabel} credentials`,
-      html: `
-        <h2>Welcome to The Grand Store, ${name}!</h2>
-        <p>Your application has been approved. Here are your login credentials:</p>
-        <table>
-          <tr><td><strong>Username (Email):</strong></td><td>${username}</td></tr>
-          <tr><td><strong>Temporary Password:</strong></td><td>${password}</td></tr>
-        </table>
-        <p>Log in at: <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login">
-          ${process.env.FRONTEND_URL || 'http://localhost:5173'}/login
-        </a></p>
-        <p>Once logged in you will be taken to your ${featureLabel} portal at <code>${portalPath}</code>.</p>
-        <p>Please change your password after first login.</p>
-        <hr/>
-        <small>The Grand Store — Wine Estate Network</small>
-      `,
+      subject: `Your Grand Store ${type === 'auction' ? 'Auction' : 'Event'} Host credentials`,
+      html: hostApplicationApprovalTemplate(name, username, password, type)
     });
     return true;
   } catch (err) {
@@ -178,6 +151,18 @@ const rejectApplication = async (req, res) => {
     app.rejectedAt     = new Date();
     app.rejectedReason = reason || 'No reason provided';
     await app.save();
+
+    // Send Rejection Email
+    try {
+      await sendEmail({
+        to: app.applicantEmail,
+        subject: `Update on your ${app.type === 'auction' ? 'Auction' : 'Event'} Host Application`,
+        html: hostApplicationRejectionTemplate(app.applicantName, app.type, app.rejectedReason)
+      });
+    } catch (err) {
+      console.error('Failed to send application rejection email:', err);
+    }
+
     res.json({ message: 'Application rejected.', application: app });
   } catch (err) {
     res.status(500).json({ message: err.message });

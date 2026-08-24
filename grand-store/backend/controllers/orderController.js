@@ -178,6 +178,30 @@ const addOrderItems = async (req, res) => {
       }
     }, req.user._id);
 
+    // Send emails based on payment method
+    try {
+      const { sendEmail } = require('../utils/emailService');
+      const { bankTransferInstructionsTemplate } = require('../utils/emailTemplates');
+      const User = require('../models/User');
+      const userDoc = await User.findById(req.user._id);
+
+      if (userDoc && paymentMethod === 'Bank Transfer') {
+        const bankDetails = {
+          bankName: 'FNB',
+          accountName: 'The Grand Store',
+          accountNumber: '62000000000',
+          branchCode: '250655'
+        };
+        await sendEmail({
+          to: userDoc.email,
+          subject: `Payment Required - Order #${createdOrder._id}`,
+          html: bankTransferInstructionsTemplate(createdOrder, bankDetails)
+        });
+      }
+    } catch (err) {
+      console.error('Failed to send bank transfer email:', err);
+    }
+
     res.status(201).json(createdOrder);
   } catch (error) {
     console.error('Add Order Error:', error);
@@ -206,6 +230,24 @@ const processOrderPayment = async (orderId) => {
     method: 'PayFast / Gateway',
     timestamp: new Date()
   }, null);
+
+  // Send Order Confirmation Email
+  try {
+    const { sendEmail } = require('../utils/emailService');
+    const { orderConfirmationTemplate } = require('../utils/emailTemplates');
+    // We need user email, so let's populate user if not already
+    const User = require('../models/User');
+    const user = await User.findById(order.user);
+    if (user) {
+      await sendEmail({
+        to: user.email,
+        subject: `Order Confirmation #${order._id}`,
+        html: orderConfirmationTemplate(order)
+      });
+    }
+  } catch (err) {
+    console.error('Failed to send order confirmation email:', err);
+  }
 
   // === GENERATE ACCOUNTING LEDGER ===
   const shopCodeDoc = await SystemCode.findOne({ code: 'SHP' });

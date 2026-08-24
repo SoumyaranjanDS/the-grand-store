@@ -19,6 +19,7 @@ import TastingCampaign from './features/home/components/TastingCampaign'
 import TequilaShowcase from './features/home/components/TequilaShowcase'
 import BrandyShowcase from './features/home/components/BrandyShowcase'
 import PrivateCollection from './features/home/components/PrivateCollection'
+import EventAdvertisements from './features/home/components/EventAdvertisements'
 import PartnerDestinations from './features/home/components/PartnerDestinations'
 import WhyChooseUs from './features/home/components/WhyChooseUs'
 import Testimonials from './features/home/components/Testimonials'
@@ -86,6 +87,8 @@ import AdminSettings from './features/admin/AdminSettings'
 import AdminFinancials from './features/admin/AdminFinancials'
 import AdminBankTransfers from './features/admin/AdminBankTransfers'
 import AdminAccessories from './features/admin/AdminAccessories'
+import AdminTestimonials from './features/admin/AdminTestimonials'
+import AdminAttributes from './features/admin/AdminAttributes'
 import AccessoriesPage from './features/shop/AccessoriesPage'
 import VendorMarketing from './features/vendor/VendorMarketing'
 import VendorAcademy from './features/vendor/VendorAcademy'
@@ -97,6 +100,9 @@ import VendorPaymentGate from './features/vendor/VendorPaymentGate'
 import CommunityPage from './pages/CommunityPage'
 import WinePairingTool from './features/tools/WinePairingTool'
 import WhiskyFinder from './features/tools/WhiskyFinder'
+import GlossaryPage from './features/pages/GlossaryPage'
+import AdminGlossary from './features/admin/AdminGlossary'
+import AdminNewsletter from './features/admin/AdminNewsletter'
 
 // Host Applications
 import HostAuctionPage from './features/hosting/HostAuctionPage'
@@ -306,6 +312,7 @@ function App() {
         <Route path="/winefarm/*" element={<WineFarmPage />} />
         <Route path="/wine-farm/*" element={<Navigate to="/winefarm" replace />} />
         <Route path="/vendor-portal" element={<VendorPortalPage />} />
+        <Route path="/glossary" element={<GlossaryPage />} />
         
         <Route path="/trade" element={<TradeLayout />}>
           <Route index element={<TradePage />} />
@@ -325,6 +332,7 @@ function App() {
             <TequilaShowcase onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />
             <BrandyShowcase onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />
             <PrivateCollection />
+            <EventAdvertisements />
             <PartnerDestinations />
             <WhyChooseUs />
             <Testimonials />
@@ -424,11 +432,15 @@ function App() {
           <Route path="vendors" element={<AdminVendors />} />
           <Route path="expert-reviews" element={<AdminExpertReviews />} />
           <Route path="accessories" element={<AdminAccessories />} />
+          <Route path="testimonials" element={<AdminTestimonials />} />
+          <Route path="attributes" element={<AdminAttributes />} />
           <Route path="host-applications" element={<AdminHostApplications />} />
           <Route path="auctions" element={<AdminAuctionPanel onNotify={showToast} />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="financials" element={<AdminFinancials />} />
           <Route path="bank-transfers" element={<AdminBankTransfers />} />
+          <Route path="glossary" element={<AdminGlossary />} />
+          <Route path="newsletter" element={<AdminNewsletter />} />
         </Route>
         
         <Route path="/auction" element={<AuctionPage onNotify={showToast} />} />

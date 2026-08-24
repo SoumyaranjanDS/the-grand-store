@@ -4,12 +4,32 @@ import { Link } from 'react-router-dom'
 export default function Footer() {
   const [newsletterStatus, setNewsletterStatus] = useState('')
 
-  const handleNewsletterSignup = (event) => {
+  const handleNewsletterSignup = async (event) => {
     event.preventDefault()
     const form = event.currentTarget
     const email = new FormData(form).get('email')
-    setNewsletterStatus(`Thank you — updates will be sent to ${email}.`)
-    form.reset()
+    
+    try {
+      setNewsletterStatus('Subscribing...')
+      const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/newsletter/subscribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      })
+      
+      const data = await response.json()
+      
+      if (response.ok) {
+        setNewsletterStatus(`Thank you — updates will be sent to ${email}.`)
+        form.reset()
+      } else {
+        setNewsletterStatus(data.message || 'Subscription failed. Please try again.')
+      }
+    } catch (error) {
+      setNewsletterStatus('Network error. Please try again later.')
+    }
   }
 
   return (
@@ -48,7 +68,7 @@ export default function Footer() {
           <Link className="block w-fit m-[0_0_14px] lg:m-[0_0_17px] text-[#f2ede4] font-serif text-[16px] lg:text-[17px] leading-[1.15] transition-all duration-[150ms] hover:text-[#e1bd70] hover:translate-x-[3px]" to="/tools/wine-pairing">Wine Pairing Tool</Link>
           <Link className="block w-fit m-[0_0_14px] lg:m-[0_0_17px] text-[#f2ede4] font-serif text-[16px] lg:text-[17px] leading-[1.15] transition-all duration-[150ms] hover:text-[#e1bd70] hover:translate-x-[3px]" to="/tools/whisky-finder">Whisky Finder</Link>
           <Link className="block w-fit m-[0_0_14px] lg:m-[0_0_17px] text-[#f2ede4] font-serif text-[16px] lg:text-[17px] leading-[1.15] transition-all duration-[150ms] hover:text-[#e1bd70] hover:translate-x-[3px]" to="/winefarm">Join Wine Farm</Link>
-          <a className="block w-fit m-[0_0_14px] lg:m-[0_0_17px] text-[#f2ede4] font-serif text-[16px] lg:text-[17px] leading-[1.15] transition-all duration-[150ms] hover:text-[#e1bd70] hover:translate-x-[3px]" href="https://grandstore.co.za/glossary" target="_blank" rel="noopener noreferrer">Glossary</a>
+          <Link className="block w-fit m-[0_0_14px] lg:m-[0_0_17px] text-[#f2ede4] font-serif text-[16px] lg:text-[17px] leading-[1.15] transition-all duration-[150ms] hover:text-[#e1bd70] hover:translate-x-[3px]" to="/glossary">Glossary</Link>
         </div>
         <div className="col-span-1 md:col-span-2 lg:col-span-1 w-full flex flex-col">
           <h3 className="m-[0_0_20px] lg:m-[0_0_28px] pb-[13px] lg:pb-[18px] border-b border-[#d99d39]/80 text-[#d99d39] font-serif text-[23px] lg:text-[25px] font-medium">Newsletter</h3>
