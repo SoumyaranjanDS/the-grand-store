@@ -108,10 +108,12 @@ export default function Testimonials() {
       >
         <div className="flex w-max gap-5 animate-[marquee_38s_linear_infinite] group-hover:[animation-play-state:paused] will-change-transform px-4">
           {marqueeReviews.map((item, index) => {
-            const initials = item.name
+            const safeName = item.name || 'Client'
+            const initials = safeName
               .split(' ')
-              .map((n) => n[0])
+              .map((n) => n ? n[0] : '')
               .join('')
+            const ratingCount = Math.max(1, Math.min(5, Number(item.rating) || 5))
 
             return (
               <article 
@@ -130,7 +132,7 @@ export default function Testimonials() {
                   {/* Rating & Tag */}
                   <div className="flex items-center justify-between gap-3 mb-3 relative z-10">
                     <div className="flex text-[#f0cf76] gap-0.5">
-                      {[...Array(item.rating)].map((_, i) => (
+                      {[...Array(ratingCount)].map((_, i) => (
                         <Star key={i} size={14} fill="#f0cf76" stroke="none" />
                       ))}
                     </div>
@@ -141,7 +143,7 @@ export default function Testimonials() {
 
                   {/* Quote Text */}
                   <p className="font-serif text-[16px] md:text-[18px] text-[#f4eee3] leading-[1.6] font-normal italic relative z-10 m-0 my-3 break-words min-h-[88px]">
-                    “{item.text}”
+                    “{item.text || item.quote || ''}”
                   </p>
                 </div>
 
@@ -166,7 +168,7 @@ export default function Testimonials() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-serif text-base md:text-[18px] font-medium text-[#eee8dd] truncate">
-                      {item.name}
+                      {safeName}
                     </div>
                     <div className="text-xs uppercase tracking-widest text-[#918a7f] mt-0.5 flex items-center gap-1.5">
                       <span>{item.location}</span>

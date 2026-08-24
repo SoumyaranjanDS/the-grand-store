@@ -67,7 +67,14 @@ export default function TradePage() {
     sections.forEach((section) => observer.observe(section))
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const heroContext = gsap.context(() => {
+    const mm = gsap.matchMedia()
+    
+    mm.add({
+      isDesktop: '(min-width: 841px)',
+      isMobile: '(max-width: 840px)'
+    }, (context) => {
+      let { isDesktop } = context.conditions
+
       if (reduceMotion) {
         gsap.set('[data-hero-reveal], [data-trade-truck], [data-trade-phone]', { clearProps: 'all' })
         return
@@ -77,7 +84,17 @@ export default function TradePage() {
       intro
         .fromTo('.trade-hero-bg-image', { scale: 1.1 }, { scale: 1.02, duration: 1.8 })
         .fromTo('[data-hero-reveal]', { y: 28 }, { y: 0, duration: .72, stagger: .08 }, .08)
-        .fromTo('[data-trade-phone]', { x: -42, y: 28, rotation: -2 }, { x: 0, y: 0, rotation: 0, duration: 1.15, ease: 'back.out(1.18)' }, .58)
+        
+      if (isDesktop) {
+        intro.fromTo(
+          '[data-trade-truck]',
+          { x: -72, y: 32, scale: .92, opacity: 0 },
+          { x: 0, y: 0, scale: 1, opacity: 1, duration: 1.2, ease: 'power3.out' },
+          .38,
+        )
+      }
+      
+      intro.fromTo('[data-trade-phone]', { x: -42, y: 28, rotation: -2 }, { x: 0, y: 0, rotation: 0, duration: 1.15, ease: 'back.out(1.18)' }, .58)
 
       gsap.to('[data-trade-phone]', {
         y: -10,
@@ -101,16 +118,18 @@ export default function TradePage() {
         },
       })
 
-      gsap.to('[data-trade-truck]', {
-        xPercent: 24,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: heroRef.current,
-          start: 'top top',
-          end: 'bottom top',
-          scrub: 1,
-        },
-      })
+      if (isDesktop) {
+        gsap.to('[data-trade-truck]', {
+          xPercent: 24,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: heroRef.current,
+            start: 'top top',
+            end: 'bottom top',
+            scrub: 1,
+          },
+        })
+      }
 
       gsap.to('[data-trade-phone]', {
         xPercent: 0,
@@ -127,7 +146,7 @@ export default function TradePage() {
 
     return () => {
       observer.disconnect()
-      heroContext.revert()
+      mm.revert()
     }
   }, [])
 

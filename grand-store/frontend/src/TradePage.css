@@ -154,10 +154,39 @@
   will-change: transform;
 }
 
+.trade-hero-truck::before,
+.trade-hero-truck::after {
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  content: '';
+}
+
+.trade-hero-truck::before {
+  inset: 4% -5% -12%;
+  background: radial-gradient(
+    ellipse at 72% 70%,
+    rgba(74, 174, 235, .28) 0%,
+    rgba(20, 91, 143, .16) 38%,
+    transparent 72%
+  );
+  filter: blur(13px);
+}
+
+.trade-hero-truck::after {
+  right: -2%;
+  bottom: -3%;
+  left: 8%;
+  height: 20%;
+  background: radial-gradient(ellipse, rgba(0, 7, 18, .9), transparent 72%);
+  filter: blur(8px);
+}
+
 .trade-hero-truck-image {
   display: block;
   width: 100%;
   height: auto;
+  filter: saturate(1.08) contrast(1.08);
   -webkit-mask: url('/assets/trade/grand-store-trade-truck-clean-v3.png') center / 100% 100% no-repeat;
   mask: url('/assets/trade/grand-store-trade-truck-clean-v3.png') center / 100% 100% no-repeat;
 }
@@ -992,10 +1021,11 @@
   }
 
   .trade-hero-truck {
-    right: 11vw;
-    bottom: 5px;
-    width: min(68vw, 590px);
-    opacity: .48;
+    right: 2vw;
+    bottom: 9px;
+    width: min(82vw, 650px);
+    opacity: .9;
+    filter: brightness(1.08) contrast(1.1) saturate(1.1) drop-shadow(0 24px 26px rgba(0, 8, 18, .62));
   }
 
   .trade-hero-phone {
@@ -1135,17 +1165,39 @@
   }
 
   .trade-hero-truck {
-    right: 86px;
-    bottom: 2px;
-    width: 430px;
-    opacity: .27;
+    right: -2vw;
+    bottom: 10px;
+    width: min(96vw, 520px);
+    opacity: .96;
+    filter: brightness(1.13) contrast(1.14) saturate(1.18) drop-shadow(0 24px 24px rgba(0, 5, 14, .72));
+  }
+
+  .trade-hero-truck::before {
+    inset: -2% -8% -18%;
+    background: radial-gradient(
+      ellipse at 72% 68%,
+      rgba(99, 195, 250, .38) 0%,
+      rgba(23, 101, 157, .2) 40%,
+      transparent 72%
+    );
+    filter: blur(10px);
+  }
+
+  .trade-hero-truck::after {
+    bottom: -5%;
+    height: 24%;
+    filter: blur(7px);
+  }
+
+  .trade-hero-truck-image {
+    filter: saturate(1.16) contrast(1.1);
   }
 
   .trade-hero-phone {
-    right: -39px;
-    bottom: 36px;
-    width: 132px;
-    opacity: .82;
+    right: -46px;
+    bottom: 42px;
+    width: clamp(112px, 31vw, 132px);
+    opacity: .9;
   }
 
   .trade-scene-orbit {

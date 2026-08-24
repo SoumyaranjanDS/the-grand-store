@@ -135,7 +135,8 @@
 
 @media (max-width: 1180px) {
   .trade-nav-inner {
-    grid-template-columns: 1fr auto auto;
+    display: flex;
+    justify-content: space-between;
   }
 
   .trade-desktop-enquiry {

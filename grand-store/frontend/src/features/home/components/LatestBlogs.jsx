@@ -65,7 +65,6 @@ export default function LatestBlogs() {
             </h2>
           </div>
         </header>
-
         <div>
           {blogPosts.map((post, index) => {
             const imageFirst = index % 2 === 0
@@ -80,9 +79,9 @@ export default function LatestBlogs() {
                   to={`/blog/${post.slug}`}
                   aria-label={`Read ${post.title}`}
                 >
-                  <div className="h-[215px] overflow-hidden sm:h-[245px] lg:h-[280px]">
+                  <div className="w-full overflow-hidden">
                     <img
-                      className="h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover/story:scale-[1.03]"
+                      className="h-auto w-full object-cover object-center transition-transform duration-700 ease-out group-hover/story:scale-[1.03]"
                       src={post.image}
                       alt={post.title}
                       loading="lazy"
