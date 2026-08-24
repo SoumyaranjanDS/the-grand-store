@@ -108,7 +108,6 @@ import ReferEarnPage from './pages/ReferEarnPage'
 import GlossaryPage from './pages/GlossaryPage'
 import WinePairingTool from './features/tools/WinePairingTool'
 import WhiskyFinder from './features/tools/WhiskyFinder'
-import GlossaryPage from './features/pages/GlossaryPage'
 import AdminGlossary from './features/admin/AdminGlossary'
 import AdminNewsletter from './features/admin/AdminNewsletter'
 
@@ -325,7 +324,6 @@ function App() {
         <Route path="/winefarm/*" element={<WineFarmPage />} />
         <Route path="/wine-farm/*" element={<Navigate to="/winefarm" replace />} />
         <Route path="/vendor-portal" element={<VendorPortalPage />} />
-        <Route path="/glossary" element={<GlossaryPage />} />
         
         <Route path="/trade" element={<TradeLayout />}>
           <Route index element={<TradePage />} />
