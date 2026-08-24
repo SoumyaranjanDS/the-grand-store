@@ -4781,8 +4781,13 @@ video {
   }
 
   .announcement-inner {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
     min-height: 31px;
     font-size: 9px;
+    white-space: nowrap;
+    padding: 0 10px;
   }
 
   .announcement-inner p svg {
@@ -9489,7 +9494,8 @@ video {
   max-height: 500px;
   margin-bottom: 32px;
   border: 1px solid rgba(225, 189, 112, 0.18);
-  object-fit: cover;
+  object-fit: contain;
+  background-color: #0b0a08;
 }
 
 .supplied-blog-article>p,

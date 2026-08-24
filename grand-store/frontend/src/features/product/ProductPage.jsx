@@ -135,29 +135,36 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
   const productSchema = {
     "@context": "https://schema.org",
     "@type": "Product",
-    "name": product.fullName || product.name,
-    "image": product.image,
-    "description": product.description || `Buy ${product.name} at The Grand Store.`,
-    "sku": product.sku || product._id,
-    "brand": {
+    name: product.fullName || product.name,
+    image: product.image,
+    description:
+      product.description || `Buy ${product.name} at The Grand Store.`,
+    sku: product.sku || product._id,
+    brand: {
       "@type": "Brand",
-      "name": product.brand || "The Grand Store"
+      name: product.brand || "The Grand Store",
     },
-    "offers": {
+    offers: {
       "@type": "Offer",
-      "url": typeof window !== 'undefined' ? window.location.href : '',
-      "priceCurrency": "ZAR",
-      "price": product.price,
-      "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-      "itemCondition": "https://schema.org/NewCondition"
-    }
+      url: typeof window !== "undefined" ? window.location.href : "",
+      priceCurrency: "ZAR",
+      price: product.price,
+      availability:
+        product.stock > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+      itemCondition: "https://schema.org/NewCondition",
+    },
   };
 
   return (
     <main className="min-h-screen bg-[#0a0907] pt-16 pb-12 px-4 md:px-8 lg:px-12 text-[#eee8dd] font-sans">
-      <SEO 
+      <SEO
         title={product.fullName || product.name}
-        description={product.description?.substring(0, 160) || `Buy ${product.name} at The Grand Store.`}
+        description={
+          product.description?.substring(0, 160) ||
+          `Buy ${product.name} at The Grand Store.`
+        }
         image={product.image}
         url={`/product/${product.slug || product._id}`}
         type="product"
@@ -325,7 +332,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             </div>
 
             <button
-              className="flex-1 min-w-[140px] border border-[#eee8dd] bg-transparent text-[#eee8dd] hover:bg-[#eee8dd] hover:text-[#0a0907] transition-colors font-bold uppercase tracking-widest text-[11px] h-[52px]"
+              className="flex-1 min-w-[140px] border border-[#eee8dd] bg-transparent text-[#eee8dd] cursor-pointer font-bold uppercase tracking-widest text-[11px] h-[52px]"
               type="button"
               onClick={() => onAdd && onAdd(product, quantity, selectedOption)}
             >
@@ -333,7 +340,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             </button>
 
             <button
-              className="flex-1 min-w-[140px] bg-[#222] hover:bg-[#333] border border-[#222] text-[#eee8dd] transition-colors font-bold uppercase tracking-widest text-[11px] h-[52px]"
+              className="flex-1 min-w-[140px] bg-[#222] hover:bg-[#333] border border-[#222] text-[#eee8dd] transition-colors font-bold uppercase tracking-widest text-[11px] h-13 cursor-pointer"
               type="button"
               onClick={() => {
                 if (onAdd) onAdd(product, quantity, selectedOption);
@@ -661,23 +668,27 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
 
       {/* Certificate Modal */}
       {showCertificate && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-8 bg-black/90 backdrop-blur-md overflow-y-auto" onClick={() => setShowCertificate(false)}>
-          <div className="relative w-full max-w-2xl mx-auto flex flex-col items-center animate-in fade-in zoom-in-95 duration-300 my-auto" onClick={(e) => e.stopPropagation()}>
-            <button 
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-8 bg-black/90 backdrop-blur-md overflow-y-auto"
+          onClick={() => setShowCertificate(false)}
+        >
+          <div
+            className="relative w-full max-w-2xl mx-auto flex flex-col items-center animate-in fade-in zoom-in-95 duration-300 my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
               onClick={() => setShowCertificate(false)}
               className="absolute -top-12 right-0 text-white/50 hover:text-white transition-colors z-10"
               title="Close Certificate"
             >
               <X size={28} />
             </button>
-            
+
             {/* Exact Image Certificate Layout */}
             <div className="w-full bg-[#1a1a1a] p-2 md:p-3 shadow-2xl">
               <div className="w-full bg-white relative p-3 md:p-5 lg:p-6 flex justify-center">
-                
                 {/* Inner Gold Border */}
                 <div className="w-full border-[3px] border-[#d4af37] relative p-6 md:p-8 lg:p-10 flex flex-col items-center justify-center min-h-[300px]">
-                  
                   {/* Corners */}
                   <CornerFlourish className="absolute top-0 left-0 w-16 md:w-20 h-16 md:h-20 text-[#e0e0e0] transform" />
                   <CornerFlourish className="absolute top-0 right-0 w-16 md:w-20 h-16 md:h-20 text-[#e0e0e0] transform scale-x-[-1]" />
@@ -689,13 +700,21 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
                     <h2 className="text-xl md:text-2xl lg:text-3xl font-bold font-serif text-[#333] mb-6 md:mb-8 tracking-wide">
                       Your Satisfaction is 100% Guaranteed!!
                     </h2>
-                    
+
                     <div className="text-[13px] md:text-[15px] lg:text-[17px] font-serif leading-[1.6] text-[#444] mb-6 md:mb-8 max-w-xl">
                       <p className="mb-4 md:mb-5">
-                        Our reputation and success of our company rests on<br className="hidden md:block"/> making you a Happy Customer today and forever!<br className="hidden md:block"/> All we want is for you have a great shopping<br className="hidden md:block"/> experience every time you Shop with us.
+                        Our reputation and success of our company rests on
+                        <br className="hidden md:block" /> making you a Happy
+                        Customer today and forever!
+                        <br className="hidden md:block" /> All we want is for
+                        you have a great shopping
+                        <br className="hidden md:block" /> experience every time
+                        you Shop with us.
                       </p>
                       <p>
-                        You simply can't go wrong shopping at Grandstore!<br className="hidden md:block"/> We will always put you right. And we mean ALWAYS!
+                        You simply can't go wrong shopping at Grandstore!
+                        <br className="hidden md:block" /> We will always put
+                        you right. And we mean ALWAYS!
                       </p>
                     </div>
 
@@ -714,11 +733,24 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
 }
 
 const CornerFlourish = ({ className }) => (
-  <svg className={className} width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M0 0 C 40 0 75 15 95 40 C 115 65 115 100 115 120 C 115 85 95 55 65 35 C 35 15 10 5 0 5 Z" fill="#e5e7eb"/>
-    <path d="M0 20 C 25 20 50 35 65 55 C 80 75 80 100 80 120 C 80 95 65 75 50 60 C 35 45 15 35 0 35 Z" fill="#e5e7eb"/>
-    <circle cx="105" cy="105" r="6" fill="#e5e7eb"/>
-    <circle cx="90" cy="112" r="3.5" fill="#e5e7eb"/>
-    <circle cx="112" cy="90" r="3.5" fill="#e5e7eb"/>
+  <svg
+    className={className}
+    width="120"
+    height="120"
+    viewBox="0 0 120 120"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M0 0 C 40 0 75 15 95 40 C 115 65 115 100 115 120 C 115 85 95 55 65 35 C 35 15 10 5 0 5 Z"
+      fill="#e5e7eb"
+    />
+    <path
+      d="M0 20 C 25 20 50 35 65 55 C 80 75 80 100 80 120 C 80 95 65 75 50 60 C 35 45 15 35 0 35 Z"
+      fill="#e5e7eb"
+    />
+    <circle cx="105" cy="105" r="6" fill="#e5e7eb" />
+    <circle cx="90" cy="112" r="3.5" fill="#e5e7eb" />
+    <circle cx="112" cy="90" r="3.5" fill="#e5e7eb" />
   </svg>
 );

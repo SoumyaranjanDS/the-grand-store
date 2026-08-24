@@ -31,6 +31,15 @@ const registerUser = async (req, res) => {
     });
 
     if (user) {
+      // Send welcome email (non-blocking)
+      const { sendEmail } = require('../utils/emailService');
+      const { welcomeEmailTemplate } = require('../utils/emailTemplates');
+      sendEmail({
+        to: user.email,
+        subject: 'Welcome to The Grand Store',
+        html: welcomeEmailTemplate(user.name)
+      }).catch(err => console.error('Failed to send welcome email:', err));
+
       res.status(201).json({
         _id: user._id,
         name: user.name,
@@ -134,9 +143,30 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
+// @desc    Delete user profile
+// @route   DELETE /api/auth/profile
+// @access  Private
+const deleteUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Perform the deletion
+    await User.findByIdAndDelete(req.user._id);
+    
+    res.json({ message: 'User profile successfully deleted' });
+  } catch (error) {
+    console.error('Error deleting user profile:', error);
+    res.status(500).json({ message: 'Server error while deleting profile' });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   getUserProfile,
   updateUserProfile,
+  deleteUserProfile,
 };

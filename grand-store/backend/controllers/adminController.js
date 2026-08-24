@@ -138,6 +138,33 @@ const updateVendorStatus = async (req, res) => {
       await user.save();
     }
 
+    // Send email notification
+    try {
+      const { sendEmail } = require('../utils/emailService');
+      const { vendorApprovalTemplate, genericNotificationTemplate } = require('../utils/emailTemplates');
+      
+      if (user) {
+        if (status === "approved") {
+          await sendEmail({
+            to: user.email,
+            subject: 'Your Vendor Account is Approved',
+            html: vendorApprovalTemplate(user.name)
+          });
+        } else if (status === "rejected") {
+          await sendEmail({
+            to: user.email,
+            subject: 'Update on your Vendor Application',
+            html: genericNotificationTemplate(
+              'Application Update',
+              `Dear ${user.name}, your application to become a vendor has been reviewed. Unfortunately, we are unable to approve your application at this time. Reason: ${reason || 'Not specified'}.`
+            )
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Failed to send vendor status email:', err);
+    }
+
     res.json({ message: `Vendor marked as ${status}`, vendor });
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });

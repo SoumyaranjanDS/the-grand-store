@@ -1,9 +1,12 @@
 import { Star, Quote, CheckCircle2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
 
 export default function Testimonials() {
-  const reviews = [
+  const [reviews, setReviews] = useState([])
+  
+  const defaultReviews = [
     {
-      id: 1,
+      _id: 1,
       name: 'Thabo Selwane',
       location: 'Johannesburg',
       image: '/assets/testimonials/thabo-selwane.jpg',
@@ -13,7 +16,7 @@ export default function Testimonials() {
       date: 'Verified Client',
     },
     {
-      id: 2,
+      _id: 2,
       name: 'Michelle Steyn',
       location: 'Stellenbosch',
       image: '/assets/testimonials/michelle-steyn.jpg',
@@ -23,7 +26,7 @@ export default function Testimonials() {
       date: 'Verified Client',
     },
     {
-      id: 3,
+      _id: 3,
       name: 'Themba Nkosi',
       location: 'Pretoria',
       image: '/assets/testimonials/themba-nkosi.jpg',
@@ -33,7 +36,7 @@ export default function Testimonials() {
       date: 'Verified Client',
     },
     {
-      id: 4,
+      _id: 4,
       name: 'Rajesh Pillay',
       location: 'Johannesburg',
       image: '/assets/testimonials/rajesh-pillay.jpg',
@@ -42,37 +45,25 @@ export default function Testimonials() {
       text: 'My primary source for milestone entertaining. Exceptional allocations, transparent estate pricing, and dependable delivery every single time.',
       date: 'Verified Client',
     },
-    {
-      id: 5,
-      name: 'Zanele Khumalo',
-      location: 'Pretoria',
-      image: '/assets/testimonials/zanele-khumalo.jpg',
-      rating: 5,
-      bottle: 'Extra Añejo Agave Reserva',
-      text: 'The presentation and temperature-controlled transit exceeded expectations. Every bottle arrives like an acquisition directly from the distillery.',
-      date: 'Verified Client',
-    },
-    {
-      id: 6,
-      name: 'Liam van der Merwe',
-      location: 'Johannesburg',
-      image: '/assets/testimonials/liam-van-der-merwe.jpg',
-      rating: 5,
-      bottle: 'Vintage Potstill XO Brandy',
-      text: 'The Cape potstill collection is unmatched. Honest sommelier notes, fast insured dispatch, and impeccable cellar-grade packaging.',
-      date: 'Verified Client',
-    },
-    {
-      id: 7,
-      name: 'Sipho Dlamini',
-      location: 'Durban',
-      image: '/assets/testimonials/sipho-dlamini.jpg',
-      rating: 5,
-      bottle: 'Artisanal Craft Distillations',
-      text: 'A truly curated selection of international and local rarities, with an easy experience that brings benchmark bottles home.',
-      date: 'Verified Client',
-    },
   ]
+
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        const res = await fetch('/api/testimonials')
+        const data = await res.json()
+        if (data && data.length > 0) {
+          setReviews(data)
+        } else {
+          setReviews(defaultReviews)
+        }
+      } catch (error) {
+        console.error('Failed to load testimonials', error)
+        setReviews(defaultReviews)
+      }
+    }
+    fetchTestimonials()
+  }, [])
 
   const marqueeReviews = [...reviews, ...reviews]
 
@@ -124,7 +115,7 @@ export default function Testimonials() {
 
             return (
               <article 
-                key={`${item.id}-${index}`}
+                key={`${item._id}-${index}`}
                 className="w-[340px] sm:w-[380px] md:w-[420px] shrink-0 p-5 md:p-6 rounded-2xl border border-white/10 bg-[#11100d] hover:border-[#c9a35b]/60 hover:bg-[#16130e] hover:shadow-[0_16px_40px_rgba(0,0,0,0.6)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between relative overflow-hidden group/card text-left shadow-xl"
               >
                 {/* Ambient Hover Orb */}

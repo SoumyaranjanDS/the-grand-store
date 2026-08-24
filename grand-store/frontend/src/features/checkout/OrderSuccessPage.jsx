@@ -29,7 +29,7 @@ export default function OrderSuccessPage({ onClearCart }) {
             headers: {
               Authorization: `Bearer ${user.token}`,
             },
-          }
+          },
         );
         const data = await res.json();
         if (res.ok) {
@@ -75,86 +75,194 @@ export default function OrderSuccessPage({ onClearCart }) {
     const invoiceNo = order.invoiceNumber || order._id;
 
     const buildPdfContent = (img) => {
-      // Draw Logo
+      // --- THEME COLORS ---
+      const themeColor = [15, 15, 15]; // Charcoal/Black
+      const accentColor = [216, 183, 109]; // Grand Store Gold
+
+      // --- WATERMARK ---
       if (img) {
-        // Logo dimensions approx 260x56, scale to 45x12
-        doc.addImage(img, "PNG", 14, 15, 45, 12);
-      } else {
-        doc.setFontSize(22);
-        doc.setTextColor(0);
-        doc.text("The Grand Store", 14, 22);
+        doc.setGState(new doc.GState({ opacity: 0.04 }));
+        doc.addImage(img, "PNG", 35, 133, 140, 30);
+        doc.setGState(new doc.GState({ opacity: 1.0 }));
       }
 
-      doc.setFontSize(10);
-      doc.setTextColor(100);
-      doc.text("Premium Goods & Accessories", 14, 32);
-      doc.text("VAT No: 123456789", 14, 38);
+      // --- LOGO (Top Left) ---
+      if (img) {
+        // Fix squeezing by calculating aspect ratio
+        const ratio = img.height / img.width;
+        const targetWidth = 45;
+        const targetHeight = targetWidth * ratio;
+        doc.addImage(img, "PNG", 14, 15, targetWidth, targetHeight);
+      } else {
+        doc.setFont("times", "bold");
+        doc.setFontSize(22);
+        doc.setTextColor(themeColor[0], themeColor[1], themeColor[2]);
+        doc.text("THE GRAND STORE", 14, 25);
+      }
 
-      // Invoice Details
-      doc.setFontSize(10);
-      doc.text("Invoice Number:", 140, 22);
-      doc.setTextColor(0);
-      doc.setFont("helvetica", "bold");
-      doc.text(invoiceNo, 140, 28);
+      // --- HEADER (Top Right) ---
+      doc.setFont("times", "bold");
+      doc.setFontSize(26);
+      doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]); // Gold
+      doc.text("INVOICE", 196, 24, { align: "right" });
       
-      doc.setTextColor(100);
-      doc.setFont("helvetica", "normal");
-      doc.text("Date:", 140, 38);
-      doc.setTextColor(0);
-      doc.text(new Date(order.createdAt).toLocaleDateString(), 140, 44);
-
-      // Addresses
-      doc.setTextColor(100);
-      doc.text("Billed To:", 14, 56);
-      doc.setTextColor(0);
       doc.setFont("helvetica", "bold");
-      doc.text(order.user?.name || "", 14, 62);
-      doc.setFont("helvetica", "normal");
-      doc.text(order.user?.email || "", 14, 68);
-
-      doc.setTextColor(100);
-      doc.text("Shipped To:", 100, 56);
+      doc.setFontSize(10);
       doc.setTextColor(0);
-      doc.setFont("helvetica", "bold");
-      doc.text(order.shippingAddress?.address || "", 100, 62);
-      doc.setFont("helvetica", "normal");
-      doc.text(`${order.shippingAddress?.city || ""}, ${order.shippingAddress?.postalCode || ""}`, 100, 68);
-      doc.text(order.shippingAddress?.country || "", 100, 74);
+      doc.text(new Date(order.createdAt).toLocaleDateString(), 196, 30, { align: "right" });
+      doc.text(`Ref: #${invoiceNo.toUpperCase()}`, 196, 35, { align: "right" });
 
-      // Table
+      // --- ADDRESSES ---
+      // Left: Store Address
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(0);
+      doc.text("Office Address", 14, 50);
+      
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(60);
+      doc.text("The Grand Store", 14, 55);
+      doc.text("Premium Goods & Accessories", 14, 60);
+      doc.text("VAT No: 123456789", 14, 65);
+
+      // Right: Customer Address
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(0);
+      doc.text("To :", 120, 50);
+      
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(0);
+      doc.text(order.user?.name || "Customer", 120, 55);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(60);
+      doc.text(order.user?.email || "", 120, 60);
+      
+      // Wrap Address so it doesn't overflow page
+      const addressLines = doc.splitTextToSize(order.shippingAddress?.address || "", 76);
+      doc.text(addressLines, 120, 65);
+      const addressOffset = 65 + (addressLines.length * 4.5); // line height spacing
+
+      doc.text(`${order.shippingAddress?.city || ""}, ${order.shippingAddress?.postalCode || ""}`, 120, addressOffset);
+      doc.text(order.shippingAddress?.country || "", 120, addressOffset + 5);
+
+      // --- CURRENCY HELPER ---
+      const pdfPrice = (amount) => {
+        return formatPrice(amount).replace(/\u00A0/g, ' ').replace(/[^\x20-\x7E]/g, '');
+      };
+
+      // --- TABLE ---
       const tableData = order.orderItems.map((item) => [
         item.name,
+        pdfPrice(item.price),
         item.qty || item.quantity || 1,
-        formatPrice(item.price),
-        formatPrice(item.price * (item.qty || item.quantity || 1)),
+        pdfPrice(item.price * (item.qty || item.quantity || 1)),
       ]);
 
+      const tableStartY = Math.max(85, addressOffset + 15);
+
       autoTable(doc, {
-        startY: 85,
-        head: [["Item", "Qty", "Price", "Total"]],
+        startY: tableStartY,
+        head: [["Items Description", "Unit Price", "Qnt", "Total"]],
         body: tableData,
-        theme: "grid",
-        headStyles: { fillColor: [10, 10, 10] },
+        theme: "plain",
+        styles: {
+          font: "helvetica",
+          fontSize: 9,
+          textColor: [0, 0, 0],
+          cellPadding: { top: 6, right: 4, bottom: 6, left: 4 },
+        },
+        headStyles: { 
+          fillColor: themeColor,
+          textColor: accentColor,
+          font: "times",
+          fontStyle: "bold",
+        },
+        bodyStyles: {
+          lineWidth: { bottom: 0.5 },
+          lineColor: [200, 200, 200],
+        },
+        columnStyles: {
+          0: { cellWidth: 'auto', fontStyle: 'bold' },
+          1: { halign: 'center' },
+          2: { halign: 'center' },
+          3: { halign: 'right' },
+        }
       });
 
       const finalY = doc.lastAutoTable.finalY + 10;
 
-      // Totals
-      doc.text("Subtotal:", 140, finalY);
-      doc.text(formatPrice(order.totalPrice - order.shippingCost), 180, finalY, { align: "right" });
-
-      doc.text("Shipping:", 140, finalY + 8);
-      doc.text(order.shippingCost === 0 ? "Complimentary" : formatPrice(order.shippingCost), 180, finalY + 8, { align: "right" });
-
-      doc.setFontSize(12);
+      // --- NOTES (Left) ---
+      doc.setFontSize(9);
       doc.setFont("helvetica", "bold");
-      doc.text("Total:", 140, finalY + 18);
-      doc.text(formatPrice(order.totalPrice), 180, finalY + 18, { align: "right" });
-
-      doc.setFontSize(10);
-      doc.setTextColor(100);
+      doc.setTextColor(0);
+      doc.text("Note:", 14, finalY + 5);
       doc.setFont("helvetica", "normal");
-      doc.text(`Payment Method: ${order.paymentMethod}`, 14, finalY + 18);
+      doc.setTextColor(80);
+      doc.text("Payment Method:", 14, finalY + 10);
+      doc.text(order.paymentMethod || "N/A", 14, finalY + 15);
+
+      // --- TOTALS (Right) ---
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(0);
+      doc.text("SUBTOTAL :", 150, finalY + 5, { align: "right" });
+      doc.text(pdfPrice(order.totalPrice - order.shippingCost), 196, finalY + 5, { align: "right" });
+
+      doc.text("SHIPPING :", 150, finalY + 12, { align: "right" });
+      doc.text(order.shippingCost === 0 ? "Complimentary" : pdfPrice(order.shippingCost), 196, finalY + 12, { align: "right" });
+
+      // TOTAL BLOCK
+      doc.setFillColor(themeColor[0], themeColor[1], themeColor[2]);
+      doc.rect(120, finalY + 18, 80, 12, "F");
+
+      doc.setFont("times", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
+      doc.text("TOTAL DUE :", 130, finalY + 26);
+      doc.setTextColor(255, 255, 255);
+      doc.text(pdfPrice(order.totalPrice), 196, finalY + 26, { align: "right" });
+
+      // --- THANK YOU ---
+      doc.setFontSize(14);
+      doc.setFont("times", "bold");
+      doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
+      doc.text("Thank you for your Business", 14, finalY + 45);
+
+      // --- FOOTER DIVIDER ---
+      const pageHeight = doc.internal.pageSize.height;
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.5);
+      doc.line(14, pageHeight - 35, 196, pageHeight - 35);
+
+      // --- FOOTER 3 COLUMNS ---
+      doc.setFontSize(8);
+      
+      // Col 1
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(themeColor[0], themeColor[1], themeColor[2]);
+      doc.text("Questions?", 14, pageHeight - 25);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(80);
+      doc.text("Email    : info@grandstore.com", 14, pageHeight - 20);
+      doc.text("Call us  : +1 234 567 890", 14, pageHeight - 15);
+
+      // Col 2
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(themeColor[0], themeColor[1], themeColor[2]);
+      doc.text("Payment Info :", 85, pageHeight - 25);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(80);
+      doc.text(`Method   : ${order.paymentMethod}`, 85, pageHeight - 20);
+      doc.text(`Status   : ${order.paymentStatus}`, 85, pageHeight - 15);
+
+      // Col 3
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(themeColor[0], themeColor[1], themeColor[2]);
+      doc.text("Terms & Conditions/Note:", 145, pageHeight - 25);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(80);
+      doc.text("All sales are final.", 145, pageHeight - 20);
+      doc.text("Keep this receipt for your records.", 145, pageHeight - 15);
 
       doc.save(`${invoiceNo}_Receipt.pdf`);
       setIsGenerating(false);
@@ -189,7 +297,8 @@ export default function OrderSuccessPage({ onClearCart }) {
             </div>
           ) : paymentStatus === "cancel" ? (
             <div className="inline-block px-4 py-2 bg-red-900/30 border border-red-500/50 rounded-lg text-red-400 font-medium mb-4">
-              Payment was cancelled. You can retry payment from your account dashboard.
+              Payment was cancelled. You can retry payment from your account
+              dashboard.
             </div>
           ) : order.paymentMethod === "Bank Transfer" &&
             order.paymentStatus === "Pending" ? (
@@ -205,7 +314,8 @@ export default function OrderSuccessPage({ onClearCart }) {
             (order.paymentStatus === "Failed" ||
               order.paymentStatus === "Rejected") ? (
             <div className="inline-block px-4 py-2 bg-red-900/30 border border-red-500/50 rounded-lg text-red-400 font-medium mb-4">
-              Your previous proof of payment was rejected. Please review and resubmit below.
+              Your previous proof of payment was rejected. Please review and
+              resubmit below.
             </div>
           ) : (
             <p className="text-[var(--color-ivory-muted)]">
@@ -281,7 +391,7 @@ export default function OrderSuccessPage({ onClearCart }) {
                             Authorization: `Bearer ${user.token}`,
                           },
                           body: JSON.stringify({ proofUrl: url }),
-                        }
+                        },
                       );
                       if (res.ok) {
                         window.location.reload();
@@ -330,7 +440,7 @@ export default function OrderSuccessPage({ onClearCart }) {
                   <img
                     src="/logo.png"
                     alt="The Grand Store"
-                    className="h-10 w-auto mb-4"
+                    className="h-10 w-auto object-contain mb-4"
                   />
                   <div className="text-sm text-[var(--color-ivory-muted)]">
                     Premium Goods & Accessories
@@ -434,7 +544,11 @@ export default function OrderSuccessPage({ onClearCart }) {
                           <Price amount={item.price} />
                         </td>
                         <td className="py-4 text-right text-white">
-                          <Price amount={item.price * (item.qty || item.quantity || 1)} />
+                          <Price
+                            amount={
+                              item.price * (item.qty || item.quantity || 1)
+                            }
+                          />
                         </td>
                       </tr>
                     ))}
@@ -487,8 +601,12 @@ export default function OrderSuccessPage({ onClearCart }) {
                 disabled={isGenerating}
                 className="bg-white/5 hover:bg-white/10 border border-white/10 px-6 py-3 rounded-xl text-sm uppercase tracking-widest transition-colors flex items-center gap-2 disabled:opacity-50"
               >
-                {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} 
-                {isGenerating ? 'Generating PDF...' : 'Download Receipt (PDF)'}
+                {isGenerating ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Download size={16} />
+                )}
+                {isGenerating ? "Generating PDF..." : "Download Receipt (PDF)"}
               </button>
             </div>
           </>

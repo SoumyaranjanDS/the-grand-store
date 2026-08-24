@@ -4,12 +4,32 @@ import { Link } from 'react-router-dom'
 export default function Footer() {
   const [newsletterStatus, setNewsletterStatus] = useState('')
 
-  const handleNewsletterSignup = (event) => {
+  const handleNewsletterSignup = async (event) => {
     event.preventDefault()
     const form = event.currentTarget
     const email = new FormData(form).get('email')
-    setNewsletterStatus(`Thank you — updates will be sent to ${email}.`)
-    form.reset()
+    
+    try {
+      setNewsletterStatus('Subscribing...')
+      const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/newsletter/subscribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      })
+      
+      const data = await response.json()
+      
+      if (response.ok) {
+        setNewsletterStatus(`Thank you — updates will be sent to ${email}.`)
+        form.reset()
+      } else {
+        setNewsletterStatus(data.message || 'Subscription failed. Please try again.')
+      }
+    } catch (error) {
+      setNewsletterStatus('Network error. Please try again later.')
+    }
   }
 
   return (

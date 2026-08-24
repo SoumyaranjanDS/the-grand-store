@@ -7,6 +7,9 @@ const cors = require("cors");
 
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
+const testimonialRoutes = require("./routes/testimonialRoutes");
+const attributeRoutes = require("./routes/attributeRoutes");
+const glossaryRoutes = require("./routes/glossaryRoutes");
 
 const app = express();
 
@@ -44,6 +47,7 @@ app.use("/uploads", express.static("uploads"));
 // Database Connection
 const startAuctionCronJobs = require("./jobs/auctionJobs");
 const startVendorTrustJobs = require("./jobs/vendorTrustJob");
+const startReminderJobs = require("./jobs/reminderJobs");
 
 // Database Connection
 mongoose
@@ -53,6 +57,7 @@ mongoose
     // Start jobs ONLY after successful DB connection to avoid Mongoose buffering timeouts
     startAuctionCronJobs();
     startVendorTrustJobs();
+    startReminderJobs();
   })
   .catch((err) => console.error("MongoDB connection error:", err));
 
@@ -71,6 +76,7 @@ const hostApplicationRoutes = require("./routes/hostApplicationRoutes");
 const postnetRoutes = require("./routes/postnetRoutes");
 const payfastRoutes = require("./routes/payfastRoutes");
 const configRoutes = require("./routes/configRoutes");
+const newsletterRoutes = require("./routes/newsletterRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
@@ -87,8 +93,12 @@ app.use("/api/estates", estateRoutes);
 app.use("/api/host-applications", hostApplicationRoutes);
 app.use("/api/postnet", postnetRoutes);
 app.use("/api/payfast", payfastRoutes);
+app.use("/api/testimonials", testimonialRoutes);
+app.use("/api/attributes", attributeRoutes);
+app.use("/api/glossary", glossaryRoutes);
 app.use("/api/config", configRoutes);
 app.use("/api/trade-enquiries", require("./routes/tradeEnquiryRoutes"));
+app.use("/api/newsletter", newsletterRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {

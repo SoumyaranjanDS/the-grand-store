@@ -228,6 +228,33 @@ const processEventPayment = async (bookingId) => {
     await event.save();
   }
 
+  // Send Event Ticket Email
+  try {
+    const { sendEmail } = require('../utils/emailService');
+    const { genericNotificationTemplate } = require('../utils/emailTemplates');
+    const User = require('../models/User');
+    const user = await User.findById(booking.user);
+    if (user) {
+      await sendEmail({
+        to: user.email,
+        subject: `Your Event Ticket - ${event.title}`,
+        html: genericNotificationTemplate(
+          'Your Event Booking is Confirmed',
+          `Thank you for booking tickets to <strong>${event.title}</strong>.<br><br>
+           <strong>Ticket ID:</strong> ${booking.ticketId}<br>
+           <strong>Ticket Type:</strong> ${booking.ticketType}<br>
+           <strong>Quantity:</strong> ${booking.quantity}<br>
+           <strong>Date:</strong> ${new Date(event.date).toLocaleDateString()}<br>
+           <strong>Time:</strong> ${event.startTime}<br>
+           <strong>Location:</strong> ${event.location}<br><br>
+           Please present your Ticket ID at the venue.`
+        )
+      });
+    }
+  } catch (err) {
+    console.error('Failed to send event ticket email:', err);
+  }
+
   // 3. Process Accounting Ledger Integration
   try {
     const seqNum = await getNextSequence("eventBooking");

@@ -88,6 +88,9 @@ export default function AdminLayout() {
             <button onClick={() => handleNavigate('/admin/vendors')} className={navItemClass('/admin/vendors')}>
               <Building2 size={16} /> Vendors & Approvals
             </button>
+            <button onClick={() => handleNavigate('/admin/newsletter')} className={navItemClass('/admin/newsletter')}>
+              <Users size={16} /> Newsletter Subscribers
+            </button>
 
             <div className="text-[10px] text-[var(--color-ivory-muted)] uppercase tracking-widest mb-2 mt-4 pl-2">Operations</div>
             <button onClick={() => handleNavigate('/admin/auctions')} className={navItemClass('/admin/auctions')}>
@@ -98,6 +101,9 @@ export default function AdminLayout() {
             </button>
             <button onClick={() => handleNavigate('/admin/expert-reviews')} className={navItemClass('/admin/expert-reviews')}>
               <Star size={16} /> Expert Reviews
+            </button>
+            <button onClick={() => handleNavigate('/admin/testimonials')} className={navItemClass('/admin/testimonials')}>
+              <Star size={16} /> Testimonials
             </button>
             <button onClick={() => handleNavigate('/admin/host-applications')} className={navItemClass('/admin/host-applications')}>
               <Building2 size={16} /> Host Applications
@@ -113,6 +119,12 @@ export default function AdminLayout() {
             </button>
 
             <div className="text-[10px] text-[var(--color-gold)] uppercase tracking-widest mb-2 mt-4 pl-2 font-bold">System Control</div>
+            <button onClick={() => handleNavigate('/admin/attributes')} className={navItemClass('/admin/attributes')}>
+              <Settings size={16} /> Product Attributes
+            </button>
+            <button onClick={() => handleNavigate('/admin/glossary')} className={navItemClass('/admin/glossary')}>
+              <Settings size={16} /> Glossary Management
+            </button>
             <button onClick={() => handleNavigate('/admin/financials')} className={navItemClass('/admin/financials')}>
               <Wallet size={16} /> Financial Control
             </button>
