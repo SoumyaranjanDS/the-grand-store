@@ -11,6 +11,7 @@ export default function Arrivals({ onAdd, onWish, onCompare, compareItems }) {
 
   const arrivalProducts = [...products]
     .filter((product) => (!product.vendorId || product.approvalStatus === 'approved'))
+    .filter((product) => String(product.category || product.type || '').toLowerCase() !== 'accessories')
     .sort((first, second) => {
       const firstCreatedAt = Date.parse(first.createdAt || '') || 0
       const secondCreatedAt = Date.parse(second.createdAt || '') || 0
