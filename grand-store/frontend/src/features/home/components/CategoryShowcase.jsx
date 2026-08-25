@@ -30,20 +30,6 @@ export default function CategoryShowcase({
     }
   }, [products])
 
-  useEffect(() => {
-    const context = gsap.context(() => {
-      gsap.from('.product-card', {
-        y: 52,
-        opacity: 0,
-        stagger: 0.09,
-        duration: 0.8,
-        ease: 'power2.out',
-        scrollTrigger: { trigger: sectionRef.current, start: 'top 77%' },
-      })
-    }, sectionRef)
-    return () => context.revert()
-  }, [])
-
   const categoryProducts = products
     .filter((product) => {
       const cat = String(product.category || product.type || '').toLowerCase()
@@ -55,6 +41,23 @@ export default function CategoryShowcase({
       return orderA - orderB
     })
     .slice(0, 5)
+
+  useEffect(() => {
+    if (categoryProducts.length === 0 || !sectionRef.current) return;
+    const context = gsap.context(() => {
+      gsap.from('.product-card', {
+        y: 52,
+        opacity: 0,
+        stagger: 0.09,
+        duration: 0.8,
+        ease: 'power2.out',
+        scrollTrigger: { trigger: sectionRef.current, start: 'top 77%' },
+      })
+    }, sectionRef)
+    return () => context.revert()
+  }, [categoryProducts.length])
+
+  
     
   const marqueeBrands = [...brands, ...brands]
 

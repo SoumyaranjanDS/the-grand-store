@@ -21,7 +21,20 @@ export default function BrandyShowcase({ onAdd, onWish, onCompare, compareItems 
     }
   }, [products])
 
+  const brandyProducts = products
+    .filter((product) => {
+      const category = String(product.category || product.type || '').toLowerCase()
+      return category === 'brandy' || category === 'cognac'
+    })
+    .sort((a, b) => {
+      const orderA = productOrder[a.id || a._id] || 0
+      const orderB = productOrder[b.id || b._id] || 0
+      return orderA - orderB
+    })
+    .slice(0, 5)
+
   useEffect(() => {
+    if (brandyProducts.length === 0 || !sectionRef.current) return;
     const context = gsap.context(() => {
       gsap.from('.product-card', {
         y: 52,
@@ -34,19 +47,9 @@ export default function BrandyShowcase({ onAdd, onWish, onCompare, compareItems 
     }, sectionRef)
 
     return () => context.revert()
-  }, [])
+  }, [brandyProducts.length])
 
-  const brandyProducts = products
-    .filter((product) => {
-      const category = String(product.category || product.type || '').toLowerCase()
-      return category === 'brandy' || category === 'cognac'
-    })
-    .sort((a, b) => {
-      const orderA = productOrder[a.id || a._id] || 0
-      const orderB = productOrder[b.id || b._id] || 0
-      return orderA - orderB
-    })
-    .slice(0, 5)
+  
   const marqueeBrands = [...brandyBrands, ...brandyBrands]
 
   return (
