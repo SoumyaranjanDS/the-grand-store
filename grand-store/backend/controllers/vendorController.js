@@ -201,8 +201,8 @@ exports.uploadDocument = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
-    // Return the path so frontend can send it in saveOnboardingProgress
-    const fileUrl = `/uploads/${req.file.filename}`;
+    // Return the Cloudinary URL so frontend can send it in saveOnboardingProgress
+    const fileUrl = req.file.path;
     res.json({ url: fileUrl });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -249,12 +249,50 @@ exports.simulatePayment = async (req, res) => {
     const vendor = await Vendor.findOne({ userId: user._id });
     if (vendor) {
       vendor.status = 'approved';
+      vendor.paymentStatus = 'paid';
       await vendor.save();
     }
 
-    res.json({ message: 'Payment successful, vendor activated' });
+    res.json({ message: 'Payment successful simulated' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+exports.processVendorPayment = async (vendorId) => {
+  try {
+    const vendor = await Vendor.findById(vendorId);
+    if (!vendor) {
+      console.error(`Vendor not found for payment processing: ${vendorId}`);
+      return;
+    }
+
+    vendor.paymentStatus = 'paid';
+    await vendor.save();
+
+    const user = await User.findById(vendor.userId);
+    if (user && user.role === 'vendor_approved_unpaid') {
+      user.role = 'vendor_active';
+      await user.save();
+    }
+    
+    // Create Transaction record
+    const Transaction = require('../models/Transaction');
+    if (Transaction) {
+      await Transaction.create({
+        user: vendor.userId,
+        orderId: vendor._id, // Using vendor ID as reference
+        amount: vendor.registrationFee || 0,
+        type: 'Payment',
+        status: 'Completed',
+        reference: `VND-${vendor._id}`,
+        gateway: 'PayFast',
+        date: new Date()
+      });
+    }
+
+  } catch (error) {
+    console.error('Error processing vendor payment:', error);
   }
 };
 
