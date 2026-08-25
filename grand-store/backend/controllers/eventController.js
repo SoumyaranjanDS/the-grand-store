@@ -43,7 +43,7 @@ const createEvent = async (req, res) => {
 
     let image = null;
     if (req.file) {
-      image = `/uploads/${req.file.filename}`;
+      image = req.file.path;
     }
 
     // Parse JSON strings back into objects/arrays if they come from FormData
