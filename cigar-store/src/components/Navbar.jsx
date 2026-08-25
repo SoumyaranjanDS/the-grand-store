@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { ChevronDown, Heart, Menu, Search, X } from "lucide-react";
 import { useWishlist } from "../context/wishlistContext";
 import brandLogo from "../assets/cigar logo.png";
@@ -23,7 +23,9 @@ function Navbar() {
   const [isHidden, setIsHidden] = useState(false);
   const lastScrollY = useRef(0);
   const navigate = useNavigate();
+  const location = useLocation();
   const { savedCount } = useWishlist();
+  const isLightPage = location.pathname === "/exclusive-collection";
 
   useEffect(() => {
     const updateHeader = () => {
@@ -38,7 +40,7 @@ function Navbar() {
       lastScrollY.current = currentScrollY;
 
       const hero = document.querySelector(
-        ".scroll-film, .history-page-hero, .mosi-shop-hero, .saved-page__hero",
+        ".scroll-film, .history-page-hero, .mosi-shop-hero, .saved-page__hero, .ec-hero",
       );
       if (!hero) {
         setScrolled(currentScrollY > 30);
@@ -68,7 +70,7 @@ function Navbar() {
 
   return (
     <header
-      className={`navbar ${scrolled ? "navbar--scrolled" : ""} ${menuOpen ? "navbar--open" : ""} ${isHidden ? "navbar--hidden" : ""}`}
+      className={`navbar ${isLightPage ? "navbar--light-page" : ""} ${scrolled ? "navbar--scrolled" : ""} ${menuOpen ? "navbar--open" : ""} ${isHidden ? "navbar--hidden" : ""}`}
     >
       <div className="navbar-main">
         <div className="navbar-main__inner">
