@@ -4,7 +4,7 @@ import { ChevronRight } from 'lucide-react';
 
 export default function HeroMobile() {
   return (
-    <section className="relative w-full h-[65svh] min-h-[450px] max-h-[600px] flex flex-col justify-end bg-[#050505] overflow-hidden select-none pb-10">
+    <section className="relative w-full py-12 flex flex-col justify-center items-center bg-[#050505] overflow-hidden select-none">
       
       {/* Background Image covering the whole container */}
       <div className="absolute inset-0 w-full h-full">
@@ -23,36 +23,17 @@ export default function HeroMobile() {
       <div className="absolute top-[15%] right-[15%] text-[#ffd700] text-sm opacity-50 animate-luxury-glitter-delay-1">✦</div>
 
       {/* Content overlaid on image at the bottom */}
-      <div className="relative z-10 w-full flex flex-col px-6 mx-auto">
+      <div className="relative z-10 w-full flex flex-col items-center text-center px-6 mx-auto">
         
         {/* Master Brand Headline */}
         <h1 
-          className="font-serif not-italic text-4xl sm:text-5xl font-bold uppercase text-left leading-[1.1] whitespace-nowrap select-none m-0 p-0 flex flex-col mb-2 drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]"
-          style={{ 
-            fontFamily: "'Cinzel', 'Playfair Display', serif",
-          }}
+          className="font-serif not-italic text-center select-none m-0 p-0 mb-4 drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]"
+          style={{ fontFamily: "'Cinzel', 'Playfair Display', serif" }}
         >
-          {/* Line 1: 'The' */}
-          <span 
-            className="tracking-widest"
-            style={{ 
-              backgroundImage: 'linear-gradient(135deg, #fff8e7 0%, #ffe299 18%, #e5a93c 45%, #ffd269 72%, #a86c0c 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}
-          >
+          <span className="block text-lg tracking-[0.3em] text-[#e5a93c] mb-1 font-medium uppercase">
             The
           </span>
-
-          {/* Line 2: 'Grand Store' */}
-          <span 
-            className="tracking-wider"
-            style={{
-              backgroundImage: 'linear-gradient(135deg, #fff8e7 0%, #ffe299 18%, #e5a93c 45%, #ffd269 72%, #a86c0c 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}
-          >
+          <span className="block text-4xl sm:text-5xl font-bold uppercase tracking-widest text-white leading-tight">
             Grand Store
           </span>
         </h1>
@@ -67,16 +48,18 @@ export default function HeroMobile() {
           Curated Rare Spirits & Wine
         </p>
 
-        {/* Bold CTA Button */}
+        {/* Minimal & Creative CTA Button */}
         <Link 
           to="/shop"
-          className="group relative w-full max-w-sm flex items-center justify-between bg-transparent border border-[#c9a35b] text-[#c9a35b] hover:bg-[#c9a35b] hover:text-black py-3.5 px-6 transition-all duration-300"
+          className="group relative flex items-center gap-4 bg-white/5 backdrop-blur-md border border-white/10 hover:border-[#c9a35b]/60 text-white py-2 pl-6 pr-2 rounded-full overflow-hidden transition-all duration-500 shadow-[0_0_20px_rgba(0,0,0,0.5)]"
         >
-          <span className="font-bold uppercase tracking-widest text-[11px]">Enter the Cellar</span>
-          <ChevronRight size={16} className="transform group-hover:translate-x-1 transition-transform" />
+          <span className="font-semibold uppercase tracking-[0.2em] text-[10px] z-10 mt-[1px]">Enter the Cellar</span>
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#e5a93c] to-[#a86c0c] flex items-center justify-center z-10 group-hover:scale-110 transition-transform duration-500 shadow-[0_0_10px_rgba(229,169,60,0.3)]">
+            <ChevronRight size={14} className="text-black ml-[1px]" />
+          </div>
           
-          {/* Ambient glow on button */}
-          <div className="absolute inset-0 -z-10 bg-[#c9a35b] blur-xl opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+          {/* Sweep animation effect */}
+          <div className="absolute inset-0 -z-10 bg-gradient-to-r from-transparent via-[#c9a35b]/15 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
         </Link>
         
       </div>
