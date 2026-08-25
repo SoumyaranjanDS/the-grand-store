@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api';
 import { Gavel, CheckCircle, ArrowLeft, User, Phone, Mail, Building2, Package, FileText } from 'lucide-react';
 import { storeCategories } from '../../data';
 
@@ -65,7 +65,7 @@ export default function HostAuctionPage() {
     setError('');
     setSubmitting(true);
     try {
-      await axios.post(`${API}/api/host-applications`, form);
+      await api.post(`/host-applications`, form);
       setStep(3);
     } catch (e) {
       setError(e.response?.data?.message || 'Submission failed. Please try again.');

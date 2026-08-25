@@ -12,26 +12,48 @@ const preparedVendorImages = {
   '/uploads/images-1787292711461.png': '/assets/products/vendor/whisky-tona-full.png',
 }
 
+const resolveImageUrl = (src) => {
+  if (!src) return '';
+  const normalizedSrc = String(src).replace(/\\/g, '/');
+  
+  const prepared = Object.entries(preparedVendorImages)
+    .find(([uploadPath]) => normalizedSrc.includes(uploadPath))?.[1];
+  if (prepared) return prepared;
+  
+  if (normalizedSrc.startsWith('http://') || normalizedSrc.startsWith('https://')) {
+    return normalizedSrc;
+  }
+  
+  if (normalizedSrc.includes('uploads/')) {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5015';
+    const cleanPath = normalizedSrc.substring(normalizedSrc.indexOf('uploads/'));
+    return `${apiUrl.replace(/\/$/, '')}/${cleanPath}`;
+  }
+  
+  return normalizedSrc;
+};
+
 function VendorProductImage({ src, alt }) {
-  const preparedSource = Object.entries(preparedVendorImages)
-    .find(([uploadPath]) => String(src || '').includes(uploadPath))?.[1]
-  const cacheKey = `${vendorImageFitVersion}:${src}`
-  const [displaySource, setDisplaySource] = useState(() => preparedSource || trimmedUploadCache.get(cacheKey) || src)
+  const resolvedSrc = resolveImageUrl(src);
+  const isPreparedSource = Object.values(preparedVendorImages).includes(resolvedSrc);
+  const cacheKey = `${vendorImageFitVersion}:${resolvedSrc}`
+  const [displaySource, setDisplaySource] = useState(() => trimmedUploadCache.get(cacheKey) || resolvedSrc)
 
   useEffect(() => {
-    if (preparedSource) {
-      setDisplaySource(preparedSource)
+    if (isPreparedSource) {
+      setDisplaySource(resolvedSrc)
       return undefined
     }
 
-    if (!src || !src.includes('/uploads/') || trimmedUploadCache.has(cacheKey)) {
-      setDisplaySource(trimmedUploadCache.get(cacheKey) || src)
+    if (!resolvedSrc || (!resolvedSrc.includes('/uploads/') && !resolvedSrc.includes('res.cloudinary.com')) || trimmedUploadCache.has(cacheKey)) {
+      setDisplaySource(trimmedUploadCache.get(cacheKey) || resolvedSrc)
       return undefined
     }
 
     let cancelled = false
     const sourceImage = new Image()
     sourceImage.decoding = 'async'
+    sourceImage.crossOrigin = 'anonymous'
 
     sourceImage.onload = () => {
       try {
@@ -73,7 +95,7 @@ function VendorProductImage({ src, alt }) {
         const needsTrim = visibleWidth < analysisWidth * 0.88 || visibleHeight < analysisHeight * 0.88
 
         if (!needsTrim) {
-          trimmedUploadCache.set(cacheKey, src)
+          trimmedUploadCache.set(cacheKey, resolvedSrc)
           return
         }
 
@@ -116,22 +138,22 @@ function VendorProductImage({ src, alt }) {
       }
     }
 
-    sourceImage.onerror = () => trimmedUploadCache.set(cacheKey, src)
+    sourceImage.onerror = () => trimmedUploadCache.set(cacheKey, resolvedSrc)
     sourceImage.crossOrigin = 'anonymous'
-    sourceImage.src = src
+    sourceImage.src = resolvedSrc
 
     return () => {
       cancelled = true
     }
-  }, [cacheKey, preparedSource, src])
+  }, [cacheKey, isPreparedSource, resolvedSrc])
 
-  if (preparedSource) {
+  if (isPreparedSource) {
     return (
       <span
         className="prepared-vendor-product"
         role="img"
         aria-label={alt}
-        style={{ backgroundImage: `url(${preparedSource})` }}
+        style={{ backgroundImage: `url(${resolvedSrc})` }}
       />
     )
   }

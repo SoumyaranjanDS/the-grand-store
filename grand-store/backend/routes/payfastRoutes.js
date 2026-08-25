@@ -6,6 +6,7 @@ const { protect } = require('../middleware/authMiddleware');
 router.post('/generate-shop', protect, payfastController.generateShopPayment);
 router.post('/generate-auction', protect, payfastController.generateAuctionPayment);
 router.post('/generate-event', protect, payfastController.generateEventPayment);
+router.post('/generate-vendor', protect, payfastController.generateVendorPayment);
 router.post('/itn', payfastController.itnWebhook);
 
 module.exports = router;

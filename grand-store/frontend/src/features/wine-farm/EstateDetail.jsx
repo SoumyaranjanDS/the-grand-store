@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Price from '../../components/ui/Price';
 import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api';
 import {
   MapPin, Phone, Mail, Globe, Heart,
   Wine, Utensils, Bed, Star, Users, Clock,
@@ -24,7 +24,7 @@ export default function EstateDetail() {
   const [followLoading, setFollowLoading] = useState(false);
 
   useEffect(() => {
-    axios.get(`${API}/api/estates/${slug}`)
+    api.get(`/estates/${slug}`)
       .then(res => {
         setData(res.data);
         setFollowerCount(res.data.estate.followers?.length || 0);

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from '../../api';
 import { useAuth } from "../../context/AuthContext";
 import { Search, Plus, Edit2, Trash2 } from "lucide-react";
 import Price from '../../components/ui/Price';
@@ -25,7 +25,7 @@ export default function AdminAccessories() {
 
   const fetchAccessories = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/products?type=accessory`);
+      const res = await api.get(`/products?type=accessory`);
       setAccessories(res.data);
     } catch (err) {
       console.error(err);

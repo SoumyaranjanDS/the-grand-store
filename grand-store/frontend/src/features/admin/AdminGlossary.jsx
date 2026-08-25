@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api';
 import { Search, Plus, Edit2, Trash2, X, Loader2, BookA } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -27,7 +27,7 @@ export default function AdminGlossary() {
   const fetchTerms = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('/api/glossary');
+      const res = await api.get(`/glossary`);
       setTerms(res.data);
     } catch (err) {
       console.error(err);
@@ -78,9 +78,9 @@ export default function AdminGlossary() {
       };
 
       if (editingTerm) {
-        await axios.put(`/api/glossary/${editingTerm._id}`, formData, config);
+        await api.put(`/glossary/${editingTerm._id}`, formData, config);
       } else {
-        await axios.post('/api/glossary', formData, config);
+        await api.post(`/glossary`, formData, config);
       }
 
       await fetchTerms();
@@ -101,7 +101,7 @@ export default function AdminGlossary() {
           Authorization: `Bearer ${user.token}`,
         },
       };
-      await axios.delete(`/api/glossary/${id}`, config);
+      await api.delete(`/glossary/${id}`, config);
       fetchTerms();
     } catch (err) {
       alert('Failed to delete term');

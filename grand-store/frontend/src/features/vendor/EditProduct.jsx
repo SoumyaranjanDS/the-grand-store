@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { Building2, Package, UploadCloud, CheckCircle2, AlertCircle, PlusCircle, User } from 'lucide-react';
 import { storeCategories } from '../../data';
@@ -39,8 +39,8 @@ export default function EditProduct({ onNotify }) {
   useEffect(() => {
     const fetchAttributes = async () => {
       try {
-        const res = await fetch('/api/attributes');
-        const data = await res.json();
+        const res = await api.get(`/attributes`);
+        const data = res.data;
         if (Array.isArray(data)) {
           setAttributes(data);
         }
@@ -57,7 +57,7 @@ export default function EditProduct({ onNotify }) {
     }
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/products/${id}`);
+        const res = await api.get(`/products/${id}`);
         const product = res.data;
         if (product) {
           setFormData({

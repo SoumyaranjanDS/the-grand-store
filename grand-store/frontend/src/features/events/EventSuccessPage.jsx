@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { CheckCircle2, Ticket, MapPin, Calendar, Clock, AlertTriangle, User } from 'lucide-react';
-import axios from 'axios';
+import api from '../../api';
 import Price from '../../components/ui/Price';
 
 export default function EventSuccessPage() {
@@ -28,7 +28,7 @@ export default function EventSuccessPage() {
         
         while (attempts < maxAttempts) {
           // We can use the existing 'my-tickets' route to find this booking
-          const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/events/bookings/my-tickets`, { headers });
+          const res = await api.get(`/events/bookings/my-tickets`, { headers });
           const found = res.data.find(b => b._id === id);
           
           if (found && (found.paymentStatus === 'Paid' || paymentStatus !== 'success')) {
@@ -44,7 +44,7 @@ export default function EventSuccessPage() {
         }
         
         // If after 5 attempts it's still pending but we hit success
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/events/bookings/my-tickets`, { headers });
+        const res = await api.get(`/events/bookings/my-tickets`, { headers });
         const finalFound = res.data.find(b => b._id === id);
         setBooking(finalFound);
         setLoading(false);

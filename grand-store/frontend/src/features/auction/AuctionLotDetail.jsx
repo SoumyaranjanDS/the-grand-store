@@ -1,7 +1,7 @@
 import Price from '../../components/ui/Price';
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api';
 import { ChevronLeft, ShieldCheck, Clock, History, AlertCircle, ArrowRight } from 'lucide-react';
 import AuctionCountdown from './AuctionCountdown';
 import BidConfirmationModal from '../../components/modals/BidConfirmationModal';
@@ -30,7 +30,7 @@ export default function AuctionLotDetail({ onNotify }) {
          headers.Authorization = `Bearer ${userInfo.token}`;
       }
 
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auction/${id}`, { headers });
+      const res = await api.get(`/auction/${id}`, { headers });
       setLot(res.data.lot);
       setBids(res.data.bids);
       setLoading(false);

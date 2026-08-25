@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import api from '../api';
 
 const AuthContext = createContext();
 
@@ -13,39 +14,42 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const res = await fetch(
-      `${import.meta.env.VITE_API_URL || ""}/api/auth/login`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      },
-    );
+    try {
+      const res = await api.post(`/auth/login`, { email, password });
+      const data = res.data;
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Login failed");
-
-    localStorage.setItem("userInfo", JSON.stringify(data));
-    setUser(data);
-    return data;
+      localStorage.setItem("userInfo", JSON.stringify(data));
+      setUser(data);
+      return data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Login failed");
+    }
   };
 
   const register = async (name, email, password) => {
-    const res = await fetch(
-      `${import.meta.env.VITE_API_URL || ""}/api/auth/register`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
-      },
-    );
+    try {
+      const res = await api.post(`/auth/register`, { name, email, password });
+      const data = res.data;
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Registration failed");
+      localStorage.setItem("userInfo", JSON.stringify(data));
+      setUser(data);
+      return data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Registration failed");
+    }
+  };
 
-    localStorage.setItem("userInfo", JSON.stringify(data));
-    setUser(data);
-    return data;
+  const googleLogin = async (token, role = 'customer') => {
+    try {
+      const res = await api.post(`/auth/google`, { token, role });
+      const data = res.data;
+
+      localStorage.setItem("userInfo", JSON.stringify(data));
+      setUser(data);
+      return data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Google Authentication failed");
+    }
   };
 
   const logout = () => {
@@ -59,7 +63,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, login, register, googleLogin, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

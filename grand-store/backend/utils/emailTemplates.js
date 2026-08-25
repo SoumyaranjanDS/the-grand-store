@@ -213,13 +213,20 @@ const bankTransferInstructionsTemplate = (order, bankDetails) => {
   return generateEmailTemplate(`Payment Required - Order #${order._id}`, content);
 };
 
-const vendorApprovalTemplate = (name) => {
+const vendorApprovalTemplate = (name, fee = 0) => {
   const content = `
     <h1>Vendor Application Approved</h1>
     <p>Dear ${name},</p>
     <p>Congratulations! Your application to become a vendor at The Grand Store has been approved.</p>
-    <p>You can now log in to your vendor dashboard to start adding your premium products to our catalog, managing your inventory, and building your exclusive storefront.</p>
-    <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/vendor/dashboard" class="btn">Access Dashboard</a>
+    
+    <div class="details-box">
+      <h3 style="margin-top: 0;">Next Steps</h3>
+      <p>To activate your storefront and unlock your vendor dashboard, a one-time onboarding fee is required.</p>
+      <p><strong style="color: ${BRAND_COLOR_GOLD}">Amount Due:</strong> R${fee}</p>
+    </div>
+    
+    <p>Please log in to complete your payment.</p>
+    <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/vendor/dashboard" class="btn">Log In and Pay</a>
   `;
   return generateEmailTemplate('Your Vendor Account is Approved', content);
 };

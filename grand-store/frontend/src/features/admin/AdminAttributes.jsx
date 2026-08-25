@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Edit, Trash2, Loader2, Info } from 'lucide-react';
 import DynamicIcon from '../../components/DynamicIcon';
+import api from '../../api';
 
 export default function AdminAttributes() {
   const { user } = useAuth();
@@ -21,8 +22,8 @@ export default function AdminAttributes() {
   const fetchAttributes = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/attributes');
-      const data = await res.json();
+      const res = await api.get(`/attributes`);
+      const data = res.data;
       setAttributes(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch attributes:', error);
@@ -72,26 +73,15 @@ export default function AdminAttributes() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const method = editMode ? 'PUT' : 'POST';
-      const url = editMode ? `/api/attributes/${currentId}` : '/api/attributes';
+      const method = editMode ? 'put' : 'post';
+      const endpoint = editMode ? `/attributes/${currentId}` : `/attributes`;
       
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${user.token}`
-        },
-        body: JSON.stringify(formData)
-      });
+      await api[method](endpoint, formData);
       
-      if (res.ok) {
-        setShowModal(false);
-        fetchAttributes();
-      } else {
-        const errorData = await res.json();
-        alert(errorData.message || 'Failed to save attribute');
-      }
+      setShowModal(false);
+      fetchAttributes();
     } catch (error) {
+      alert(error.response?.data?.message || 'Failed to save attribute');
       console.error(error);
     }
   };
@@ -99,13 +89,8 @@ export default function AdminAttributes() {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this attribute? Products using it might lose this badge.')) {
       try {
-        const res = await fetch(`/api/attributes/${id}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${user.token}` }
-        });
-        if (res.ok) {
-          fetchAttributes();
-        }
+        await api.delete(`/attributes/${id}`);
+        fetchAttributes();
       } catch (error) {
         console.error(error);
       }

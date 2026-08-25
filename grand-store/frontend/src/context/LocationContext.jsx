@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import axios from 'axios';
 
 const LocationContext = createContext();
 
@@ -17,9 +18,8 @@ export function LocationProvider({ children }) {
   useEffect(() => {
     const fetchLocation = async () => {
       try {
-        const response = await fetch('https://ipapi.co/json/');
-        if (!response.ok) throw new Error('Failed to fetch location');
-        const data = await response.json();
+        const response = await axios.get('https://ipapi.co/json/');
+        const data = response.data;
         setLocation({
           country_code: data.country_code,
           country_name: data.country_name,

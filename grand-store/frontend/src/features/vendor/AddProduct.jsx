@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { Building2, Package, UploadCloud, CheckCircle2, AlertCircle, PlusCircle, User } from 'lucide-react';
 import { storeCategories } from '../../data';
+import api from '../../api';
 import DynamicIcon from '../../components/DynamicIcon';
 
 export default function AddProduct({ onNotify }) {
@@ -38,8 +39,8 @@ export default function AddProduct({ onNotify }) {
   useEffect(() => {
     const fetchAttributes = async () => {
       try {
-        const res = await fetch('/api/attributes');
-        const data = await res.json();
+        const res = await api.get(`/attributes`);
+        const data = res.data;
         if (Array.isArray(data)) {
           setAttributes(data);
         }

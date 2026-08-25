@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { Settings, Save, RefreshCw, Percent, Truck, ShieldCheck, ShoppingBag } from "lucide-react";
-import axios from "axios";
+import api from '../../api';
 import Price from '../../components/ui/Price';
 
 export default function AdminSettings() {
@@ -15,7 +15,7 @@ export default function AdminSettings() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/settings/public`);
+        const res = await api.get(`/settings/public`);
         setSettings(res.data);
       } catch (e) {
         console.error(e);

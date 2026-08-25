@@ -20,6 +20,32 @@ import ReviewSection from "../../components/social/ReviewSection";
 import ProductQnA from "../../components/social/ProductQnA";
 import ExpertReviewCard from "../../components/social/ExpertReviewCard";
 import Price from "../../components/ui/Price";
+
+const preparedVendorImages = {
+  '/uploads/images-1787292711461.png': '/assets/products/vendor/whisky-tona-full.png',
+};
+
+const resolveImageUrl = (src) => {
+  if (!src) return '';
+  const normalizedSrc = String(src).replace(/\\/g, '/');
+  
+  const prepared = Object.entries(preparedVendorImages)
+    .find(([uploadPath]) => normalizedSrc.includes(uploadPath))?.[1];
+  if (prepared) return prepared;
+  
+  if (normalizedSrc.startsWith('http://') || normalizedSrc.startsWith('https://')) {
+    return normalizedSrc;
+  }
+  
+  if (normalizedSrc.includes('uploads/')) {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5015';
+    const cleanPath = normalizedSrc.substring(normalizedSrc.indexOf('uploads/'));
+    return `${apiUrl.replace(/\/$/, '')}/${cleanPath}`;
+  }
+  
+  return normalizedSrc;
+};
+
 export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
   const { products } = useProducts();
   const { slug } = useParams();
@@ -34,7 +60,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
   );
   const { isWishlisted } = useWishlist();
   const wishlisted = product ? isWishlisted(product) : false;
-  const [selectedImage, setSelectedImage] = useState(product?.image ?? "");
+  const [selectedImage, setSelectedImage] = useState(resolveImageUrl(product?.image ?? ""));
   const [quantity, setQuantity] = useState(1);
   const [selectedOption, setSelectedOption] = useState(
     product?.options?.[0] ?? "Pack of 1",
@@ -56,7 +82,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
 
   useEffect(() => {
     if (!product) return;
-    setSelectedImage(product.image);
+    setSelectedImage(resolveImageUrl(product.image));
     setQuantity(1);
     setSelectedOption(product.options?.[0] ?? "Pack of 1");
     setIsZoomed(false);
@@ -97,7 +123,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
 
   if (!product) return <Navigate to="/" replace />;
 
-  const gallery = [product.image, ...(product.gallery || [])].filter(Boolean);
+  const gallery = [product.image, ...(product.gallery || [])].filter(Boolean).map(resolveImageUrl);
   const relatedProducts = products
     .filter((item) => item.id !== product.id)
     .slice(0, 4);
@@ -136,7 +162,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.fullName || product.name,
-    image: product.image,
+    image: resolveImageUrl(product.image),
     description:
       product.description || `Buy ${product.name} at The Grand Store.`,
     sku: product.sku || product._id,
@@ -165,7 +191,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
           product.description?.substring(0, 160) ||
           `Buy ${product.name} at The Grand Store.`
         }
-        image={product.image}
+        image={resolveImageUrl(product.image)}
         url={`/product/${product.slug || product._id}`}
         type="product"
         schema={productSchema}

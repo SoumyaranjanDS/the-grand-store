@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Calendar, Users, DollarSign, Activity } from 'lucide-react';
+import { Calendar, DollarSign, Activity, AlertCircle, ShoppingBag, Lightbulb, Users } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import api from '../../api';
 import { formatCartPrice } from '../../data';
 import Price from '../../components/ui/Price';
 
@@ -15,18 +16,17 @@ export default function EventHostDashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const headers = { Authorization: `Bearer ${user.token}` };
-        
         // Fetch Events
-        const eventsRes = await fetch(`${import.meta.env.VITE_API_URL}/api/events/vendor`, { headers });
-        if (eventsRes.ok) setEvents(await eventsRes.json());
+        try {
+          const eventsRes = await api.get(`/events/vendor`);
+          setEvents(eventsRes.data);
+        } catch (e) { console.error('Events fetch failed', e); }
 
         // Fetch Wallet
-        const walletRes = await fetch(`${import.meta.env.VITE_API_URL}/api/vendor/wallet`, { headers });
-        if (walletRes.ok) {
-          const data = await walletRes.json();
-          setWallet(data.wallet);
-        }
+        try {
+          const walletRes = await api.get(`/vendor/wallet`);
+          setWallet(walletRes.data.wallet);
+        } catch (e) { console.error('Wallet fetch failed', e); }
       } catch (error) {
         console.error('Failed to fetch dashboard data', error);
       } finally {

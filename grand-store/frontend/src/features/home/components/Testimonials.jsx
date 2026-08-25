@@ -1,5 +1,6 @@
 import { Star, Quote, CheckCircle2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import api from '../../../api'
 
 export default function Testimonials() {
   const [reviews, setReviews] = useState([])
@@ -50,8 +51,8 @@ export default function Testimonials() {
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
-        const res = await fetch('/api/testimonials')
-        const data = await res.json()
+        const res = await api.get(`/testimonials`)
+        const data = res.data
         if (data && data.length > 0) {
           setReviews(data)
         } else {

@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { TrendingUp, Package, DollarSign, Activity, AlertCircle, ShoppingBag, Lightbulb, Calendar, Gavel } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { formatCartPrice } from '../../data';
+import api from '../../api';
 
 export default function VendorDashboard() {
   const { user } = useAuth();
@@ -19,22 +20,23 @@ export default function VendorDashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const headers = { Authorization: `Bearer ${user.token}` };
-        
         // Fetch Sales
-        const salesRes = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/vendor/sales`, { headers });
-        if (salesRes.ok) setSales(await salesRes.json());
+        try {
+          const salesRes = await api.get(`/orders/vendor/sales`);
+          setSales(salesRes.data);
+        } catch (e) { console.error('Sales fetch failed', e); }
 
         // Fetch Lots
-        const lotsRes = await fetch(`${import.meta.env.VITE_API_URL}/api/auction/vendor/lots`, { headers });
-        if (lotsRes.ok) setLots(await lotsRes.json());
+        try {
+          const lotsRes = await api.get(`/auction/vendor/lots`);
+          setLots(lotsRes.data);
+        } catch (e) { console.error('Lots fetch failed', e); }
 
         // Fetch Wallet
-        const walletRes = await fetch(`${import.meta.env.VITE_API_URL}/api/vendor/wallet`, { headers });
-        if (walletRes.ok) {
-          const data = await walletRes.json();
-          setWallet(data.wallet);
-        }
+        try {
+          const walletRes = await api.get(`/vendor/wallet`);
+          setWallet(walletRes.data.wallet);
+        } catch (e) { console.error('Wallet fetch failed', e); }
       } catch (error) {
         console.error('Failed to fetch dashboard data', error);
       } finally {
@@ -48,30 +50,17 @@ export default function VendorDashboard() {
 
   const handleResubmit = async (lotId) => {
     try {
-      const headers = { 
-        Authorization: `Bearer ${user.token}`,
-        'Content-Type': 'application/json'
-      };
-      
       const payload = {
         startDate: resubmitDates.startDate ? new Date(resubmitDates.startDate).toISOString() : new Date().toISOString(),
         endDate: resubmitDates.endDate ? new Date(resubmitDates.endDate).toISOString() : new Date(Date.now() + 7 * 86400000).toISOString()
       };
-
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auction/${lotId}/resubmit`, {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify(payload)
-      });
-
-      if (res.ok) {
-        setResubmitLotId(null);
-        // Refresh lots
-        const lotsRes = await fetch(`${import.meta.env.VITE_API_URL}/api/auction/vendor/lots`, { headers: { Authorization: `Bearer ${user.token}` } });
-        if (lotsRes.ok) setLots(await lotsRes.json());
-      } else {
-        alert("Failed to resubmit lot.");
-      }
+      
+      await api.put(`/auction/${lotId}/resubmit`, payload);
+      
+      setResubmitLotId(null);
+      // Refresh lots
+      const lotsRes = await api.get(`/auction/vendor/lots`);
+      setLots(lotsRes.data);
     } catch (err) {
       console.error(err);
       alert("Error resubmitting lot.");

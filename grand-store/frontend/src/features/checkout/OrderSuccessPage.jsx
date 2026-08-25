@@ -4,6 +4,7 @@ import { CheckCircle2, ChevronLeft, Download, Loader2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useCurrency } from "../../context/CurrencyContext";
 import Price from "../../components/ui/Price";
+import api from "../../api";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -23,20 +24,11 @@ export default function OrderSuccessPage({ onClearCart }) {
 
     const fetchOrder = async () => {
       try {
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/orders/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${user.token}`,
-            },
-          },
-        );
-        const data = await res.json();
-        if (res.ok) {
-          setOrder(data);
-          if (paymentStatus === "success" && onClearCart) {
-            onClearCart();
-          }
+        const res = await api.get(`/orders/${id}`);
+        const data = res.data;
+        setOrder(data);
+        if (paymentStatus === "success" && onClearCart) {
+          onClearCart();
         }
       } catch (error) {
         console.error("Error fetching order", error);
@@ -382,26 +374,10 @@ export default function OrderSuccessPage({ onClearCart }) {
                     const url = e.target.proofUrl.value;
                     if (!url) return;
                     try {
-                      const res = await fetch(
-                        `${import.meta.env.VITE_API_URL}/api/orders/${order._id}/bank-transfer/upload`,
-                        {
-                          method: "POST",
-                          headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${user.token}`,
-                          },
-                          body: JSON.stringify({ proofUrl: url }),
-                        },
-                      );
-                      if (res.ok) {
-                        window.location.reload();
-                      } else {
-                        const data = await res.json();
-                        alert(data.message || "Failed to upload proof");
-                      }
-                    } catch (err) {
-                      console.error(err);
-                      alert("Network Error");
+                      await api.post(`/orders/${order._id}/bank-transfer/upload`, { proofUrl: url });
+                      window.location.reload();
+                    } catch (error) {
+                      alert(error.response?.data?.message || "Failed to upload proof");
                     }
                   }}
                   className="max-w-sm mx-auto text-left"

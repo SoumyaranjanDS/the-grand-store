@@ -22,6 +22,15 @@ const vendorSchema = new mongoose.Schema({
     enum: ['draft', 'pending_approval', 'approved', 'rejected', 'suspended'],
     default: 'draft'
   },
+  registrationFee: {
+    type: Number,
+    default: 0
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['unpaid', 'paid'],
+    default: 'unpaid'
+  },
   verificationScore: {
     businessVerified: { type: Boolean, default: false },
     identityVerified: { type: Boolean, default: false },

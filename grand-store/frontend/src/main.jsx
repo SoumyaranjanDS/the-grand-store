@@ -8,23 +8,26 @@ import { HelmetProvider } from 'react-helmet-async'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { LocationProvider } from './context/LocationContext.jsx'
 import { CurrencyProvider } from './context/CurrencyContext.jsx'
+import { GoogleOAuthProvider } from '@react-oauth/google'
 import './styles.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <HelmetProvider>
       <BrowserRouter>
-        <LocationProvider>
-          <AuthProvider>
-            <CurrencyProvider>
-              <ProductProvider>
-                <WishlistProvider>
-                  <App />
-                </WishlistProvider>
-              </ProductProvider>
-            </CurrencyProvider>
-          </AuthProvider>
-        </LocationProvider>
+        <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+          <LocationProvider>
+            <AuthProvider>
+              <CurrencyProvider>
+                <ProductProvider>
+                  <WishlistProvider>
+                    <App />
+                  </WishlistProvider>
+                </ProductProvider>
+              </CurrencyProvider>
+            </AuthProvider>
+          </LocationProvider>
+        </GoogleOAuthProvider>
       </BrowserRouter>
     </HelmetProvider>
   </StrictMode>,

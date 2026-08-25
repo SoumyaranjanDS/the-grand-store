@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 
 const CurrencyContext = createContext();
 
@@ -27,7 +27,7 @@ export const CurrencyProvider = ({ children }) => {
     const initCurrency = async () => {
       try {
         // 1. Fetch Exchange Rates
-        const ratesRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/config/currency-rates`);
+        const ratesRes = await api.get(`/config/currency-rates`);
         if (ratesRes.data && ratesRes.data.rates) {
           setRates(ratesRes.data.rates);
         }

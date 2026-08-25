@@ -1,60 +1,65 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import React from "react";
+import { Link } from "react-router-dom";
+import { ArrowRight, Star } from "lucide-react";
 
 export default function EventAdvertisements() {
   return (
     <section className="section pb-24" id="event-advertisements">
       <div className="shell">
-        <div className="section-heading collection-heading">
-          <div>
-            <p className="eyebrow">Upcoming Events</p>
-            <h2>Join the Experience</h2>
+        <div className="relative w-full max-w-6xl mx-auto rounded-2xl overflow-hidden group">
+          {/* Background Image / Gradient */}
+          <div className="absolute inset-0 bg-[#0a0a0a]">
+            <img
+              src="/auc-ev/wine tasting event.webp"
+              alt="Host with The Grand Store"
+              className="w-full h-full object-cover opacity-40 mix-blend-luminosity group-hover:opacity-50 transition-opacity duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#050505] via-[#050505]/80 to-transparent"></div>
           </div>
-          <p className="section-intro">
-            Discover our exclusive luxury auctions and curated tasting events designed for the true connoisseur.
-          </p>
-        </div>
 
-        {/* Use a narrower max-width and smaller gap to decrease card size */}
-        <div className="max-w-4xl mx-auto mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-          
-          {/* Auction Card */}
-          <div className="group flex flex-col bg-[#0f0e0c] rounded-lg overflow-hidden shadow-2xl transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(216,183,109,0.15)] border border-white/10 hover:border-[#d8b76d]/40">
-            <Link to="/auction" className="w-full aspect-square relative overflow-hidden block">
-              <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-500 z-10"></div>
-              <img 
-                src="/auc-ev/wine-tasting.webp" 
-                alt="Luxury Wine Auction" 
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-            </Link>
-            <div className="p-6 flex items-center justify-between border-t border-white/5 group-hover:border-[#d8b76d]/20 transition-colors duration-500">
-              <h3 className="font-serif text-xl md:text-2xl text-[#f2ede4] group-hover:text-[#d8b76d] transition-colors">Luxury Wine Auction</h3>
-              <Link to="/auction" className="flex items-center gap-2 text-sm text-[#918a7f] group-hover:text-[#d8b76d] transition-colors whitespace-nowrap">
-                Explore <ArrowRight size={16} />
+          {/* Content */}
+          <div className="relative z-10 p-8 md:p-16 lg:p-20 flex flex-col md:flex-row items-center justify-between gap-10">
+            <div className="max-w-xl">
+              <div className="flex items-center gap-2 text-[#c9a35b] mb-4 text-sm font-semibold tracking-[0.2em] uppercase">
+                <Star size={14} className="fill-[#c9a35b]" />
+                <span>Partner With Us</span>
+              </div>
+              <h2 className="font-serif text-3xl md:text-5xl lg:text-6xl text-white mb-6 leading-tight">
+                Host An Event <br className="hidden md:block" /> Or Auction
+              </h2>
+              <p className="text-[#918a7f] text-lg md:text-xl mb-10 leading-relaxed font-light">
+                Elevate your brand by hosting an exclusive luxury auction or
+                curated tasting event on our platform. Reach our discerning
+                audience of connoisseurs.
+              </p>
+
+              <Link
+                to="/vendor/onboarding"
+                className="inline-flex items-center justify-center px-8 py-4 bg-[#c9a35b] hover:bg-[#d8b76d] text-[#050505] font-semibold tracking-wider uppercase text-sm rounded-sm transition-all duration-300 hover:shadow-[0_0_20px_rgba(201,163,91,0.4)] hover:-translate-y-1 gap-3"
+              >
+                Become a Host <ArrowRight size={18} />
               </Link>
             </div>
-          </div>
 
-          {/* Event Card */}
-          <div className="group flex flex-col bg-[#0f0e0c] rounded-lg overflow-hidden shadow-2xl transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(216,183,109,0.15)] border border-white/10 hover:border-[#d8b76d]/40">
-            <a href="http://localhost:5174" target="_blank" rel="noopener noreferrer" className="w-full aspect-square relative overflow-hidden block">
-              <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-500 z-10"></div>
-              <img 
-                src="/auc-ev/wine tasting event.webp" 
-                alt="Exclusive Tasting Event" 
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-            </a>
-            <div className="p-6 flex items-center justify-between border-t border-white/5 group-hover:border-[#d8b76d]/20 transition-colors duration-500">
-              <h3 className="font-serif text-xl md:text-2xl text-[#f2ede4] group-hover:text-[#d8b76d] transition-colors">Wine Tasting</h3>
-              <a href="http://localhost:5174" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-[#918a7f] group-hover:text-[#d8b76d] transition-colors whitespace-nowrap">
-                Explore <ArrowRight size={16} />
-              </a>
+            {/* Visual accent on the right for desktop */}
+            <div className="hidden md:flex flex-col gap-4">
+              <div className="w-48 h-64 rounded-lg overflow-hidden border border-white/10 rotate-3 shadow-2xl relative">
+                <img
+                  src="/auc-ev/wine-tasting.webp"
+                  alt="Auction"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-4">
+                  <span className="text-white font-serif tracking-wide">
+                    Auctions
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
+          {/* Subtle border glow */}
+          <div className="absolute inset-0 border border-white/10 rounded-2xl pointer-events-none group-hover:border-[#c9a35b]/30 transition-colors duration-700"></div>
         </div>
       </div>
     </section>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api';
 import { Store, MapPin, CheckCircle, Search } from 'lucide-react';
 import ProductCard from '../../components/ProductCard';
 
@@ -14,7 +14,7 @@ export default function StoreFront() {
     const fetchStore = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`${import.meta.env.VITE_API_URL || ''}/api/shop/stores/${storeId}`);
+        const res = await api.get(`/shop/stores/${storeId}`);
         setStoreData(res.data.storeData);
         setProducts(res.data.products);
       } catch (err) {

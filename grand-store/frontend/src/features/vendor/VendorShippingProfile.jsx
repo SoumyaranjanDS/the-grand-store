@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import LocationInput from '../../components/LocationInput';
 import { Navigation, ExternalLink } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../api';
 
 const VendorShippingProfile = () => {
   const { user } = useAuth();
@@ -33,19 +34,13 @@ const VendorShippingProfile = () => {
 
       try {
         setPostnetLoading(true);
-        const token = user?.token || localStorage.getItem('token');
         let queryParams = `address=${encodeURIComponent(addressString)}`;
         if (addr.lat && addr.lng) {
             queryParams += `&lat=${addr.lat}&lng=${addr.lng}`;
         }
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL || ''}/api/postnet/locator?${queryParams}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const data = await res.json();
-        if (res.ok && data.stores) {
+        const res = await api.get(`/postnet/locator?${queryParams}`);
+        const data = res.data;
+        if (data.stores) {
           setPostnetStores(data.stores);
         }
       } catch (error) {
@@ -61,15 +56,10 @@ const VendorShippingProfile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = user?.token || localStorage.getItem('token');
-        const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/vendor/shipping-profile`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (Object.keys(data).length > 0) {
-            setProfile(data);
-          }
+        const res = await api.get(`/vendor/shipping-profile`);
+        const data = res.data;
+        if (Object.keys(data).length > 0) {
+          setProfile(data);
         }
       } catch (err) {
         console.error('Error fetching shipping profile:', err);
@@ -103,22 +93,10 @@ const VendorShippingProfile = () => {
     setSaving(true);
     setMessage('');
     try {
-      const token = user?.token || localStorage.getItem('token');
-      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/vendor/shipping-profile`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ shippingProfile: profile })
-      });
-      if (res.ok) {
-        setMessage('Shipping profile updated successfully!');
-      } else {
-        setMessage('Failed to update shipping profile.');
-      }
+      await api.put(`/vendor/shipping-profile`, { shippingProfile: profile });
+      setMessage('Shipping profile updated successfully!');
     } catch (err) {
-      setMessage('An error occurred while saving.');
+      setMessage(err.response?.data?.message || 'Failed to update shipping profile.');
     } finally {
       setSaving(false);
     }
