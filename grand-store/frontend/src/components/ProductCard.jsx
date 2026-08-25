@@ -7,6 +7,7 @@ import {
   ShoppingBag,
   Plus,
   Store,
+  CreditCard,
 } from "lucide-react";
 import IconButton from "./IconButton";
 import { useWishlist } from "../wishlistContext";
@@ -337,23 +338,90 @@ export default function ProductCard({
           </Link>
         )}
 
-        <div className="product-buy-row">
-          <strong>
+        <div className="product-buy-section" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: 'auto' }}>
+          <strong style={{ fontSize: '1.25rem', color: '#fff', letterSpacing: '0.05em' }}>
             <Price amount={product.price} />
           </strong>
-          {onAdd && (
-            <button
-              type="button"
+          <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+            {onAdd && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onAdd(product);
+                }}
+                aria-label={`Add ${productName} to bag`}
+                style={{ 
+                  flex: 1, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  gap: '6px', 
+                  padding: '10px 4px', 
+                  backgroundColor: 'rgba(255,255,255,0.05)', 
+                  color: '#fff', 
+                  border: '1px solid rgba(255,255,255,0.1)', 
+                  borderRadius: '2px', 
+                  fontSize: '10px', 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '0.1em', 
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxSizing: 'border-box'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                }}
+              >
+                <ShoppingBag size={14} style={{ display: 'block' }} /> 
+                <span style={{ lineHeight: 1, paddingTop: '1px' }}>Add</span>
+              </button>
+            )}
+            <Link
+              to="/checkout"
               onClick={(e) => {
-                e.preventDefault();
                 e.stopPropagation();
-                onAdd(product);
+                if (onAdd) onAdd(product);
               }}
-              aria-label={`Add ${productName} to bag`}
+              style={{ 
+                flex: 1, 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                gap: '6px', 
+                padding: '10px 4px', 
+                backgroundColor: 'var(--gold-bright)', 
+                color: '#000', 
+                border: '1px solid var(--gold-bright)', 
+                borderRadius: '2px', 
+                fontSize: '10px', 
+                textTransform: 'uppercase', 
+                letterSpacing: '0.1em', 
+                cursor: 'pointer', 
+                textDecoration: 'none', 
+                fontWeight: 'bold',
+                transition: 'all 0.2s ease',
+                boxSizing: 'border-box'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--gold)';
+                e.currentTarget.style.borderColor = 'var(--gold)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--gold-bright)';
+                e.currentTarget.style.borderColor = 'var(--gold-bright)';
+              }}
             >
-              Add to bag <ShoppingBag size={16} />
-            </button>
-          )}
+              <CreditCard size={14} style={{ display: 'block' }} /> 
+              <span style={{ lineHeight: 1, paddingTop: '1px' }}>Checkout</span>
+            </Link>
+          </div>
         </div>
       </div>
     </article>
