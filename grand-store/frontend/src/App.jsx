@@ -94,6 +94,8 @@ import AdminBankTransfers from './features/admin/AdminBankTransfers'
 import AdminAccessories from './features/admin/AdminAccessories'
 import AdminTradeEnquiries from './features/admin/AdminTradeEnquiries'
 import AdminAttributes from './features/admin/AdminAttributes'
+import AdminAdvertisementRequests from './features/admin/AdminAdvertisementRequests'
+import AdminAdvertisementRequestDetail from './features/admin/AdminAdvertisementRequestDetail'
 import AccessoriesPage from './features/shop/AccessoriesPage'
 import VendorMarketing from './features/vendor/VendorMarketing'
 import VendorAcademy from './features/vendor/VendorAcademy'
@@ -449,6 +451,8 @@ function App() {
           <Route path="testimonials" element={<AdminTestimonials />} />
           <Route path="attributes" element={<AdminAttributes />} />
           <Route path="host-applications" element={<AdminHostApplications />} />
+          <Route path="advertisement-requests" element={<AdminAdvertisementRequests />} />
+          <Route path="advertisement-requests/:id" element={<AdminAdvertisementRequestDetail />} />
           <Route path="auctions" element={<AdminAuctionPanel onNotify={showToast} />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="testimonials" element={<AdminTestimonials />} />
