@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getProducts, getProductById, createProduct, getVendorProducts, updateProduct } = require('../controllers/productController');
+const { getProducts, getProductById, createProduct, getVendorProducts, updateProduct, deleteProduct } = require('../controllers/productController');
 const { protect } = require('../middleware/authMiddleware');
 const multer = require('multer');
 const path = require('path');
@@ -16,6 +16,7 @@ router.route('/vendor/me').get(protect, getVendorProducts);
 
 router.route('/:id')
   .get(getProductById)
-  .put(protect, upload.fields([{ name: 'images', maxCount: 5 }, { name: 'factSheetPdf', maxCount: 1 }]), updateProduct);
+  .put(protect, upload.fields([{ name: 'images', maxCount: 5 }, { name: 'factSheetPdf', maxCount: 1 }]), updateProduct)
+  .delete(protect, deleteProduct);
 
 module.exports = router;

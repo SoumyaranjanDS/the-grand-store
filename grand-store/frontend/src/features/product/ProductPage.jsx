@@ -337,11 +337,12 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
           {/* Action Row */}
           <div className="flex flex-wrap items-stretch gap-4 mb-6">
             {/* Quantity Selector */}
-            <div className="flex items-center border border-white/20 h-[52px]">
+            <div className={`flex items-center border border-white/20 h-[52px] ${product.stock === 0 ? 'opacity-50 pointer-events-none' : ''}`}>
               <button
                 type="button"
                 className="w-12 h-full flex items-center justify-center text-[#918a7f] hover:text-gold-gradient transition-colors"
                 onClick={() => setQuantity((value) => Math.max(1, value - 1))}
+                disabled={product.stock === 0}
               >
                 <Minus size={14} />
               </button>
@@ -352,26 +353,30 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
                 type="button"
                 className="w-12 h-full flex items-center justify-center text-[#918a7f] hover:text-gold-gradient transition-colors"
                 onClick={() => setQuantity((value) => value + 1)}
+                disabled={product.stock === 0 || quantity >= product.stock}
               >
                 <Plus size={14} />
               </button>
             </div>
 
             <button
-              className="flex-1 min-w-[140px] border border-[#eee8dd] bg-transparent text-[#eee8dd] cursor-pointer font-bold uppercase tracking-widest text-[11px] h-[52px]"
+              className={`flex-1 min-w-[140px] border border-[#eee8dd] bg-transparent text-[#eee8dd] font-bold uppercase tracking-widest text-[11px] h-[52px] ${product.stock === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-white/5 transition-colors'}`}
               type="button"
-              onClick={() => onAdd && onAdd(product, quantity, selectedOption)}
+              onClick={() => product.stock !== 0 && onAdd && onAdd(product, quantity, selectedOption)}
+              disabled={product.stock === 0}
             >
-              Add To Cart
+              {product.stock === 0 ? 'Out of Stock' : 'Add To Cart'}
             </button>
 
             <button
-              className="flex-1 min-w-[140px] bg-[#222] hover:bg-[#333] border border-[#222] text-[#eee8dd] transition-colors font-bold uppercase tracking-widest text-[11px] h-13 cursor-pointer"
+              className={`flex-1 min-w-[140px] bg-[#222] border border-[#222] text-[#eee8dd] font-bold uppercase tracking-widest text-[11px] h-[52px] ${product.stock === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-[#333] transition-colors'}`}
               type="button"
               onClick={() => {
-                if (onAdd) onAdd(product, quantity, selectedOption);
-                // In future, redirect to checkout here
+                if (product.stock !== 0 && onAdd) {
+                  onAdd(product, quantity, selectedOption);
+                }
               }}
+              disabled={product.stock === 0}
             >
               Buy Now
             </button>

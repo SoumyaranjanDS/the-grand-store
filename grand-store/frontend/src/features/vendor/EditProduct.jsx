@@ -52,7 +52,7 @@ export default function EditProduct({ onNotify }) {
   }, []);
 
   useEffect(() => {
-    if (!user || user.role !== 'vendor_active') {
+    if (!user || (user.role !== 'vendor_active' && user.role !== 'admin')) {
       return;
     }
     const fetchProduct = async () => {
@@ -93,7 +93,7 @@ export default function EditProduct({ onNotify }) {
     fetchProduct();
   }, [user, id]);
 
-  if (!user || user.role !== 'vendor_active') {
+  if (!user || (user.role !== 'vendor_active' && user.role !== 'admin')) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
         <div className="p-8 border border-red-500/20 bg-red-950/10 text-[var(--color-ivory)] max-w-md w-full flex items-center gap-4">

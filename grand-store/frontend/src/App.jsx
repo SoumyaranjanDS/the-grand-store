@@ -23,8 +23,11 @@ import EventAdvertisements from './features/home/components/EventAdvertisements'
 import PartnerDestinations from './features/home/components/PartnerDestinations'
 import WhyChooseUs from './features/home/components/WhyChooseUs'
 import Testimonials from './features/home/components/Testimonials'
+import AdminProducts from './features/admin/AdminProducts'
+import AdminOrders from './features/admin/AdminOrders'
 import LatestBlogs from './features/home/components/LatestBlogs'
 import Footer from './components/Footer'
+import CookieConsent from './components/CookieConsent'
 import SiteMotion from './components/SiteMotion'
 import ProductCard from './components/ProductCard'
 import ProductQuickView from './components/ProductQuickView'
@@ -454,6 +457,10 @@ function App() {
           <Route path="bank-transfers" element={<AdminBankTransfers />} />
           <Route path="glossary" element={<AdminGlossary />} />
           <Route path="newsletter" element={<AdminNewsletter />} />
+          <Route path="products" element={<AdminProducts />} />
+          <Route path="orders" element={<AdminOrders />} />
+          <Route path="product-add" element={<AddProduct onNotify={showToast} />} />
+          <Route path="product-edit/:id" element={<EditProduct onNotify={showToast} />} />
         </Route>
         
         <Route path="/auction" element={<AuctionPage onNotify={showToast} />} />
@@ -505,6 +512,7 @@ function App() {
           </a>
         </>
       )}
+      <CookieConsent />
       {import.meta.env.DEV && <Agentation />}
     </div>
   )

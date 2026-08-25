@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { LayoutDashboard, Users, Building2, Gavel, Wallet, Settings, Menu, X, LogOut, ArrowLeft, Star } from 'lucide-react';
+import { LayoutDashboard, Users, Building2, Gavel, Wallet, Settings, Menu, X, LogOut, ArrowLeft, Star, Package, ShoppingBag } from 'lucide-react';
 
 export default function AdminLayout() {
   const { user, logout } = useAuth();
@@ -93,6 +93,12 @@ export default function AdminLayout() {
             </button>
 
             <div className="text-[10px] text-[var(--color-ivory-muted)] uppercase tracking-widest mb-2 mt-4 pl-2">Operations</div>
+            <button onClick={() => handleNavigate('/admin/products')} className={navItemClass('/admin/products')}>
+              <Package size={16} /> Retail Products
+            </button>
+            <button onClick={() => handleNavigate('/admin/orders')} className={navItemClass('/admin/orders')}>
+              <ShoppingBag size={16} /> Retail Orders
+            </button>
             <button onClick={() => handleNavigate('/admin/auctions')} className={navItemClass('/admin/auctions')}>
               <Gavel size={16} /> Auctions Management
             </button>

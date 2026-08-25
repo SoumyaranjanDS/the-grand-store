@@ -43,6 +43,21 @@ export default function Header({
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchRef = useRef(null);
+
+  const [mobileSearchQuery, setMobileSearchQuery] = useState("");
+  const mobileSearchRef = useRef(null);
+
+  const searchResults = searchQuery.trim() 
+    ? products.filter(p => p.name?.toLowerCase().includes(searchQuery.toLowerCase()) || p.brand?.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 5)
+    : [];
+
+  const mobileSearchResults = mobileSearchQuery.trim()
+    ? products.filter(p => p.name?.toLowerCase().includes(mobileSearchQuery.toLowerCase()) || p.brand?.toLowerCase().includes(mobileSearchQuery.toLowerCase())).slice(0, 5)
+    : [];
+
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > lastScrollY && window.scrollY > 100) {
@@ -71,6 +86,20 @@ export default function Header({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [megaOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setIsSearchOpen(false);
+      }
+    };
+    if (isSearchOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isSearchOpen]);
 
   const closeMenus = () => {
     setMobileOpen(false);
@@ -140,17 +169,69 @@ export default function Header({
           </div>
 
           {/* Center: Search Field (Desktop only) */}
-          <form
-            className="search-field hidden md:grid flex-1 max-w-[560px] mx-6"
-            onSubmit={(event) => event.preventDefault()}
-          >
-            <Search size={18} aria-hidden="true" />
-            <input
-              aria-label="Search the collection"
-              placeholder="Search rare bottles, estates, vintages…"
-            />
-            <button type="submit">Search</button>
-          </form>
+          <div className="hidden md:block flex-1 max-w-[560px] mx-6 relative" ref={searchRef}>
+            <form
+              className="search-field w-full"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (searchQuery.trim()) {
+                  navigate(`/shop?search=${encodeURIComponent(searchQuery)}`);
+                  setIsSearchOpen(false);
+                }
+              }}
+            >
+              <Search size={18} aria-hidden="true" />
+              <input
+                aria-label="Search the collection"
+                placeholder="Search rare bottles, estates, vintages…"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setIsSearchOpen(true);
+                }}
+                onFocus={() => setIsSearchOpen(true)}
+              />
+              <button type="submit">Search</button>
+            </form>
+
+            <AnimatePresence>
+              {isSearchOpen && searchQuery.trim() && searchResults.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute top-full left-0 w-full bg-[#1e1e1e] border border-white/20 shadow-2xl z-50 overflow-hidden"
+                >
+                  {searchResults.map(product => (
+                    <Link
+                      key={product.id || product._id}
+                      to={`/product/${product.slug || product.id || product._id}`}
+                      className="flex items-center justify-between p-3 border-b border-white/10 hover:bg-white/5 transition-colors last:border-b-0"
+                      onClick={() => {
+                        setIsSearchOpen(false);
+                        setSearchQuery("");
+                      }}
+                    >
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className="w-8 h-10 flex items-center justify-center rounded border border-white/10 overflow-hidden shrink-0 bg-white/5">
+                          {product.image ? (
+                            <img src={product.image} alt={product.name} className="max-w-full max-h-full object-contain" />
+                          ) : (
+                            <div className="w-full h-full bg-[#222]"></div>
+                          )}
+                        </div>
+                        <span className="text-[15px] text-[#eee] truncate" title={product.name}>{product.name}</span>
+                      </div>
+                      <span className="text-[15px] text-[#eee] ml-4 shrink-0">
+                        <Price amount={product.price} />
+                      </span>
+                    </Link>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* Right: Header Actions */}
           <div className="header-actions flex items-center justify-end gap-1 sm:gap-2.5 shrink-0">
@@ -254,6 +335,7 @@ export default function Header({
               <Link
                 className="nav-shop-link font-bold text-[#f0cf76] hover:text-white transition-colors"
                 to="/shop"
+                onClick={() => setMegaOpen(false)}
               >
                 SHOP
               </Link>
@@ -279,6 +361,7 @@ export default function Header({
               <Link
                 to="/accessories"
                 className="nav-dropdown-button hover:text-[#f0cf76] transition-colors"
+                onClick={() => setMegaOpen(false)}
               >
                 Accessories
               </Link>
@@ -515,13 +598,63 @@ export default function Header({
               <X size={23} />
             </IconButton>
           </div>
-          <form
-            className="mobile-search"
-            onSubmit={(event) => event.preventDefault()}
-          >
-            <Search size={18} />
-            <input aria-label="Search" placeholder="Search the cellar" />
-          </form>
+          <div className="mobile-search-container relative" ref={mobileSearchRef}>
+            <form
+              className="mobile-search"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (mobileSearchQuery.trim()) {
+                  navigate(`/shop?search=${encodeURIComponent(mobileSearchQuery)}`);
+                  closeMenus();
+                }
+              }}
+            >
+              <Search size={18} />
+              <input 
+                aria-label="Search" 
+                placeholder="Search the cellar" 
+                value={mobileSearchQuery}
+                onChange={(e) => setMobileSearchQuery(e.target.value)}
+              />
+            </form>
+            
+            <AnimatePresence>
+              {mobileSearchQuery.trim() && mobileSearchResults.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  className="absolute top-full left-0 w-full mt-2 bg-[#1a1a1a] border border-[#333] shadow-xl z-[100] rounded-sm overflow-hidden"
+                >
+                  {mobileSearchResults.map(product => (
+                    <Link
+                      key={product.id || product._id}
+                      to={`/product/${product.slug || product.id || product._id}`}
+                      className="flex items-center justify-between p-3 border-b border-[#333] hover:bg-[#2a2a2a] transition-colors last:border-b-0"
+                      onClick={() => {
+                        setMobileSearchQuery("");
+                        closeMenus();
+                      }}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-10 bg-black flex items-center justify-center rounded border border-[#333] overflow-hidden shrink-0">
+                          {product.image ? (
+                            <img src={product.image} alt={product.name} className="max-w-full max-h-full object-contain" />
+                          ) : (
+                            <div className="w-full h-full bg-[#222]"></div>
+                          )}
+                        </div>
+                        <span className="text-sm text-[#eee] truncate" title={product.name}>{product.name}</span>
+                      </div>
+                      <span className="text-sm font-semibold text-white ml-4 shrink-0">
+                        <Price amount={product.price} />
+                      </span>
+                    </Link>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
           <div className="drawer-links">
             <Link to="/" onClick={closeMenus}>
               Home
