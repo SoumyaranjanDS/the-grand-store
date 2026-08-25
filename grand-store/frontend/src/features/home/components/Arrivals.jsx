@@ -9,9 +9,14 @@ export default function Arrivals({ onAdd, onWish, onCompare, compareItems }) {
   const { products } = useProducts()
   const sectionRef = useRef(null)
 
+  const isExcludedCategory = (catStr) => {
+    const c = String(catStr || '').toLowerCase();
+    return c.includes('accessor') || c.includes('glassware') || c.includes('drinkware');
+  };
+
   const arrivalProducts = [...products]
     .filter((product) => !product.vendorId) // Only from admin
-    .filter((product) => !String(product.category || product.type || '').toLowerCase().includes('accessor')) // Not from accessories
+    .filter((product) => !isExcludedCategory(product.category) && !isExcludedCategory(product.type))
     .sort((first, second) => {
       const firstCreatedAt = Date.parse(first.createdAt || '') || 0
       const secondCreatedAt = Date.parse(second.createdAt || '') || 0
