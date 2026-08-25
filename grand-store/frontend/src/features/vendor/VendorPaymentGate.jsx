@@ -11,49 +11,86 @@ export default function VendorPaymentGate() {
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // Mock payment details
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvv, setCvv] = useState("");
+  const [registrationFee, setRegistrationFee] = useState(0);
+
+  React.useEffect(() => {
+    // Check if we just returned from PayFast
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('success') === 'true') {
+      handleSuccessRedirect();
+    } else if (params.get('success') === 'false') {
+      alert("Payment was cancelled or failed. Please try again.");
+    }
+
+    // Fetch fee
+    const fetchFee = async () => {
+      try {
+        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+        const token = userInfo?.token || user?.token;
+        const { data } = await axios.get(`${import.meta.env.VITE_API_URL || ''}/api/vendor/onboarding`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (data && data.registrationFee) {
+          setRegistrationFee(data.registrationFee);
+        }
+      } catch (err) {
+        console.error("Failed to fetch vendor registration fee", err);
+      }
+    };
+    fetchFee();
+  }, [user]);
+
+  const handleSuccessRedirect = () => {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+    if (userInfo) {
+      userInfo.role = "vendor_active";
+      localStorage.setItem("userInfo", JSON.stringify(userInfo));
+    }
+    if (login && userInfo) {
+      login(userInfo);
+    }
+    setSuccess(true);
+    setTimeout(() => {
+      navigate("/vendor/dashboard");
+    }, 2000);
+  };
 
   const handlePayment = async (e) => {
     e.preventDefault();
     setProcessing(true);
 
     try {
-      // Simulate network delay for payment gateway
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Call backend to update role to vendor_active
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
       const token = userInfo?.token || user?.token;
 
-      const { data } = await axios.post(`${import.meta.env.VITE_API_URL || ''}/api/vendor/simulate-payment`, {}, {
+      // Call backend to generate PayFast URL and signature
+      const { data } = await axios.post(`${import.meta.env.VITE_API_URL || ''}/api/payfast/generate-vendor`, {}, {
         headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      });
 
-      // Update local storage and context
-      if (userInfo) {
-        userInfo.role = "vendor_active";
-        localStorage.setItem("userInfo", JSON.stringify(userInfo));
+      // Construct and submit a form dynamically to redirect to PayFast
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = data.url;
+
+      for (const key in data.data) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = data.data[key];
+        form.appendChild(input);
       }
-      if (login && userInfo) {
-        login(userInfo);
-      }
 
-      setSuccess(true);
-
-      // Redirect to dashboard after a short delay
-      setTimeout(() => {
-        navigate("/vendor/dashboard");
-      }, 2000);
+      document.body.appendChild(form);
+      form.submit();
+      
     } catch (error) {
-      console.error("Payment failed", error);
-      alert("Payment processing failed. Please try again.");
+      console.error("Payment generation failed", error);
+      alert("Failed to initialize payment gateway.");
       setProcessing(false);
     }
   };
+
 
   if (success) {
     return (
@@ -94,13 +131,7 @@ export default function VendorPaymentGate() {
               <div className="flex justify-between text-sm">
                 <span className="text-white/60">Setup & Verification</span>
                 <span className="text-white">
-                  <Price amount={2500} />
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-white/60">First Month Subscription</span>
-                <span className="text-white">
-                  <Price amount={500} />
+                  <Price amount={registrationFee} />
                 </span>
               </div>
             </div>
@@ -108,7 +139,7 @@ export default function VendorPaymentGate() {
             <div className="flex justify-between text-lg">
               <span className="text-white">Total Due</span>
               <span className="text-gold font-mono">
-                <Price amount={3000} />
+                <Price amount={registrationFee} />
               </span>
             </div>
           </div>
@@ -125,87 +156,23 @@ export default function VendorPaymentGate() {
 
           <form onSubmit={handlePayment}>
             <div className="mb-6">
-              <label className="block text-xs uppercase tracking-widest text-gold mb-2">
-                Cardholder Name
-              </label>
-              <input
-                type="text"
-                required
-                className="w-full bg-black border border-white/20 rounded p-4 text-white focus:border-gold outline-none"
-                placeholder="Name on card"
-              />
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-xs uppercase tracking-widest text-gold mb-2">
-                Card Number
-              </label>
-              <div className="relative">
-                <CreditCard
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30"
-                  size={20}
-                />
-                <input
-                  type="text"
-                  required
-                  maxLength="19"
-                  value={cardNumber}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, "");
-                    const formatted = val.match(/.{1,4}/g)?.join(" ") || val;
-                    setCardNumber(formatted);
-                  }}
-                  className="w-full bg-black border border-white/20 rounded p-4 pl-12 text-white focus:border-gold outline-none font-mono tracking-wider"
-                  placeholder="0000 0000 0000 0000"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-6 mb-8">
-              <div className="flex-1">
-                <label className="block text-xs uppercase tracking-widest text-gold mb-2">
-                  Expiry Date
-                </label>
-                <input
-                  type="text"
-                  required
-                  maxLength="5"
-                  value={expiry}
-                  onChange={(e) => {
-                    let val = e.target.value.replace(/\D/g, "");
-                    if (val.length > 2) {
-                      val = val.substring(0, 2) + "/" + val.substring(2, 4);
-                    }
-                    setExpiry(val);
-                  }}
-                  className="w-full bg-black border border-white/20 rounded p-4 text-white focus:border-gold outline-none font-mono"
-                  placeholder="MM/YY"
-                />
-              </div>
-              <div className="flex-1">
-                <label className="block text-xs uppercase tracking-widest text-gold mb-2">
-                  CVV
-                </label>
-                <input
-                  type="text"
-                  required
-                  maxLength="4"
-                  value={cvv}
-                  onChange={(e) => setCvv(e.target.value.replace(/\D/g, ""))}
-                  className="w-full bg-black border border-white/20 rounded p-4 text-white focus:border-gold outline-none font-mono"
-                  placeholder="123"
-                />
-              </div>
+              <p className="text-white/60 text-sm mb-6">
+                You will be securely redirected to PayFast to complete your activation payment.
+              </p>
             </div>
 
             <button
               type="submit"
               disabled={processing}
-              className="w-full bg-gold text-black py-4 rounded font-medium tracking-wide hover:bg-white transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full bg-gold hover:bg-white text-black py-4 rounded font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {processing
-                ? "Processing Payment..."
-                : "Pay <Price amount={3000} /> & Activate"}
+              {processing ? (
+                "Initializing Secure Gateway..."
+              ) : (
+                <>
+                  Pay Now via PayFast <ShieldCheck size={18} />
+                </>
+              )}
             </button>
           </form>
         </div>
