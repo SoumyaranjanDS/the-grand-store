@@ -11,6 +11,10 @@ export default function AdminProducts() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('All');
+
+  const categories = ['All', ...new Set(products.map(p => p.type || 'Other'))];
+  const filteredProducts = selectedCategory === 'All' ? products : products.filter(p => (p.type || 'Other') === selectedCategory);
 
   useEffect(() => {
     if (!user || user.role !== 'admin') {
@@ -93,10 +97,24 @@ export default function AdminProducts() {
               <Package size={20} />
             </div>
             My Retail Products
+            <span className="bg-[#1a1917] text-[#918a7f] text-sm font-sans px-3 py-1 rounded-full border border-white/5">
+              {filteredProducts.length} Total
+            </span>
           </h3>
-          <button onClick={() => navigate('/admin/product-add')} className="px-6 py-2.5 rounded-full bg-[var(--color-gold)]/10 text-[#e1bd70] border border-[var(--color-gold)]/30 font-semibold uppercase tracking-widest text-xs transition-all hover:bg-[#c9a35b] hover:text-black ">
-            + New Product
-          </button>
+          <div className="flex items-center gap-4">
+            <select 
+              value={selectedCategory} 
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="bg-[#1a1917] border border-white/10 text-[#eee8dd] text-sm rounded-lg focus:ring-[#c9a35b] focus:border-[#c9a35b] block p-2.5 transition-colors"
+            >
+              {categories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+            <button onClick={() => navigate('/admin/product-add')} className="px-6 py-2.5 rounded-full bg-[var(--color-gold)]/10 text-[#e1bd70] border border-[var(--color-gold)]/30 font-semibold uppercase tracking-widest text-xs transition-all hover:bg-[#c9a35b] hover:text-black ">
+              + New Product
+            </button>
+          </div>
         </div>
         
         {loading ? (
@@ -128,7 +146,7 @@ export default function AdminProducts() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {products.map((product) => (
+                {filteredProducts.map((product) => (
                   <tr key={product._id} className="hover:bg-white/[0.02] transition-colors group">
                     <td className="py-5 px-5">
                       <div className="flex items-center gap-4">
