@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import gsap from 'gsap'
 import { ArrowRight } from 'lucide-react'
@@ -9,14 +9,18 @@ export default function Arrivals({ onAdd, onWish, onCompare, compareItems }) {
   const { products } = useProducts()
   const sectionRef = useRef(null)
 
-  const arrivalProducts = [...products]
-    .filter((product) => (!product.vendorId || product.approvalStatus === 'approved'))
-    .sort((first, second) => {
-      const firstCreatedAt = Date.parse(first.createdAt || '') || 0
-      const secondCreatedAt = Date.parse(second.createdAt || '') || 0
-      return secondCreatedAt - firstCreatedAt
-    })
-    .slice(0, 5)
+  const [arrivalProducts, setArrivalProducts] = useState([])
+
+  useEffect(() => {
+    if (products.length > 0 && arrivalProducts.length === 0) {
+      const filtered = [...products]
+        .filter((product) => (!product.vendorId || product.approvalStatus === 'approved'))
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 5)
+      
+      setArrivalProducts(filtered)
+    }
+  }, [products])
 
   useEffect(() => {
     if (arrivalProducts.length === 0 || !sectionRef.current) return;
