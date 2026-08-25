@@ -11,6 +11,15 @@ export default function TequilaShowcase({ onAdd, onWish, onCompare, compareItems
   const { products } = useProducts()
   const sectionRef = useRef(null)
   const [quickViewProduct, setQuickViewProduct] = useState(null)
+  const [productOrder, setProductOrder] = useState({})
+
+  useEffect(() => {
+    if (products.length > 0 && Object.keys(productOrder).length === 0) {
+      const order = {}
+      products.forEach(p => { order[p.id || p._id] = Math.random() })
+      setProductOrder(order)
+    }
+  }, [products])
 
   useEffect(() => {
     const context = gsap.context(() => {
@@ -28,9 +37,15 @@ export default function TequilaShowcase({ onAdd, onWish, onCompare, compareItems
   }, [])
 
   const tequilaProducts = products
-    .filter((product) => (
-      String(product.category || product.type || '').toLowerCase() === 'tequila'
-    ))
+    .filter((product) => {
+      const category = String(product.category || product.type || '').toLowerCase()
+      return category === 'tequila'
+    })
+    .sort((a, b) => {
+      const orderA = productOrder[a.id || a._id] || 0
+      const orderB = productOrder[b.id || b._id] || 0
+      return orderA - orderB
+    })
     .slice(0, 5)
   const marqueeBrands = [...tequilaBrands, ...tequilaBrands]
 
