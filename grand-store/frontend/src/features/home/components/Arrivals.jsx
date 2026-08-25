@@ -15,6 +15,13 @@ export default function Arrivals({ onAdd, onWish, onCompare, compareItems }) {
     if (products.length > 0 && arrivalProducts.length === 0) {
       const filtered = [...products]
         .filter((product) => (!product.vendorId || product.approvalStatus === 'approved'))
+        .filter((product) => String(product.category || product.type || '').toLowerCase() !== 'accessories')
+        .sort((first, second) => {
+          const firstCreatedAt = Date.parse(first.createdAt || '') || 0
+          const secondCreatedAt = Date.parse(second.createdAt || '') || 0
+          return secondCreatedAt - firstCreatedAt
+        })
+        .slice(0, 15)
         .sort(() => 0.5 - Math.random())
         .slice(0, 5)
       
