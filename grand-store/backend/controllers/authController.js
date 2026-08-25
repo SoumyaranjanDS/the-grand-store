@@ -1,6 +1,10 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const { OAuth2Client } = require('google-auth-library');
+const axios = require('axios');
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -163,10 +167,90 @@ const deleteUserProfile = async (req, res) => {
   }
 };
 
+// @desc    Authenticate with Google
+// @route   POST /api/auth/google
+// @access  Public
+const googleAuth = async (req, res) => {
+  try {
+    const { token, role = 'customer' } = req.body;
+    
+    if (!token) {
+      return res.status(400).json({ message: 'Google token is required' });
+    }
+
+    let payload;
+    if (token.startsWith('ya29.')) {
+      // It's an access token
+      const { data } = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      payload = data;
+    } else {
+      // It's an ID token
+      const ticket = await client.verifyIdToken({
+        idToken: token,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+    }
+
+    const { sub: googleId, email, name } = payload;
+
+    // Check if user exists
+    let user = await User.findOne({ email });
+
+    if (user) {
+      // If user exists without googleId, link it
+      if (!user.googleId) {
+        user.googleId = googleId;
+        await user.save();
+      }
+      
+      // We don't overwrite the role if it's already a vendor, unless requested by the frontend
+      // But if the frontend passes 'vendor_pending' and they are 'customer', we can upgrade them.
+      if (role === 'vendor_pending' && user.role === 'customer') {
+        user.role = 'vendor_pending';
+        await user.save();
+      }
+    } else {
+      // Create new user
+      user = await User.create({
+        name,
+        email,
+        googleId,
+        role: role,
+        // password is required: false in schema, so we can omit it
+      });
+
+      // Send welcome email (non-blocking)
+      const { sendEmail } = require('../utils/emailService');
+      const { welcomeEmailTemplate } = require('../utils/emailTemplates');
+      sendEmail({
+        to: user.email,
+        subject: 'Welcome to The Grand Store',
+        html: welcomeEmailTemplate(user.name)
+      }).catch(err => console.error('Failed to send welcome email:', err));
+    }
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      token: generateToken(user._id),
+    });
+
+  } catch (error) {
+    console.error('Google Auth Error:', error);
+    res.status(401).json({ message: 'Invalid Google token' });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   getUserProfile,
   updateUserProfile,
   deleteUserProfile,
+  googleAuth,
 };
