@@ -14,8 +14,13 @@ export default function CartPage({ cartItems, onUpdateQuantity, onRemove, onClea
   const navigate = useNavigate();
 
   const handleCheckoutClick = (e) => {
-    if (user && user.role && user.role.startsWith('vendor')) {
-      e.preventDefault();
+    e.preventDefault();
+    if (!user) {
+      onNotify("Please log in to proceed to checkout.");
+      navigate('/login');
+      return;
+    }
+    if (user.role && user.role.startsWith('vendor')) {
       onNotify("Vendors cannot checkout. Please sign up as a customer.");
       navigate('/register');
       return;

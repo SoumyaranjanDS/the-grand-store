@@ -1,11 +1,31 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { useGeoLocation } from '../../context/LocationContext';
-import { CheckCircle2, ChevronRight, UploadCloud, Building2, User, FileText, BadgeCheck, FileSpreadsheet, Landmark, Package, Truck, FileSignature, Globe, Image as ImageIcon } from 'lucide-react';
+import { CheckCircle2, ChevronRight, ChevronLeft, UploadCloud, Building2, User, FileText, BadgeCheck, FileSpreadsheet, Landmark, Package, Truck, FileSignature, Globe, Image as ImageIcon } from 'lucide-react';
 import LocationInput from '../../components/LocationInput';
 
+const InputField = ({ label, value, onChange, placeholder, type = 'text' }) => (
+  <div className="mb-6">
+    <label className="block text-[#bdb5a6] text-[10px] font-bold uppercase tracking-widest mb-2">{label}</label>
+    <input type={type} value={value} onChange={onChange} placeholder={placeholder} className="block w-full py-4 border-b border-white/10 bg-transparent text-[#eee8dd] placeholder-white/20 focus:outline-none focus:border-[#c9a35b] sm:text-sm transition-colors rounded-none" />
+  </div>
+);
+
+const FileUploadField = ({ label, url, onUpload }) => (
+  <div className="mb-6">
+    <label className="block text-[#bdb5a6] text-[10px] font-bold uppercase tracking-widest mb-2">{label}</label>
+    <div className="flex items-center gap-4">
+      <label className="flex items-center justify-center gap-2 px-4 py-4 bg-transparent border-b border-white/10 border-dashed rounded-none cursor-pointer hover:border-[#c9a35b] transition-colors flex-1">
+        <UploadCloud size={18} className="text-[#918a7f]" />
+        <span className="text-[#eee8dd] text-sm">Upload Document</span>
+        <input type="file" className="hidden" onChange={onUpload} accept=".pdf,.png,.jpg,.jpeg" />
+      </label>
+      {url && <div className="text-green-500 flex items-center gap-1 text-sm"><CheckCircle2 size={16} /> Uploaded</div>}
+    </div>
+  </div>
+);
 export default function OnboardingWizard() {
   const { user } = useAuth();
   const { country_code } = useGeoLocation();
@@ -267,31 +287,19 @@ export default function OnboardingWizard() {
     }
   };
 
-  const InputField = ({ label, value, onChange, placeholder, type = 'text' }) => (
-    <div className="mb-6">
-      <label className="block text-[#bdb5a6] text-[10px] font-bold uppercase tracking-widest mb-2">{label}</label>
-      <input type={type} value={value} onChange={onChange} placeholder={placeholder} className="block w-full py-4 border-b border-white/10 bg-transparent text-[#eee8dd] placeholder-white/20 focus:outline-none focus:border-[#c9a35b] sm:text-sm transition-colors rounded-none" />
-    </div>
-  );
 
-  const FileUploadField = ({ label, url, onUpload }) => (
-    <div className="mb-6">
-      <label className="block text-[#bdb5a6] text-[10px] font-bold uppercase tracking-widest mb-2">{label}</label>
-      <div className="flex items-center gap-4">
-        <label className="flex items-center justify-center gap-2 px-4 py-4 bg-transparent border-b border-white/10 border-dashed rounded-none cursor-pointer hover:border-[#c9a35b] transition-colors flex-1">
-          <UploadCloud size={18} className="text-[#918a7f]" />
-          <span className="text-[#eee8dd] text-sm">Upload Document</span>
-          <input type="file" className="hidden" onChange={onUpload} accept=".pdf,.png,.jpg,.jpeg" />
-        </label>
-        {url && <div className="text-green-500 flex items-center gap-1 text-sm"><CheckCircle2 size={16} /> Uploaded</div>}
-      </div>
-    </div>
-  );
 
   if (loading) return <div className="vendor-theme min-h-screen bg-[#0a0907] flex items-center justify-center text-[#e1bd70]">Loading...</div>;
 
   return (
     <div className="vendor-theme min-h-screen bg-[#0a0907] pt-8 pb-20 px-4 relative overflow-hidden">
+      <Link 
+        to="/" 
+        className="fixed top-6 left-6 z-50 flex items-center justify-center w-10 h-10 bg-[#e1bd70]/10 hover:bg-[#e1bd70]/20 text-[#e1bd70] rounded-full border border-[#c9a35b]/20 backdrop-blur-sm transition-all duration-300"
+        title="Back to Home"
+      >
+        <ChevronLeft size={20} />
+      </Link>
       {/* Massive subtle golden glow background */}
       <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[#c9a35b]/5 pointer-events-none rounded-full blur-3xl opacity-60"></div>
       

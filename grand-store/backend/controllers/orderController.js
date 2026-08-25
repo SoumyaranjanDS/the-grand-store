@@ -371,7 +371,8 @@ const getVendorOrders = async (req, res) => {
     const Shipment = require('../models/Shipment');
     const Order = require('../models/Order');
     
-    const shipments = await Shipment.find({ vendorId: req.user._id })
+    const filter = req.user.role === 'admin' ? { vendorId: null } : { vendorId: req.user._id };
+    const shipments = await Shipment.find(filter)
       .sort({ createdAt: -1 })
       .populate('customerId', 'name email');
 
@@ -384,7 +385,10 @@ const getVendorOrders = async (req, res) => {
         return null;
       }
 
-      let items = masterOrder.orderItems.filter(item => item.vendorId && item.vendorId.toString() === req.user._id.toString());
+      let items = masterOrder.orderItems.filter(item => {
+        if (req.user.role === 'admin') return !item.vendorId;
+        return item.vendorId && item.vendorId.toString() === req.user._id.toString();
+      });
       
       return {
         _id: shp._id,

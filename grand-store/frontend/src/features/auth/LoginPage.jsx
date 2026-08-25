@@ -39,12 +39,12 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#050505] flex items-center justify-center px-4 py-12 md:py-20 relative">
-      <button 
-        onClick={() => navigate(-1)} 
-        className="absolute top-6 left-6 flex items-center gap-2 text-[var(--color-ivory-muted)] hover:text-white transition-colors text-[10px] uppercase tracking-widest font-bold"
+      <Link 
+        to="/" 
+        className="absolute top-6 left-6 flex items-center gap-2 text-[var(--color-ivory-muted)] hover:text-white transition-colors text-[10px] uppercase tracking-widest font-bold z-50 cursor-pointer"
       >
-        <ArrowLeft size={16} /> Back
-      </button>
+        <ArrowLeft size={16} /> Back to Home
+      </Link>
 
       <div className="w-full max-w-md z-10">
         <div className="text-center mb-10">

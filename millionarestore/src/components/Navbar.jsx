@@ -1,13 +1,20 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { ArrowUpRight, Menu, X } from 'lucide-react'
 import './Navbar.css'
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const { pathname } = useLocation()
 
   useEffect(() => {
     const updateHeader = () => {
+      if (pathname !== '/') {
+        setScrolled(true)
+        return
+      }
+
       const hero = document.getElementById('home')
       const pinSpacer = hero?.closest('.pin-spacer')
       // If the hero section is pinned by GSAP, its pin-spacer contains the total scroll duration
@@ -19,12 +26,16 @@ export default function Navbar() {
     updateHeader()
     window.addEventListener('scroll', updateHeader, { passive: true })
     return () => window.removeEventListener('scroll', updateHeader)
-  }, [])
+  }, [pathname])
 
   const closeMenu = () => setMenuOpen(false)
 
+  // Determine if we should force the navbar to be in the "scrolled" (dark text) state
+  const isInnerPage = pathname !== '/'
+  const isScrolled = scrolled || isInnerPage
+
   return (
-    <header className={`navbar ${scrolled ? 'is-scrolled' : ''}`}>
+    <header className={`navbar ${isScrolled ? 'is-scrolled' : ''}`}>
       <div className="nav-shell">
         <a className="nav-brand" href="#home" onClick={closeMenu} aria-label="Millionaires Collection home">
           <div className="logo-icon">

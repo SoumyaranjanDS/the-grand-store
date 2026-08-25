@@ -74,7 +74,7 @@ export default function WhiskyShowcase({ onAdd, onWish, onCompare, compareItems 
         <div className="relative max-w-[1440px] mx-auto text-center px-6 sm:px-8 lg:px-7">
           <div className="relative border border-white/10 rounded-2xl py-8 bg-white/[0.01]">
             <div className="mb-8 relative">
-              <h2 id="whisky-brands-title" className="m-0 font-serif text-[clamp(40px,3.8vw,62px)] font-medium tracking-[-0.02em] leading-[1.05] text-[#eee8dd] relative z-10">
+              <h2 id="whisky-brands-title" className="m-0 font-serif text-[clamp(24px,2.5vw,36px)] font-medium tracking-[-0.02em] leading-[1.05] text-[#eee8dd] relative z-10">
                 Top Whisky Brands
               </h2>
               <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-[160px] h-[2px] rounded-full bg-[linear-gradient(90deg,transparent,rgba(197,153,59,0.8),transparent)] blur-[0.5px]" />

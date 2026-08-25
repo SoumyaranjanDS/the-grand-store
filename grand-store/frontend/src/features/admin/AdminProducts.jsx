@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Building2, PlusCircle, Package, Clock, CheckCircle2, XCircle, User } from 'lucide-react';
 import Price from '../../components/ui/Price';
 
-export default function VendorProducts() {
+export default function AdminProducts() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
@@ -13,7 +13,7 @@ export default function VendorProducts() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!user || user.role !== 'vendor_active') {
+    if (!user || user.role !== 'admin') {
       navigate('/login');
       return;
     }
@@ -36,6 +36,7 @@ export default function VendorProducts() {
 
     fetchProducts();
   }, [user, navigate]);
+
   const handleDeleteProduct = async (id) => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
     try {
@@ -93,7 +94,7 @@ export default function VendorProducts() {
             </div>
             My Retail Products
           </h3>
-          <button onClick={() => navigate('/vendor/product-add')} className="px-6 py-2.5 rounded-full bg-[var(--color-gold)]/10 text-[#e1bd70] border border-[var(--color-gold)]/30 font-semibold uppercase tracking-widest text-xs transition-all hover:bg-[#c9a35b] hover:text-black ">
+          <button onClick={() => navigate('/admin/product-add')} className="px-6 py-2.5 rounded-full bg-[var(--color-gold)]/10 text-[#e1bd70] border border-[var(--color-gold)]/30 font-semibold uppercase tracking-widest text-xs transition-all hover:bg-[#c9a35b] hover:text-black ">
             + New Product
           </button>
         </div>
@@ -108,7 +109,7 @@ export default function VendorProducts() {
             <h3 className="text-[var(--color-ivory)] font-serif text-3xl mb-3">No Products Found</h3>
             <p className="text-[var(--color-ivory-muted)] mb-10 max-w-md mx-auto font-light">You haven't added any retail products yet. Start by adding your first item to our store.</p>
             <button
-              onClick={() => navigate('/vendor/product-add')}
+              onClick={() => navigate('/admin/product-add')}
               className="px-8 py-3 rounded-full bg-[#c9a35b] text-black font-bold uppercase tracking-widest text-sm  transition-all"
             >
               Add your first product
@@ -151,7 +152,7 @@ export default function VendorProducts() {
                         View
                       </button>
                       <button
-                        onClick={() => navigate(`/vendor/product-edit/${product.id || product._id}`)}
+                        onClick={() => navigate(`/admin/product-edit/${product.id || product._id}`)}
                         className="px-4 py-1.5 rounded-full border border-white/10 text-white hover:bg-white/10 transition-all text-[10px] uppercase tracking-widest"
                       >
                         Edit

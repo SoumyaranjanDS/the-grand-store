@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, ArrowRight, ShieldCheck, Gift, CircleUserRound, GitCompareArrows } from 'lucide-react';
+import { Search, ArrowRight, ShieldCheck, Gift, CircleUserRound, GitCompareArrows, ChevronLeft } from 'lucide-react';
 import axios from 'axios';
 import AuctionLotCard from './AuctionLotCard';
 import AuctionCountdown from './AuctionCountdown';
@@ -70,7 +70,15 @@ export default function AuctionPage({ onNotify }) {
   const heroLots = visibleLots.slice(0, 3);
 
   return (
-    <main className="auction-page">
+    <main className="auction-page relative">
+      <Link 
+        to="/" 
+        className="absolute top-6 left-6 z-50 flex items-center gap-2 px-5 py-2.5 bg-[#c9a35b] hover:bg-[#e1bd70] text-black !text-black rounded-full shadow-[0_4px_20px_rgba(201,163,91,0.4)] transition-all duration-300 font-bold uppercase tracking-widest text-xs"
+        title="Back to Home"
+      >
+        <ChevronLeft size={16} />
+        Back to Home
+      </Link>
       <LuxuryAuctionHero lots={heroLots} now={now} onNotify={onNotify} onRefresh={fetchLots} />
 
       <section className="auction-catalogue py-24 bg-[#050505] border-t border-white/[0.05]" id="current-auctions" aria-labelledby="current-auctions-title">

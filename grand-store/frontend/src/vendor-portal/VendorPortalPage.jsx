@@ -15,6 +15,7 @@ import {
   Banknote,
   CheckCircle2,
   ChevronRight,
+  ChevronLeft,
   Image as ImageIcon,
   Plus,
   Minus,
@@ -120,6 +121,14 @@ export default function VendorPortalPage() {
 
   return (
     <main className="min-h-screen bg-white text-gray-900 font-sans pb-20">
+      <Link 
+        to="/" 
+        className="fixed top-6 left-6 z-50 flex items-center gap-2 px-5 py-2.5 bg-[#c9a35b] hover:bg-[#e1bd70] text-black !text-black rounded-full shadow-[0_4px_20px_rgba(201,163,91,0.4)] transition-all duration-300 font-bold uppercase tracking-widest text-xs"
+        title="Back to Home"
+      >
+        <ChevronLeft size={16} />
+        Back to Home
+      </Link>
       {/* 1. DYNAMIC HERO SECTION (Full Bleed Image) */}
       <section className="relative w-full min-h-screen flex items-center justify-center overflow-hidden">
         <img
