@@ -18,6 +18,7 @@ import WhiskyShowcase from './features/home/components/WhiskyShowcase'
 import TastingCampaign from './features/home/components/TastingCampaign'
 import TequilaShowcase from './features/home/components/TequilaShowcase'
 import BrandyShowcase from './features/home/components/BrandyShowcase'
+import CategoryShowcase from './features/home/components/CategoryShowcase'
 import PrivateCollection from './features/home/components/PrivateCollection'
 import EventAdvertisements from './features/home/components/EventAdvertisements'
 import PartnerDestinations from './features/home/components/PartnerDestinations'
@@ -111,6 +112,7 @@ import CocktailsPage from './pages/CocktailsPage'
 import ContactUsPage from './pages/ContactUsPage'
 import ReferEarnPage from './pages/ReferEarnPage'
 import GlossaryPage from './pages/GlossaryPage'
+import OffersPage from './pages/OffersPage'
 import WinePairingTool from './features/tools/WinePairingTool'
 import WhiskyFinder from './features/tools/WhiskyFinder'
 import AdminGlossary from './features/admin/AdminGlossary'
@@ -347,6 +349,14 @@ function App() {
             <TastingCampaign />
             <TequilaShowcase onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />
             <BrandyShowcase onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />
+            <CategoryShowcase categoryId="Wine" title="Top Wine" eyebrow="Curated Selection" description="Discover our exquisite collection of fine wines from around the world." onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />
+            <CategoryShowcase categoryId="Champagne" title="Top Champagne" eyebrow="Celebrate in Style" description="Elevate your moments with our premium selection of champagne." onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />
+            <CategoryShowcase categoryId="Cognac" title="Top Cognac" eyebrow="Elegance in a Glass" description="Experience the rich, complex flavors of our top-tier cognacs." onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />
+            <CategoryShowcase categoryId="Gin" title="Top Gin" eyebrow="Botanical Brilliance" description="Explore artisanal and classic gins perfect for any cocktail." onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />
+            <CategoryShowcase categoryId="Liqueur" title="Top Liqueur" eyebrow="Sweet & Sophisticated" description="Indulge in our carefully selected sweet and herbal liqueurs." onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />
+            <CategoryShowcase categoryId="Rum" title="Top Rum" eyebrow="Caribbean Spirit" description="Savor the deep, molasses-rich profiles of our finest rums." onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />
+            <CategoryShowcase categoryId="Vodka" title="Top Vodka" eyebrow="Pure & Smooth" description="Discover ultra-premium vodkas crafted for ultimate clarity." onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />
+            <CategoryShowcase categoryId="Ciders" title="Top Ciders" eyebrow="Crisp & Refreshing" description="Enjoy our handpicked selection of refreshing craft ciders." onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />
             <PrivateCollection />
             <EventAdvertisements />
             <PartnerDestinations />
@@ -496,6 +506,7 @@ function App() {
         <Route path="/cocktails" element={<Navigate to="/cocktail" replace />} />
         <Route path="/contact-us" element={<ContactUsPage />} />
         <Route path="/refer-and-earn" element={<ReferEarnPage />} />
+        <Route path="/offers" element={<OffersPage />} />
         <Route path="/glossary" element={<GlossaryPage />} />
 
         <Route path="/blog/top-south-african-brandy-brands-you-can-order-online" element={<BrandyBlogPage />} />

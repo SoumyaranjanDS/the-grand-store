@@ -1321,9 +1321,14 @@ video {
 
 .product-buy-row strong {
   color: var(--color-gold-bright);
-  font-family: var(--serif);
-  font-size: 23px;
-  @apply font-medium;
+  font-family: 'Inter', 'DM Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: baseline;
 }
 
 .product-buy-row button {

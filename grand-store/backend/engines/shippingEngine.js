@@ -74,22 +74,32 @@ const getShippingQuotes = async (vendorId, customerAddress, shipmentItemsSubtota
         ]
       });
       
-      if (standardCost > 0) {
-        quotes.push({
-          courierName: 'PostNet',
-          serviceLevel: 'PostNet to PostNet',
-          cost: expressCost,
-          estimatedDays: '1-3 business days',
-          legs: [
-            {
-              courierName: 'PostNet Express',
-              origin: originCountry,
-              destination: customerAddress.city || 'Customer',
-              cost: expressCost * 0.8
-            }
-          ]
-        });
-      }
+      // Always add PostNet option for domestic
+      const city = customerAddress.city || '';
+      // Mock logic: return stores for most cities, but empty for some to show the error
+      const hasStores = city.toLowerCase() !== 'nowhere' && city.length % 3 !== 1;
+      
+      const mockStores = hasStores ? [
+        { id: 'pn-1', name: `PostNet ${city} Central`, address: `1 Main Road, ${city}` },
+        { id: 'pn-2', name: `PostNet ${city} Mall`, address: `Shop 42, The Mall, ${city}` },
+        { id: 'pn-3', name: `PostNet ${city} North`, address: `10 North Street, ${city}` }
+      ] : [];
+
+      quotes.push({
+        courierName: 'PostNet',
+        serviceLevel: 'PostNet to PostNet',
+        cost: expressCost,
+        estimatedDays: '1-3 business days',
+        stores: mockStores,
+        legs: [
+          {
+            courierName: 'PostNet Express',
+            origin: originCountry,
+            destination: customerAddress.city || 'Customer',
+            cost: expressCost * 0.8
+          }
+        ]
+      });
     } 
     // 2. EXPORT (SA -> Intl)
     else if (originSA && !destSA) {

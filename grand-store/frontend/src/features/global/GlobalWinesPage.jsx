@@ -8,6 +8,11 @@ const countries = [
   { name: 'Italy', code: 'IT', image: 'https://i.pinimg.com/1200x/40/1d/84/401d84d477523012fa2eec4b0ca1b7b2.jpg', desc: 'Tuscany, Piedmont, Veneto' },
   { name: 'Spain', code: 'ES', image: 'https://images.unsplash.com/photo-1543783207-ec64e4d95325?q=80&w=2070&auto=format&fit=crop', desc: 'Rioja, Ribera del Duero, Priorat' },
   { name: 'Australia', code: 'AU', image: 'https://images.unsplash.com/photo-1528072164453-f4e8ef0d475a?q=80&w=2071&auto=format&fit=crop', desc: 'Barossa, Margaret River, Yarra Valley' },
+  { name: 'South Africa', code: 'ZA', image: 'https://res.cloudinary.com/oioqrgj0/image/upload/v1787661480/grand-store/global-wines/zzksu1ceacegz0hflvrq.png', desc: 'Stellenbosch, Franschhoek, Swartland' },
+  { name: 'United States', code: 'US', image: 'https://res.cloudinary.com/oioqrgj0/image/upload/v1787661481/grand-store/global-wines/txfvlktfshwo2ytuhsit.png', desc: 'Napa Valley, Sonoma, Oregon' },
+  { name: 'Argentina', code: 'AR', image: 'https://res.cloudinary.com/oioqrgj0/image/upload/v1787661484/grand-store/global-wines/chxw3iubgaud4xlzflvi.png', desc: 'Mendoza, Salta, Patagonia' },
+  { name: 'Chile', code: 'CL', image: 'https://res.cloudinary.com/oioqrgj0/image/upload/v1787661485/grand-store/global-wines/shsu9rdog5tqmp1apldm.png', desc: 'Maipo Valley, Colchagua, Casablanca' },
+  { name: 'New Zealand', code: 'NZ', image: 'https://res.cloudinary.com/oioqrgj0/image/upload/v1787661482/grand-store/global-wines/lid2udfdfob8mm5462r2.png', desc: 'Marlborough, Central Otago, Hawke\'s Bay' },
 ];
 
 export default function GlobalWinesPage() {
