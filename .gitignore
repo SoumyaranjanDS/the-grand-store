@@ -132,6 +132,7 @@ dist
 
 # Project Specific Files & Documents
 docs/
+products_csv/
 db-check.js
 GRAND STORE mock vendor sign up to generate interest (1).docx
 GRAND STORE AUCTION FEATURES.docx
@@ -139,3 +140,4 @@ GRAND STORE VENDOR ONBOARDING.docx
 
 Grandstore-web-main (1)/
 grandsto_codedb.sql
+
