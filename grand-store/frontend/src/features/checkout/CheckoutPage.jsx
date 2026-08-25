@@ -322,9 +322,113 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
             {checkoutStep !== 3 ? (
             
               <form onSubmit={handlePlaceOrder}>
-                <section className="border-t border-white/10 pt-0 mb-8">
+                {/* Shipping Method Section moved to top */}
+                <section className="mb-8">
                   <h2 className="text-xl font-serif mb-6 flex items-center gap-3">
                     <span className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-sm font-sans">1</span>
+                    Delivery Method
+                  </h2>
+                  
+                  {!quote && !quoteLoading && (
+                    <div className="bg-[#0a0a0a] border border-white/10 rounded-xl p-6 flex flex-col items-center justify-center text-center gap-3">
+                      <Truck className="text-white/20" size={32} />
+                      <p className="text-sm text-[var(--color-ivory-muted)]">Please enter your delivery address below to view available shipping options and rates.</p>
+                    </div>
+                  )}
+
+                  {quoteLoading && (
+                    <div className="flex flex-col items-center justify-center p-8 border border-white/10 rounded-xl bg-black/40">
+                      <Loader2 size={32} className="animate-spin text-gold mb-4" />
+                      <p className="text-[var(--color-ivory-muted)]">Calculating dynamic rates from Courier Guy & DHL...</p>
+                    </div>
+                  )}
+
+                  {!quoteLoading && quote && quote.shipments.map((shp, index) => (
+                    <div key={index} className="bg-black/40 border border-white/10 rounded-xl p-6 mb-6 last:mb-0">
+                      <h4 className="text-lg font-serif text-gold mb-4 flex items-center gap-2"><Truck size={18} /> Shipment {index + 1} — {shp.vendorName || 'The Grand Store'}</h4>
+                      <p className="text-xs text-[var(--color-ivory-muted)] mb-4">Delivering from {shp.originCountry} to {shp.destCountry}</p>
+                      
+                      <div className="mb-4">
+                        {shp.items.map((item, i) => (
+                          <div key={i} className="flex justify-between text-sm mb-2">
+                            <span>{item.quantity} × {item.name}</span>
+                            <span><Price amount={item.price * item.quantity} /></span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="space-y-3 mt-4 pt-4 border-t border-white/5">
+                        <p className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)]">Select Delivery Option</p>
+                        {shp.shippingQuotes.map((opt, optIndex) => (
+                          <div key={optIndex} className="mb-2">
+                            <label className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${shp.selectedCourier?.serviceLevel === opt.serviceLevel ? 'border-gold bg-gold/5' : 'border-white/10 hover:border-white/30'}`}>
+                              <div className="flex items-center gap-3">
+                                <input 
+                                  type="radio" 
+                                  name={`courier-${index}`} 
+                                  checked={shp.selectedCourier?.serviceLevel === opt.serviceLevel}
+                                  onChange={() => handleCourierSelect(index, opt)}
+                                  className="accent-gold"
+                                />
+                                <div>
+                                  <div className="text-sm font-medium text-white">{opt.serviceLevel} ({opt.courierName})</div>
+                                  <div className="text-xs text-[var(--color-ivory-muted)]">{opt.estimatedDays}</div>
+                                </div>
+                              </div>
+                              <div className="font-medium text-gold">{opt.cost > 0 ? <Price amount={opt.cost} /> : 'FREE'}</div>
+                            </label>
+                            
+                            {/* PostNet Stores Logic */}
+                            {shp.selectedCourier?.serviceLevel === opt.serviceLevel && opt.courierName === 'PostNet' && (
+                              <div className="mt-2 pl-8 pr-3 pb-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                {opt.stores && opt.stores.length > 0 ? (
+                                  <div className="mt-3">
+                                    <p className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-3">Nearby PostNet Locations</p>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                      {opt.stores.map(store => (
+                                        <label key={store.id} className="block cursor-pointer">
+                                          <input type="radio" name={`postnet-store-${index}`} value={store.id} className="peer sr-only" required />
+                                          <div className="h-full border border-white/10 bg-[#0a0a0a] p-3 rounded-lg peer-checked:border-gold peer-checked:bg-gold/5 hover:border-white/30 transition-colors">
+                                            <p className="text-sm font-medium text-white mb-1">{store.name}</p>
+                                            <p className="text-xs text-[var(--color-ivory-muted)]">{store.address}</p>
+                                          </div>
+                                        </label>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3 text-red-400 text-sm mt-2 flex items-start gap-2">
+                                    <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+                                    <p>No PostNet stores are available near your address. Please select another delivery option.</p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  {!quoteLoading && quote?.hasInternational && (
+                    <div className="bg-red-900/20 border border-red-500/50 rounded-xl p-5 mt-6">
+                      <h4 className="text-red-400 font-bold flex items-center gap-2 mb-2"><AlertTriangle size={18} /> IMPORTANT: International Delivery</h4>
+                      <p className="text-sm text-red-200/80 mb-4">
+                        Import duties, customs charges, destination VAT/GST or other government charges may be payable by you upon arrival in {formData.country}. 
+                        The delivery charge covers transportation only.
+                        Estimated duties/taxes: <Price amount={quote.aggregatedTotals.estimatedImportDuties + quote.aggregatedTotals.estimatedImportTaxes} />.
+                      </p>
+                      <label className="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox" className="mt-1 accent-red-500" checked={dutiesAccepted} onChange={(e) => setDutiesAccepted(e.target.checked)} required />
+                        <span className="text-sm text-white font-medium">I understand that I am responsible for any destination-country taxes, duties, or customs charges.</span>
+                      </label>
+                    </div>
+                  )}
+                </section>
+
+                <section className="border-t border-white/10 pt-8 mb-8">
+                  <h2 className="text-xl font-serif mb-6 flex items-center gap-3">
+                    <span className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-sm font-sans">2</span>
                     Delivery Address
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -404,72 +508,10 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                   </div>
                 </section>
                 
-                
-
-
-                {quoteLoading && (
-                  <div className="flex flex-col items-center justify-center p-8 border border-white/10 rounded-xl mb-8 bg-black/40 mt-8">
-                    <Loader2 size={32} className="animate-spin text-gold mb-4" />
-                    <p className="text-[var(--color-ivory-muted)]">Calculating dynamic rates from Courier Guy & DHL...</p>
-                  </div>
-                )}
-                {!quoteLoading && quote && quote.shipments.map((shp, index) => (
-                  <div key={index} className="mt-8 mb-6 bg-black/40 border border-white/10 rounded-xl p-6">
-                    <h4 className="text-lg font-serif text-gold mb-4 flex items-center gap-2"><Truck size={18} /> Shipment {index + 1} — {shp.vendorName || 'The Grand Store'}</h4>
-                    <p className="text-xs text-[var(--color-ivory-muted)] mb-4">Delivering from {shp.originCountry} to {shp.destCountry}</p>
-                    
-                    <div className="mb-4">
-                      {shp.items.map((item, i) => (
-                        <div key={i} className="flex justify-between text-sm mb-2">
-                          <span>{item.quantity} × {item.name}</span>
-                          <span><Price amount={item.price * item.quantity} /></span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="space-y-3 mt-4 pt-4 border-t border-white/5">
-                      <p className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)]">Select Delivery Option</p>
-                      {shp.shippingQuotes.map((opt, optIndex) => (
-                        <label key={optIndex} className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${shp.selectedCourier?.serviceLevel === opt.serviceLevel ? 'border-gold bg-gold/5' : 'border-white/10 hover:border-white/30'}`}>
-                          <div className="flex items-center gap-3">
-                            <input 
-                              type="radio" 
-                              name={`courier-${index}`} 
-                              checked={shp.selectedCourier?.serviceLevel === opt.serviceLevel}
-                              onChange={() => handleCourierSelect(index, opt)}
-                              className="accent-gold"
-                            />
-                            <div>
-                              <div className="text-sm font-medium text-white">{opt.serviceLevel} ({opt.courierName})</div>
-                              <div className="text-xs text-[var(--color-ivory-muted)]">{opt.estimatedDays}</div>
-                            </div>
-                          </div>
-                          <div className="font-medium text-gold">{opt.cost > 0 ? <Price amount={opt.cost} /> : 'FREE'}</div>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-
-                {quote?.hasInternational && (
-                  <div className="bg-red-900/20 border border-red-500/50 rounded-xl p-5 mb-8">
-                    <h4 className="text-red-400 font-bold flex items-center gap-2 mb-2"><AlertTriangle size={18} /> IMPORTANT: International Delivery</h4>
-                    <p className="text-sm text-red-200/80 mb-4">
-                      Import duties, customs charges, destination VAT/GST or other government charges may be payable by you upon arrival in {formData.country}. 
-                      The delivery charge covers transportation only.
-                      Estimated duties/taxes: <Price amount={quote.aggregatedTotals.estimatedImportDuties + quote.aggregatedTotals.estimatedImportTaxes} />.
-                    </p>
-                    <label className="flex items-start gap-3 cursor-pointer">
-                      <input type="checkbox" className="mt-1 accent-red-500" checked={dutiesAccepted} onChange={(e) => setDutiesAccepted(e.target.checked)} required />
-                      <span className="text-sm text-white font-medium">I understand that I am responsible for any destination-country taxes, duties, or customs charges.</span>
-                    </label>
-                  </div>
-                )}
-
                 {/* Payment Section */}
                 <section className="border-t border-white/10 pt-8">
                   <h2 className="text-xl font-serif flex items-center gap-3 mb-6">
-                    <span className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-sm font-sans">2</span>
+                    <span className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-sm font-sans">3</span>
                     Payment Method
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
