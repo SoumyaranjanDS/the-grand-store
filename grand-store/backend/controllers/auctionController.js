@@ -204,7 +204,7 @@ exports.submitLot = async (req, res) => {
 
     let images = [];
     if (req.files && req.files.length > 0) {
-      images = req.files.map(file => `/uploads/${file.filename}`);
+      images = req.files.map(file => file.path);
     } else if (req.body.images) {
       images = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
     }
