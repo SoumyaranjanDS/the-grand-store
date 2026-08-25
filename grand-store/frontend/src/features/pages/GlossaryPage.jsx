@@ -11,7 +11,7 @@ export default function GlossaryPage() {
   useEffect(() => {
     const fetchTerms = async () => {
       try {
-        const response = await axios.get('/api/glossary');
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/glossary`);
         setTerms(response.data);
       } catch (error) {
         console.error('Error fetching glossary:', error);

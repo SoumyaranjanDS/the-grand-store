@@ -27,7 +27,7 @@ export default function AdminGlossary() {
   const fetchTerms = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('/api/glossary');
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/glossary`);
       setTerms(res.data);
     } catch (err) {
       console.error(err);
@@ -78,9 +78,9 @@ export default function AdminGlossary() {
       };
 
       if (editingTerm) {
-        await axios.put(`/api/glossary/${editingTerm._id}`, formData, config);
+        await axios.put(`${import.meta.env.VITE_API_URL}/api/glossary/${editingTerm._id}`, formData, config);
       } else {
-        await axios.post('/api/glossary', formData, config);
+        await axios.post(`${import.meta.env.VITE_API_URL}/api/glossary`, formData, config);
       }
 
       await fetchTerms();
@@ -101,7 +101,7 @@ export default function AdminGlossary() {
           Authorization: `Bearer ${user.token}`,
         },
       };
-      await axios.delete(`/api/glossary/${id}`, config);
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/glossary/${id}`, config);
       fetchTerms();
     } catch (err) {
       alert('Failed to delete term');

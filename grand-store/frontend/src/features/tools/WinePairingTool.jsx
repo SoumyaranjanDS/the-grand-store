@@ -24,7 +24,7 @@ export default function WinePairingTool() {
   useEffect(() => {
     const fetchPairings = async () => {
       try {
-        const res = await fetch('/api/attributes');
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/attributes`);
         const data = await res.json();
         if (Array.isArray(data)) {
           const pairings = data.filter(a => a.type === 'pairing').map(p => ({

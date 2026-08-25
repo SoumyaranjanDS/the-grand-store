@@ -21,7 +21,7 @@ export default function AdminAttributes() {
   const fetchAttributes = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/attributes');
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/attributes`);
       const data = await res.json();
       setAttributes(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -73,7 +73,7 @@ export default function AdminAttributes() {
     e.preventDefault();
     try {
       const method = editMode ? 'PUT' : 'POST';
-      const url = editMode ? `/api/attributes/${currentId}` : '/api/attributes';
+      const url = editMode ? `${import.meta.env.VITE_API_URL}/api/attributes/${currentId}` : `${import.meta.env.VITE_API_URL}/api/attributes`;
       
       const res = await fetch(url, {
         method,
@@ -99,7 +99,7 @@ export default function AdminAttributes() {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this attribute? Products using it might lose this badge.')) {
       try {
-        const res = await fetch(`/api/attributes/${id}`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/attributes/${id}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${user.token}` }
         });

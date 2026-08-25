@@ -50,7 +50,7 @@ export default function Testimonials() {
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
-        const res = await fetch('/api/testimonials')
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/testimonials`)
         const data = await res.json()
         if (data && data.length > 0) {
           setReviews(data)

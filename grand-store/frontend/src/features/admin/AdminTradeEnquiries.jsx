@@ -13,7 +13,7 @@ export default function AdminTradeEnquiries() {
 
   const fetchEnquiries = async () => {
     try {
-      const res = await fetch('/api/trade-enquiries', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/trade-enquiries`, {
         headers: {
           Authorization: `Bearer ${user.token}`
         }
@@ -31,7 +31,7 @@ export default function AdminTradeEnquiries() {
 
   const handleUpdateStatus = async (id, status) => {
     try {
-      const res = await fetch(`/api/trade-enquiries/${id}/status`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/trade-enquiries/${id}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

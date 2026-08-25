@@ -38,7 +38,7 @@ export default function AddProduct({ onNotify }) {
   useEffect(() => {
     const fetchAttributes = async () => {
       try {
-        const res = await fetch('/api/attributes');
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/attributes`);
         const data = await res.json();
         if (Array.isArray(data)) {
           setAttributes(data);

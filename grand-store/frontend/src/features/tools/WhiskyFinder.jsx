@@ -22,7 +22,7 @@ export default function WhiskyFinder() {
   useEffect(() => {
     const fetchFlavors = async () => {
       try {
-        const res = await fetch('/api/attributes');
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/attributes`);
         const data = await res.json();
         if (Array.isArray(data)) {
           const flavors = data.filter(a => a.type === 'flavor').map(p => ({
