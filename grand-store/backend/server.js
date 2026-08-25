@@ -17,7 +17,7 @@ const app = express();
 // Parse allowed origins from .env or fallback to localhost
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
-  : ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175"];
+  : ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:56842"];
 
 app.use(
   cors({
@@ -99,6 +99,7 @@ app.use("/api/glossary", glossaryRoutes);
 app.use("/api/config", configRoutes);
 app.use("/api/trade-enquiries", require("./routes/tradeEnquiryRoutes"));
 app.use("/api/newsletter", newsletterRoutes);
+app.use("/api/advertisements", require("./routes/advertisementRoutes"));
 
 // Health check endpoint  
 app.get("/api/health", (req, res) => {
