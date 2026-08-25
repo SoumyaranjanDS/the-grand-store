@@ -169,7 +169,7 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
                 <SlidersHorizontal size={18} className="text-[#d4af37]" />
                 Filters
                 {activeFilterCount > 0 && (
-                  <span className="bg-gradient-to-r from-[#d4af37] to-[#aa8022] text-black px-2 py-0.5 rounded-full text-[10px] font-bold">
+                  <span className="bg-gradient-to-r from-[#d4af37] to-[#aa8022] text-black px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap">
                     {activeFilterCount} Active
                   </span>
                 )}
