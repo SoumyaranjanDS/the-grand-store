@@ -38,11 +38,6 @@ export default function PrivateCollection() {
           {cards.map((card) => (
             <Link className="collection-card" to={card.link} key={card.number}>
               <span className="collection-number">{card.number}</span>
-              <div className="collection-text">
-                <p>{card.overline}</p>
-                <h3>{card.title}</h3>
-                <span>Explore collection <ArrowRight size={15} /></span>
-              </div>
               {card.hasPreparedBottle ? (
                 <span
                   className="collection-prepared-bottle"
@@ -52,6 +47,11 @@ export default function PrivateCollection() {
               ) : (
                 <img src={card.image} alt="" loading="lazy" />
               )}
+              <div className="collection-text">
+                <p>{card.overline}</p>
+                <h3>{card.title}</h3>
+                <span>Explore collection <ArrowRight size={15} /></span>
+              </div>
             </Link>
           ))}
         </div>
