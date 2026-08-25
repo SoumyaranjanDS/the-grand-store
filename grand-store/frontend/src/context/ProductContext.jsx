@@ -38,8 +38,7 @@ export const ProductProvider = ({ children }) => {
         const data = res.data;
         // The API's legacy products only contain the fields in the database schema.
         // Restore their catalog metadata and normalize newer vendor product fields.
-        const filteredData = data.filter((p) => p.id !== 'prod_1787641901446' && p._id !== 'prod_1787641901446');
-        setProducts(filteredData.map(hydrateProductMetadata));
+        setProducts(data.map(hydrateProductMetadata));
         setLoading(false);
       } catch (err) {
         console.error(err);

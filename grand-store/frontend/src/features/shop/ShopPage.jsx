@@ -66,19 +66,8 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
   const selectedSizes = searchParams
     .getAll("size")
     .filter(isVisibleFilterValue);
-  const isExcludedCategory = (catStr) => {
-    const c = String(catStr || "").toLowerCase();
-    return (
-      c.includes("accessor") ||
-      c.includes("glassware") ||
-      c.includes("drinkware")
-    );
-  };
-
   const shopProducts = products.filter(
-    (product) =>
-      !isExcludedCategory(product.category) &&
-      !isExcludedCategory(product.type),
+    (product) => product.type !== "accessory",
   );
 
   const categoryOptions = [
