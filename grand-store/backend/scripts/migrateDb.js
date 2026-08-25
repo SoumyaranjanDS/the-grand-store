@@ -1,8 +1,7 @@
 const { MongoClient } = require('mongodb');
 
-const oldUri = 'mongodb+srv://soumyaranjansahoo97292_db_user:MhyaihjRhis8NgOU@cluster0.neotr0o.mongodb.net/';
-const newUri = 'mongodb+srv://crmisa1000_db_user:Ug5sH8m4vxCjmZHN@cluster0.8snrppp.mongodb.net/';
-
+//const oldUri = 'mongodb+srv://soumyaranjansahoo97292_db_user:MhyaihjRhis8NgOU@cluster0.neotr0o.mongodb.net/';
+//const newUri = 'mongodb+srv://crmisa1000_db_user:Ug5sH8m4vxCjmZHN@cluster0.8snrppp.mongodb.net/';
 async function migrate() {
   const oldClient = new MongoClient(oldUri);
   const newClient = new MongoClient(newUri);
