@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api';
 import {
   Gavel, Calendar, CheckCircle, XCircle, Trash2, Copy, Eye,
   ChevronDown, ChevronUp, Clock, User, Mail, Phone, Building2,
@@ -115,7 +115,7 @@ export default function AdminHostApplications() {
       const params = {};
       if (filter.status) params.status = filter.status;
       if (filter.type)   params.type   = filter.type;
-      const res = await axios.get(`${API}/api/host-applications`, { headers: headers(), params });
+      const res = await api.get(`/host-applications`, { headers: headers(), params });
       setApps(res.data);
     } catch { }
     finally { setLoading(false); }
@@ -127,7 +127,7 @@ export default function AdminHostApplications() {
     if (!approveLimit || approveLimit < 1) { alert('Limit must be at least 1'); return; }
     setActionLoading(id + '_approve');
     try {
-      const res = await axios.put(`${API}/api/host-applications/${id}/approve`, { allowedHostLimit: Number(approveLimit) }, { headers: headers() });
+      const res = await api.put(`/host-applications/${id}/approve`, { allowedHostLimit: Number(approveLimit) }, { headers: headers() });
       setCredentials({ ...res.data, id });
       setApproveId(null);
       setApproveLimit(1);
@@ -153,7 +153,7 @@ export default function AdminHostApplications() {
     if (!window.confirm('Revoke this host\'s access? This will delete their account.')) return;
     setActionLoading(id + '_revoke');
     try {
-      await axios.delete(`${API}/api/host-applications/${id}/revoke`, { headers: headers() });
+      await api.delete(`/host-applications/${id}/revoke`, { headers: headers() });
       load();
     } catch { } finally { setActionLoading(null); }
   };

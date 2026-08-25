@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../../api';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { useGeoLocation } from '../../context/LocationContext';
@@ -134,12 +135,8 @@ export default function OnboardingWizard() {
     
     setSaving(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/vendor/upload-public`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${user?.token}` },
-        body: formData
-      });
-      const data = await res.json();
+      const res = await api.post(`/vendor/upload-public`, formData);
+      const data = res.data;
       setUrlFn(data.url);
     } catch (err) {
       console.error('Upload failed', err);
@@ -238,30 +235,15 @@ export default function OnboardingWizard() {
         ...(isLocal ? { kycInfo, taxInfo, licenceInfo, customsInfo, deliveryInfo } : { credentialsInfo, marketInfo, logisticsInfo, storyInfo })
       };
       
-      const headers = { 'Content-Type': 'application/json' };
-      const userInfo = localStorage.getItem('userInfo');
-      if (userInfo) {
-        const parsed = JSON.parse(userInfo);
-        if (parsed.token) {
-          headers['Authorization'] = `Bearer ${parsed.token}`;
-        }
-      }
-
-      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/vendor/register-full`, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify(payload)
-      });
-      
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Submission failed');
+      const res = await api.post(`/vendor/register-full`, payload);
+      const data = res.data;
 
       localStorage.removeItem('vendor-onboarding-draft');
       localStorage.setItem('userInfo', JSON.stringify(data));
       window.location.href = '/customer/profile';
     } catch (err) {
       console.error(err);
-      alert('Error submitting application: ' + err.message);
+      alert('Error submitting application: ' + (err.response?.data?.message || err.message));
     } finally {
       setSaving(false);
     }

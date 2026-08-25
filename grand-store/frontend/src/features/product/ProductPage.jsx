@@ -27,14 +27,23 @@ const preparedVendorImages = {
 
 const resolveImageUrl = (src) => {
   if (!src) return '';
+  const normalizedSrc = String(src).replace(/\\/g, '/');
+  
   const prepared = Object.entries(preparedVendorImages)
-    .find(([uploadPath]) => String(src).includes(uploadPath))?.[1];
+    .find(([uploadPath]) => normalizedSrc.includes(uploadPath))?.[1];
   if (prepared) return prepared;
-  if (String(src).startsWith('/uploads/')) {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    return `${apiUrl}${src}`;
+  
+  if (normalizedSrc.startsWith('http://') || normalizedSrc.startsWith('https://')) {
+    return normalizedSrc;
   }
-  return src;
+  
+  if (normalizedSrc.includes('uploads/')) {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5015';
+    const cleanPath = normalizedSrc.substring(normalizedSrc.indexOf('uploads/'));
+    return `${apiUrl.replace(/\/$/, '')}/${cleanPath}`;
+  }
+  
+  return normalizedSrc;
 };
 
 export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {

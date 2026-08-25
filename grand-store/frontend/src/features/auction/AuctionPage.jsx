@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, ArrowRight, ShieldCheck, Gift, CircleUserRound, GitCompareArrows } from 'lucide-react';
-import axios from 'axios';
+import api from '../../api';
 import AuctionLotCard from './AuctionLotCard';
 import AuctionCountdown from './AuctionCountdown';
 import LuxuryAuctionHero from './LuxuryAuctionHero';
@@ -17,7 +17,7 @@ export default function AuctionPage({ onNotify }) {
 
   const fetchLots = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auction`);
+      const res = await api.get(`/auction`);
       setLots(res.data);
       setLoading(false);
     } catch (err) {

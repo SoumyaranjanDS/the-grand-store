@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api';
 import { ChevronRight, ArrowRight, ShieldCheck, CreditCard, Loader2 } from 'lucide-react';
 import LocationInput from '../../components/LocationInput';
 import { formatCartPrice } from '../../data';
@@ -38,7 +38,7 @@ export default function AuctionCheckout({ onNotify }) {
       try {
         const userInfo = JSON.parse(localStorage.getItem('userInfo'));
         const headers = userInfo?.token ? { Authorization: `Bearer ${userInfo.token}` } : {};
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auction/${id}`, { headers });
+        const res = await api.get(`/auction/${id}`, { headers });
         setLot(res.data.lot);
         setLoading(false);
       } catch (err) {

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { formatCartPrice } from "../../data";
 import Price from '../../components/ui/Price';
+import api from '../../api';
 
 export default function VendorOrders() {
   const { user } = useAuth();
@@ -25,30 +26,14 @@ export default function VendorOrders() {
   useEffect(() => {
     const fetchSales = async () => {
       try {
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/orders/vendor/sales`,
-          {
-            headers: {
-              Authorization: `Bearer ${user.token}`,
-            },
-          },
-        );
-        const data = await res.json();
-        if (res.ok) {
-          setShipments(data);
-        }
+        const res = await api.get(`/orders/vendor/sales`);
+        const data = res.data;
+        setShipments(data);
 
         // Also fetch vendor profile to get address for PostNet Locator
-        const profRes = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/vendor/shipping-profile`,
-          {
-            headers: { Authorization: `Bearer ${user.token}` },
-          },
-        );
-        const profData = await profRes.json();
-        if (profRes.ok) {
-          setVendorProfile(profData);
-        }
+        const profRes = await api.get(`/vendor/shipping-profile`);
+        const profData = profRes.data;
+        setVendorProfile(profData);
       } catch (error) {
         console.error("Failed to fetch sales or profile", error);
       } finally {
@@ -73,14 +58,9 @@ export default function VendorOrders() {
         if (addr.lat && addr.lng) {
             queryParams += `&lat=${addr.lat}&lng=${addr.lng}`;
         }
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/postnet/locator?${queryParams}`,
-          {
-            headers: { Authorization: `Bearer ${user.token}` },
-          },
-        );
-        const data = await res.json();
-        if (res.ok && data.stores) {
+        const res = await api.get(`/postnet/locator?${queryParams}`);
+        const data = res.data;
+        if (data.stores) {
           setPostnetStores(data.stores);
         }
       } catch (error) {

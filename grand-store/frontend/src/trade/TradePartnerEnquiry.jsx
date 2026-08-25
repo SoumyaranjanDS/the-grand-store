@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import api from '../api'
 import './TradePartnerEnquiry.css'
 
 export default function TradePartnerEnquiry() {
@@ -14,25 +15,16 @@ export default function TradePartnerEnquiry() {
     }
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/trade-enquiries`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
+      await api.post(`/trade-enquiries`, formData);
 
-      if (response.ok) {
-        setSubmitted(true)
-        setTimeout(() => {
-          setFormData({ fullname: '', email: '', phone: '', companyname: '', website: '' })
-          setSubmitted(false)
-        }, 5000)
-      } else {
-        console.error('Failed to submit enquiry');
-        alert('There was a problem submitting your enquiry. Please try again.');
-      }
+      setSubmitted(true)
+      setTimeout(() => {
+        setFormData({ fullname: '', email: '', phone: '', companyname: '', website: '' })
+        setSubmitted(false)
+      }, 5000)
     } catch (error) {
       console.error('Error submitting form:', error);
-      alert('There was a problem submitting your enquiry. Please try again.');
+      alert(error.response?.data?.message || 'There was a problem submitting your enquiry. Please try again.');
     }
   }
 

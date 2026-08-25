@@ -11,9 +11,11 @@ import {
   Ticket,
   Gavel,
   Building2,
+  MapPin,
   LogOut,
   Trash2,
 } from "lucide-react";
+import api from '../../api';
 
 export default function CustomerLayout() {
   const { user, logout } = useAuth();
@@ -29,21 +31,12 @@ export default function CustomerLayout() {
   const handleDeleteAccount = async () => {
     if (window.confirm("Are you sure you want to permanently delete your account? This action cannot be undone.")) {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/auth/profile`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${user.token}`
-          }
-        });
-        if (response.ok) {
-          logout();
-          navigate("/");
-        } else {
-          alert("Failed to delete account");
-        }
+        await api.delete(`/auth/profile`);
+        logout();
+        navigate("/");
       } catch (error) {
+        alert(error.response?.data?.message || "Failed to delete account");
         console.error("Error deleting account:", error);
-        alert("An error occurred while deleting your account");
       }
     }
   };

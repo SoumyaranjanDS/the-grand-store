@@ -4,6 +4,7 @@ import { useProducts } from '../../context/ProductContext';
 import ProductCard from '../../components/ProductCard';
 import { RotateCcw } from 'lucide-react';
 import DynamicIcon from '../../components/DynamicIcon';
+import api from '../../api';
 
 // Default keywords for standard pairings to keep the search smart
 const DEFAULT_KEYWORDS = {
@@ -24,8 +25,8 @@ export default function WinePairingTool() {
   useEffect(() => {
     const fetchPairings = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/attributes`);
-        const data = await res.json();
+        const res = await api.get(`/attributes`);
+        const data = res.data;
         if (Array.isArray(data)) {
           const pairings = data.filter(a => a.type === 'pairing').map(p => ({
             id: p.value,

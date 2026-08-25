@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api';
 import { Calendar, CheckCircle, ArrowLeft, User, Phone, Mail, Building2, MapPin, Users, FileText, Clock } from 'lucide-react';
 import { useLoadScript } from '@react-google-maps/api';
 import usePlacesAutocomplete from 'use-places-autocomplete';
@@ -123,7 +123,7 @@ export default function HostEventPage() {
     setError('');
     setSubmitting(true);
     try {
-      await axios.post(`${API}/api/host-applications`, form);
+      await api.post(`/host-applications`, form);
       setStep(3);
     } catch (e) {
       setError(e.response?.data?.message || 'Submission failed. Please try again.');

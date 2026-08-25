@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Edit, Trash2, Eye, EyeOff, Loader2 } from 'lucide-react';
+import api from '../../api';
 
 export default function AdminTestimonials() {
   const { user } = useAuth();
@@ -23,10 +24,8 @@ export default function AdminTestimonials() {
   const fetchTestimonials = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/testimonials/admin`, {
-        headers: { Authorization: `Bearer ${user.token}` }
-      });
-      const data = await res.json();
+      const res = await api.get(`/testimonials/admin`);
+      const data = res.data;
       setTestimonials(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch testimonials:', error);
@@ -78,25 +77,15 @@ export default function AdminTestimonials() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const method = editMode ? 'PUT' : 'POST';
-      const url = editMode ? `${import.meta.env.VITE_API_URL || ''}/api/testimonials/${currentId}` : `${import.meta.env.VITE_API_URL || ''}/api/testimonials`;
+      const method = editMode ? 'put' : 'post';
+      const endpoint = editMode ? `/testimonials/${currentId}` : `/testimonials`;
       
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${user.token}`
-        },
-        body: JSON.stringify(formData)
-      });
+      await api[method](endpoint, formData);
       
-      if (res.ok) {
-        setShowModal(false);
-        fetchTestimonials();
-      } else {
-        alert('Failed to save testimonial');
-      }
+      setShowModal(false);
+      fetchTestimonials();
     } catch (error) {
+      alert(error.response?.data?.message || 'Failed to save testimonial');
       console.error(error);
     }
   };
@@ -104,13 +93,8 @@ export default function AdminTestimonials() {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this testimonial?')) {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/testimonials/${id}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${user.token}` }
-        });
-        if (res.ok) {
-          fetchTestimonials();
-        }
+        await api.delete(`/testimonials/${id}`);
+        fetchTestimonials();
       } catch (error) {
         console.error(error);
       }
@@ -119,17 +103,8 @@ export default function AdminTestimonials() {
 
   const toggleVisibility = async (t) => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/testimonials/${t._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${user.token}`
-        },
-        body: JSON.stringify({ isVisible: !t.isVisible })
-      });
-      if (res.ok) {
-        fetchTestimonials();
-      }
+      await api.put(`/testimonials/${t._id}`, { isVisible: !t.isVisible });
+      fetchTestimonials();
     } catch (error) {
       console.error(error);
     }

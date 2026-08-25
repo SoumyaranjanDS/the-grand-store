@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import api from '../api';
 import { products as catalogProducts } from "../data";
 
 const ProductContext = createContext();
@@ -33,11 +34,8 @@ export const ProductProvider = ({ children }) => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL || ""}/api/products`,
-        );
-        if (!res.ok) throw new Error("Failed to fetch products");
-        const data = await res.json();
+        const res = await api.get(`/products`);
+        const data = res.data;
         // The API's legacy products only contain the fields in the database schema.
         // Restore their catalog metadata and normalize newer vendor product fields.
         setProducts(data.map(hydrateProductMetadata));

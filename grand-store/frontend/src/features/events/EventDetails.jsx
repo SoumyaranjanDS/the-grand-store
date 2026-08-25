@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api';
 import { Calendar, MapPin, Clock, Users, Tag, Check, ArrowLeft, ShoppingBag, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import PaymentForm from '../checkout/PaymentForm';
@@ -18,7 +18,7 @@ export default function EventDetails({ onNotify, onAdd }) {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/events/${id}`);
+        const res = await api.get(`/events/${id}`);
         setEvent(res.data);
         if (res.data.ticketTiers && res.data.ticketTiers.length > 0) {
           setSelectedTicket(res.data.ticketTiers[0]);

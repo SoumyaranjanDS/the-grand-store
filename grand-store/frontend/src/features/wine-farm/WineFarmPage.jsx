@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
+import api from '../../api'
 import wineFarmStyles from './wine-farm.css?inline'
 
 const liveBase = ''
@@ -390,9 +391,8 @@ function Farms() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/estates`)
-      .then(r => r.json())
-      .then(data => setEstates(Array.isArray(data) ? data : []))
+    api.get(`/estates`)
+      .then(res => setEstates(Array.isArray(res.data) ? res.data : []))
       .catch(() => setEstates([]))
       .finally(() => setLoading(false));
   }, []);
@@ -523,8 +523,8 @@ function Testimonials() {
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/settings/testimonials`);
-        const data = await response.json();
+        const response = await api.get(`/settings/testimonials`);
+        const data = response.data;
         if (data && data.length > 0) {
           setTestimonials(data);
         }

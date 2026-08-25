@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
-import axios from 'axios';
+import api from '../../api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -17,7 +17,7 @@ export const ProductQnA = ({ questions = [], productId }) => {
     const fetchQuestions = async () => {
       if (!productId) return;
       try {
-        const res = await axios.get(`${API_URL}/api/social-proof/questions/${productId}`);
+        const res = await api.get(`/social-proof/questions/${productId}`);
         if (res.data.success) {
           setLocalQuestions(res.data.data);
         }

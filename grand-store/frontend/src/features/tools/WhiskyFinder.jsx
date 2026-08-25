@@ -4,6 +4,7 @@ import { useProducts } from '../../context/ProductContext';
 import ProductCard from '../../components/ProductCard';
 import { RotateCcw } from 'lucide-react';
 import DynamicIcon from '../../components/DynamicIcon';
+import api from '../../api';
 
 const DEFAULT_KEYWORDS = {
   smoky: ['Peat', 'Smoky', 'Islay', 'Lagavulin', 'Laphroaig', 'Smoke'],
@@ -22,8 +23,8 @@ export default function WhiskyFinder() {
   useEffect(() => {
     const fetchFlavors = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/attributes`);
-        const data = await res.json();
+        const res = await api.get(`/attributes`);
+        const data = res.data;
         if (Array.isArray(data)) {
           const flavors = data.filter(a => a.type === 'flavor').map(p => ({
             id: p.value,

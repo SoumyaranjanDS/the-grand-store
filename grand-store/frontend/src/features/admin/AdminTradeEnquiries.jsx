@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../api';
 import { Mail, Phone, Globe, Calendar, Check, X, Building2 } from 'lucide-react';
 
 export default function AdminTradeEnquiries() {
@@ -13,12 +14,8 @@ export default function AdminTradeEnquiries() {
 
   const fetchEnquiries = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/trade-enquiries`, {
-        headers: {
-          Authorization: `Bearer ${user.token}`
-        }
-      });
-      const data = await res.json();
+      const res = await api.get(`/trade-enquiries`);
+      const data = res.data;
       if (data.success) {
         setEnquiries(data.data);
       }
@@ -31,16 +28,9 @@ export default function AdminTradeEnquiries() {
 
   const handleUpdateStatus = async (id, status) => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/trade-enquiries/${id}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${user.token}`
-        },
-        body: JSON.stringify({ status })
-      });
+      const res = await api.put(`/trade-enquiries/${id}/status`, { status });
       
-      const data = await res.json();
+      const data = res.data;
       if (data.success) {
         setEnquiries(prev => prev.map(eq => eq._id === id ? { ...eq, status: data.data.status } : eq));
       }

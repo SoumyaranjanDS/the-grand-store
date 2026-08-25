@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Mail, MapPin, Phone } from 'lucide-react'
+import api from '../api'
 import './TradeContact.css'
 
 export default function TradeContact() {
@@ -9,29 +10,21 @@ export default function TradeContact() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/trade-enquiries`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fullname: formData.name,
-          email: formData.email,
-          message: formData.message,
-          source: 'contact'
-        })
+      await api.post(`/trade-enquiries`, {
+        fullname: formData.name,
+        email: formData.email,
+        message: formData.message,
+        source: 'contact'
       });
 
-      if (response.ok) {
-        setSubmitted(true)
-        setTimeout(() => {
-          setFormData({ name: '', email: '', message: '' })
-          setSubmitted(false)
-        }, 5000)
-      } else {
-        alert('There was a problem sending your message. Please try again.');
-      }
+      setSubmitted(true)
+      setTimeout(() => {
+        setFormData({ name: '', email: '', message: '' })
+        setSubmitted(false)
+      }, 5000)
     } catch (error) {
-      console.error('Error submitting form:', error);
-      alert('There was a problem sending your message. Please try again.');
+      console.error('Error submitting contact form:', error);
+      alert(error.response?.data?.message || 'There was a problem sending your message. Please try again.');
     }
   }
 

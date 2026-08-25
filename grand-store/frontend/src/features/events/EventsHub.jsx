@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api';
 import { Calendar, Filter, MapPin, Users } from 'lucide-react';
 import Price from '../../components/ui/Price';
 
@@ -12,7 +12,7 @@ export default function EventsHub() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/events`);
+        const res = await api.get(`/events`);
         setEvents(res.data);
       } catch (error) {
         console.error('Failed to load events', error);

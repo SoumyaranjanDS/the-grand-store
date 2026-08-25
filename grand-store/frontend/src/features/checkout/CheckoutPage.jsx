@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { ChevronRight, ArrowRight, ShieldCheck, Lock, CreditCard, Loader2, Truck, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { ChevronRight, ArrowRight, ShieldCheck, Lock, CreditCard, Loader2, Truck, AlertTriangle, CheckCircle2, ShoppingCart, MapPin, FileText, Download } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { formatCartPrice } from '../../data';
 import LocationInput from '../../components/LocationInput';
 import PaymentForm from './PaymentForm';
 import Price from '../../components/ui/Price';
+import api from '../../api';
 
 export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, onNotify }) {
   const navigate = useNavigate();
@@ -77,24 +78,15 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
         shippingAddress
       };
 
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/checkout/quote`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.token}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Error generating quote');
+      const res = await api.post(`/checkout/quote`, payload);
+      const data = res.data;
 
       setQuote(data);
       // setCheckoutStep(2); -> removed
       
     } catch (error) {
       console.error(error);
-      onNotify(error.message || 'Failed to get shipping quote. Check address details.');
+      onNotify(error.response?.data?.message || error.message || 'Failed to get shipping quote. Check address details.');
     } finally {
       setQuoteLoading(false);
     }
@@ -220,39 +212,15 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
         giftMessage
       };
 
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.token}`
-        },
-        body: JSON.stringify(orderData)
-      });
-
-      const data = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(data.message || 'Error placing order');
-      }
+      const res = await api.post(`/orders`, orderData);
+      const data = res.data;
       
       setCreatedOrderId(data._id);
 
       if (paymentMethod === 'payfast') {
         // Request PayFast signature
-        const pfRes = await fetch(`${import.meta.env.VITE_API_URL}/api/payfast/generate-shop`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${user.token}`
-          },
-          body: JSON.stringify({ orderId: data._id })
-        });
-
-        const pfData = await pfRes.json();
-        
-        if (!pfRes.ok) {
-           throw new Error(pfData.message || 'Error generating payment');
-        }
+        const pfRes = await api.post(`/payfast/generate-shop`, { orderId: data._id });
+        const pfData = pfRes.data;
 
         setPayfastUrl(pfData.url);
         setPaymentData(pfData.data);
@@ -263,8 +231,9 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
       
     } catch (error) {
       console.error(error);
-      onNotify(error.message || 'Failed to place order');
-      if (error.message.includes('expired')) {
+      const msg = error.response?.data?.message || error.message || 'Failed to place order';
+      onNotify(msg);
+      if (msg.includes('expired')) {
         setCheckoutStep(1); // Force requote
       }
     } finally {
@@ -282,22 +251,13 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
     }
     setUploadingProof(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/${createdOrderId}/bank-transfer/upload`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.token}`
-        },
-        body: JSON.stringify({ proofUrl })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      await api.post(`/orders/${createdOrderId}/bank-transfer/upload`, { proofUrl });
       
       onNotify("Proof uploaded successfully. Awaiting verification.");
       onClearCart(vendorId);
       navigate(`/customer/order/${createdOrderId}`);
     } catch (error) {
-      onNotify(error.message || "Failed to upload proof");
+      onNotify(error.response?.data?.message || error.message || "Failed to upload proof");
     } finally {
       setUploadingProof(false);
     }
