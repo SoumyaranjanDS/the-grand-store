@@ -110,7 +110,7 @@ const getAllVendors = async (req, res) => {
 // @access  Private/Admin
 const updateVendorStatus = async (req, res) => {
   try {
-    const { status, reason } = req.body;
+    const { status, reason, registrationFee } = req.body;
     const vendor = await Vendor.findById(req.params.id);
 
     if (!vendor) {
@@ -122,6 +122,9 @@ const updateVendorStatus = async (req, res) => {
     }
 
     vendor.status = status;
+    if (registrationFee !== undefined) {
+      vendor.registrationFee = registrationFee;
+    }
     // We could store the rejection reason in the vendor model if we add a field for it
     await vendor.save();
 
@@ -148,7 +151,7 @@ const updateVendorStatus = async (req, res) => {
           await sendEmail({
             to: user.email,
             subject: 'Your Vendor Account is Approved',
-            html: vendorApprovalTemplate(user.name)
+            html: vendorApprovalTemplate(user.name, vendor.registrationFee)
           });
         } else if (status === "rejected") {
           await sendEmail({
