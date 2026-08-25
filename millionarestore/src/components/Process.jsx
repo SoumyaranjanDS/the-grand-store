@@ -18,7 +18,7 @@ export default function Process() {
   const trackRef = useRef(null)
 
   useEffect(() => {
-    const isMobile = window.innerWidth < 768
+    const isMobile = window.matchMedia('(max-width: 768px)').matches
 
     const context = gsap.context(() => {
       const bgs = gsap.utils.toArray('.process-bg')
