@@ -86,13 +86,13 @@ const createProduct = async (req, res) => {
     // If files are uploaded (multipart/form-data)
     if (req.files) {
       if (req.files.images && req.files.images.length > 0) {
-        image = `/uploads/${req.files.images[0].filename}`;
+        image = req.files.images[0].path;
         if (req.files.images.length > 1) {
-          gallery = req.files.images.slice(1).map(f => `/uploads/${f.filename}`);
+          gallery = req.files.images.slice(1).map(f => f.path);
         }
       }
       if (req.files.factSheetPdf && req.files.factSheetPdf[0]) {
-        factSheetPdf = `/uploads/${req.files.factSheetPdf[0].filename}`;
+        factSheetPdf = req.files.factSheetPdf[0].path;
       }
     }
 
@@ -181,15 +181,15 @@ const updateProduct = async (req, res) => {
 
     if (req.files) {
       if (req.files.images && req.files.images.length > 0) {
-        product.image = `/uploads/${req.files.images[0].filename}`;
+        product.image = req.files.images[0].path;
         if (req.files.images.length > 1) {
-          product.gallery = req.files.images.slice(1).map(f => `/uploads/${f.filename}`);
+          product.gallery = req.files.images.slice(1).map(f => f.path);
         } else {
           product.gallery = [];
         }
       }
       if (req.files.factSheetPdf && req.files.factSheetPdf[0]) {
-        product.factSheetPdf = `/uploads/${req.files.factSheetPdf[0].filename}`;
+        product.factSheetPdf = req.files.factSheetPdf[0].path;
       }
     }
 
