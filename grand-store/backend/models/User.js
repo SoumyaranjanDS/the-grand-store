@@ -12,11 +12,16 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: false,
+  },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true,
   },
   role: {
     type: String,
-    enum: ['customer', 'vendor_pending', 'vendor_active', 'admin', 'auction_host', 'event_host'],
+    enum: ['customer', 'admin', 'super_admin', 'vendor_pending', 'vendor_approved_unpaid', 'vendor_active', 'vendor_rejected', 'auction_host', 'event_host'],
     default: 'customer',
   },
   wishlist: [{
