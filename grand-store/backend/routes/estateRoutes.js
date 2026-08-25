@@ -20,11 +20,7 @@ const isVendor = (req, res, next) => {
 };
 
 const multer = require('multer');
-const path = require('path');
-const storage = multer.diskStorage({
-  destination(req, file, cb) { cb(null, 'uploads/'); },
-  filename(req, file, cb) { cb(null, `estate-${Date.now()}${path.extname(file.originalname)}`); }
-});
+const { storage } = require('../config/cloudinary');
 const upload = multer({ storage });
 
 // ─── Vendor (authenticated) ─── must come BEFORE /:slug wildcard ─────────────
@@ -37,7 +33,7 @@ router.post('/vendor/upload-images', protect, isVendor, upload.array('images', 4
   if (!req.files || req.files.length === 0) {
     return res.status(400).json({ message: 'No files uploaded' });
   }
-  const urls = req.files.map(file => `/${file.path.replace(/\\/g, '/')}`);
+  const urls = req.files.map(file => file.path);
   res.json({ urls });
 });
 
