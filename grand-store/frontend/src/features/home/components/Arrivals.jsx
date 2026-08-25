@@ -10,8 +10,8 @@ export default function Arrivals({ onAdd, onWish, onCompare, compareItems }) {
   const sectionRef = useRef(null)
 
   const arrivalProducts = [...products]
-    .filter((product) => (!product.vendorId || product.approvalStatus === 'approved'))
-    .filter((product) => String(product.category || product.type || '').toLowerCase() !== 'accessories')
+    .filter((product) => !product.vendorId) // Only from admin
+    .filter((product) => !String(product.category || product.type || '').toLowerCase().includes('accessor')) // Not from accessories
     .sort((first, second) => {
       const firstCreatedAt = Date.parse(first.createdAt || '') || 0
       const secondCreatedAt = Date.parse(second.createdAt || '') || 0
