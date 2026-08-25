@@ -35,11 +35,17 @@ const resolveImageUrl = (src) => {
 
 function VendorProductImage({ src, alt }) {
   const resolvedSrc = resolveImageUrl(src);
+  const isPreparedSource = Object.values(preparedVendorImages).includes(resolvedSrc);
   const cacheKey = `${vendorImageFitVersion}:${resolvedSrc}`
   const [displaySource, setDisplaySource] = useState(() => trimmedUploadCache.get(cacheKey) || resolvedSrc)
 
   useEffect(() => {
-    if (!resolvedSrc || !resolvedSrc.includes('/uploads/') || trimmedUploadCache.has(cacheKey)) {
+    if (isPreparedSource) {
+      setDisplaySource(resolvedSrc)
+      return undefined
+    }
+
+    if (!resolvedSrc || (!resolvedSrc.includes('/uploads/') && !resolvedSrc.includes('res.cloudinary.com')) || trimmedUploadCache.has(cacheKey)) {
       setDisplaySource(trimmedUploadCache.get(cacheKey) || resolvedSrc)
       return undefined
     }
@@ -132,22 +138,22 @@ function VendorProductImage({ src, alt }) {
       }
     }
 
-    sourceImage.onerror = () => trimmedUploadCache.set(cacheKey, src)
+    sourceImage.onerror = () => trimmedUploadCache.set(cacheKey, resolvedSrc)
     sourceImage.crossOrigin = 'anonymous'
     sourceImage.src = resolvedSrc
 
     return () => {
       cancelled = true
     }
-  }, [cacheKey, preparedSource, src])
+  }, [cacheKey, isPreparedSource, resolvedSrc])
 
-  if (preparedSource) {
+  if (isPreparedSource) {
     return (
       <span
         className="prepared-vendor-product"
         role="img"
         aria-label={alt}
-        style={{ backgroundImage: `url(${preparedSource})` }}
+        style={{ backgroundImage: `url(${resolvedSrc})` }}
       />
     )
   }
