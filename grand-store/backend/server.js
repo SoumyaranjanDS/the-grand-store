@@ -15,16 +15,27 @@ const app = express();
 
 // Middleware
 // Parse allowed origins from .env or fallback to localhost
-const allowedOrigins = process.env.ALLOWED_ORIGINS
+let allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
   : [
       "http://localhost:5173",
       "http://localhost:5174",
       "http://localhost:5175",
-      "http://localhost:56842",
-      "https://grandstore.yogapranafitness.com",
-      "https://www.grandstore.yogapranafitness.com"
+      "http://localhost:56842"
     ];
+
+const productionDomains = [
+  "https://grandstore.yogapranafitness.com",
+  "https://www.grandstore.yogapranafitness.com",
+  "http://grandstore.yogapranafitness.com",
+  "http://www.grandstore.yogapranafitness.com"
+];
+
+productionDomains.forEach(domain => {
+  if (!allowedOrigins.includes(domain)) {
+    allowedOrigins.push(domain);
+  }
+});
 
 app.use(
   cors({
