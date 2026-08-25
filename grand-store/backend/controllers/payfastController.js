@@ -5,6 +5,7 @@ const Booking = require('../models/Booking');
 const { processOrderPayment } = require('./orderController');
 const { processAuctionPayment } = require('./auctionController');
 const { processEventPayment } = require('./eventController');
+const { processVendorPayment } = require('./vendorController');
 
 // Helper to generate PayFast signature
 const generateSignature = (data, passphrase = null) => {
@@ -156,6 +157,44 @@ exports.generateEventPayment = async (req, res) => {
   }
 };
 
+// @desc    Generate PayFast payload for Vendor Registration
+// @route   POST /api/payfast/generate-vendor
+// @access  Private
+exports.generateVendorPayment = async (req, res) => {
+  try {
+    const Vendor = require('../models/Vendor');
+    const vendor = await Vendor.findOne({ userId: req.user._id }).populate('userId');
+
+    if (!vendor) {
+      return res.status(404).json({ message: 'Vendor application not found' });
+    }
+
+    const config = getPayfastConfig();
+
+    const data = {
+      merchant_id: config.merchant_id,
+      merchant_key: config.merchant_key,
+      return_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/vendor/payment?success=true`,
+      cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/vendor/payment?success=false`,
+      notify_url: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/payfast/itn`,
+      name_first: vendor.userId.name.split(' ')[0],
+      name_last: vendor.userId.name.split(' ').slice(1).join(' ') || 'Vendor',
+      email_address: vendor.userId.email,
+      m_payment_id: `VND-${vendor._id}`,
+      amount: (vendor.registrationFee || 0).toFixed(2),
+      item_name: 'Vendor Registration Fee'
+    };
+
+    const signature = generateSignature(data, config.passphrase);
+    data.signature = signature;
+    
+    res.json({ url: config.url, data });
+  } catch (error) {
+    console.error('Error generating PayFast vendor payment:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 // @desc    Handle PayFast ITN Webhook
 // @route   POST /api/payfast/itn
 // @access  Public
@@ -200,6 +239,10 @@ exports.itnWebhook = async (req, res) => {
           const bookingId = reference.replace('EVT-', '');
           await processEventPayment(bookingId);
           console.log(`Successfully processed event payment for ${bookingId}`);
+       } else if (reference.startsWith('VND-')) {
+          const vendorId = reference.replace('VND-', '');
+          await processVendorPayment(vendorId);
+          console.log(`Successfully processed vendor payment for ${vendorId}`);
        }
     }
 
