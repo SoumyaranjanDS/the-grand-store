@@ -10,6 +10,7 @@ export default function AdminFinancials({ hideHeader = false }) {
   const [shopOrders, setShopOrders] = useState([]);
   const [auctionOrders, setAuctionOrders] = useState([]);
   const [eventBookings, setEventBookings] = useState([]);
+  const [vendorPayments, setVendorPayments] = useState([]);
   const [activeTab, setActiveTab] = useState('shop');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -30,6 +31,7 @@ export default function AdminFinancials({ hideHeader = false }) {
         setShopOrders(res.data.shopOrders || []);
         setAuctionOrders(res.data.auctionOrders || []);
         setEventBookings(res.data.eventBookings || []);
+        setVendorPayments(res.data.vendorPayments || []);
       } catch (err) {
         setError('Failed to load finance data');
         console.error(err);
@@ -122,6 +124,14 @@ export default function AdminFinancials({ hideHeader = false }) {
               }`}
             >
               Auctions
+            </button>
+            <button
+              onClick={() => setActiveTab('vendor')}
+              className={`px-4 py-2 text-xs font-bold tracking-wider uppercase rounded-sm transition-colors ${
+                activeTab === 'vendor' ? 'bg-[#b58b38] text-black' : 'bg-white/5 text-[#888] hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              Vendor Reg.
             </button>
           </div>
         </div>
@@ -253,6 +263,40 @@ export default function AdminFinancials({ hideHeader = false }) {
                       </tr>
                     );
                   })}
+                </tbody>
+              </table>
+            </div>
+          )
+        )}
+
+        {activeTab === 'vendor' && (
+          vendorPayments.length === 0 ? (
+            <div className="p-12 text-center text-[#666]">
+              <History size={48} className="mx-auto mb-4 opacity-20" />
+              <p>No vendor registration payments yet.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse whitespace-nowrap">
+                <thead>
+                  <tr className="bg-black/60 text-[#888] text-[10px] uppercase tracking-wider">
+                    <th className="p-4 font-medium">Ref ID</th>
+                    <th className="p-4 font-medium">Date</th>
+                    <th className="p-4 font-medium">Vendor</th>
+                    <th className="p-4 font-medium text-right font-bold text-white">Amount Paid</th>
+                    <th className="p-4 font-medium">Gateway</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm text-gray-300">
+                  {vendorPayments.map(txn => (
+                    <tr key={txn._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                      <td className="p-4 font-mono text-xs text-[#b58b38]">{txn.reference}</td>
+                      <td className="p-4 text-xs">{new Date(txn.createdAt || txn.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                      <td className="p-4 text-xs">{txn.user?.name || txn.user?.email || 'N/A'}</td>
+                      <td className="p-4 text-right font-bold text-white">{formatMoney(txn.amount)}</td>
+                      <td className="p-4 text-xs text-[#888]">{txn.gateway}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
