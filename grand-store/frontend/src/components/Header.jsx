@@ -1,6 +1,6 @@
 import Price from "./ui/Price";
-import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   Menu,
   Search,
@@ -31,14 +31,18 @@ export default function Header({
 }) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { products } = useProducts();
   const { country_name, currency } = useGeoLocation();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
-  const [activeCategory, setActiveCategory] = useState(0);
   const [megaTrigger, setMegaTrigger] = useState("shop");
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [activeBrand, setActiveBrand] = useState(null);
   const headerRef = useRef(null);
+
+  const closeTimerRef = useRef(null);
 
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -50,12 +54,24 @@ export default function Header({
   const [mobileSearchQuery, setMobileSearchQuery] = useState("");
   const mobileSearchRef = useRef(null);
 
-  const searchResults = searchQuery.trim() 
-    ? products.filter(p => p.name?.toLowerCase().includes(searchQuery.toLowerCase()) || p.brand?.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 5)
+  const searchResults = searchQuery.trim()
+    ? products
+        .filter(
+          (p) =>
+            p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            p.brand?.toLowerCase().includes(searchQuery.toLowerCase()),
+        )
+        .slice(0, 5)
     : [];
 
   const mobileSearchResults = mobileSearchQuery.trim()
-    ? products.filter(p => p.name?.toLowerCase().includes(mobileSearchQuery.toLowerCase()) || p.brand?.toLowerCase().includes(mobileSearchQuery.toLowerCase())).slice(0, 5)
+    ? products
+        .filter(
+          (p) =>
+            p.name?.toLowerCase().includes(mobileSearchQuery.toLowerCase()) ||
+            p.brand?.toLowerCase().includes(mobileSearchQuery.toLowerCase()),
+        )
+        .slice(0, 5)
     : [];
 
   useEffect(() => {
@@ -68,7 +84,6 @@ export default function Header({
       }
       setLastScrollY(window.scrollY);
     };
-
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
@@ -82,9 +97,7 @@ export default function Header({
     if (megaOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [megaOpen]);
 
   useEffect(() => {
@@ -96,9 +109,7 @@ export default function Header({
     if (isSearchOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isSearchOpen]);
 
   const closeMenus = () => {
@@ -106,14 +117,47 @@ export default function Header({
     setMegaOpen(false);
   };
 
-  const toggleMegaMenu = (trigger, categoryName) => {
-    const categoryIndex = categoryName
-      ? storeCategories.findIndex((category) => category === categoryName)
-      : activeCategory;
-    if (categoryIndex >= 0) setActiveCategory(categoryIndex);
-    setMegaOpen(!(megaOpen && megaTrigger === trigger));
-    setMegaTrigger(trigger);
-  };
+  const scheduleClose = useCallback(() => {
+    closeTimerRef.current = setTimeout(() => setMegaOpen(false), 300);
+  }, []);
+
+  const cancelClose = useCallback(() => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+  }, []);
+
+  // Build category→brands map from live products (must be before openMega)
+  const getProductCategory = (p) => p.category || p.type || "";
+  const categoryBrandsMap = {};
+  for (const p of products) {
+    const cat = getProductCategory(p);
+    if (!cat) continue;
+    if (!categoryBrandsMap[cat]) categoryBrandsMap[cat] = new Set();
+    if (p.brand) categoryBrandsMap[cat].add(p.brand);
+  }
+  const liveCategories = Object.keys(categoryBrandsMap).sort();
+
+  // Keep a ref so openMega can read latest map without being in its dep array
+  const categoryBrandsMapRef = useRef(categoryBrandsMap);
+  categoryBrandsMapRef.current = categoryBrandsMap;
+
+  const openMega = useCallback(
+    (trigger) => {
+      cancelClose();
+      setMegaTrigger(trigger);
+      setMegaOpen(true);
+      // Auto-select first category + first brand so panels aren't empty on open
+      if (trigger === "shop") {
+        const map = categoryBrandsMapRef.current;
+        const firstCat = Object.keys(map).sort()[0] ?? null;
+        setActiveCategory(firstCat);
+        const firstBrand = firstCat ? ([...map[firstCat]][0] ?? null) : null;
+        setActiveBrand(firstBrand);
+      } else {
+        setActiveCategory(null);
+      }
+    },
+    [cancelClose],
+  );
 
   return (
     <div
@@ -138,13 +182,9 @@ export default function Header({
         </div>
       </div>
 
-      <header
-        className="site-header relative"
-        ref={headerRef}
-        onMouseLeave={() => setMegaOpen(false)}
-      >
+      <header className="site-header relative" ref={headerRef}>
         <div className="shell header-main flex items-center justify-between min-h-[50px] sm:min-h-[64px] md:min-h-[80px] px-2 sm:px-6 md:px-10">
-          {/* Left: Mobile Menu + Leftified Brand Logo */}
+          {/* Left: Mobile Menu + Logo */}
           <div className="flex items-center gap-1 sm:gap-3 shrink-0">
             <button
               className="mobile-menu-button shrink-0"
@@ -168,8 +208,11 @@ export default function Header({
             </Link>
           </div>
 
-          {/* Center: Search Field (Desktop only) */}
-          <div className="hidden md:block flex-1 max-w-[560px] mx-6 relative" ref={searchRef}>
+          {/* Center: Search */}
+          <div
+            className="hidden md:block flex-1 max-w-[560px] mx-6 relative"
+            ref={searchRef}
+          >
             <form
               className="search-field w-full"
               onSubmit={(event) => {
@@ -195,41 +238,52 @@ export default function Header({
             </form>
 
             <AnimatePresence>
-              {isSearchOpen && searchQuery.trim() && searchResults.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -5 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute top-full left-0 w-full bg-[#1e1e1e] border border-white/20 shadow-2xl z-50 overflow-hidden"
-                >
-                  {searchResults.map(product => (
-                    <Link
-                      key={product.id || product._id}
-                      to={`/product/${product.slug || product.id || product._id}`}
-                      className="flex items-center justify-between p-3 border-b border-white/10 hover:bg-white/5 transition-colors last:border-b-0"
-                      onClick={() => {
-                        setIsSearchOpen(false);
-                        setSearchQuery("");
-                      }}
-                    >
-                      <div className="flex items-center gap-4 min-w-0">
-                        <div className="w-8 h-10 flex items-center justify-center rounded border border-white/10 overflow-hidden shrink-0 bg-white/5">
-                          {product.image ? (
-                            <img src={product.image} alt={product.name} className="max-w-full max-h-full object-contain" />
-                          ) : (
-                            <div className="w-full h-full bg-[#222]"></div>
-                          )}
+              {isSearchOpen &&
+                searchQuery.trim() &&
+                searchResults.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full left-0 w-full bg-[#1e1e1e] border border-white/20 shadow-2xl z-50 overflow-hidden"
+                  >
+                    {searchResults.map((product) => (
+                      <Link
+                        key={product.id || product._id}
+                        to={`/product/${product.slug || product.id || product._id}`}
+                        className="flex items-center justify-between p-3 border-b border-white/10 hover:bg-white/5 transition-colors last:border-b-0"
+                        onClick={() => {
+                          setIsSearchOpen(false);
+                          setSearchQuery("");
+                        }}
+                      >
+                        <div className="flex items-center gap-4 min-w-0">
+                          <div className="w-8 h-10 flex items-center justify-center rounded border border-white/10 overflow-hidden shrink-0 bg-white/5">
+                            {product.image ? (
+                              <img
+                                src={product.image}
+                                alt={product.name}
+                                className="max-w-full max-h-full object-contain"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-[#222]"></div>
+                            )}
+                          </div>
+                          <span
+                            className="text-[15px] text-[#eee] truncate"
+                            title={product.name}
+                          >
+                            {product.name}
+                          </span>
                         </div>
-                        <span className="text-[15px] text-[#eee] truncate" title={product.name}>{product.name}</span>
-                      </div>
-                      <span className="text-[15px] text-[#eee] ml-4 shrink-0">
-                        <Price amount={product.price} />
-                      </span>
-                    </Link>
-                  ))}
-                </motion.div>
-              )}
+                        <span className="text-[15px] text-[#eee] ml-4 shrink-0">
+                          <Price amount={product.price} />
+                        </span>
+                      </Link>
+                    ))}
+                  </motion.div>
+                )}
             </AnimatePresence>
           </div>
 
@@ -283,7 +337,6 @@ export default function Header({
               </>
             )}
 
-            {/* Compare Button - Hidden as per user request */}
             <div className="hidden">
               <IconButton
                 label="Compare products"
@@ -294,7 +347,6 @@ export default function Header({
               </IconButton>
             </div>
 
-            {/* Wishlist / Likes - Visible on Mobile & Desktop */}
             <IconButton
               className={wishlistCount ? "wishlist-header-active" : ""}
               label={`Wishlist, ${wishlistCount} saved ${wishlistCount === 1 ? "bottle" : "bottles"}`}
@@ -304,7 +356,6 @@ export default function Header({
               <Heart size={21} fill={wishlistCount ? "currentColor" : "none"} />
             </IconButton>
 
-            {/* Cart - Visible on Mobile & Desktop */}
             <IconButton
               label="Shopping bag"
               count={cartCount}
@@ -315,25 +366,32 @@ export default function Header({
           </div>
         </div>
 
-        <nav className="desktop-nav" aria-label="Main navigation">
+        {/* Desktop Nav */}
+        <nav
+          className="desktop-nav"
+          aria-label="Main navigation"
+          onMouseLeave={scheduleClose}
+          onMouseEnter={cancelClose}
+        >
           <div className="shell nav-inner">
             <Link
-              className="active"
+              className={location.pathname === "/" ? "active" : ""}
               to="/"
-              onMouseEnter={() => setMegaOpen(false)}
+              onMouseEnter={() => {
+                cancelClose();
+                setMegaOpen(false);
+              }}
             >
               Home
             </Link>
+
+            {/* Shop trigger */}
             <div
               className="nav-shop-control"
-              onMouseEnter={() => {
-                setActiveCategory(0);
-                setMegaTrigger("shop");
-                setMegaOpen(true);
-              }}
+              onMouseEnter={() => openMega("shop")}
             >
               <Link
-                className="nav-shop-link font-bold text-[#f0cf76] hover:text-white transition-colors"
+                className={`nav-shop-link font-bold hover:text-white transition-colors ${location.pathname.startsWith("/shop") ? "text-[#f0cf76] active" : ""}`}
                 to="/shop"
                 onClick={() => setMegaOpen(false)}
               >
@@ -341,228 +399,215 @@ export default function Header({
               </Link>
             </div>
 
-            <a
-              href="/#private-collection"
-              onMouseEnter={() => setMegaOpen(false)}
+            <Link
+              className={
+                location.pathname.startsWith("/offers") ? "active" : ""
+              }
+              to="/offers"
+              onMouseEnter={() => {
+                cancelClose();
+                setMegaOpen(false);
+              }}
             >
               Offers
-            </a>
-            <Link to="/auction" onMouseEnter={() => setMegaOpen(false)}>
+            </Link>
+            <Link
+              className={
+                location.pathname.startsWith("/auction") ? "active" : ""
+              }
+              to="/auction"
+              onMouseEnter={() => {
+                cancelClose();
+                setMegaOpen(false);
+              }}
+            >
               Auction
             </Link>
+
+            {/* Accessories trigger */}
             <div
               className="nav-accessories-control"
-              onMouseEnter={() => {
-                setActiveCategory(0);
-                setMegaTrigger("accessories");
-                setMegaOpen(true);
-              }}
+              onMouseEnter={() => openMega("accessories")}
             >
               <Link
                 to="/accessories"
-                className="nav-dropdown-button hover:text-[#f0cf76] transition-colors"
+                className={`nav-dropdown-button hover:text-[#f0cf76] transition-colors ${location.pathname.startsWith("/accessories") ? "active text-[#f0cf76]" : ""}`}
                 onClick={() => setMegaOpen(false)}
               >
                 Accessories
               </Link>
             </div>
+
             <Link
               to="/events"
-              className="font-bold text-[#f0cf76] hover:text-white transition-colors"
-              onMouseEnter={() => setMegaOpen(false)}
+              className={`font-bold hover:text-white transition-colors ${location.pathname.startsWith("/events") ? "text-[#f0cf76] active" : ""}`}
+              onMouseEnter={() => {
+                cancelClose();
+                setMegaOpen(false);
+              }}
             >
               Events
             </Link>
-            <Link to="/vendor-portal" onMouseEnter={() => setMegaOpen(false)}>
+            <Link
+              className={
+                location.pathname.startsWith("/vendor-portal") ? "active" : ""
+              }
+              to="/vendor-portal"
+              onMouseEnter={() => {
+                cancelClose();
+                setMegaOpen(false);
+              }}
+            >
               Sell on The Grand Store
             </Link>
-            <Link to="/events" onMouseEnter={() => setMegaOpen(false)}>
+            <Link
+              className={
+                location.pathname === "/events/tasting" ? "active" : ""
+              }
+              to="/events"
+              onMouseEnter={() => {
+                cancelClose();
+                setMegaOpen(false);
+              }}
+            >
               Book a tasting
             </Link>
             <Link
               to="/global-wines"
-              className="font-bold text-[#f0cf76] hover:text-white transition-colors"
-              onMouseEnter={() => setMegaOpen(false)}
+              className={`font-bold hover:text-white transition-colors ${location.pathname.startsWith("/global-wines") ? "text-[#f0cf76] active" : ""}`}
+              onMouseEnter={() => {
+                cancelClose();
+                setMegaOpen(false);
+              }}
             >
               🌍 GLOBAL WINES
             </Link>
           </div>
         </nav>
 
+        {/* ── SHOP MEGA MENU ── */}
         <AnimatePresence>
           {megaOpen && megaTrigger === "shop" && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
+              initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="absolute top-[100%] left-0 w-full pt-0 z-50 border-t border-white/5"
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+              className="absolute top-[100%] left-0 w-full z-50 border-t border-white/10"
+              onMouseEnter={cancelClose}
+              onMouseLeave={scheduleClose}
             >
-              <div className="w-full bg-[#0a0a0a] shadow-[0_20px_40px_rgba(0,0,0,0.9)] relative flex justify-center">
-                <div className="w-full max-w-[1500px] mx-auto flex h-[450px]">
-                  {/* Categories Column */}
-                  <div className="w-1/4 bg-[#111] border-r border-white/5 py-6 flex flex-col">
-                    <div className="px-8 pb-4 text-xs font-bold tracking-widest text-[#888] uppercase">
-                      Explore
-                    </div>
-                    <div className="flex-1 overflow-y-auto custom-scrollbar">
-                      {storeCategories.map((category, index) => (
-                        <div
-                          key={category}
-                          className="relative group/category"
-                          onMouseEnter={() => setActiveCategory(index)}
-                        >
-                          <div
-                            className={`px-8 py-3 flex items-center justify-between text-sm cursor-pointer transition-colors ${activeCategory === index ? "text-[#e6c97a] bg-white/5" : "text-[#ccc] hover:text-white hover:bg-white/5"}`}
+              <div className="w-full bg-[#111] shadow-[0_20px_60px_rgba(0,0,0,0.8)]">
+                <div className="w-full max-w-[1400px] mx-auto px-10 py-8">
+                  {/* Multi-column grid — each category is a column cell */}
+                  <div className="columns-4 gap-x-8 space-y-6">
+                    {liveCategories.map((cat) => {
+                      const catProducts = products
+                        .filter((p) => (p.category || p.type || "") === cat)
+                        .slice(0, 5);
+                      return (
+                        <div key={cat} className="break-inside-avoid mb-6">
+                          {/* Category header */}
+                          <Link
+                            to={`/shop?category=${encodeURIComponent(cat)}`}
+                            onClick={closeMenus}
+                            className="block mb-2 text-[11px] font-bold tracking-[0.18em] text-white hover:text-[#d4af37] transition-colors uppercase"
                           >
-                            {category}
-                            <ChevronRight
-                              size={14}
-                              className={
-                                activeCategory === index
-                                  ? "opacity-100"
-                                  : "opacity-0 group-hover/category:opacity-50 transition-opacity"
-                              }
-                            />
+                            {cat}
+                          </Link>
+                          {/* Product list */}
+                          <div className="space-y-[3px]">
+                            {catProducts.map((p) => (
+                              <Link
+                                key={p._id || p.id}
+                                to={`/product/${p.slug || p._id || p.id}`}
+                                onClick={closeMenus}
+                                title={p.name}
+                                className="flex items-center gap-1.5 group"
+                              >
+                                <span className="text-[#c9a35b] text-[11px] shrink-0">
+                                  ›
+                                </span>
+                                <span className="text-[13px] text-[#888] group-hover:text-[#c9a35b] transition-colors truncate">
+                                  {p.name}
+                                </span>
+                              </Link>
+                            ))}
+                            {products.filter(
+                              (p) => (p.category || p.type || "") === cat,
+                            ).length > 5 && (
+                              <Link
+                                to={`/shop?category=${encodeURIComponent(cat)}`}
+                                onClick={closeMenus}
+                                className="flex items-center gap-1.5 mt-1 group"
+                              >
+                                <span className="text-[#c9a35b] text-[11px] shrink-0">
+                                  ›
+                                </span>
+                                <span className="text-[12px] text-[#c9a35b]/70 group-hover:text-[#c9a35b] transition-colors">
+                                  All {cat}
+                                </span>
+                              </Link>
+                            )}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Products Grid */}
-                  <div className="flex-1 bg-[#0a0a0a] py-6 px-8 flex flex-col">
-                    <div className="pb-4 text-xs font-bold tracking-widest text-[#888] uppercase">
-                      {activeCategory >= 0 && storeCategories[activeCategory]
-                        ? storeCategories[activeCategory]
-                        : "Featured"}
-                    </div>
-                    <div className="flex-1 overflow-y-auto custom-scrollbar">
-                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3 pr-4">
-                        {products
-                          .filter((p) =>
-                            activeCategory >= 0
-                              ? (p.category || p.type || "")
-                                  .toLowerCase()
-                                  .includes(
-                                    storeCategories[
-                                      activeCategory
-                                    ].toLowerCase(),
-                                  )
-                              : true,
-                          )
-                          .slice(0, 30)
-                          .map((product) => (
-                            <Link
-                              key={product.id}
-                              to={`/product/${product.slug || product.id}`}
-                              onClick={closeMenus}
-                              className="text-sm text-[#ccc] hover:text-[#e6c97a] transition-colors truncate block py-1"
-                            >
-                              {product.name}
-                              {product.vintage && (
-                                <span className="ml-2 text-xs text-[#888]">
-                                  {product.vintage}
-                                </span>
-                              )}
-                            </Link>
-                          ))}
-                      </div>
-                      {activeCategory >= 0 &&
-                        products.filter((p) =>
-                          (p.category || p.type || "")
-                            .toLowerCase()
-                            .includes(
-                              storeCategories[activeCategory].toLowerCase(),
-                            ),
-                        ).length === 0 && (
-                          <div className="h-full flex items-center justify-center text-[#888] text-sm italic">
-                            New allocations arriving soon.
-                          </div>
-                        )}
-                    </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* ── ACCESSORIES MEGA MENU ── */}
         <AnimatePresence>
           {megaOpen && megaTrigger === "accessories" && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
+              initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="absolute top-[100%] left-0 w-full pt-0 z-50 border-t border-white/5"
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+              className="absolute top-[100%] left-0 w-full z-50 border-t border-white/10"
+              onMouseEnter={cancelClose}
+              onMouseLeave={scheduleClose}
             >
-              <div className="w-full bg-[#0a0a0a] shadow-[0_20px_40px_rgba(0,0,0,0.9)] relative flex justify-center">
-                <div className="w-full max-w-[1500px] mx-auto flex h-[450px]">
-                  {/* Categories Column */}
-                  <div className="w-1/4 bg-[#111] border-r border-white/5 py-6 flex flex-col">
-                    <div className="px-8 pb-4 text-xs font-bold tracking-widest text-[#888] uppercase">
-                      Categories
-                    </div>
-                    <div className="flex-1 overflow-y-auto custom-scrollbar">
-                      {Object.keys(accessoryCategories).map(
-                        (category, index) => (
-                          <div
-                            key={category}
-                            className="relative group/category"
-                            onMouseEnter={() => setActiveCategory(index)}
+              <div className="w-full bg-[#111] shadow-[0_20px_60px_rgba(0,0,0,0.8)]">
+                <div className="w-full max-w-[1400px] mx-auto px-10 py-8">
+                  {/* Multi-column grid — each category is a column cell */}
+                  <div className="columns-4 gap-x-8 space-y-6">
+                    {Object.entries(accessoryCategories).map(
+                      ([cat, subcats]) => (
+                        <div key={cat} className="break-inside-avoid mb-6">
+                          {/* Category header */}
+                          <Link
+                            to={`/accessories?category=${encodeURIComponent(cat)}`}
+                            onClick={closeMenus}
+                            className="block mb-2 text-[11px] font-bold tracking-[0.18em] text-white hover:text-[#d4af37] transition-colors uppercase"
                           >
-                            <div
-                              className={`px-8 py-3 flex items-center justify-between text-sm cursor-pointer transition-colors ${activeCategory === index ? "text-[#e6c97a] bg-white/5" : "text-[#ccc] hover:text-white hover:bg-white/5"}`}
-                            >
-                              {category}
-                              <ChevronRight
-                                size={14}
-                                className={
-                                  activeCategory === index
-                                    ? "opacity-100"
-                                    : "opacity-0 group-hover/category:opacity-50 transition-opacity"
-                                }
-                              />
-                            </div>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Products Grid */}
-                  <div className="flex-1 bg-[#0a0a0a] py-6 px-8 flex flex-col">
-                    <div className="pb-4 text-xs font-bold tracking-widest text-[#888] uppercase">
-                      {activeCategory >= 0 &&
-                      Object.keys(accessoryCategories)[activeCategory]
-                        ? Object.keys(accessoryCategories)[activeCategory]
-                        : "Featured"}
-                    </div>
-                    <div className="flex-1 overflow-y-auto custom-scrollbar">
-                      <div className="grid grid-cols-3 xl:grid-cols-4 gap-6 pr-4">
-                        {activeCategory >= 0 &&
-                          accessoryCategories[
-                            Object.keys(accessoryCategories)[activeCategory]
-                          ]?.map((subcat) => (
-                            <div
-                              key={subcat}
-                              className="flex flex-col gap-2 p-4 rounded-md bg-[#111] border border-white/5 hover:border-[#c9a35b]/30 transition-colors"
-                            >
-                              <div className="text-sm font-medium text-[#e6c97a] mb-2">
-                                {subcat}
-                              </div>
-                              {/* Dummy product representation for subcategory */}
+                            {cat}
+                          </Link>
+                          {/* Subcategory list */}
+                          <div className="space-y-[3px]">
+                            {subcats.map((subcat) => (
                               <Link
-                                to={`/accessories?category=${encodeURIComponent(Object.keys(accessoryCategories)[activeCategory])}&subcategory=${encodeURIComponent(subcat)}`}
+                                key={subcat}
+                                to={`/accessories?category=${encodeURIComponent(cat)}&subcategory=${encodeURIComponent(subcat)}`}
                                 onClick={closeMenus}
-                                className="text-xs text-[#888] hover:text-white transition-colors"
+                                className="flex items-center gap-1.5 group"
                               >
-                                View collection &rarr;
+                                <span className="text-[#c9a35b] text-[11px] shrink-0">
+                                  ›
+                                </span>
+                                <span className="text-[13px] text-[#888] group-hover:text-[#c9a35b] transition-colors truncate">
+                                  {subcat}
+                                </span>
                               </Link>
-                            </div>
-                          ))}
-                      </div>
-                    </div>
+                            ))}
+                          </div>
+                        </div>
+                      ),
+                    )}
                   </div>
                 </div>
               </div>
@@ -571,6 +616,7 @@ export default function Header({
         </AnimatePresence>
       </header>
 
+      {/* Mobile Drawer */}
       <div
         className={`mobile-drawer ${mobileOpen ? "open" : ""}`}
         aria-hidden={!mobileOpen}
@@ -598,26 +644,30 @@ export default function Header({
               <X size={23} />
             </IconButton>
           </div>
-          <div className="mobile-search-container relative" ref={mobileSearchRef}>
+          <div
+            className="mobile-search-container relative"
+            ref={mobileSearchRef}
+          >
             <form
               className="mobile-search"
               onSubmit={(event) => {
                 event.preventDefault();
                 if (mobileSearchQuery.trim()) {
-                  navigate(`/shop?search=${encodeURIComponent(mobileSearchQuery)}`);
+                  navigate(
+                    `/shop?search=${encodeURIComponent(mobileSearchQuery)}`,
+                  );
                   closeMenus();
                 }
               }}
             >
               <Search size={18} />
-              <input 
-                aria-label="Search" 
-                placeholder="Search the cellar" 
+              <input
+                aria-label="Search"
+                placeholder="Search the cellar"
                 value={mobileSearchQuery}
                 onChange={(e) => setMobileSearchQuery(e.target.value)}
               />
             </form>
-            
             <AnimatePresence>
               {mobileSearchQuery.trim() && mobileSearchResults.length > 0 && (
                 <motion.div
@@ -626,7 +676,7 @@ export default function Header({
                   exit={{ opacity: 0, y: -5 }}
                   className="absolute top-full left-0 w-full mt-2 bg-[#1a1a1a] border border-[#333] shadow-xl z-[100] rounded-sm overflow-hidden"
                 >
-                  {mobileSearchResults.map(product => (
+                  {mobileSearchResults.map((product) => (
                     <Link
                       key={product.id || product._id}
                       to={`/product/${product.slug || product.id || product._id}`}
@@ -639,12 +689,21 @@ export default function Header({
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-8 h-10 bg-black flex items-center justify-center rounded border border-[#333] overflow-hidden shrink-0">
                           {product.image ? (
-                            <img src={product.image} alt={product.name} className="max-w-full max-h-full object-contain" />
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              className="max-w-full max-h-full object-contain"
+                            />
                           ) : (
                             <div className="w-full h-full bg-[#222]"></div>
                           )}
                         </div>
-                        <span className="text-sm text-[#eee] truncate" title={product.name}>{product.name}</span>
+                        <span
+                          className="text-sm text-[#eee] truncate"
+                          title={product.name}
+                        >
+                          {product.name}
+                        </span>
                       </div>
                       <span className="text-sm font-semibold text-white ml-4 shrink-0">
                         <Price amount={product.price} />
@@ -677,9 +736,9 @@ export default function Header({
                 ))}
               </div>
             </details>
-            <a href="/#private-collection" onClick={closeMenus}>
+            <Link to="/offers" onClick={closeMenus}>
               Offers
-            </a>
+            </Link>
             <Link to="/auction" onClick={closeMenus}>
               Auction
             </Link>
@@ -721,7 +780,6 @@ export default function Header({
             >
               🌍 Global Wines
             </Link>
-
             <Link to="/customer/wishlist" onClick={closeMenus}>
               Wishlist
             </Link>
