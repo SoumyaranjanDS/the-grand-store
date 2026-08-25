@@ -5,15 +5,7 @@ const { protect } = require('../middleware/authMiddleware');
 const multer = require('multer');
 const path = require('path');
 
-// Configure multer
-const storage = multer.diskStorage({
-  destination(req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename(req, file, cb) {
-    cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
-  }
-});
+const { storage } = require('../config/cloudinary');
 const upload = multer({ storage });
 
 router.route('/')
