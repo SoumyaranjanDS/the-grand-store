@@ -17,6 +17,7 @@ const getAdminFinanceOverview = async (req, res) => {
       .populate('shipments');
     const auctionOrders = await Order.find({ transactionId: { $regex: /AUC/ } }).sort({ createdAt: -1 }).limit(50).populate('user', 'name email');
     const eventBookings = await Booking.find().sort({ createdAt: -1 }).limit(50).populate('user', 'name email');
+    const vendorPayments = await Transaction.find({ reference: { $regex: /^VND-/ } }).sort({ createdAt: -1 }).limit(50).populate('user', 'name email');
 
     let totalProcessed = 0;
     let totalPlatformRevenue = 0;
@@ -49,7 +50,8 @@ const getAdminFinanceOverview = async (req, res) => {
       orders: shopOrders,
       shopOrders,
       auctionOrders,
-      eventBookings
+      eventBookings,
+      vendorPayments
     });
   } catch (error) {
     console.error('Get Admin Finance Error:', error);
