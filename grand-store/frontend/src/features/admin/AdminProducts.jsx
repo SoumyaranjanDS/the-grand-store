@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
-import { Building2, PlusCircle, Package, Clock, CheckCircle2, XCircle, User } from 'lucide-react';
+import { Building2, PlusCircle, Package, Clock, CheckCircle2, XCircle, User, Eye, Edit, Trash2 } from 'lucide-react';
 import Price from '../../components/ui/Price';
 
 export default function AdminProducts() {
@@ -144,25 +144,30 @@ export default function AdminProducts() {
                     <td className="py-5 px-5 text-[var(--color-ivory)] font-sans font-medium tracking-wide"><Price amount={Number(product.price)} /></td>
                     <td className="py-5 px-5 text-[#e1bd70] font-sans font-semibold tracking-wide">{product.stock} units</td>
                     <td className="py-5 px-5">{getStatusBadge(product.approvalStatus)}</td>
-                    <td className="py-5 px-5 text-right">
-                      <button
-                        onClick={() => navigate(`/product/${product.slug || product.id || product._id}`)}
-                        className="px-4 py-1.5 rounded-full border border-[var(--color-gold)]/30 text-[#e1bd70] hover:bg-[var(--color-gold)]/10 transition-all text-[10px] uppercase tracking-widest mr-2"
-                      >
-                        View
-                      </button>
-                      <button
-                        onClick={() => navigate(`/admin/product-edit/${product.id || product._id}`)}
-                        className="px-4 py-1.5 rounded-full border border-white/10 text-white hover:bg-white/10 transition-all text-[10px] uppercase tracking-widest"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteProduct(product.id || product._id)}
-                        className="px-4 py-1.5 rounded-full border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all text-[10px] uppercase tracking-widest ml-2"
-                      >
-                        Delete
-                      </button>
+                    <td className="py-5 px-5">
+                      <div className="flex items-center justify-end gap-3">
+                        <button
+                          onClick={() => navigate(`/product/${product.slug || product.id || product._id}`)}
+                          className="p-2 rounded-full text-[#e1bd70] hover:bg-[#e1bd70]/10 hover:text-[#f4d699] transition-all"
+                          title="View Product"
+                        >
+                          <Eye size={18} strokeWidth={1.5} />
+                        </button>
+                        <button
+                          onClick={() => navigate(`/admin/product-edit/${product.id || product._id}`)}
+                          className="p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-all"
+                          title="Edit Product"
+                        >
+                          <Edit size={18} strokeWidth={1.5} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProduct(product.id || product._id)}
+                          className="p-2 rounded-full text-red-400/80 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                          title="Delete Product"
+                        >
+                          <Trash2 size={18} strokeWidth={1.5} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
