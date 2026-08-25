@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Filter, Search } from 'lucide-react';
-import { products } from '../../data';
+import { useProducts } from '../../context/ProductContext';
 import ProductCard from '../../components/ProductCard';
 
 const countryDetails = {
@@ -25,11 +25,37 @@ const countryDetails = {
     name: 'Australia',
     desc: 'Bold, expressive, and unconstrained by tradition. Home to some of the world’s most powerful Shiraz and refined Cabernet.',
     image: 'https://images.unsplash.com/photo-1528072164453-f4e8ef0d475a?q=80&w=2071&auto=format&fit=crop'
+  },
+  'south africa': {
+    name: 'South Africa',
+    desc: 'A beautiful collision of Old World elegance and New World fruit. Celebrated for distinctive Chenin Blanc and bold Pinotage.',
+    image: 'https://res.cloudinary.com/oioqrgj0/image/upload/v1787661480/grand-store/global-wines/zzksu1ceacegz0hflvrq.png'
+  },
+  'united states': {
+    name: 'United States',
+    desc: 'Home to the iconic Napa Valley and Sonoma Coast. World-renowned for powerful Cabernet Sauvignon and elegant Pinot Noir.',
+    image: 'https://res.cloudinary.com/oioqrgj0/image/upload/v1787661481/grand-store/global-wines/txfvlktfshwo2ytuhsit.png'
+  },
+  argentina: {
+    name: 'Argentina',
+    desc: 'High-altitude vineyards producing the world\'s definitive Malbecs, characterized by deep color, rich fruit, and velvety tannins.',
+    image: 'https://res.cloudinary.com/oioqrgj0/image/upload/v1787661484/grand-store/global-wines/chxw3iubgaud4xlzflvi.png'
+  },
+  chile: {
+    name: 'Chile',
+    desc: 'A viticultural paradise isolated by the Andes and the Pacific, known for exceptional Carmenère, Cabernet, and coastal whites.',
+    image: 'https://res.cloudinary.com/oioqrgj0/image/upload/v1787661485/grand-store/global-wines/shsu9rdog5tqmp1apldm.png'
+  },
+  'new zealand': {
+    name: 'New Zealand',
+    desc: 'Cool-climate precision at its finest. Famous globally for vibrant Sauvignon Blanc and exceptionally elegant Central Otago Pinot Noir.',
+    image: 'https://res.cloudinary.com/oioqrgj0/image/upload/v1787661482/grand-store/global-wines/lid2udfdfob8mm5462r2.png'
   }
 };
 
 export default function CountryPavilionPage({ onAdd, onWish, onCompare, compareItems = [] }) {
   const { country } = useParams();
+  const { products } = useProducts();
   const [pavilionWines, setPavilionWines] = useState([]);
 
   const details = countryDetails[country?.toLowerCase()] || {
@@ -39,11 +65,11 @@ export default function CountryPavilionPage({ onAdd, onWish, onCompare, compareI
   };
 
   useEffect(() => {
-    // Filter products from data.js where country matches the route param
+    // Filter products from the context where country matches the route param
     const filtered = products.filter(p => p.country && p.country.toLowerCase() === country?.toLowerCase());
     setPavilionWines(filtered);
     window.scrollTo(0, 0);
-  }, [country]);
+  }, [country, products]);
 
   return (
     <div className="min-h-screen bg-[#0a0907] pb-20 relative overflow-hidden">
