@@ -11,6 +11,7 @@ import TermsConditionsPage from "./pages/TermsConditionsPage";
 import TermsServicePage from "./pages/TermsServicePage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import CookiesPolicyPage from "./pages/CookiesPolicyPage";
+import ExclusiveCollectionPage from "./pages/ExclusiveCollectionPage";
 import React from "react";
 import { Agentation } from "agentation";
 import Navbar from "./components/Navbar";
@@ -26,6 +27,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/product-details/:slug" element={<ProductDetailPage />} />
         <Route path="/shop/mosi-oa-tunya" element={<MosiShopPage />} />
+        <Route path="/exclusive-collection" element={<ExclusiveCollectionPage />} />
         <Route path="/cigar-history" element={<CigarHistoryPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/wishlist" element={<SavedCigarsPage />} />

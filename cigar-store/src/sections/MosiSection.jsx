@@ -17,7 +17,7 @@ function MosiSection() {
         <p>
           Mosi Oa Tunya Cigars is a women-empowerment initiative powered by an all-female team of expert cigar rollers. We promote livelihood upliftment through skill development, value addition, and export-driven growth. Inspired by the mystique of Victoria Falls, our premium cigars are meticulously hand-rolled using high-quality African tobacco, offering a truly unique smoking experience.
         </p>
-        <a className="outline-link outline-link--light" href="/shop/mosi-oa-tunya">
+        <a className="outline-link" href="/shop/mosi-oa-tunya">
           Discover Mosi Oa Tunya <ArrowUpRight size={16} strokeWidth={1.4} />
         </a>
       </div>

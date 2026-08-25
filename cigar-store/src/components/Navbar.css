@@ -24,6 +24,47 @@
   -webkit-backdrop-filter: blur(12px);
 }
 
+.navbar--light-page,
+.navbar--light-page.navbar--scrolled {
+  color: #211c17;
+  background: rgba(255, 253, 249, 0.9);
+  border-bottom-color: rgba(92, 70, 43, 0.14);
+  box-shadow: 0 14px 38px rgba(59, 39, 19, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.navbar--light-page .desktop-nav > a,
+.navbar--light-page .desktop-nav__group > button,
+.navbar--light-page .nav-search,
+.navbar--light-page .nav-saved,
+.navbar--light-page .menu-toggle,
+.navbar--light-page .nav-enquire {
+  color: #211c17;
+}
+
+.navbar--light-page .nav-search,
+.navbar--light-page .nav-saved,
+.navbar--light-page .menu-toggle {
+  border-color: rgba(71, 49, 28, 0.22);
+}
+
+.navbar--light-page .nav-enquire {
+  border-color: var(--brass);
+}
+
+.navbar--light-page .nav-saved span {
+  border-color: #fffdf9;
+}
+
+.navbar--light-page.navbar--open .menu-toggle {
+  color: #211c17;
+}
+
+.navbar--light-page .mobile-nav {
+  color: var(--paper);
+}
+
 .navbar-utility {
   height: 34px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);

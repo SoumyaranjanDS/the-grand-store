@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { LayoutDashboard, Users, Building2, Gavel, Wallet, Settings, Menu, X, LogOut, ArrowLeft, Star, Package, ShoppingBag } from 'lucide-react';
+import { LayoutDashboard, Users, Building2, Gavel, Wallet, Settings, Menu, X, LogOut, ArrowLeft, Star, Package, ShoppingBag, Tv, Mail, Activity, Briefcase, Shield, Gem, Award, MessageSquare } from 'lucide-react';
 
 export default function AdminLayout() {
   const { user, logout } = useAuth();
@@ -78,7 +78,7 @@ export default function AdminLayout() {
         <aside className={`w-64 bg-[#0a0a0a]/95 backdrop-blur-xl border-r border-white/[0.02] flex flex-col fixed top-20 bottom-0 left-0 z-50 overflow-y-auto transition-transform duration-300 ease-in-out ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
           <nav className="flex flex-col flex-1 p-6 gap-2 mt-2">
             
-            <div className="text-[10px] text-[var(--color-ivory-muted)] uppercase tracking-widest mb-2 mt-2 pl-2">Overview</div>
+            <div className="flex items-center gap-1.5 text-[10px] text-[var(--color-ivory-muted)] uppercase tracking-widest mb-2 mt-2 pl-2"><Activity size={12} /> Overview</div>
             <button onClick={() => handleNavigate('/admin/dashboard')} className={navItemClass('/admin/dashboard')}>
               <LayoutDashboard size={16} /> Dashboard
             </button>
@@ -89,10 +89,10 @@ export default function AdminLayout() {
               <Building2 size={16} /> Vendors & Approvals
             </button>
             <button onClick={() => handleNavigate('/admin/newsletter')} className={navItemClass('/admin/newsletter')}>
-              <Users size={16} /> Newsletter Subscribers
+              <Mail size={16} /> Newsletter Subscribers
             </button>
 
-            <div className="text-[10px] text-[var(--color-ivory-muted)] uppercase tracking-widest mb-2 mt-4 pl-2">Operations</div>
+            <div className="flex items-center gap-1.5 text-[10px] text-[var(--color-ivory-muted)] uppercase tracking-widest mb-2 mt-4 pl-2"><Briefcase size={12} /> Operations</div>
             <button onClick={() => handleNavigate('/admin/products')} className={navItemClass('/admin/products')}>
               <Package size={16} /> Retail Products
             </button>
@@ -103,19 +103,22 @@ export default function AdminLayout() {
               <Gavel size={16} /> Auctions Management
             </button>
             <button onClick={() => handleNavigate('/admin/accessories')} className={navItemClass('/admin/accessories')}>
-              <Star size={16} /> Accessories
+              <Gem size={16} /> Accessories
             </button>
             <button onClick={() => handleNavigate('/admin/expert-reviews')} className={navItemClass('/admin/expert-reviews')}>
-              <Star size={16} /> Expert Reviews
+              <Award size={16} /> Expert Reviews
+            </button>
+            <button onClick={() => handleNavigate('/admin/advertisement-requests')} className={navItemClass('/admin/advertisement-requests')}>
+              <Tv size={16} /> Advertisements
             </button>
             <button onClick={() => handleNavigate('/admin/testimonials')} className={navItemClass('/admin/testimonials')}>
-              <Star size={16} /> Testimonials
+              <MessageSquare size={16} /> Testimonials
             </button>
             <button onClick={() => handleNavigate('/admin/host-applications')} className={navItemClass('/admin/host-applications')}>
               <Building2 size={16} /> Host Applications
             </button>
             <button onClick={() => handleNavigate('/admin/testimonials')} className={navItemClass('/admin/testimonials')}>
-              <Star size={16} /> Wine Farm Testimonials
+              <MessageSquare size={16} /> Wine Farm Testimonials
             </button>
             <button onClick={() => handleNavigate('/admin/trade-enquiries')} className={navItemClass('/admin/trade-enquiries')}>
               <Building2 size={16} /> Trade Enquiries
@@ -124,7 +127,7 @@ export default function AdminLayout() {
               <Gavel size={16} /> Live Auctions
             </button>
 
-            <div className="text-[10px] text-[var(--color-gold)] uppercase tracking-widest mb-2 mt-4 pl-2 font-bold">System Control</div>
+            <div className="flex items-center gap-1.5 text-[10px] text-[var(--color-gold)] uppercase tracking-widest mb-2 mt-4 pl-2 font-bold"><Shield size={12} /> System Control</div>
             <button onClick={() => handleNavigate('/admin/attributes')} className={navItemClass('/admin/attributes')}>
               <Settings size={16} /> Product Attributes
             </button>

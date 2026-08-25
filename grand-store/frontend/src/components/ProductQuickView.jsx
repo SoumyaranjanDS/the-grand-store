@@ -42,7 +42,7 @@ export default function ProductQuickView({ product, onClose, onAdd }) {
         >
           <X size={22} />
         </button>
-        <div className="grid min-h-[300px] md:min-h-[520px] lg:min-h-[570px] p-[35px] md:p-[28px] lg:p-[45px] place-items-center bg-[#181612] bg-[radial-gradient(circle,rgba(177,122,39,0.15),transparent_42%)]">
+        <div className="grid min-h-[300px] md:min-h-[520px] lg:min-h-[570px] p-[35px] md:p-[28px] lg:p-[45px] items-start justify-items-center bg-[#181612] bg-[radial-gradient(circle,rgba(177,122,39,0.15),transparent_42%)]">
           <img 
             className="w-[80%] h-[270px] md:h-[420px] lg:h-[470px] object-contain drop-shadow-[0_28px_30px_rgba(0,0,0,0.58)]" 
             src={product.image} 
