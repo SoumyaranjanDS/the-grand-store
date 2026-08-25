@@ -45,7 +45,9 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
   useEffect(() => {
     if (products.length > 0 && Object.keys(productOrder).length === 0) {
       const order = {};
-      products.forEach(p => { order[p.id || p._id] = Math.random(); });
+      products.forEach((p) => {
+        order[p.id || p._id] = Math.random();
+      });
       setProductOrder(order);
     }
   }, [products]);
@@ -54,7 +56,6 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
   useEffect(() => {
     setVisibleCount(12);
   }, [searchParams, minPrice, maxPriceInput, sortBy]);
-
 
   const selectedCategories = searchParams
     .getAll("category")
@@ -139,7 +140,6 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
 
   const displayedProducts = filteredProducts.slice(0, visibleCount);
 
-
   const isPriceFiltered =
     (minPrice !== "" && Number(minPrice) > 0) ||
     (maxPriceInput !== "" && Number(maxPriceInput) < maxPrice);
@@ -218,11 +218,11 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
                   Price range (ZAR)
                 </h3>
                 <div className="relative w-full h-1.5 mt-8 mb-8 bg-[#111] rounded-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)] border border-white/5">
-                  <div 
-                    className="absolute h-full bg-linear-to-r from-[#a07c33] to-[#d4af37] rounded-full shadow-[0_0_8px_rgba(212,175,55,0.5)]" 
-                    style={{ 
-                      left: `${(minP / maxPrice) * 100}%`, 
-                      right: `${100 - (maxP / maxPrice) * 100}%` 
+                  <div
+                    className="absolute h-full bg-linear-to-r from-[#a07c33] to-[#d4af37] rounded-full shadow-[0_0_8px_rgba(212,175,55,0.5)]"
+                    style={{
+                      left: `${(minP / maxPrice) * 100}%`,
+                      right: `${100 - (maxP / maxPrice) * 100}%`,
                     }}
                   ></div>
                   <input
@@ -283,7 +283,9 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
                 `}</style>
                 <div className="flex gap-4 items-center mt-2">
                   <div className="relative w-full">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm font-medium">R</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm font-medium">
+                      R
+                    </span>
                     <input
                       type="number"
                       placeholder="Min"
@@ -294,7 +296,9 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
                   </div>
                   <span className="text-white/30 font-light">-</span>
                   <div className="relative w-full">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm font-medium">R</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm font-medium">
+                      R
+                    </span>
                     <input
                       type="number"
                       placeholder="Max"

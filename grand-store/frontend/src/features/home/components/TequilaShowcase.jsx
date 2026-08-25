@@ -21,7 +21,20 @@ export default function TequilaShowcase({ onAdd, onWish, onCompare, compareItems
     }
   }, [products])
 
+  const tequilaProducts = products
+    .filter((product) => {
+      const category = String(product.category || product.type || '').toLowerCase()
+      return category === 'tequila'
+    })
+    .sort((a, b) => {
+      const orderA = productOrder[a.id || a._id] || 0
+      const orderB = productOrder[b.id || b._id] || 0
+      return orderA - orderB
+    })
+    .slice(0, 5)
+
   useEffect(() => {
+    if (tequilaProducts.length === 0 || !sectionRef.current) return;
     const context = gsap.context(() => {
       gsap.from('.product-card', {
         y: 52,
@@ -34,19 +47,9 @@ export default function TequilaShowcase({ onAdd, onWish, onCompare, compareItems
     }, sectionRef)
 
     return () => context.revert()
-  }, [])
+  }, [tequilaProducts.length])
 
-  const tequilaProducts = products
-    .filter((product) => {
-      const category = String(product.category || product.type || '').toLowerCase()
-      return category === 'tequila'
-    })
-    .sort((a, b) => {
-      const orderA = productOrder[a.id || a._id] || 0
-      const orderB = productOrder[b.id || b._id] || 0
-      return orderA - orderB
-    })
-    .slice(0, 5)
+  
   const marqueeBrands = [...tequilaBrands, ...tequilaBrands]
 
   return (

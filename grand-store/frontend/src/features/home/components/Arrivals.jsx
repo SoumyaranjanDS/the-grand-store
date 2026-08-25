@@ -9,7 +9,17 @@ export default function Arrivals({ onAdd, onWish, onCompare, compareItems }) {
   const { products } = useProducts()
   const sectionRef = useRef(null)
 
+  const arrivalProducts = [...products]
+    .filter((product) => (!product.vendorId || product.approvalStatus === 'approved'))
+    .sort((first, second) => {
+      const firstCreatedAt = Date.parse(first.createdAt || '') || 0
+      const secondCreatedAt = Date.parse(second.createdAt || '') || 0
+      return secondCreatedAt - firstCreatedAt
+    })
+    .slice(0, 5)
+
   useEffect(() => {
+    if (arrivalProducts.length === 0 || !sectionRef.current) return;
     const context = gsap.context(() => {
       gsap.from('.product-card', {
         y: 60,
@@ -22,16 +32,9 @@ export default function Arrivals({ onAdd, onWish, onCompare, compareItems }) {
     }, sectionRef)
 
     return () => context.revert()
-  }, [])
+  }, [arrivalProducts.length])
 
-  const arrivalProducts = [...products]
-    .filter((product) => (!product.vendorId || product.approvalStatus === 'approved'))
-    .sort((first, second) => {
-      const firstCreatedAt = Date.parse(first.createdAt || '') || 0
-      const secondCreatedAt = Date.parse(second.createdAt || '') || 0
-      return secondCreatedAt - firstCreatedAt
-    })
-    .slice(0, 5)
+  
 
   return (
     <section className="section arrivals home-product-editorial" id="arrivals" ref={sectionRef}>

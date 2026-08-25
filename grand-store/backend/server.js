@@ -17,7 +17,13 @@ const app = express();
 // Parse allowed origins from .env or fallback to localhost
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
-  : ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175"];
+  : [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://localhost:5175",
+      "https://grandstore.yogapranafitness.com",
+      "https://www.grandstore.yogapranafitness.com"
+    ];
 
 app.use(
   cors({
