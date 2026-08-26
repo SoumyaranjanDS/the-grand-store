@@ -13,7 +13,7 @@ export default function VendorProducts() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!user || user.role !== 'vendor_active') {
+    if (!user || (user.role !== 'vendor_active' && user.role !== 'admin')) {
       navigate('/login');
       return;
     }

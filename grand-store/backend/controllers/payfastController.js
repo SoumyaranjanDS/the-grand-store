@@ -226,30 +226,41 @@ exports.itnWebhook = async (req, res) => {
     const payload = req.body;
     const config = getPayfastConfig();
 
+    console.error('PayFast ITN Received:', {
+      method: req.method,
+      headers: req.headers,
+      body: req.body,
+      query: req.query
+    });
+
     if (!payload || typeof payload !== 'object' || !payload.m_payment_id || !payload.payment_status) {
       console.error('PayFast ITN missing required form fields');
       return res.status(400).send('Invalid payload');
     }
     
-    // In a production environment, you should verify the ITN by doing a POST back to PayFast.
-    // For local development or simplified integration, we at least verify the signature locally.
-    
-    // Reconstruct data without signature
-    const dataObj = {};
-    for (const key in payload) {
-      if (key !== 'signature') {
-        dataObj[key] = payload[key];
-      }
+    // We will verify the ITN by doing a POST back to PayFast's validation endpoint
+    const axios = require('axios');
+    let pfParamString = '';
+    for (let key in payload) {
+      pfParamString += `${key}=${encodeURIComponent(payload[key].toString().trim()).replace(/%20/g, '+')}&`;
     }
-    
-    // Sort keys or iterate in order (PayFast requires keys in order they are received, express keeps this)
-    // Actually, PayFast sends fields in a specific order, but signature validation is robust if we just reconstruct
-    // We will verify the signature locally as a basic check:
-    const validSignature = generateSignature(dataObj, config.passphrase);
-    
-    if (payload.signature !== validSignature) {
-      console.error('PayFast ITN signature mismatch');
-      return res.status(400).send('Invalid signature');
+    pfParamString = pfParamString.slice(0, -1);
+
+    const isLive = process.env.PAYFAST_IS_LIVE === 'true';
+    const validateUrl = isLive ? 'https://www.payfast.co.za/eng/query/validate' : 'https://sandbox.payfast.co.za/eng/query/validate';
+
+    try {
+      const validateResponse = await axios.post(validateUrl, pfParamString, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+      
+      if (validateResponse.data !== 'VALID') {
+        console.error('PayFast ITN signature mismatch (Validation failed):', validateResponse.data);
+        return res.status(400).send('Invalid signature');
+      }
+    } catch (valErr) {
+      console.error('Error contacting PayFast validation endpoint:', valErr.message);
+      return res.status(500).send('Validation network error');
     }
 
     if (String(payload.merchant_id) !== String(config.merchant_id)) {

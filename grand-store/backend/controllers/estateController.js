@@ -77,7 +77,7 @@ exports.upsertMyProfile = async (req, res) => {
     const profile = await EstateProfile.findOneAndUpdate(
       { vendorId: req.user._id },
       { ...data, vendorId: req.user._id, slug },
-      { new: true, upsert: true, runValidators: true }
+      { returnDocument: 'after', upsert: true, runValidators: true }
     );
 
     res.json({ message: 'Estate profile saved', estate: profile });

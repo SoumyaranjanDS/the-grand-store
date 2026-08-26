@@ -10,6 +10,6 @@ router.post('/generate-vendor', protect, payfastController.generateVendorPayment
 // PayFast posts ITNs as application/x-www-form-urlencoded form data, not JSON.
 // Keep this parser on the public callback route so req.body contains the
 // payment_status, m_payment_id, and signature fields sent by PayFast.
-router.post('/itn', express.urlencoded({ extended: false }), payfastController.itnWebhook);
+router.post('/itn', express.urlencoded({ extended: true, type: '*/*' }), payfastController.itnWebhook);
 
 module.exports = router;

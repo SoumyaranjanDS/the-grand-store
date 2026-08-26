@@ -165,15 +165,18 @@ export default function AddProduct({ onNotify }) {
         payload.append('factSheetPdf', pdfFile);
       }
 
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/products`, payload, {
+      const res = await api.post(`/products`, payload, {
         headers: { 
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }
       });
 
       if (onNotify) onNotify('Product added successfully!');
-      navigate('/vendor/dashboard');
+      if (user.role === 'admin') {
+        setTimeout(() => navigate('/admin/products'), 2000);
+      } else {
+        setTimeout(() => navigate('/vendor/products'), 2000);
+      }
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || err.message || 'Failed to add product');
@@ -291,6 +294,7 @@ export default function AddProduct({ onNotify }) {
                       value={formData.price} 
                       onChange={handleChange} 
                       min="0"
+                      step="any"
                       className="block py-3 px-0 w-full text-base text-[var(--color-ivory)] bg-transparent border-0 border-b border-white/20 appearance-none focus:outline-none focus:ring-0 focus:border-[var(--color-gold)] peer" 
                       placeholder=" " 
                       required 
