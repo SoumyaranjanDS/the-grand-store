@@ -21,7 +21,7 @@ const faqs = [
   {
     category: 'Orders',
     priority: 9,
-    keywords: ['track', 'tracking', 'where is my order', 'order status', 'delivery status'],
+    keywords: ['track', 'tracking', 'track my order', 'how do i track', 'where is my order', 'order status', 'delivery status', 'track order'],
     question: 'How can I track my order?',
     answer:
       'You can track your order by logging in and visiting My Account → My Orders. Your order status will show as Pending, Processing, Shipped, or Delivered. Once shipped, a tracking number will be visible on your order page.',
@@ -71,7 +71,7 @@ const faqs = [
   {
     category: 'Payments',
     priority: 9,
-    keywords: ['payment method', 'accepted payment', 'credit card', 'debit card', 'eft', 'snapscan'],
+    keywords: ['payment method', 'payment methods', 'accepted payment', 'what payment', 'do you accept', 'credit card', 'debit card', 'eft', 'snapscan', 'how can i pay', 'ways to pay'],
     question: 'What payment methods are accepted?',
     answer:
       'We accept all payment methods supported by PayFast, including: Visa/Mastercard credit & debit cards, Instant EFT, SnapScan, Mobicred, and more. All transactions are processed in South African Rand (ZAR).',
@@ -105,7 +105,7 @@ const faqs = [
   {
     category: 'Shipping',
     priority: 10,
-    keywords: ['shipping', 'delivery', 'deliver', 'how long', 'how fast', 'arrive'],
+    keywords: ['shipping', 'delivery', 'deliver', 'how long', 'how fast', 'arrive', 'how long does delivery', 'delivery take', 'long does it take', 'when will i get'],
     question: 'How long does delivery take?',
     answer:
       'Standard delivery takes 3–5 business days within South Africa. Express delivery (1–2 business days) is available at checkout for select areas. Remote areas may take up to 7 business days.',
@@ -147,7 +147,7 @@ const faqs = [
   {
     category: 'Returns & Refunds',
     priority: 10,
-    keywords: ['return', 'return policy', 'how to return', 'send back', 'exchange'],
+    keywords: ['return', 'return policy', 'how to return', 'send back', 'exchange', 'what is your return', 'refund policy', 'returns policy', 'can i return', 'return my order'],
     question: 'What is your return policy?',
     answer:
       'We accept returns within 7 days of delivery for items that are: damaged/broken on arrival, incorrect items (wrong product sent), or defective products. Items must be unused and in original packaging. Alcohol products cannot be returned unless damaged.',
@@ -265,7 +265,7 @@ const faqs = [
   {
     category: 'Vendors',
     priority: 10,
-    keywords: ['become vendor', 'sell', 'vendor registration', 'sell on grandstore', 'list products', 'supplier'],
+    keywords: ['become vendor', 'become a vendor', 'how do i become', 'sell', 'vendor registration', 'sell on grandstore', 'list products', 'supplier', 'start selling', 'register as vendor', 'join as vendor'],
     question: 'How do I become a vendor on The Grand Store?',
     answer:
       "Visit the Vendor Portal at /vendor-portal or click 'Become a Vendor' in the footer. Fill in your business details and pay the vendor registration fee via PayFast. After approval, you'll get access to your vendor dashboard to list products.",
@@ -299,7 +299,7 @@ const faqs = [
   {
     category: 'Auctions',
     priority: 10,
-    keywords: ['auction', 'bid', 'bidding', 'how auction works', 'live auction'],
+    keywords: ['auction', 'auctions', 'bid', 'bidding', 'how auction works', 'how do auctions work', 'how auctions work', 'live auction', 'what is an auction', 'how does auction work'],
     question: 'How do auctions work on The Grand Store?',
     answer:
       'Our auction platform allows you to bid on premium and rare products. Each auction lot has a starting price, minimum bid increment, and end time. The highest bidder at the end time wins. Visit /auction to browse all active lots.',

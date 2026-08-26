@@ -24,12 +24,38 @@ exports.getAnswer = async (req, res) => {
     for (const faq of faqs) {
       let score = 0;
       for (const keyword of faq.keywords) {
-        const kw = keyword.toLowerCase();
-        // Exact word match scores 2, substring match scores 1
-        if (words.includes(kw)) {
-          score += 2;
-        } else if (normalized.includes(kw)) {
-          score += 1;
+        const kw = keyword.toLowerCase().trim();
+
+        // 1. Exact phrase found in the full normalized message — highest value
+        if (normalized.includes(kw)) {
+          score += kw.split(/\s+/).length * 3;
+          continue;
+        }
+
+        // 2. Word-by-word stem/prefix matching:
+        //    "methods" starts with "method" ✓
+        //    "auctions" starts with "auction" ✓
+        //    "tracking" starts with "track" ✓
+        const kwWords = kw.split(/\s+/);
+        let matchedWords = 0;
+        for (const kwWord of kwWords) {
+          for (const userWord of words) {
+            if (
+              userWord === kwWord ||
+              userWord.startsWith(kwWord) ||
+              kwWord.startsWith(userWord)
+            ) {
+              matchedWords++;
+              break;
+            }
+          }
+        }
+        // Award points proportional to how many keyword words matched
+        if (kwWords.length > 0 && matchedWords > 0) {
+          const ratio = matchedWords / kwWords.length;
+          if (ratio >= 0.5) {
+            score += matchedWords * 2;
+          }
         }
       }
       if (score > bestScore) {
