@@ -205,9 +205,8 @@ export default function EditProduct({ onNotify }) {
         payload.append('factSheetPdf', pdfFile);
       }
 
-      await axios.put(`${import.meta.env.VITE_API_URL}/api/products/${id}`, payload, {
+      await api.put(`/products/${id}`, payload, {
         headers: { 
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }
       });

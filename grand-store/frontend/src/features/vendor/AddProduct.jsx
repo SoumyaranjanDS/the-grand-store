@@ -165,9 +165,8 @@ export default function AddProduct({ onNotify }) {
         payload.append('factSheetPdf', pdfFile);
       }
 
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/products`, payload, {
+      const res = await api.post(`/products`, payload, {
         headers: { 
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }
       });
