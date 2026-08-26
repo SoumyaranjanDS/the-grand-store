@@ -13,10 +13,23 @@ const QUICK_QUESTIONS = [
 
 export default function ChatbotWidget() {
   const [open, setOpen] = useState(false);
+  const [showTeaser, setShowTeaser] = useState(false);
   const [input, setInput] = useState('');
   const { messages, loading, sendMessage } = useChatbot();
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+
+  // Auto-open once per browser session (not on every refresh)
+  useEffect(() => {
+    const alreadyShown = sessionStorage.getItem('chatbot_teaser_shown');
+    if (!alreadyShown) {
+      const timer = setTimeout(() => {
+        setShowTeaser(true);
+        sessionStorage.setItem('chatbot_teaser_shown', 'true');
+      }, 5000); // show teaser bubble after 5 seconds
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
@@ -31,6 +44,11 @@ export default function ChatbotWidget() {
       setTimeout(() => inputRef.current?.focus(), 300);
     }
   }, [open]);
+
+  const handleOpen = () => {
+    setOpen(true);
+    setShowTeaser(false);
+  };
 
   const handleSend = () => {
     if (!input.trim() || loading) return;
@@ -51,12 +69,56 @@ export default function ChatbotWidget() {
 
   return (
     <>
+      {/* Teaser Bubble — shown once per session, 5s after page load */}
+      {showTeaser && !open && (
+        <div
+          onClick={handleOpen}
+          style={{
+            position: 'fixed',
+            bottom: '90px',
+            left: '20px',
+            backgroundColor: '#1a1a1a',
+            border: '1px solid rgba(201,163,91,0.35)',
+            borderRadius: '16px 16px 16px 4px',
+            padding: '12px 16px',
+            maxWidth: '230px',
+            cursor: 'pointer',
+            zIndex: 9997,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+            animation: 'teaserSlide 0.45s cubic-bezier(0.175,0.885,0.32,1.275)',
+          }}
+        >
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowTeaser(false); }}
+            style={{
+              position: 'absolute',
+              top: '6px',
+              right: '8px',
+              background: 'none',
+              border: 'none',
+              color: '#666',
+              cursor: 'pointer',
+              fontSize: '16px',
+              lineHeight: 1,
+            }}
+          >
+            ×
+          </button>
+          <div style={{ fontSize: '13px', color: '#f5ede0', lineHeight: '1.5', paddingRight: '16px' }}>
+            👋 Hi! Need help with orders, payments, or anything else?
+          </div>
+          <div style={{ fontSize: '11px', color: '#c9a35b', marginTop: '6px', fontWeight: 600 }}>
+            Click to chat →
+          </div>
+        </div>
+      )}
+
       {/* Chat Panel */}
       <div
         style={{
           position: 'fixed',
           bottom: open ? '90px' : '-600px',
-          right: '20px',
+          left: '20px',
           width: '360px',
           maxWidth: 'calc(100vw - 40px)',
           height: '520px',
@@ -73,6 +135,7 @@ export default function ChatbotWidget() {
           pointerEvents: open ? 'all' : 'none',
         }}
       >
+
         {/* Header */}
         <div
           style={{
@@ -371,11 +434,11 @@ export default function ChatbotWidget() {
 
       {/* Floating Bubble Button */}
       <button
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => open ? setOpen(false) : handleOpen()}
         style={{
           position: 'fixed',
           bottom: '20px',
-          right: '20px',
+          left: '20px',
           width: '58px',
           height: '58px',
           borderRadius: '50%',
@@ -414,6 +477,10 @@ export default function ChatbotWidget() {
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+        @keyframes teaserSlide {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </>
