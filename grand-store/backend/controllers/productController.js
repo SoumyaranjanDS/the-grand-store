@@ -10,7 +10,7 @@ const getProducts = async (req, res) => {
     if (req.query.type) {
       query.type = req.query.type;
     }
-    const products = await Product.find(query).lean();
+    const products = await Product.find(query).sort({ createdAt: -1 }).lean();
     
     const vendorIds = [...new Set(products.filter(p => p.vendorId).map(p => p.vendorId.toString()))];
     const vendors = await Vendor.find({ userId: { $in: vendorIds } }).lean();
@@ -142,7 +142,7 @@ const getVendorProducts = async (req, res) => {
     if (['admin', 'super_admin', 'product_manager'].includes(req.user.role)) {
       filter = {};
     }
-    const products = await Product.find(filter);
+    const products = await Product.find(filter).sort({ createdAt: -1 });
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: 'Server error fetching vendor products' });
