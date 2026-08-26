@@ -226,7 +226,7 @@ exports.itnWebhook = async (req, res) => {
     const payload = req.body;
     const config = getPayfastConfig();
 
-    console.log('PayFast ITN Received:', {
+    console.error('PayFast ITN Received:', {
       method: req.method,
       headers: req.headers,
       body: req.body,
