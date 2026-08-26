@@ -226,6 +226,13 @@ exports.itnWebhook = async (req, res) => {
     const payload = req.body;
     const config = getPayfastConfig();
 
+    console.log('PayFast ITN Received:', {
+      method: req.method,
+      headers: req.headers,
+      body: req.body,
+      query: req.query
+    });
+
     if (!payload || typeof payload !== 'object' || !payload.m_payment_id || !payload.payment_status) {
       console.error('PayFast ITN missing required form fields');
       return res.status(400).send('Invalid payload');
