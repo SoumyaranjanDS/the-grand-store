@@ -361,7 +361,7 @@ export default function ProductCard({
           <strong style={{ fontSize: '1.25rem', color: '#fff', letterSpacing: '0.05em' }}>
             <Price amount={product.price} />
           </strong>
-          <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', width: '100%' }}>
             {onAdd && (
               <button
                 type="button"
@@ -372,7 +372,7 @@ export default function ProductCard({
                 }}
                 aria-label={`Add ${productName} to bag`}
                 style={{ 
-                  flex: 1, 
+                  flex: '1 1 80px', 
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'center', 
@@ -409,7 +409,7 @@ export default function ProductCard({
                 if (onAdd) onAdd(product);
               }}
               style={{ 
-                flex: 1, 
+                flex: '1 1 80px', 
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center', 
