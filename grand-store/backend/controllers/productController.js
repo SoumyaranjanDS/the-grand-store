@@ -209,7 +209,7 @@ const updateProduct = async (req, res) => {
 // @access  Private (Vendor/Admin)
 const deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findOne({ _id: req.params.id });
+    const product = await Product.findOne({ id: req.params.id });
 
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
@@ -219,7 +219,7 @@ const deleteProduct = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to delete this product' });
     }
 
-    await Product.deleteOne({ _id: req.params.id });
+    await Product.deleteOne({ id: req.params.id });
     res.json({ message: 'Product removed' });
   } catch (error) {
     console.error('Error deleting product:', error);
