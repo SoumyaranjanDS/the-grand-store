@@ -108,22 +108,22 @@ export const ProductQnA = ({ questions = [], productId }) => {
 
   return (
     <div className="product-qna">
-      <h3 className="text-2xl font-serif mb-6 flex items-center gap-3">
-        <MessageCircle className="text-gold-500" />
+      <h3 className="mb-6 flex items-start gap-3 font-serif text-xl sm:items-center sm:text-2xl">
+        <MessageCircle className="mt-0.5 shrink-0 text-gold-500 sm:mt-0" />
         Questions from Customers
       </h3>
 
-      <div className="mb-8 p-6 bg-white/5 border border-white/10 rounded-sm relative">
+      <div className="relative mb-8 rounded-sm border border-white/10 bg-white/5 p-4 sm:p-6">
         <h4 className="text-sm uppercase tracking-widest mb-4">Have a question about this product?</h4>
-        <form onSubmit={handleAsk} className="flex gap-4">
+        <form onSubmit={handleAsk} className="flex min-w-0 flex-col gap-4 sm:flex-row">
           <input 
             type="text" 
-            className="flex-1 bg-transparent border-b border-white/20 pb-2 focus:border-gold-500 outline-none transition-colors"
+            className="min-w-0 flex-1 border-b border-white/20 bg-transparent pb-2 outline-none transition-colors focus:border-gold-500"
             placeholder="e.g. Is this wine sweet?"
             value={newQuestion}
             onChange={(e) => setNewQuestion(e.target.value)}
           />
-          <button type="submit" disabled={loading} className="button button-gold py-2 px-6 text-sm disabled:opacity-50">Ask</button>
+          <button type="submit" disabled={loading} className="button button-gold w-full px-6 py-2 text-sm disabled:opacity-50 sm:w-auto">Ask</button>
         </form>
         {successMsg && (
           <div className="absolute -bottom-8 left-0 text-green-400 text-xs tracking-wider flex items-center gap-1">
@@ -146,11 +146,11 @@ export const ProductQnA = ({ questions = [], productId }) => {
           {localQuestions.map((q) => (
             <div key={q._id} className="border-b border-white/10 pb-4">
               <button 
-                className="w-full text-left flex justify-between items-center py-2 group"
+                className="group flex w-full min-w-0 items-start justify-between gap-3 py-2 text-left sm:items-center"
                 onClick={() => toggleExpand(q._id)}
               >
-                <span className="font-medium group-hover:text-gold-400 transition-colors">Q: {q.question}</span>
-                {expanded[q._id] ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                <span className="min-w-0 break-words font-medium transition-colors group-hover:text-gold-400">Q: {q.question}</span>
+                <span className="mt-0.5 shrink-0 sm:mt-0">{expanded[q._id] ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</span>
               </button>
               
               {expanded[q._id] && q.answers && q.answers.length > 0 && (
@@ -176,15 +176,15 @@ export const ProductQnA = ({ questions = [], productId }) => {
               )}
               
               {expanded[q._id] && (
-                <form onSubmit={(e) => handleReply(e, q._id)} className="mt-4 flex gap-2 pl-4">
+                <form onSubmit={(e) => handleReply(e, q._id)} className="mt-4 flex min-w-0 flex-col gap-2 pl-4 sm:flex-row">
                   <input 
                     type="text" 
-                    className="flex-1 bg-white/5 border border-white/10 px-3 py-1.5 text-sm focus:border-gold-500 outline-none transition-colors"
+                    className="min-w-0 flex-1 border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none transition-colors focus:border-gold-500"
                     placeholder="Know the answer? Reply here..."
                     value={replyTexts[q._id] || ''}
                     onChange={(e) => setReplyTexts(prev => ({ ...prev, [q._id]: e.target.value }))}
                   />
-                  <button type="submit" className="button button-gold py-1.5 px-4 text-sm">Reply</button>
+                  <button type="submit" className="button button-gold w-full px-4 py-2 text-sm sm:w-auto">Reply</button>
                 </form>
               )}
             </div>

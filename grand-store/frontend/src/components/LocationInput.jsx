@@ -27,19 +27,19 @@ export default function LocationInput({ name, value, onChange, placeholder, clas
 
       autocompleteRef.current.addListener('place_changed', () => {
         const place = autocompleteRef.current.getPlace();
-        if (place && place.formatted_address) {
+        if (place && (place.formatted_address || place.name)) {
           
           let city = '';
           let postalCode = '';
           let country = '';
           let lat = typeof place.geometry?.location?.lat === 'function' ? place.geometry.location.lat() : null;
           let lng = typeof place.geometry?.location?.lng === 'function' ? place.geometry.location.lng() : null;
+          const addressToUse = place.formatted_address || place.name;
 
           if (place.address_components) {
             for (const component of place.address_components) {
               const types = component.types;
               
-              // More robust city detection
               if (types.includes('locality') || types.includes('postal_town') || types.includes('sublocality') || types.includes('administrative_area_level_3')) {
                 if (!city) city = component.long_name;
               }
@@ -55,7 +55,7 @@ export default function LocationInput({ name, value, onChange, placeholder, clas
           const event = {
             target: {
               name: name,
-              value: place.formatted_address
+              value: addressToUse
             }
           };
           
@@ -64,7 +64,7 @@ export default function LocationInput({ name, value, onChange, placeholder, clas
           }
 
           if (onPlaceDetailsRef.current) {
-            onPlaceDetailsRef.current({ address: place.formatted_address, city, postalCode, country, lat, lng });
+            onPlaceDetailsRef.current({ address: addressToUse, city, postalCode, country, lat, lng });
           }
         }
       });
@@ -96,6 +96,11 @@ export default function LocationInput({ name, value, onChange, placeholder, clas
       name={name}
       value={value}
       onChange={onChange}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+        }
+      }}
       required={required}
       className={className}
       placeholder={placeholder}

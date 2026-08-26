@@ -184,7 +184,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
   };
 
   return (
-    <main className="min-h-screen bg-[#0a0907] pt-16 pb-12 px-4 md:px-8 lg:px-12 text-[#eee8dd] font-sans">
+    <main className="min-h-screen overflow-x-hidden bg-[#0a0907] px-4 pb-10 pt-5 text-[#eee8dd] sm:px-6 sm:pb-12 sm:pt-8 md:px-8 lg:px-12 font-sans">
       <SEO
         title={product.fullName || product.name}
         description={
@@ -197,34 +197,36 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
         schema={productSchema}
       />
       {/* Top Breadcrumbs */}
-      <section className="max-w-7xl mx-auto mb-2 flex items-center text-[10px] text-[#918a7f] uppercase tracking-[0.2em] font-semibold gap-3">
+      <section className="mx-auto mb-4 flex max-w-7xl items-center gap-2 overflow-x-auto whitespace-nowrap pb-2 text-[9px] font-semibold uppercase tracking-[0.16em] text-[#918a7f] sm:mb-2 sm:gap-3 sm:text-[10px] sm:tracking-[0.2em]">
         <Link to="/" className="hover:text-gold-gradient transition-colors">
           Home
         </Link>
         <span>/</span>
         <Link
           to={`/shop?category=${encodeURIComponent(product.category || product.type || "")}`}
-          className="hover:text-gold-gradient transition-colors"
+          className="max-w-[34vw] truncate hover:text-gold-gradient transition-colors sm:max-w-none"
         >
           {product.category || product.type || "Shop"}
         </Link>
         {product.brand && (
-          <>
+          <span className="hidden sm:contents">
             <span>/</span>
             <span className="hover:text-gold-gradient cursor-pointer transition-colors">
               {product.brand}
             </span>
-          </>
+          </span>
         )}
         <span>/</span>
-        <span className="text-[#eee8dd] font-bold">{product.name}</span>
+        <span className="inline-block max-w-[42vw] truncate align-middle font-bold text-[#eee8dd] sm:max-w-[30vw]">
+          {product.name}
+        </span>
       </section>
 
       {/* Main Detail Section (Split Layout) */}
-      <section className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16">
+      <section className="mx-auto mb-12 grid max-w-7xl grid-cols-1 gap-6 sm:gap-8 lg:mb-16 lg:grid-cols-2 lg:gap-12">
         {/* Left: Floating Image */}
-        <div className="flex flex-col items-center">
-          <div className="relative w-full max-w-lg aspect-[4/5] flex items-center justify-center group overflow-hidden">
+        <div className="flex min-w-0 flex-col items-center">
+          <div className="group relative flex h-[clamp(320px,112vw,480px)] w-full max-w-lg items-center justify-center overflow-hidden sm:h-auto sm:aspect-[4/5]">
             {/* Image Drop Shadow for floating effect */}
             <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-3/4 h-8 bg-black/80 blur-2xl rounded-[100%] pointer-events-none"></div>
 
@@ -237,11 +239,11 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
 
           {/* Thumbnails underneath */}
           {gallery.length > 1 && (
-            <div className="flex gap-4 mt-8 justify-center flex-wrap">
+            <div className="mt-4 flex w-full max-w-lg snap-x gap-3 overflow-x-auto pb-2 sm:mt-8 sm:justify-center sm:gap-4">
               {gallery.map((img) => (
                 <button
                   key={img}
-                  className={`w-16 h-16 md:w-20 md:h-20 flex items-center justify-center p-1 rounded-lg border transition-all ${selectedImage === img ? "border-[#c9a35b] bg-white/5" : "border-transparent hover:border-white/10"}`}
+                  className={`flex h-16 w-16 shrink-0 snap-start items-center justify-center rounded-lg border p-1 transition-all md:h-20 md:w-20 ${selectedImage === img ? "border-[#c9a35b] bg-white/5" : "border-transparent hover:border-white/10"}`}
                   onClick={() => setSelectedImage(img)}
                 >
                   <img
@@ -256,17 +258,17 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
         </div>
 
         {/* Right: Product Info */}
-        <div className="flex flex-col justify-center">
+        <div className="flex min-w-0 flex-col justify-center">
           <TrustBadges
             badges={product.badges || ["GRAND_STORE_CHOICE"]}
             className="mb-4"
           />
 
-          <h1 className="text-4xl md:text-5xl lg:text-[54px] font-serif leading-[1.1] mb-4 text-[#eee8dd]">
+          <h1 className="mb-4 break-words font-serif text-[clamp(2rem,10vw,3rem)] leading-[1.08] text-[#eee8dd] md:text-5xl lg:text-[54px]">
             {product.fullName || product.name}
           </h1>
 
-          <div className="flex items-center gap-2 text-xs font-semibold tracking-widest uppercase mb-4">
+          <div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-semibold uppercase tracking-widest sm:text-xs">
             <span className="text-[#918a7f]">
               SKU: {String(product.id).substring(0, 10).toUpperCase()}
             </span>
@@ -284,32 +286,42 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             </span>
           </div>
 
-          <div className="flex items-end justify-between mb-8 gap-4">
-            <div className="text-[42px] font-serif text-[#d8b76d]">
+          <div className="mb-7 flex flex-wrap items-center gap-3 sm:mb-8 sm:gap-4">
+            <div className="min-w-0 font-serif text-[clamp(2rem,10vw,2.625rem)] leading-none text-[#d8b76d]">
               <Price amount={product.price} />
             </div>
 
             <button
+              type="button"
               onClick={() => setShowCertificate(true)}
-              className="relative group hover:scale-105 transition-transform duration-300 shrink-0"
+              className="group inline-flex h-11 shrink-0 items-center gap-2 rounded-full border border-[#c9a35b]/40 bg-[#c9a35b]/[0.08] py-1.5 pl-1.5 pr-3 text-left transition-colors hover:border-[#c9a35b] hover:bg-[#c9a35b]/[0.14]"
               title="Click to view our 100% Satisfaction Guarantee"
+              aria-label="View the Grandstore 100% satisfaction guarantee"
             >
-              <img
-                src="/grandstore-badge.png"
-                alt="Grandstore Guarantee"
-                className="relative w-8 sm:w-10 h-auto"
+              <span
+                aria-hidden="true"
+                className="h-8 w-8 shrink-0 bg-contain bg-center bg-no-repeat"
+                style={{ backgroundImage: "url('/grandstore-badge.png')" }}
               />
+              <span className="leading-none">
+                <span className="block text-[9px] font-bold uppercase tracking-[0.13em] text-[#e1bd70]">
+                  100% Guarantee
+                </span>
+                <span className="mt-1 block text-[8px] uppercase tracking-[0.08em] text-[#918a7f]">
+                  View certificate
+                </span>
+              </span>
             </button>
           </div>
 
           {/* Details Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-4 mb-8">
+          <div className="mb-8 grid grid-cols-2 gap-x-4 gap-y-5 md:grid-cols-3 md:gap-y-6">
             {gridItems.slice(0, 6).map((item, idx) => (
-              <div key={idx}>
+              <div className="min-w-0" key={idx}>
                 <div className="text-[10px] text-[#918a7f] uppercase tracking-widest font-semibold mb-1.5">
                   {item.label}
                 </div>
-                <div className="text-sm font-medium">{item.value}</div>
+                <div className="break-words text-sm font-medium">{item.value}</div>
               </div>
             ))}
           </div>
@@ -335,9 +347,9 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
           )}
 
           {/* Action Row */}
-          <div className="flex flex-wrap items-stretch gap-4 mb-6">
+          <div className="mb-6 grid grid-cols-[minmax(0,1fr)_52px] items-stretch gap-3 sm:flex sm:flex-wrap sm:gap-4">
             {/* Quantity Selector */}
-            <div className={`flex items-center border border-white/20 h-[52px] ${product.stock === 0 ? 'opacity-50 pointer-events-none' : ''}`}>
+            <div className={`order-1 flex h-[52px] w-full items-center border border-white/20 sm:w-auto ${product.stock === 0 ? 'opacity-50 pointer-events-none' : ''}`}>
               <button
                 type="button"
                 className="w-12 h-full flex items-center justify-center text-[#918a7f] hover:text-gold-gradient transition-colors"
@@ -346,7 +358,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
               >
                 <Minus size={14} />
               </button>
-              <span className="w-8 text-center text-sm font-semibold">
+              <span className="min-w-8 flex-1 text-center text-sm font-semibold sm:w-8 sm:flex-none">
                 {quantity}
               </span>
               <button
@@ -360,7 +372,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             </div>
 
             <button
-              className={`flex-1 min-w-[140px] border border-[#eee8dd] bg-transparent text-[#eee8dd] font-bold uppercase tracking-widest text-[11px] h-[52px] ${product.stock === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-white/5 transition-colors'}`}
+              className={`order-3 col-span-2 h-[52px] w-full min-w-0 border border-[#eee8dd] bg-transparent text-[11px] font-bold uppercase tracking-widest text-[#eee8dd] sm:order-2 sm:flex-1 sm:min-w-[140px] ${product.stock === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-white/5 transition-colors'}`}
               type="button"
               onClick={() => product.stock !== 0 && onAdd && onAdd(product, quantity, selectedOption)}
               disabled={product.stock === 0}
@@ -369,7 +381,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             </button>
 
             <button
-              className={`flex-1 min-w-[140px] bg-[#222] border border-[#222] text-[#eee8dd] font-bold uppercase tracking-widest text-[11px] h-[52px] ${product.stock === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-[#333] transition-colors'}`}
+              className={`order-4 col-span-2 h-[52px] w-full min-w-0 border border-[#222] bg-[#222] text-[11px] font-bold uppercase tracking-widest text-[#eee8dd] sm:order-3 sm:flex-1 sm:min-w-[140px] ${product.stock === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-[#333] transition-colors'}`}
               type="button"
               onClick={() => {
                 if (product.stock !== 0 && onAdd) {
@@ -382,7 +394,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             </button>
 
             <button
-              className={`w-[52px] h-[52px] border transition-colors flex items-center justify-center ${wishlisted ? "border-[#c9a35b] text-gold-gradient" : "border-white/20 text-[#918a7f] hover:border-white/50 hover:text-white"}`}
+              className={`order-2 flex h-[52px] w-[52px] items-center justify-center border transition-colors sm:order-4 ${wishlisted ? "border-[#c9a35b] text-gold-gradient" : "border-white/20 text-[#918a7f] hover:border-white/50 hover:text-white"}`}
               type="button"
               onClick={() => onWish && onWish(product)}
             >
@@ -428,7 +440,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
           </div>
 
           {/* Fulfilled By Widget */}
-          <div className="border border-white/10 p-5 mb-8 bg-white/5">
+          <div className="mb-8 border border-white/10 bg-white/5 p-4 sm:p-5">
             <h4 className="text-[10px] text-gold-gradient uppercase tracking-widest font-bold flex items-center gap-2 mb-3">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -447,20 +459,20 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
               </svg>
               Delivery & Fulfillment
             </h4>
-            <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-              <div>
+            <div className="mb-4 grid grid-cols-2 gap-4 text-sm">
+              <div className="min-w-0">
                 <span className="block text-[#918a7f] text-[10px] uppercase tracking-wider mb-1">
                   Fulfilled By
                 </span>
-                <span className="font-medium">
+                <span className="break-words font-medium">
                   {product.vendorName || "ABC Winery"}
                 </span>
               </div>
-              <div>
+              <div className="min-w-0">
                 <span className="block text-[#918a7f] text-[10px] uppercase tracking-wider mb-1">
                   Ships From
                 </span>
-                <span className="font-medium">
+                <span className="break-words font-medium">
                   {product.origin || "South Africa"}
                 </span>
               </div>
@@ -470,9 +482,9 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
               <label className="block text-[#918a7f] text-[10px] uppercase tracking-wider mb-2">
                 Estimate Delivery To
               </label>
-              <div className="flex gap-2">
+              <div className="flex min-w-0 gap-2">
                 <select
-                  className="bg-[#0a0907] border border-white/20 text-[#eee8dd] text-sm p-2 flex-1 focus:border-[#c9a35b] outline-none"
+                  className="min-w-0 flex-1 border border-white/20 bg-[#0a0907] p-2 text-sm text-[#eee8dd] outline-none focus:border-[#c9a35b]"
                   value={deliveryCountry}
                   onChange={(e) => setDeliveryCountry(e.target.value)}
                 >
@@ -484,7 +496,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
                 </select>
               </div>
               {shippingEstimate && (
-                <div className="mt-3 flex justify-between items-center text-sm bg-[#0a0907] p-3 border border-white/10">
+                <div className="mt-3 flex flex-col gap-2 border border-white/10 bg-[#0a0907] p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <span className="text-[#918a7f] mr-2">Est. Time:</span>
                     <span className="font-medium">{shippingEstimate.time}</span>
@@ -501,7 +513,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
           </div>
 
           {/* Share Links */}
-          <div className="flex items-center gap-6 text-[10px] uppercase tracking-widest font-semibold text-[#918a7f]">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px] font-semibold uppercase tracking-widest text-[#918a7f] sm:gap-6">
             <span>Share</span>
             <a
               href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`}
@@ -570,7 +582,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
               href={product.factSheetPdf}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-3 px-8 py-4 border border-[#c9a35b] text-gold-gradient hover:bg-gold-gradient hover:text-black font-bold uppercase tracking-widest text-xs transition-colors rounded-full"
+              className="inline-flex w-full items-center justify-center gap-3 rounded-full border border-[#c9a35b] px-5 py-4 text-center text-[10px] font-bold uppercase tracking-widest text-gold-gradient transition-colors hover:bg-gold-gradient hover:text-black sm:w-auto sm:px-8 sm:text-xs"
             >
               Download Official Fact Sheet PDF <ArrowRight size={16} />
             </a>
@@ -583,7 +595,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             <h3 className="text-xl font-serif text-[#eee8dd]">Description</h3>
           </div>
           <div className="md:col-span-9">
-            <div className="max-w-3xl space-y-6 text-[#918a7f] text-sm leading-relaxed">
+            <div className="max-w-3xl space-y-6 break-words text-sm leading-relaxed text-[#918a7f]">
               <p>{product.description}</p>
               {product.tastingNotes && product.tastingNotes.length > 0 && (
                 <div className="mt-6">
@@ -609,37 +621,37 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             </h3>
           </div>
           <div className="md:col-span-9">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="space-y-1">
+            <div className="grid grid-cols-2 gap-5 sm:gap-6 md:grid-cols-4">
+              <div className="min-w-0 space-y-1">
                 <div className="text-[10px] text-[#918a7f] uppercase tracking-widest font-semibold">
                   Category
                 </div>
-                <div className="text-sm font-medium">
+                <div className="break-words text-sm font-medium">
                   {product.category || product.type || "N/A"}
                 </div>
               </div>
-              <div className="space-y-1">
+              <div className="min-w-0 space-y-1">
                 <div className="text-[10px] text-[#918a7f] uppercase tracking-widest font-semibold">
                   Brand
                 </div>
-                <div className="text-sm font-medium">
+                <div className="break-words text-sm font-medium">
                   {product.brand || product.name}
                 </div>
               </div>
-              <div className="space-y-1">
+              <div className="min-w-0 space-y-1">
                 <div className="text-[10px] text-[#918a7f] uppercase tracking-widest font-semibold">
                   Origin
                 </div>
-                <div className="text-sm font-medium">
+                <div className="break-words text-sm font-medium">
                   {product.origin || "N/A"}
                 </div>
               </div>
               {detailEntries.map(([label, value]) => (
-                <div className="space-y-1" key={label}>
+                <div className="min-w-0 space-y-1" key={label}>
                   <div className="text-[10px] text-[#918a7f] uppercase tracking-widest font-semibold">
                     {label}
                   </div>
-                  <div className="text-sm font-medium">{value}</div>
+                  <div className="break-words text-sm font-medium">{value}</div>
                 </div>
               ))}
             </div>
@@ -648,16 +660,16 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
       </section>
 
       {/* Social Proof Engine Components */}
-      <section className="max-w-7xl mx-auto my-16 px-4 md:px-0">
-        <div className="border-t border-white/10 pt-16">
+      <section className="mx-auto my-12 max-w-7xl sm:my-16">
+        <div className="border-t border-white/10 pt-10 sm:pt-16">
           <ExpertReviewCard expertReview={expertReview} />
         </div>
 
-        <div className="mt-16">
+        <div className="mt-12 sm:mt-16">
           <ProductQnA questions={qna} productId={product.id || product._id} />
         </div>
 
-        <div className="mt-16">
+        <div className="mt-12 sm:mt-16">
           <ReviewSection
             reviews={reviews}
             averageRating={product.averageRating || 4.8}
@@ -668,13 +680,13 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
 
       {/* Related Products */}
       {relatedProducts.length > 0 && (
-        <section className="max-w-7xl mx-auto mt-16">
-          <div className="flex justify-between items-end mb-8">
+        <section className="mx-auto mt-12 max-w-7xl sm:mt-16">
+          <div className="mb-7 flex flex-col items-start gap-3 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
             <h2 className="text-2xl font-serif text-[#eee8dd]">
               Related Products
             </h2>
             <a
-              className="text-[10px] text-gold-gradient uppercase tracking-[0.2em] font-bold hover:text-[#e1bd70] transition-colors"
+              className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold-gradient transition-colors hover:text-[#e1bd70]"
               href="/#arrivals"
             >
               View More In This Category
@@ -719,7 +731,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             <div className="w-full bg-[#1a1a1a] p-2 md:p-3 shadow-2xl">
               <div className="w-full bg-white relative p-3 md:p-5 lg:p-6 flex justify-center">
                 {/* Inner Gold Border */}
-                <div className="w-full border-[3px] border-[#d4af37] relative p-6 md:p-8 lg:p-10 flex flex-col items-center justify-center min-h-[300px]">
+                <div className="relative flex min-h-[300px] w-full flex-col items-center justify-center border-[3px] border-[#d4af37] p-3 sm:p-6 md:p-8 lg:p-10">
                   {/* Corners */}
                   <CornerFlourish className="absolute top-0 left-0 w-16 md:w-20 h-16 md:h-20 text-[#e0e0e0] transform" />
                   <CornerFlourish className="absolute top-0 right-0 w-16 md:w-20 h-16 md:h-20 text-[#e0e0e0] transform scale-x-[-1]" />
@@ -727,7 +739,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
                   <CornerFlourish className="absolute bottom-0 right-0 w-16 md:w-20 h-16 md:h-20 text-[#e0e0e0] transform scale-x-[-1] scale-y-[-1]" />
 
                   {/* Content */}
-                  <div className="relative z-10 flex flex-col items-center text-center px-4">
+                  <div className="relative z-10 flex flex-col items-center px-2 text-center sm:px-4">
                     <h2 className="text-xl md:text-2xl lg:text-3xl font-bold font-serif text-[#333] mb-6 md:mb-8 tracking-wide">
                       Your Satisfaction is 100% Guaranteed!!
                     </h2>

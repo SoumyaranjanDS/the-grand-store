@@ -396,7 +396,7 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
                   more exceptional spirits.
                 </p>
                 <button
-                  className="px-8 py-3 bg-white text-black text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-[#e6c97a] transition-colors"
+                  className="px-8 py-3 bg-white text-black text-[10px] font-bold tracking-[0.2em] uppercase"
                   type="button"
                   onClick={resetFilters}
                 >

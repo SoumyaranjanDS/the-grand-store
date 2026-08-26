@@ -79,11 +79,11 @@ export default function CartPage({ cartItems, onUpdateQuantity, onRemove, onClea
           </div>
         </section>
       ) : (
-        <section className="cart-content-section pb-24">
+        <section className="cart-content-section">
           <div className="shell cart-layout">
-            <div className="cart-items-panel" style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+            <div className="cart-items-panel">
               {vendorGroups.map((group, index) => (
-                <div key={group.vendorId}>
+                <div className="cart-vendor-group" key={group.vendorId}>
                   <div className="cart-panel-heading">
                     <div>
                       <p className="eyebrow">Shipment {index + 1} – {group.vendorName}</p>
@@ -135,19 +135,19 @@ export default function CartPage({ cartItems, onUpdateQuantity, onRemove, onClea
                 <div className="cart-summary-total"><dt>Total</dt><dd><Price amount={cartTotal} /></dd></div>
               </dl>
               <p className="cart-tax-note">Taxes included where applicable.</p>
-              <button className="cart-checkout-button block w-full text-center mt-6" onClick={handleCheckoutClick}>
+              <button className="cart-checkout-button" onClick={handleCheckoutClick}>
                 Proceed to Checkout <ArrowRight size={17} className="inline ml-2" />
               </button>
-              <Link className="cart-continue-link mt-4 inline-block" to="/shop"><ChevronLeft size={15} /> Continue Shopping</Link>
-              <div className="cart-assurance-list mt-6 pt-6 border-t border-white/10">
+              <Link className="cart-continue-link" to="/shop"><ChevronLeft size={15} /> Continue Shopping</Link>
+              <div className="cart-assurance-list">
                 <p><ShieldCheck size={17} /><span><strong>Secure checkout</strong>Your details stay protected.</span></p>
                 <p><Truck size={17} /><span><strong>Considered delivery</strong>Complimentary over R1,500.</span></p>
                 <p><PackageCheck size={17} /><span><strong>Cellar-safe packaging</strong>Prepared for a safe arrival.</span></p>
               </div>
             </aside>
           </div>
-          <div className="shell text-center mt-8">
-            <button type="button" onClick={onClear} className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] hover:text-white transition-colors">Clear Entire Cart</button>
+          <div className="shell cart-clear-row">
+            <button type="button" onClick={onClear} className="cart-clear-button">Clear Entire Cart</button>
           </div>
         </section>
       )}

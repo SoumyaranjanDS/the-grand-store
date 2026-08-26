@@ -7,7 +7,7 @@ export default function PremiumLiquorsBlogPage() {
       slug="top-10-must-try-premium-liquors-available-at-the-grand-store"
       intro={[
         'South Africa’s love for quality liquor is nothing new, but what is changing fast is the way people are buying it. With convenience and quality high on the wishlist, more South Africans are turning to trusted platforms like The Grand Store, an online liquor store that brings premium spirits right to your doorstep.',
-        'Let’s dive into the Top 10 Must-Try Premium Liquors available at The Grand Store, where luxury meets local convenience.',
+        'Let’s explore ten must-try premium liquors available at The Grand Store, where luxury meets local convenience.',
       ]}
       items={premiumLiquorItems}
       closingTitle="Final Sip: Luxury is Just a Click Away"

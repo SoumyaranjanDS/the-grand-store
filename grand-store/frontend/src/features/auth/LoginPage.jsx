@@ -24,7 +24,8 @@ export default function LoginPage() {
       
       let defaultRoute = '/customer/profile';
       const role = userData.role;
-      if (role === 'admin') defaultRoute = '/admin/dashboard';
+      if (['admin', 'super_admin', 'accountant'].includes(role)) defaultRoute = '/admin/dashboard';
+      else if (role === 'product_manager') defaultRoute = '/admin/products';
       else if (role === 'event_host') defaultRoute = '/event-manager/dashboard';
       else if (role === 'auction_host') defaultRoute = '/auction-manager/dashboard';
       else if (role === 'vendor_pending' || role === 'vendor_active') defaultRoute = '/vendor/dashboard';
@@ -46,7 +47,8 @@ export default function LoginPage() {
         const userData = await googleLogin(tokenResponse.credential || tokenResponse.access_token, 'customer');
         let defaultRoute = '/customer/profile';
         const role = userData.role;
-        if (role === 'admin') defaultRoute = '/admin/dashboard';
+        if (['admin', 'super_admin', 'accountant'].includes(role)) defaultRoute = '/admin/dashboard';
+        else if (role === 'product_manager') defaultRoute = '/admin/products';
         else if (role === 'event_host') defaultRoute = '/event-manager/dashboard';
         else if (role === 'auction_host') defaultRoute = '/auction-manager/dashboard';
         else if (role === 'vendor_pending' || role === 'vendor_active') defaultRoute = '/vendor/dashboard';
@@ -74,7 +76,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md z-10">
         <div className="text-center mb-10">
           <h1 className="text-[#d8b76d] font-serif text-4xl md:text-5xl font-medium tracking-tight mb-4 py-2">
-            Private Access
+            Login
           </h1>
           <p className="text-[var(--color-ivory-muted)] text-sm md:text-base">
             Sign in to view your cellar, track your collection, and manage your private offers.

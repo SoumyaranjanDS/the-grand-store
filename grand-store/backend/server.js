@@ -70,8 +70,10 @@ const startReminderJobs = require("./jobs/reminderJobs");
 // Database Connection
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => {
+  .then(async () => {
     console.log("MongoDB connected successfully");
+    const seedAdminStaff = require("./services/seedAdminStaff");
+    await seedAdminStaff();
     // Start jobs ONLY after successful DB connection to avoid Mongoose buffering timeouts
     startAuctionCronJobs();
     startVendorTrustJobs();

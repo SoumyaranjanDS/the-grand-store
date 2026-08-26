@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { DollarSign, ArrowUpRight, ArrowDownRight, TrendingUp, History } from 'lucide-react';
+import { DollarSign, ArrowUpRight, ArrowDownRight, TrendingUp, History, Download } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export default function AdminFinancials({ hideHeader = false }) {
@@ -42,6 +42,47 @@ export default function AdminFinancials({ hideHeader = false }) {
 
     fetchFinanceData();
   }, []);
+
+  const exportToCSV = () => {
+    let csvContent = "data:text/csv;charset=utf-8,";
+    const fC = (val) => `"R${Number(val || 0).toFixed(2)}"`;
+    
+    if (activeTab === 'shop') {
+      csvContent += "Order Ref,Date,Products,Shipping,Ship Margin,VAT,Total Paid,Commission,Vendor Payout\n";
+      shopOrders.forEach(order => {
+        const totalVendorPayout = order.vendorPayables?.reduce((sum, p) => sum + (p.netPayable || 0), 0) || 0;
+        let customerShipping = order.shippingCost || 0;
+        let actualShipping = order.shipments?.reduce((sum, shp) => sum + (shp.actualShippingCost || 0), 0) || 0;
+        const shippingMargin = customerShipping - actualShipping;
+        
+        csvContent += `${order.orderId || order.transactionId},${new Date(order.createdAt).toLocaleDateString()},${fC(order.subTotal)},${fC(customerShipping)},${fC(shippingMargin)},${fC(order.vatAmount)},${fC(order.totalPrice)},${fC(order.commissionAmount)},${fC(totalVendorPayout)}\n`;
+      });
+    } else if (activeTab === 'events') {
+      csvContent += "Ticket Ref,Date,Subtotal,VAT,Customer Paid,Commission,Organizer Payout\n";
+      eventBookings.forEach(booking => {
+        csvContent += `${booking.gsReference || booking.ticketId},${new Date(booking.bookingDate || booking.createdAt).toLocaleDateString()},${fC(booking.subTotal)},${fC(booking.vatAmount)},${fC(booking.totalPrice)},${fC(booking.commissionAmount)},${fC(booking.organizerPayable)}\n`;
+      });
+    } else if (activeTab === 'auctions') {
+      csvContent += "Order Ref,Date,Hammer Price,VAT,Buyer Paid,Commission,Vendor Payout\n";
+      auctionOrders.forEach(order => {
+        const totalVendorPayout = order.vendorPayables?.reduce((sum, p) => sum + (p.netPayable || 0), 0) || 0;
+        csvContent += `${order.transactionId || order.orderId},${new Date(order.createdAt).toLocaleDateString()},${fC(order.subTotal)},${fC(order.vatAmount)},${fC(order.totalPrice)},${fC(order.commissionAmount)},${fC(totalVendorPayout)}\n`;
+      });
+    } else if (activeTab === 'vendor') {
+      csvContent += "Ref ID,Date,Vendor,Amount Paid,Gateway\n";
+      vendorPayments.forEach(txn => {
+        csvContent += `${txn.reference},${new Date(txn.createdAt || txn.date).toLocaleDateString()},${txn.user?.name || txn.user?.email || 'N/A'},${fC(txn.amount)},${txn.gateway}\n`;
+      });
+    }
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `grand_store_financials_${activeTab}_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   if (loading) return <div className="text-white p-8 text-center animate-pulse">Loading financial data...</div>;
   if (error) return <div className="text-red-500 p-8">{error}</div>;
@@ -132,6 +173,14 @@ export default function AdminFinancials({ hideHeader = false }) {
               }`}
             >
               Vendor Reg.
+            </button>
+            <div className="w-px h-6 bg-white/10 mx-2 self-center"></div>
+            <button
+              onClick={exportToCSV}
+              className="px-4 py-2 text-xs font-bold tracking-wider uppercase rounded-sm bg-white/5 text-white hover:bg-white/10 hover:text-[#e6c97a] transition-colors flex items-center gap-2"
+              title="Export Current View to CSV"
+            >
+              <Download size={14} /> Export CSV
             </button>
           </div>
         </div>

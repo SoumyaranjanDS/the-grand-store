@@ -21,7 +21,7 @@ const fallbackBadges = [
   "Sommelier pick",
 ];
 const trimmedUploadCache = new Map();
-const vendorImageFitVersion = "full-bottle-v4";
+const vendorImageFitVersion = "full-bottle-v6";
 const preparedVendorImages = {
   "/uploads/images-1787292711461.png":
     "/assets/products/vendor/whisky-tona-full.png",
@@ -40,6 +40,21 @@ const resolveImageUrl = (src) => {
     normalizedSrc.startsWith("http://") ||
     normalizedSrc.startsWith("https://")
   ) {
+    // Grand Store uploads use a large transparent canvas. Cloudinary's trim
+    // effect removes that canvas at delivery time, so the real bottle bounds
+    // can be centered and scaled consistently in every product card.
+    if (
+      normalizedSrc.includes("res.cloudinary.com") &&
+      normalizedSrc.includes("/grandstore-uploads/") &&
+      normalizedSrc.includes("/image/upload/") &&
+      !normalizedSrc.includes("/e_trim")
+    ) {
+      return normalizedSrc.replace(
+        "/image/upload/",
+        "/image/upload/e_trim:10/",
+      );
+    }
+
     return normalizedSrc;
   }
 
@@ -78,6 +93,10 @@ function VendorProductImage({ src, alt }) {
       setDisplaySource(trimmedUploadCache.get(cacheKey) || resolvedSrc);
       return undefined;
     }
+
+    // Show the latest upload immediately while its transparent padding is
+    // analysed. This prevents an older product image lingering after an edit.
+    setDisplaySource(resolvedSrc);
 
     let cancelled = false;
     const sourceImage = new Image();
@@ -158,9 +177,9 @@ function VendorProductImage({ src, alt }) {
         const sourceHeight = visibleHeight / analysisScale;
         // Pad from the detected object dimensions rather than the longest
         // side. This preserves a natural portrait ratio for tall bottles.
-        const horizontalPadding = sourceWidth * 0.12;
-        const topPadding = sourceHeight * 0.08;
-        const bottomPadding = sourceHeight * 0.18;
+        const horizontalPadding = sourceWidth * 0.14;
+        const topPadding = sourceHeight * 0.1;
+        const bottomPadding = sourceHeight * 0.12;
         const paddedWidth = sourceWidth + horizontalPadding * 2;
         const paddedHeight = sourceHeight + topPadding + bottomPadding;
         const outputScale = Math.min(
@@ -224,7 +243,7 @@ function VendorProductImage({ src, alt }) {
         src={displaySource}
         alt={alt}
         loading="lazy"
-        style={{ width: "auto", objectFit: "contain" }}
+        decoding="async"
       />
     </span>
   );

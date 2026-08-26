@@ -9,10 +9,14 @@ export default function AdminLayout() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Strictly allow ONLY admin users
-  if (!user || user.role !== 'admin') {
+  // Allow admin, accountant, and product_manager users
+  if (!user || !['admin', 'super_admin', 'accountant', 'product_manager'].includes(user.role)) {
     return <Navigate to="/login" replace />;
   }
+
+  const isAdmin = user.role === 'admin' || user.role === 'super_admin';
+  const isAccountant = user.role === 'accountant' || isAdmin;
+  const isProductManager = user.role === 'product_manager' || isAdmin;
 
   const handleNavigate = (path) => {
     navigate(path);
@@ -54,7 +58,9 @@ export default function AdminLayout() {
           <div className="flex items-center gap-3">
             <div className="text-right hidden md:block">
               <div className="text-sm font-serif">{user.name}</div>
-              <div className="text-xs text-gold-gradient tracking-widest uppercase">System Administrator</div>
+              <div className="text-xs text-gold-gradient tracking-widest uppercase">
+                {isAdmin ? 'System Administrator' : user.role === 'accountant' ? 'Accountant' : 'Product Manager'}
+              </div>
             </div>
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--color-gold)] to-yellow-700 p-[1px]">
               <div className="w-full h-full bg-[#0a0a0a] rounded-full flex items-center justify-center">
@@ -78,74 +84,106 @@ export default function AdminLayout() {
         <aside className={`w-64 bg-[#0a0a0a]/95 backdrop-blur-xl border-r border-white/[0.02] flex flex-col fixed top-20 bottom-0 left-0 z-50 overflow-y-auto transition-transform duration-300 ease-in-out ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
           <nav className="flex flex-col flex-1 p-6 gap-2 mt-2">
             
-            <div className="flex items-center gap-1.5 text-[10px] text-[var(--color-ivory-muted)] uppercase tracking-widest mb-2 mt-2 pl-2"><Activity size={12} /> Overview</div>
-            <button onClick={() => handleNavigate('/admin/dashboard')} className={navItemClass('/admin/dashboard')}>
-              <LayoutDashboard size={16} /> Dashboard
-            </button>
-            <button onClick={() => handleNavigate('/admin/users')} className={navItemClass('/admin/users')}>
-              <Users size={16} /> All Users
-            </button>
-            <button onClick={() => handleNavigate('/admin/vendors')} className={navItemClass('/admin/vendors')}>
-              <Building2 size={16} /> Vendors & Approvals
-            </button>
-            <button onClick={() => handleNavigate('/admin/newsletter')} className={navItemClass('/admin/newsletter')}>
-              <Mail size={16} /> Newsletter Subscribers
-            </button>
+            {user.role !== 'product_manager' && (
+              <>
+                <div className="flex items-center gap-1.5 text-[10px] text-[var(--color-ivory-muted)] uppercase tracking-widest mb-2 mt-2 pl-2"><Activity size={12} /> Overview</div>
+                <button onClick={() => handleNavigate('/admin/dashboard')} className={navItemClass('/admin/dashboard')}>
+                  <LayoutDashboard size={16} /> Dashboard
+                </button>
+              </>
+            )}
+            {isAdmin && (
+              <>
+                <button onClick={() => handleNavigate('/admin/users')} className={navItemClass('/admin/users')}>
+                  <Users size={16} /> All Users
+                </button>
+                <button onClick={() => handleNavigate('/admin/staff')} className={navItemClass('/admin/staff')}>
+                  <Shield size={16} /> Staff Directory
+                </button>
+                <button onClick={() => handleNavigate('/admin/vendors')} className={navItemClass('/admin/vendors')}>
+                  <Building2 size={16} /> Vendors & Approvals
+                </button>
+                <button onClick={() => handleNavigate('/admin/newsletter')} className={navItemClass('/admin/newsletter')}>
+                  <Mail size={16} /> Newsletter Subscribers
+                </button>
+              </>
+            )}
 
-            <div className="flex items-center gap-1.5 text-[10px] text-[var(--color-ivory-muted)] uppercase tracking-widest mb-2 mt-4 pl-2"><Briefcase size={12} /> Operations</div>
-            <button onClick={() => handleNavigate('/admin/products')} className={navItemClass('/admin/products')}>
-              <Package size={16} /> Retail Products
-            </button>
-            <button onClick={() => handleNavigate('/admin/orders')} className={navItemClass('/admin/orders')}>
-              <ShoppingBag size={16} /> Retail Orders
-            </button>
-            <button onClick={() => handleNavigate('/admin/auctions')} className={navItemClass('/admin/auctions')}>
-              <Gavel size={16} /> Auctions Management
-            </button>
-            <button onClick={() => handleNavigate('/admin/accessories')} className={navItemClass('/admin/accessories')}>
-              <Gem size={16} /> Accessories
-            </button>
-            <button onClick={() => handleNavigate('/admin/expert-reviews')} className={navItemClass('/admin/expert-reviews')}>
-              <Award size={16} /> Expert Reviews
-            </button>
-            <button onClick={() => handleNavigate('/admin/advertisement-requests')} className={navItemClass('/admin/advertisement-requests')}>
-              <Tv size={16} /> Advertisements
-            </button>
-            <button onClick={() => handleNavigate('/admin/testimonials')} className={navItemClass('/admin/testimonials')}>
-              <MessageSquare size={16} /> Testimonials
-            </button>
-            <button onClick={() => handleNavigate('/admin/host-applications')} className={navItemClass('/admin/host-applications')}>
-              <Building2 size={16} /> Host Applications
-            </button>
-            <button onClick={() => handleNavigate('/admin/testimonials')} className={navItemClass('/admin/testimonials')}>
-              <MessageSquare size={16} /> Wine Farm Testimonials
-            </button>
-            <button onClick={() => handleNavigate('/admin/trade-enquiries')} className={navItemClass('/admin/trade-enquiries')}>
-              <Building2 size={16} /> Trade Enquiries
-            </button>
-            <button onClick={() => handleNavigate('/auction')} className={navItemClass('/auction')}>
-              <Gavel size={16} /> Live Auctions
-            </button>
+            {isProductManager && (
+              <>
+                <div className="flex items-center gap-1.5 text-[10px] text-[var(--color-ivory-muted)] uppercase tracking-widest mb-2 mt-4 pl-2"><Briefcase size={12} /> Operations</div>
+                <button onClick={() => handleNavigate('/admin/products')} className={navItemClass('/admin/products')}>
+                  <Package size={16} /> Retail Products
+                </button>
+                <button onClick={() => handleNavigate('/admin/orders')} className={navItemClass('/admin/orders')}>
+                  <ShoppingBag size={16} /> Retail Orders
+                </button>
+                <button onClick={() => handleNavigate('/admin/accessories')} className={navItemClass('/admin/accessories')}>
+                  <Gem size={16} /> Accessories
+                </button>
+              </>
+            )}
 
-            <div className="flex items-center gap-1.5 text-[10px] text-[var(--color-gold)] uppercase tracking-widest mb-2 mt-4 pl-2 font-bold"><Shield size={12} /> System Control</div>
-            <button onClick={() => handleNavigate('/admin/attributes')} className={navItemClass('/admin/attributes')}>
-              <Settings size={16} /> Product Attributes
-            </button>
-            <button onClick={() => handleNavigate('/admin/glossary')} className={navItemClass('/admin/glossary')}>
-              <Settings size={16} /> Glossary Management
-            </button>
-            <button onClick={() => handleNavigate('/admin/financials')} className={navItemClass('/admin/financials')}>
-              <Wallet size={16} /> Financial Control
-            </button>
-            <button onClick={() => handleNavigate('/admin/bank-transfers')} className={navItemClass('/admin/bank-transfers')}>
-              <Wallet size={16} /> Bank Transfers
-            </button>
-            <button onClick={() => handleNavigate('/admin/settings')} className={navItemClass('/admin/settings')}>
-              <Settings size={16} /> Platform Settings
-            </button>
+            {isAdmin && (
+              <>
+                <button onClick={() => handleNavigate('/admin/auctions')} className={navItemClass('/admin/auctions')}>
+                  <Gavel size={16} /> Auctions Management
+                </button>
+                <button onClick={() => handleNavigate('/admin/expert-reviews')} className={navItemClass('/admin/expert-reviews')}>
+                  <Award size={16} /> Expert Reviews
+                </button>
+                <button onClick={() => handleNavigate('/admin/advertisement-requests')} className={navItemClass('/admin/advertisement-requests')}>
+                  <Tv size={16} /> Advertisements
+                </button>
+                <button onClick={() => handleNavigate('/admin/testimonials')} className={navItemClass('/admin/testimonials')}>
+                  <MessageSquare size={16} /> Testimonials
+                </button>
+                <button onClick={() => handleNavigate('/admin/host-applications')} className={navItemClass('/admin/host-applications')}>
+                  <Building2 size={16} /> Host Applications
+                </button>
+                <button onClick={() => handleNavigate('/admin/trade-enquiries')} className={navItemClass('/admin/trade-enquiries')}>
+                  <Building2 size={16} /> Trade Enquiries
+                </button>
+                <button onClick={() => handleNavigate('/auction')} className={navItemClass('/auction')}>
+                  <Gavel size={16} /> Live Auctions
+                </button>
+              </>
+            )}
+
+            {(isAdmin || isAccountant) && (
+              <div className="flex items-center gap-1.5 text-[10px] text-[var(--color-gold)] uppercase tracking-widest mb-2 mt-4 pl-2 font-bold"><Shield size={12} /> System Control</div>
+            )}
+
+            {isAdmin && (
+              <>
+                <button onClick={() => handleNavigate('/admin/attributes')} className={navItemClass('/admin/attributes')}>
+                  <Settings size={16} /> Product Attributes
+                </button>
+                <button onClick={() => handleNavigate('/admin/glossary')} className={navItemClass('/admin/glossary')}>
+                  <Settings size={16} /> Glossary Management
+                </button>
+              </>
+            )}
+            
+            {isAccountant && (
+              <>
+                <button onClick={() => handleNavigate('/admin/financials')} className={navItemClass('/admin/financials')}>
+                  <Wallet size={16} /> Financial Control
+                </button>
+                <button onClick={() => handleNavigate('/admin/bank-transfers')} className={navItemClass('/admin/bank-transfers')}>
+                  <Wallet size={16} /> Bank Transfers
+                </button>
+              </>
+            )}
+
+            {isAdmin && (
+              <button onClick={() => handleNavigate('/admin/settings')} className={navItemClass('/admin/settings')}>
+                <Settings size={16} /> Platform Settings
+              </button>
+            )}
 
             <div className="mt-6 pt-6 border-t border-white/[0.05] flex flex-col gap-2">
-              <button onClick={logout} className="flex items-center gap-4 px-4 py-3 rounded-xl w-full text-red-400 hover:bg-red-500/10 transition-all text-left text-xs uppercase tracking-widest">
+              <button onClick={() => { logout(); navigate('/login'); }} className="flex items-center gap-4 px-4 py-3 rounded-xl w-full text-red-400 hover:bg-red-500/10 transition-all text-left text-xs uppercase tracking-widest">
                 <LogOut size={16} /> Sign Out
               </button>
             </div>

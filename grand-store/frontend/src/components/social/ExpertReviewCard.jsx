@@ -5,13 +5,13 @@ export const ExpertReviewCard = ({ expertReview }) => {
   if (!expertReview) return null;
 
   return (
-    <div className="w-full py-12 relative overflow-hidden">
+    <div className="relative w-full overflow-hidden py-8 sm:py-12">
       <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
         <Star size={120} />
       </div>
       
-      <div className="relative z-10 flex flex-col md:flex-row gap-8 lg:gap-16">
-        <div className="md:w-1/3 md:border-r border-white/10 md:pr-10">
+      <div className="relative z-10 flex min-w-0 flex-col gap-8 md:flex-row lg:gap-16">
+        <div className="min-w-0 border-b border-white/10 pb-8 md:w-1/3 md:border-b-0 md:border-r md:pb-0 md:pr-10">
           <p className="eyebrow text-gold-400 mb-2">Grand Store Expert Review</p>
           <div className="flex items-center gap-4 mb-4">
             {expertReview.expertImage ? (
@@ -21,9 +21,9 @@ export const ExpertReviewCard = ({ expertReview }) => {
                 <span className="text-xl uppercase">{expertReview.expertName.substring(0, 2)}</span>
               </div>
             )}
-            <div>
-              <h3 className="text-lg font-serif">{expertReview.expertName}</h3>
-              <p className="text-sm text-[var(--color-ivory-muted)]">{expertReview.expertTitle}</p>
+            <div className="min-w-0">
+              <h3 className="break-words text-lg font-serif">{expertReview.expertName}</h3>
+              <p className="break-words text-sm text-[var(--color-ivory-muted)]">{expertReview.expertTitle}</p>
             </div>
           </div>
           
@@ -37,7 +37,7 @@ export const ExpertReviewCard = ({ expertReview }) => {
           </div>
         </div>
         
-        <div className="md:w-2/3">
+        <div className="min-w-0 md:w-2/3">
           <div className="mb-6 grid grid-cols-2 md:grid-cols-3 gap-4">
             {expertReview.ratings.criteria.map((c, i) => (
               <div key={i}>
@@ -49,7 +49,7 @@ export const ExpertReviewCard = ({ expertReview }) => {
           
           <div>
             <h4 className="text-sm uppercase tracking-widest mb-2 text-gold-400">Our Verdict</h4>
-            <p className="text-[var(--color-ivory)] leading-relaxed italic">"{expertReview.verdict}"</p>
+            <p className="break-words text-[var(--color-ivory)] leading-relaxed italic">"{expertReview.verdict}"</p>
           </div>
           
           {expertReview.detailedReview && (

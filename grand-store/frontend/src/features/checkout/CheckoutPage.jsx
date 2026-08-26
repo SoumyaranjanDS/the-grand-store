@@ -561,7 +561,13 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                       <div className="relative z-10">
                         <h4 className="font-medium text-white mb-1">PayFast (Instant)</h4>
                         <p className="text-xs text-[var(--color-ivory-muted)] mb-4">Credit/Debit Cards, Instant EFT</p>
-                        <img src="https://payfast.io/images/payfast-logo.svg" alt="PayFast" className="h-6 brightness-0 invert opacity-80" />
+                        <div className="inline-flex items-center justify-center rounded-lg bg-white px-4 py-2 shadow-[0_6px_20px_rgba(0,0,0,0.25)] min-w-[120px]">
+                          <img
+                            src="https://res.cloudinary.com/oioqrgj0/image/upload/v1787729897/grand-store/assets/pkv0g8anwi079fvihl2e.png"
+                            alt="PayFast"
+                            className="h-10 md:h-12 w-auto object-contain"
+                          />
+                        </div>
                       </div>
                     </label>
 

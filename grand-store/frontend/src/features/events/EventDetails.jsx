@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../../api';
 import { Calendar, MapPin, Clock, Users, Tag, Check, ArrowLeft, ShoppingBag, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -206,9 +206,11 @@ export default function EventDetails({ onNotify, onAdd }) {
                   <p className="text-gold-gradient text-sm uppercase tracking-widest mb-3">
                     {event.hostTitle || 'Distillery Partner'}
                   </p>
-                  <button className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1 hover:text-gold-gradient transition-colors">
-                    View Vendor Profile <ChevronRight size={14} />
-                  </button>
+                  {event.vendorSlug && (
+                    <Link to={`/estate/${event.vendorSlug}`} className="inline-block text-xs font-bold uppercase tracking-wider text-white hover:text-gold-gradient transition-colors mt-2">
+                      <span className="flex items-center gap-1">View Vendor Profile <ChevronRight size={14} /></span>
+                    </Link>
+                  )}
                 </div>
               </div>
             </section>

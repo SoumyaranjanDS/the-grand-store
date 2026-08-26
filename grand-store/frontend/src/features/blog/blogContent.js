@@ -3,7 +3,7 @@ export const blogPosts = [
     slug: 'top-10-must-try-premium-liquors-available-at-the-grand-store',
     title: 'Top 10 Must-Try Premium Liquors Available at The Grand Store',
     date: '14 Apr 2025',
-    image: '/assets/blogs/premium-liquors.jpg',
+    image: '/assets/hero-bar-bg.jpg',
     excerpt: 'South Africa’s love for quality liquor is nothing new, but what is changing fast is the way people are buying it. Discover ten premium bottles where luxury meets local convenience.',
   },
   {

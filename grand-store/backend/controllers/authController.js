@@ -75,6 +75,7 @@ const loginUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        mustChangePassword: user.mustChangePassword,
         token: generateToken(user._id),
       });
     } else {
@@ -239,6 +240,7 @@ const googleAuth = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      mustChangePassword: user.mustChangePassword,
       token: generateToken(user._id),
     });
 

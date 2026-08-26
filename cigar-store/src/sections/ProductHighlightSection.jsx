@@ -23,10 +23,9 @@ function ProductHighlightSection() {
         }
       `}</style>
       <div 
-        className="editorial-section__grid" 
-        style={{ 
-          gridTemplateColumns: 'minmax(350px, 1.1fr) 1fr', 
-          gap: 'clamp(30px, 4vw, 60px)' 
+        className="editorial-section__grid"
+        style={{
+          '--desktop-cols': 'minmax(350px, 1.1fr) 1fr' // CSS variable in case it's needed
         }}
       >
         <figure 
@@ -50,7 +49,6 @@ function ProductHighlightSection() {
         <div 
           ref={contentRef}
           className={`editorial-section__content reveal-right ${contentVisible ? 'is-visible' : ''}`}
-          style={{ paddingLeft: 'clamp(10px, 3vw, 40px)' }}
         >
           <p className="editorial-section__number">03 / Connoisseur Selection</p>
           <h3>A Masterclass in<br /><em>Craftsmanship</em></h3>

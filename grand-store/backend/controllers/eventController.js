@@ -107,9 +107,17 @@ const getEventById = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id)
       .populate("vendorId", "name vendorProfile")
-      .populate("tastingProducts"); // Populate the actual products
+      .populate("tastingProducts")
+      .lean();
 
     if (event) {
+      if (event.vendorId && event.vendorId._id) {
+        const EstateProfile = require('../models/EstateProfile');
+        const estate = await EstateProfile.findOne({ vendor: event.vendorId._id }).select('slug');
+        if (estate) {
+          event.vendorSlug = estate.slug;
+        }
+      }
       res.json(event);
     } else {
       res.status(404).json({ message: "Event not found" });

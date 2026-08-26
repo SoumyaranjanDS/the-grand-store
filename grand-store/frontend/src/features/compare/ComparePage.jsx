@@ -60,8 +60,14 @@ export default function ComparePage({ compareItems, onCompare, onRemove, onClear
                         <td key={product.id}>
                           <div className="compare-product-head">
                             <button type="button" onClick={() => onRemove(product)} aria-label={`Remove ${product.name} from comparison`}><Trash2 size={17} /></button>
-                            <Link to={`/product/${product.slug || product.id || product._id}`}><img src={product.image} alt={product.fullName || product.name} /></Link>
-                            <p>{product.brand}</p>
+                            <Link to={`/product/${product.slug || product.id || product._id}`}>
+                              <img 
+                                src={product.image} 
+                                alt={product.fullName || product.name}
+                                style={{ maxHeight: '180px', width: 'auto', margin: '0 auto', objectFit: 'contain' }}
+                              />
+                            </Link>
+                            <p style={{ marginTop: '16px' }}>{product.brand}</p>
                             <h2><Link to={`/product/${product.slug || product.id || product._id}`}>{product.fullName || product.name}</Link></h2>
                           </div>
                         </td>
@@ -105,7 +111,11 @@ export default function ComparePage({ compareItems, onCompare, onRemove, onClear
               <div className="compare-suggestion-grid">
                 {suggestions.map((product) => (
                   <article key={product.id}>
-                    <img src={product.image} alt={product.name} />
+                    <img 
+                      src={product.image} 
+                      alt={product.name}
+                      style={{ maxHeight: '140px', width: 'auto', margin: '0 auto', objectFit: 'contain' }}
+                    />
                     <div><p>{product.brand}</p><h3>{product.name}</h3><strong>{product.price}</strong></div>
                     <button type="button" onClick={() => onCompare(product)} aria-label={`Compare ${product.name}`}><Plus size={18} /></button>
                   </article>

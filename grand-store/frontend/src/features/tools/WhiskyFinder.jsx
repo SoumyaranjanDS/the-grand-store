@@ -13,7 +13,7 @@ const DEFAULT_KEYWORDS = {
   fruity: ['Fruity', 'Spicy', 'Speyside', 'Highland', 'Apple', 'Honey']
 };
 
-export default function WhiskyFinder() {
+export default function WhiskyFinder({ onAdd, onWish, onCompare, compareItems }) {
   const navigate = useNavigate();
   const { products } = useProducts();
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -136,7 +136,7 @@ export default function WhiskyFinder() {
             {recommendedWhiskies.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 {recommendedWhiskies.map((product) => (
-                  <ProductCard key={product.id || product._id} product={product} />
+                  <ProductCard key={product.id || product._id} product={product} onAdd={onAdd} onWish={onWish} onCompare={onCompare} isCompared={compareItems?.some(item => (item.id || item._id) === (product.id || product._id))} />
                 ))}
               </div>
             ) : (

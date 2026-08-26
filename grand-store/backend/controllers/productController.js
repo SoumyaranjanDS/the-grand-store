@@ -73,7 +73,7 @@ const getProductById = async (req, res) => {
 // @access  Private (Vendor/Admin)
 const createProduct = async (req, res) => {
   try {
-    if (req.user.role !== 'vendor_active' && req.user.role !== 'admin') {
+    if (!['vendor_active', 'admin', 'super_admin', 'product_manager'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Only approved vendors or admins can add products' });
     }
 
@@ -122,7 +122,7 @@ const createProduct = async (req, res) => {
       flavorProfile: flavorProfile && typeof flavorProfile === 'string' ? JSON.parse(flavorProfile) : flavorProfile || [],
       foodPairing: foodPairing && typeof foodPairing === 'string' ? JSON.parse(foodPairing) : foodPairing || [],
       stock: Number(stock) || 0,
-      vendorId: req.user.role === 'admin' ? null : req.user._id,
+      vendorId: ['admin', 'super_admin', 'product_manager'].includes(req.user.role) ? null : req.user._id,
       approvalStatus: 'approved'
     });
 
@@ -138,7 +138,10 @@ const createProduct = async (req, res) => {
 // @access  Private (Vendor/Admin)
 const getVendorProducts = async (req, res) => {
   try {
-    const filter = req.user.role === 'admin' ? { vendorId: null } : { vendorId: req.user._id };
+    let filter = { vendorId: req.user._id };
+    if (['admin', 'super_admin', 'product_manager'].includes(req.user.role)) {
+      filter = {};
+    }
     const products = await Product.find(filter);
     res.json(products);
   } catch (error) {
@@ -157,7 +160,7 @@ const updateProduct = async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    if (req.user.role !== 'admin' && product.vendorId?.toString() !== req.user._id.toString()) {
+    if (!['admin', 'super_admin', 'product_manager'].includes(req.user.role) && product.vendorId?.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Not authorized to edit this product' });
     }
 
@@ -212,7 +215,7 @@ const deleteProduct = async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    if (req.user.role !== 'admin' && product.vendorId?.toString() !== req.user._id.toString()) {
+    if (!['admin', 'super_admin', 'product_manager'].includes(req.user.role) && product.vendorId?.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Not authorized to delete this product' });
     }
 

@@ -75,7 +75,7 @@ export default function AdminProducts() {
   }, [categoryProducts, normalizedSearchTerm]);
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') {
+    if (!user || !['admin', 'super_admin', 'product_manager'].includes(user.role)) {
       navigate('/login');
       return;
     }

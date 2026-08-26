@@ -9,6 +9,8 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+    lowercase: true,
+    trim: true,
   },
   password: {
     type: String,
@@ -21,8 +23,18 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['customer', 'admin', 'super_admin', 'vendor_pending', 'vendor_approved_unpaid', 'vendor_active', 'vendor_rejected', 'auction_host', 'event_host'],
+    enum: ['customer', 'admin', 'super_admin', 'accountant', 'product_manager', 'vendor_pending', 'vendor_approved_unpaid', 'vendor_active', 'vendor_rejected', 'auction_host', 'event_host'],
     default: 'customer',
+  },
+  staffKey: {
+    type: String,
+    enum: ['accountant', 'product_manager'],
+    unique: true,
+    sparse: true,
+  },
+  mustChangePassword: {
+    type: Boolean,
+    default: false,
   },
   wishlist: [{
     type: mongoose.Schema.Types.ObjectId,

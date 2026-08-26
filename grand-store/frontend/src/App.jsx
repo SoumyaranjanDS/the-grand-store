@@ -86,6 +86,7 @@ import VendorShippingProfile from './features/vendor/VendorShippingProfile'
 import AdminLayout from './features/admin/AdminLayout'
 import AdminDashboard from './features/admin/AdminDashboard'
 import AdminUsers from './features/admin/AdminUsers'
+import AdminStaff from './features/admin/AdminStaff'
 import AdminVendors from './features/admin/AdminVendors'
 import AdminExpertReviews from './features/admin/AdminExpertReviews'
 import AdminSettings from './features/admin/AdminSettings'
@@ -399,8 +400,8 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         
         {/* Tools & Finders */}
-        <Route path="/tools/wine-pairing" element={<WinePairingTool />} />
-        <Route path="/tools/whisky-finder" element={<WhiskyFinder />} />
+        <Route path="/tools/wine-pairing" element={<WinePairingTool onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />} />
+        <Route path="/tools/whisky-finder" element={<WhiskyFinder onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />} />
         
         {/* Global Wines */}
         <Route path="/global-wines" element={<GlobalWinesPage />} />
@@ -455,6 +456,7 @@ function App() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="users" element={<AdminUsers />} />
+          <Route path="staff" element={<AdminStaff />} />
           <Route path="vendors" element={<AdminVendors />} />
           <Route path="expert-reviews" element={<AdminExpertReviews />} />
           <Route path="accessories" element={<AdminAccessories />} />

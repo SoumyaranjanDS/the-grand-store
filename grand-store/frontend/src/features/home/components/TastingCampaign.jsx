@@ -19,7 +19,7 @@ export default function TastingCampaign() {
       
       <Link 
         className="flex flex-col justify-end lg:justify-center items-start w-full lg:w-[min(620px,48%)] p-[30px_26px_38px] lg:p-[clamp(44px,6vw,96px)] text-inherit no-underline cursor-pointer group focus-visible:outline-2 focus-visible:outline-[#e1bd70] focus-visible:-outline-offset-[5px]" 
-        to="/bookatasting" 
+        to="/events" 
         aria-label="Explore and book an in-store tasting"
       >
         <h2 

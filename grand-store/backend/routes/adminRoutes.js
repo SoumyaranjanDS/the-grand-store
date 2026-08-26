@@ -3,25 +3,28 @@ const router = express.Router();
 const adminController = require('../controllers/adminController');
 const financeController = require('../controllers/financeController');
 const testimonialController = require('../controllers/testimonialController');
-const { protect, admin } = require('../middleware/authMiddleware');
+const { protect, superAdmin, financeStaff } = require('../middleware/authMiddleware');
 
 router.use(protect);
-router.use(admin);
 
+// Anyone in staff/admin can see dashboard metrics (frontend handles component visibility)
 router.get('/dashboard', adminController.getDashboardStats);
-router.get('/users', adminController.getAllUsers);
-router.get('/vendors', adminController.getAllVendors);
-router.put('/vendors/:id/status', adminController.updateVendorStatus);
+router.get('/users', superAdmin, adminController.getAllUsers);
+router.get('/vendors', superAdmin, adminController.getAllVendors);
+router.put('/vendors/:id/status', superAdmin, adminController.updateVendorStatus);
+router.get('/staff', superAdmin, adminController.getStaffAccounts);
+router.post('/staff', superAdmin, adminController.createStaffAccount);
+router.put('/staff/:id', superAdmin, adminController.updateStaffCredentials);
 
-router.get('/finance', financeController.getAdminFinanceOverview);
-router.get('/bank-transfers', adminController.getPendingBankTransfers);
+router.get('/finance', financeStaff, financeController.getAdminFinanceOverview);
+router.get('/bank-transfers', financeStaff, adminController.getPendingBankTransfers);
 
 router.route('/testimonials')
-  .get(testimonialController.getAdminTestimonials)
-  .post(testimonialController.createTestimonial);
+  .get(superAdmin, testimonialController.getAdminTestimonials)
+  .post(superAdmin, testimonialController.createTestimonial);
 
 router.route('/testimonials/:id')
-  .put(testimonialController.updateTestimonial)
-  .delete(testimonialController.deleteTestimonial);
+  .put(superAdmin, testimonialController.updateTestimonial)
+  .delete(superAdmin, testimonialController.deleteTestimonial);
 
 module.exports = router;

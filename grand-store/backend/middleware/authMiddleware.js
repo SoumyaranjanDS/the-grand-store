@@ -26,11 +26,23 @@ const protect = async (req, res, next) => {
 };
 
 const admin = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
+  if (req.user && ['admin', 'super_admin'].includes(req.user.role)) {
     next();
   } else {
-    res.status(401).json({ message: 'Not authorized as an admin' });
+    res.status(403).json({ message: 'Administrator access is required' });
   }
 };
 
-module.exports = { protect, admin };
+const requireRoles = (...roles) => (req, res, next) => {
+  if (req.user && roles.includes(req.user.role)) {
+    return next();
+  }
+
+  return res.status(403).json({ message: 'You do not have permission to access this resource' });
+};
+
+const superAdmin = requireRoles('admin', 'super_admin');
+const financeStaff = requireRoles('admin', 'super_admin', 'accountant');
+const productStaff = requireRoles('admin', 'super_admin', 'product_manager');
+
+module.exports = { protect, admin, requireRoles, superAdmin, financeStaff, productStaff };
