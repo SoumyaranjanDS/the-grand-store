@@ -286,15 +286,16 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             </span>
           </div>
 
-          <div className="mb-7 flex flex-wrap items-center gap-3 sm:mb-8 sm:gap-4">
+          <div className="mb-7 flex flex-wrap items-center md:items-end justify-between gap-3 sm:mb-8 sm:gap-4">
             <div className="min-w-0 font-serif text-[clamp(2rem,10vw,2.625rem)] leading-none text-[#d8b76d]">
               <Price amount={product.price} />
             </div>
 
+            {/* Mobile View Pill */}
             <button
               type="button"
               onClick={() => setShowCertificate(true)}
-              className="group inline-flex h-11 shrink-0 items-center gap-2 rounded-full border border-[#c9a35b]/40 bg-[#c9a35b]/[0.08] py-1.5 pl-1.5 pr-3 text-left transition-colors hover:border-[#c9a35b] hover:bg-[#c9a35b]/[0.14]"
+              className="group inline-flex md:hidden h-11 shrink-0 items-center gap-2 rounded-full border border-[#c9a35b]/40 bg-[#c9a35b]/[0.08] py-1.5 pl-1.5 pr-3 text-left transition-colors hover:border-[#c9a35b] hover:bg-[#c9a35b]/[0.14]"
               title="Click to view our 100% Satisfaction Guarantee"
               aria-label="View the Grandstore 100% satisfaction guarantee"
             >
@@ -311,6 +312,20 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
                   View certificate
                 </span>
               </span>
+            </button>
+
+            {/* PC View Old Image */}
+            <button
+              onClick={() => setShowCertificate(true)}
+              className="relative group hover:scale-105 transition-transform duration-300 shrink-0 hidden md:block"
+              title="Click to view our 100% Satisfaction Guarantee"
+              aria-label="View the Grandstore 100% satisfaction guarantee"
+            >
+              <img
+                src="/grandstore-badge.png"
+                alt="Grandstore Guarantee"
+                className="relative w-14 lg:w-16 h-auto"
+              />
             </button>
           </div>
 
