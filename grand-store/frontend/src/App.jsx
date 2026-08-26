@@ -117,6 +117,9 @@ import WinePairingTool from './features/tools/WinePairingTool'
 import WhiskyFinder from './features/tools/WhiskyFinder'
 import AdminGlossary from './features/admin/AdminGlossary'
 import AdminNewsletter from './features/admin/AdminNewsletter'
+import AdminChatbot from './features/admin/AdminChatbot'
+import ChatbotWidget from './components/ChatbotWidget'
+
 
 // Host Applications
 import HostAuctionPage from './features/hosting/HostAuctionPage'
@@ -471,7 +474,9 @@ function App() {
           <Route path="bank-transfers" element={<AdminBankTransfers />} />
           <Route path="glossary" element={<AdminGlossary />} />
           <Route path="newsletter" element={<AdminNewsletter />} />
+          <Route path="chatbot" element={<AdminChatbot />} />
           <Route path="products" element={<AdminProducts />} />
+
           <Route path="orders" element={<AdminOrders />} />
           <Route path="product-add" element={<AddProduct onNotify={showToast} />} />
           <Route path="product-edit/:id" element={<EditProduct onNotify={showToast} />} />
@@ -527,6 +532,7 @@ function App() {
           </a>
         </>
       )}
+      <ChatbotWidget />
       <CookieConsent />
       {import.meta.env.DEV && <Agentation />}
     </div>

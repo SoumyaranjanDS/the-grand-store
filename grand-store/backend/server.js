@@ -21,17 +21,17 @@ let allowedOrigins = process.env.ALLOWED_ORIGINS
       "http://localhost:5173",
       "http://localhost:5174",
       "http://localhost:5175",
-      "http://localhost:56842"
+      "http://localhost:56842",
     ];
 
 const productionDomains = [
   "https://grandstore.yogapranafitness.com",
   "https://www.grandstore.yogapranafitness.com",
   "http://grandstore.yogapranafitness.com",
-  "http://www.grandstore.yogapranafitness.com"
+  "http://www.grandstore.yogapranafitness.com",
 ];
 
-productionDomains.forEach(domain => {
+productionDomains.forEach((domain) => {
   if (!allowedOrigins.includes(domain)) {
     allowedOrigins.push(domain);
   }
@@ -59,8 +59,8 @@ app.use(
     credentials: true,
   }),
 );
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' })); // Added for PayFast ITN form data
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" })); // Added for PayFast ITN form data
 app.use("/uploads", express.static("uploads"));
 
 // Database Connection
@@ -96,6 +96,7 @@ const postnetRoutes = require("./routes/postnetRoutes");
 const payfastRoutes = require("./routes/payfastRoutes");
 const configRoutes = require("./routes/configRoutes");
 const newsletterRoutes = require("./routes/newsletterRoutes");
+const chatbotRoutes = require("./routes/chatbotRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
@@ -119,8 +120,9 @@ app.use("/api/config", configRoutes);
 app.use("/api/trade-enquiries", require("./routes/tradeEnquiryRoutes"));
 app.use("/api/newsletter", newsletterRoutes);
 app.use("/api/advertisements", require("./routes/advertisementRoutes"));
+app.use("/api/chatbot", chatbotRoutes);
 
-// Health check endpoint  
+// Health check endpoint
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "OK", message: "API is running" });
 });
