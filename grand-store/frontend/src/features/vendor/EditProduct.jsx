@@ -213,7 +213,7 @@ export default function EditProduct({ onNotify }) {
 
       setSuccess(true);
       if (onNotify) onNotify('Product updated successfully!');
-      setTimeout(() => navigate('/vendor/products'), 2000);
+      setTimeout(() => navigate(`/product/${id}`), 2000);
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || err.message || 'Failed to update product');
