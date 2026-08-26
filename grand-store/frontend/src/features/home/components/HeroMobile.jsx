@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 
 const images = [
-  "/assets/vendor/premium-bar.png",
-  "/assets/golden-champagne-pour.jpg",
-  "/assets/golden-moet-ice.jpg"
+  "/assets/mobile-hero/premium-bar.jpg",
+  "/assets/mobile-hero/champagne-pour.jpg",
+  "/assets/mobile-hero/moet-ice.jpg"
 ];
 
 export default function HeroMobile() {
