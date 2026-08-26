@@ -291,6 +291,7 @@ export default function AddProduct({ onNotify }) {
                       value={formData.price} 
                       onChange={handleChange} 
                       min="0"
+                      step="any"
                       className="block py-3 px-0 w-full text-base text-[var(--color-ivory)] bg-transparent border-0 border-b border-white/20 appearance-none focus:outline-none focus:ring-0 focus:border-[var(--color-gold)] peer" 
                       placeholder=" " 
                       required 
