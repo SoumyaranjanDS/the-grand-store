@@ -60,6 +60,7 @@ app.use(
   }),
 );
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // Added for PayFast ITN form data
 app.use("/uploads", express.static("uploads"));
 
 // Database Connection
