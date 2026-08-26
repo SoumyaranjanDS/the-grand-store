@@ -285,6 +285,38 @@ export default function ChatbotWidget() {
                     <ExternalLink size={12} />
                   </a>
                 )}
+
+                {/* Suggestion chips after no-match */}
+                {msg.showSuggestions && (
+                  <div style={{ marginTop: '10px' }}>
+                    <div style={{ color: '#666', fontSize: '11px', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                      Try one of these:
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {QUICK_QUESTIONS.map((q) => (
+                        <button
+                          key={q}
+                          onClick={() => handleQuick(q)}
+                          style={{
+                            padding: '5px 11px',
+                            backgroundColor: 'rgba(201,163,91,0.08)',
+                            border: '1px solid rgba(201,163,91,0.25)',
+                            borderRadius: '20px',
+                            color: '#c9a35b',
+                            fontSize: '11px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            letterSpacing: '0.02em',
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(201,163,91,0.18)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(201,163,91,0.08)'; }}
+                        >
+                          {q}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}

@@ -19,24 +19,28 @@ export default function useChatbot() {
     setLoading(true);
 
     try {
-      const res = await api.post("/chatbot/message", { message: text });
+      const res = await api.post('/chatbot/message', { message: text });
       const data = res.data;
-
-      let botText = data.answer;
-      let whatsapp = data.whatsapp || null;
 
       setMessages((prev) => [
         ...prev,
-        { id: Date.now() + 1, from: "bot", text: botText, whatsapp },
+        {
+          id: Date.now() + 1,
+          from: 'bot',
+          text: data.answer,
+          whatsapp: data.whatsapp || null,
+          showSuggestions: !data.matched, // show quick questions again on no match
+        },
       ]);
     } catch {
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now() + 1,
-          from: "bot",
-          text: "Something went wrong. Please try again or contact us on WhatsApp.",
-          whatsapp: "+27765809522",
+          from: 'bot',
+          text: 'Something went wrong. Please try again or contact us on WhatsApp.',
+          whatsapp: '+27765809522',
+          showSuggestions: true,
         },
       ]);
     } finally {
