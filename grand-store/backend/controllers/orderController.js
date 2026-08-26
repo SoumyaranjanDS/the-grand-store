@@ -380,7 +380,8 @@ const getVendorOrders = async (req, res) => {
     const Shipment = require('../models/Shipment');
     const Order = require('../models/Order');
     
-    const filter = req.user.role === 'admin' ? { vendorId: null } : { vendorId: req.user._id };
+    const managesInternalOrders = ['admin', 'super_admin', 'product_manager'].includes(req.user.role);
+    const filter = managesInternalOrders ? { vendorId: null } : { vendorId: req.user._id };
     const shipments = await Shipment.find(filter)
       .sort({ createdAt: -1 })
       .populate('customerId', 'name email');
@@ -395,7 +396,7 @@ const getVendorOrders = async (req, res) => {
       }
 
       let items = masterOrder.orderItems.filter(item => {
-        if (req.user.role === 'admin') return !item.vendorId;
+        if (managesInternalOrders) return !item.vendorId;
         return item.vendorId && item.vendorId.toString() === req.user._id.toString();
       });
       
@@ -407,7 +408,7 @@ const getVendorOrders = async (req, res) => {
         status: shp.status,
         courierName: shp.legs && shp.legs.length > 0 ? shp.legs[0].courierName : 'Vendor Managed',
         shippingCost: shp.customerShippingCharge,
-        trackingNumber: shp.trackingNumber,
+        trackingNumber: shp.mainTrackingNumber,
         deliveryAddress: shp.deliveryAddress,
         customerName: shp.customerId ? shp.customerId.name : 'Guest',
         items: items,
@@ -425,10 +426,53 @@ const getVendorOrders = async (req, res) => {
   }
 };
 
+// @desc    Update a retail shipment's fulfilment status
+// @route   PATCH /api/orders/vendor/sales/:shipmentId/status
+// @access  Private (Vendor/Product Staff)
+const updateShipmentStatus = async (req, res) => {
+  try {
+    const Shipment = require('../models/Shipment');
+    const allowedStatuses = [
+      'Order Confirmed',
+      'Preparing',
+      'Collected',
+      'In Transit',
+      'Out for Delivery',
+      'Delivered',
+      'Delayed',
+      'Failed',
+    ];
+    const status = String(req.body.status || '');
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Invalid shipment status' });
+    }
+
+    const shipment = await Shipment.findById(req.params.shipmentId);
+    if (!shipment) {
+      return res.status(404).json({ message: 'Shipment not found' });
+    }
+
+    const managesInternalOrders = ['admin', 'super_admin', 'product_manager'].includes(req.user.role);
+    const ownsShipment = shipment.vendorId?.toString() === req.user._id.toString();
+    if ((!shipment.vendorId && !managesInternalOrders) || (shipment.vendorId && !ownsShipment)) {
+      return res.status(403).json({ message: 'Not authorized to update this shipment' });
+    }
+
+    shipment.status = status;
+    shipment.actualDeliveryDate = status === 'Delivered' ? new Date() : shipment.actualDeliveryDate;
+    await shipment.save();
+    res.json({ _id: shipment._id, status: shipment.status, actualDeliveryDate: shipment.actualDeliveryDate });
+  } catch (error) {
+    console.error('Update Shipment Status Error:', error);
+    res.status(500).json({ message: 'Server Error updating shipment status' });
+  }
+};
+
 module.exports = {
   addOrderItems,
   getOrderById,
   getVendorOrders,
+  updateShipmentStatus,
   getMyOrders,
   processOrderPayment // Exported for ITN webhook
 };

@@ -4,19 +4,29 @@ const {
   addOrderItems,
   getOrderById,
   getVendorOrders,
+  updateShipmentStatus,
   getMyOrders
 } = require('../controllers/orderController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, requireRoles, financeStaff } = require('../middleware/authMiddleware');
 
 router.route('/').post(protect, addOrderItems);
 router.route('/myorders').get(protect, getMyOrders);
-router.route('/vendor/sales').get(protect, getVendorOrders);
+router.route('/vendor/sales').get(
+  protect,
+  requireRoles('vendor_active', 'admin', 'super_admin', 'product_manager'),
+  getVendorOrders,
+);
+router.route('/vendor/sales/:shipmentId/status').patch(
+  protect,
+  requireRoles('vendor_active', 'admin', 'super_admin', 'product_manager'),
+  updateShipmentStatus,
+);
 router.route('/:id').get(protect, getOrderById);
 
 // Bank Transfer Routes
 const { uploadProofOfPayment, approvePayment, rejectPayment } = require('../controllers/bankTransferController');
 router.route('/:orderId/bank-transfer/upload').post(protect, uploadProofOfPayment);
-router.route('/:orderId/bank-transfer/approve').post(protect, approvePayment); // In real world, add admin protect
-router.route('/:orderId/bank-transfer/reject').post(protect, rejectPayment); // In real world, add admin protect
+router.route('/:orderId/bank-transfer/approve').post(protect, financeStaff, approvePayment);
+router.route('/:orderId/bank-transfer/reject').post(protect, financeStaff, rejectPayment);
 
 module.exports = router;

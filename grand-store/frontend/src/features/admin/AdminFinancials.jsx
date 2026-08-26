@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { DollarSign, ArrowUpRight, ArrowDownRight, TrendingUp, History, Download } from 'lucide-react';
+import { DollarSign, ArrowUpRight, ArrowDownRight, TrendingUp, History, Download, FileSpreadsheet } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { downloadAccountingWorkbook } from '../../utils/accountingWorkbook';
 
 export default function AdminFinancials({ hideHeader = false }) {
   const { user } = useAuth();
@@ -14,6 +15,7 @@ export default function AdminFinancials({ hideHeader = false }) {
   const [activeTab, setActiveTab] = useState('shop');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [exporting, setExporting] = useState(false);
 
   const formatMoney = (amount) => {
     return new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(amount || 0);
@@ -23,7 +25,7 @@ export default function AdminFinancials({ hideHeader = false }) {
     const fetchFinanceData = async () => {
       try {
         const API_URL = import.meta.env.VITE_API_URL || '';
-        const res = await axios.get(`${API_URL}/api/admin/finance`, {
+        const res = await axios.get(`${API_URL}/api/admin/finance?limit=2000`, {
           headers: { Authorization: `Bearer ${user?.token}` }
         });
         setMetrics(res.data.metrics);
@@ -41,47 +43,18 @@ export default function AdminFinancials({ hideHeader = false }) {
     };
 
     fetchFinanceData();
-  }, []);
+  }, [user?.token]);
 
-  const exportToCSV = () => {
-    let csvContent = "data:text/csv;charset=utf-8,";
-    const fC = (val) => `"R${Number(val || 0).toFixed(2)}"`;
-    
-    if (activeTab === 'shop') {
-      csvContent += "Order Ref,Date,Products,Shipping,Ship Margin,VAT,Total Paid,Commission,Vendor Payout\n";
-      shopOrders.forEach(order => {
-        const totalVendorPayout = order.vendorPayables?.reduce((sum, p) => sum + (p.netPayable || 0), 0) || 0;
-        let customerShipping = order.shippingCost || 0;
-        let actualShipping = order.shipments?.reduce((sum, shp) => sum + (shp.actualShippingCost || 0), 0) || 0;
-        const shippingMargin = customerShipping - actualShipping;
-        
-        csvContent += `${order.orderId || order.transactionId},${new Date(order.createdAt).toLocaleDateString()},${fC(order.subTotal)},${fC(customerShipping)},${fC(shippingMargin)},${fC(order.vatAmount)},${fC(order.totalPrice)},${fC(order.commissionAmount)},${fC(totalVendorPayout)}\n`;
-      });
-    } else if (activeTab === 'events') {
-      csvContent += "Ticket Ref,Date,Subtotal,VAT,Customer Paid,Commission,Organizer Payout\n";
-      eventBookings.forEach(booking => {
-        csvContent += `${booking.gsReference || booking.ticketId},${new Date(booking.bookingDate || booking.createdAt).toLocaleDateString()},${fC(booking.subTotal)},${fC(booking.vatAmount)},${fC(booking.totalPrice)},${fC(booking.commissionAmount)},${fC(booking.organizerPayable)}\n`;
-      });
-    } else if (activeTab === 'auctions') {
-      csvContent += "Order Ref,Date,Hammer Price,VAT,Buyer Paid,Commission,Vendor Payout\n";
-      auctionOrders.forEach(order => {
-        const totalVendorPayout = order.vendorPayables?.reduce((sum, p) => sum + (p.netPayable || 0), 0) || 0;
-        csvContent += `${order.transactionId || order.orderId},${new Date(order.createdAt).toLocaleDateString()},${fC(order.subTotal)},${fC(order.vatAmount)},${fC(order.totalPrice)},${fC(order.commissionAmount)},${fC(totalVendorPayout)}\n`;
-      });
-    } else if (activeTab === 'vendor') {
-      csvContent += "Ref ID,Date,Vendor,Amount Paid,Gateway\n";
-      vendorPayments.forEach(txn => {
-        csvContent += `${txn.reference},${new Date(txn.createdAt || txn.date).toLocaleDateString()},${txn.user?.name || txn.user?.email || 'N/A'},${fC(txn.amount)},${txn.gateway}\n`;
-      });
+  const exportToExcel = async () => {
+    try {
+      setExporting(true);
+      await downloadAccountingWorkbook({ metrics, transactions, shopOrders, auctionOrders, eventBookings, vendorPayments });
+    } catch (exportError) {
+      console.error(exportError);
+      setError('Could not create the Excel report. Please try again.');
+    } finally {
+      setExporting(false);
     }
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `grand_store_financials_${activeTab}_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   if (loading) return <div className="text-white p-8 text-center animate-pulse">Loading financial data...</div>;
@@ -141,7 +114,7 @@ export default function AdminFinancials({ hideHeader = false }) {
       <div className="bg-[#111] border border-white/10 rounded-sm overflow-hidden mt-8">
         <div className="px-6 py-4 border-b border-white/10 bg-black/40 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
           <h3 className="text-white font-serif text-xl">Revenue Breakdown</h3>
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setActiveTab('shop')}
               className={`px-4 py-2 text-xs font-bold tracking-wider uppercase rounded-sm transition-colors ${
@@ -174,13 +147,22 @@ export default function AdminFinancials({ hideHeader = false }) {
             >
               Vendor Reg.
             </button>
-            <div className="w-px h-6 bg-white/10 mx-2 self-center"></div>
             <button
-              onClick={exportToCSV}
-              className="px-4 py-2 text-xs font-bold tracking-wider uppercase rounded-sm bg-white/5 text-white hover:bg-white/10 hover:text-[#e6c97a] transition-colors flex items-center gap-2"
-              title="Export Current View to CSV"
+              onClick={() => setActiveTab('transactions')}
+              className={`px-4 py-2 text-xs font-bold tracking-wider uppercase rounded-sm transition-colors ${
+                activeTab === 'transactions' ? 'bg-[#b58b38] text-black' : 'bg-white/5 text-[#888] hover:bg-white/10 hover:text-white'
+              }`}
             >
-              <Download size={14} /> Export CSV
+              Ledger
+            </button>
+            <button
+              onClick={exportToExcel}
+              disabled={exporting}
+              className="px-4 py-2 text-xs font-bold tracking-wider uppercase rounded-sm bg-[#c9a35b] text-black hover:bg-[#e1bd70] disabled:opacity-50 transition-colors flex items-center gap-2"
+              title="Download the complete accountant workbook"
+            >
+              {exporting ? <FileSpreadsheet size={14} className="animate-pulse" /> : <Download size={14} />}
+              {exporting ? 'Creating…' : 'Excel report'}
             </button>
           </div>
         </div>
@@ -339,11 +321,51 @@ export default function AdminFinancials({ hideHeader = false }) {
                 <tbody className="text-sm text-gray-300">
                   {vendorPayments.map(txn => (
                     <tr key={txn._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                      <td className="p-4 font-mono text-xs text-[#b58b38]">{txn.reference}</td>
+                      <td className="p-4 font-mono text-xs text-[#b58b38]">{txn.gsReference || txn.reference}</td>
                       <td className="p-4 text-xs">{new Date(txn.createdAt || txn.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                      <td className="p-4 text-xs">{txn.user?.name || txn.user?.email || 'N/A'}</td>
+                      <td className="p-4 text-xs">{txn.customer?.name || txn.customer?.email || txn.user?.name || txn.user?.email || 'N/A'}</td>
                       <td className="p-4 text-right font-bold text-white">{formatMoney(txn.amount)}</td>
                       <td className="p-4 text-xs text-[#888]">{txn.gateway}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        )}
+
+        {activeTab === 'transactions' && (
+          transactions.length === 0 ? (
+            <div className="p-12 text-center text-[#666]">
+              <History size={48} className="mx-auto mb-4 opacity-20" />
+              <p>No ledger transactions yet.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse whitespace-nowrap">
+                <thead>
+                  <tr className="bg-black/60 text-[#888] text-[10px] uppercase tracking-wider">
+                    <th className="p-4 font-medium">GS Reference</th>
+                    <th className="p-4 font-medium">Date</th>
+                    <th className="p-4 font-medium">Module</th>
+                    <th className="p-4 font-medium">Type</th>
+                    <th className="p-4 font-medium">Status</th>
+                    <th className="p-4 font-medium text-right">Gross</th>
+                    <th className="p-4 font-medium text-right">Net</th>
+                    <th className="p-4 font-medium">Gateway</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm text-gray-300">
+                  {transactions.map((transaction) => (
+                    <tr key={transaction._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                      <td className="p-4 font-mono text-xs text-[#b58b38]">{transaction.gsReference}</td>
+                      <td className="p-4 text-xs">{new Date(transaction.createdAt).toLocaleDateString('en-ZA')}</td>
+                      <td className="p-4 text-xs uppercase">{transaction.module}</td>
+                      <td className="p-4 text-xs uppercase">{transaction.type}</td>
+                      <td className="p-4 text-xs uppercase">{transaction.status}</td>
+                      <td className="p-4 text-right">{formatMoney(transaction.amount)}</td>
+                      <td className="p-4 text-right">{formatMoney(transaction.netAmount)}</td>
+                      <td className="p-4 text-xs">{transaction.gateway}</td>
                     </tr>
                   ))}
                 </tbody>

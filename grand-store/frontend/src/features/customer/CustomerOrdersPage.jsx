@@ -72,19 +72,19 @@ export default function CustomerOrdersPage() {
   );
 
   return (
-    <div className="w-full max-w-5xl mx-auto flex flex-col gap-8 md:gap-12">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-6 mb-10">
+    <div className="customer-orders-page w-full max-w-5xl mx-auto flex flex-col gap-6 md:gap-12">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 border-b border-white/10 pb-5 md:pb-6 mb-2 md:mb-10">
         <div>
-          <h1 className="text-[var(--color-ivory)] font-serif text-3xl md:text-4xl mb-2 flex items-center gap-4">
-            <div className="p-3 bg-[var(--color-gold)]/10 text-gold-gradient rounded-xl border border-[var(--color-gold)]/20 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
-              <Package size={28} />
+          <h1 className="text-[var(--color-ivory)] font-serif text-3xl md:text-4xl mb-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <div className="p-2.5 md:p-3 bg-[var(--color-gold)]/10 text-gold-gradient rounded-xl border border-[var(--color-gold)]/20 shadow-[0_0_15px_rgba(212,175,55,0.1)]">
+              <Package size={24} className="md:w-7 md:h-7" />
             </div>
             Order{" "}
-            <span className="text-gold-gradient ml-2 text-5xl font-normal drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">
+            <span className="text-gold-gradient text-3xl sm:text-4xl md:text-5xl font-normal drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">
               History
             </span>
           </h1>
-          <p className="text-[var(--color-ivory-muted)] text-sm max-w-2xl font-light mt-4">
+          <p className="text-[var(--color-ivory-muted)] text-sm max-w-2xl font-light mt-2 md:mt-4 leading-relaxed">
             Review all your past purchases and trace your private collection
             history.
           </p>
@@ -129,18 +129,18 @@ export default function CustomerOrdersPage() {
           </button>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {filteredOrders.map((order) => (
             <div
               key={order._id}
-              className="bg-white/[0.02] backdrop-blur-md border border-white/[0.05] hover:border-white/10 hover:bg-white/[0.04] transition-all rounded-3xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
+              className="bg-white/[0.02] backdrop-blur-md border border-white/[0.07] hover:border-white/10 hover:bg-white/[0.04] transition-all rounded-2xl md:rounded-3xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
             >
-              <div className="p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-white/[0.05]">
-                <div>
-                  <div className="text-gold-gradient text-sm tracking-widest uppercase mb-2 font-bold flex items-center gap-2">
+              <div className="p-4 sm:p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6 border-b border-white/[0.05]">
+                <div className="min-w-0 w-full md:w-auto">
+                  <div className="text-gold-gradient text-xs sm:text-sm tracking-wider sm:tracking-widest uppercase mb-2 font-bold truncate">
                     {order.invoiceNumber || order._id}
                   </div>
-                  <div className="text-sm text-[var(--color-ivory-muted)] flex items-center gap-3">
+                  <div className="text-xs sm:text-sm text-[var(--color-ivory-muted)] flex flex-wrap items-center gap-2 sm:gap-3">
                     <span>
                       {new Date(order.createdAt).toLocaleDateString("en-US", {
                         year: "numeric",
@@ -155,16 +155,17 @@ export default function CustomerOrdersPage() {
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
-                  <div className="text-left md:text-right">
-                    <div className="text-sm text-[var(--color-ivory-muted)] mb-1">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 w-full md:w-auto sm:justify-between md:justify-end">
+                  <div className="flex sm:block items-end justify-between text-left sm:text-right border-t border-white/5 sm:border-0 pt-3 sm:pt-0">
+                    <div className="text-xs sm:text-sm text-[var(--color-ivory-muted)] mb-0 sm:mb-1">
                       Order Total
                     </div>
-                    <div className="text-2xl font-serif text-[var(--color-ivory)]">
-                      <Price amount={order.totalPrice} />
-                    </div>
-                    <div
-                      className={`text-xs mt-1 font-bold tracking-widest uppercase ${
+                    <div className="text-right">
+                      <div className="text-2xl font-serif text-[var(--color-ivory)]">
+                        <Price amount={order.totalPrice} />
+                      </div>
+                      <div
+                        className={`text-[10px] sm:text-xs mt-1 font-bold tracking-widest uppercase ${
                         order.paymentStatus === "Pending" ||
                         order.paymentStatus === "Awaiting_Approval"
                           ? "text-blue-400"
@@ -172,16 +173,17 @@ export default function CustomerOrdersPage() {
                               order.paymentStatus === "Rejected"
                             ? "text-red-500"
                             : "text-gold-gradient"
-                      }`}
-                    >
-                      {order.paymentStatus
-                        ? order.paymentStatus.replace("_", " ")
-                        : "Processing"}
+                        }`}
+                      >
+                        {order.paymentStatus
+                          ? order.paymentStatus.replace("_", " ")
+                          : "Processing"}
+                      </div>
                     </div>
                   </div>
                   <button
                     onClick={() => navigate(`/customer/order/${order._id}`)}
-                    className="px-6 py-3 rounded-full bg-[var(--color-gold)]/10 text-gold-gradient border border-[var(--color-gold)]/20 hover:bg-gold-gradient hover:text-black transition-colors text-xs font-bold uppercase tracking-widest flex items-center gap-2"
+                    className="w-full sm:w-auto min-h-11 px-5 sm:px-6 py-3 rounded-xl sm:rounded-full bg-[var(--color-gold)]/10 text-gold-gradient border border-[var(--color-gold)]/20 hover:bg-gold-gradient hover:text-black transition-colors text-[10px] sm:text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2"
                   >
                     {order.paymentMethod === "Bank Transfer" &&
                     order.paymentStatus === "Pending"
@@ -198,14 +200,14 @@ export default function CustomerOrdersPage() {
                 </div>
               </div>
 
-              <div className="p-6 md:px-8 bg-black/20">
-                <div className="flex gap-4 overflow-x-auto custom-scrollbar pb-2">
+              <div className="p-4 sm:p-6 md:px-8 bg-black/20">
+                <div className="grid grid-cols-1 md:flex gap-3 md:gap-4 md:overflow-x-auto custom-scrollbar md:pb-2">
                   {order.orderItems?.map((item, idx) => (
                     <div
                       key={idx}
-                      className="flex-shrink-0 w-64 bg-white/[0.02] border border-white/[0.05] rounded-xl p-4 flex gap-4 items-center"
+                      className="w-full md:w-64 md:flex-shrink-0 bg-white/[0.025] border border-white/[0.07] rounded-xl p-3 sm:p-4 flex gap-3 sm:gap-4 items-center"
                     >
-                      <div className="w-16 h-16 rounded-lg bg-black border border-white/10 flex items-center justify-center overflow-hidden shrink-0 p-1">
+                      <div className="w-14 h-16 sm:w-16 sm:h-16 rounded-lg bg-black border border-white/10 flex items-center justify-center overflow-hidden shrink-0 p-1">
                         {item.image ? (
                           <img
                             src={item.image}

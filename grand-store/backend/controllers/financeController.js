@@ -9,33 +9,45 @@ const Booking = require('../models/Booking');
 // @access  Private/Admin
 const getAdminFinanceOverview = async (req, res) => {
   try {
-    const transactions = await Transaction.find().sort({ createdAt: -1 });
+    const requestedLimit = Number.parseInt(req.query.limit, 10);
+    const limit = Math.min(Math.max(Number.isFinite(requestedLimit) ? requestedLimit : 250, 1), 2000);
+    const transactions = await Transaction.find()
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .populate('customer', 'name email')
+      .populate('vendor', 'name email');
     const shopOrders = await Order.find({ transactionId: { $regex: /SHP/ } })
       .sort({ createdAt: -1 })
-      .limit(50)
+      .limit(limit)
       .populate('user', 'name email')
       .populate('shipments');
-    const auctionOrders = await Order.find({ transactionId: { $regex: /AUC/ } }).sort({ createdAt: -1 }).limit(50).populate('user', 'name email');
-    const eventBookings = await Booking.find().sort({ createdAt: -1 }).limit(50).populate('user', 'name email');
-    const vendorPayments = await Transaction.find({ reference: { $regex: /^VND-/ } }).sort({ createdAt: -1 }).limit(50).populate('user', 'name email');
+    const auctionOrders = await Order.find({ transactionId: { $regex: /AUC/ } }).sort({ createdAt: -1 }).limit(limit).populate('user', 'name email');
+    const eventBookings = await Booking.find().sort({ createdAt: -1 }).limit(limit).populate('user', 'name email');
+    const vendorPayments = await Transaction.find({ module: 'vendor', type: 'payment' })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .populate('customer', 'name email');
+    const metricRows = await Transaction.aggregate([
+      { $group: { _id: { type: '$type', status: '$status' }, amount: { $sum: '$amount' } } },
+    ]);
 
     let totalProcessed = 0;
     let totalPlatformRevenue = 0;
     let totalPendingPayables = 0;
     let totalVatCollected = 0;
 
-    transactions.forEach(txn => {
-      if (txn.type === 'payment' && txn.status === 'cleared') {
-        totalProcessed += txn.amount;
+    metricRows.forEach((row) => {
+      if (row._id.type === 'payment' && row._id.status === 'cleared') {
+        totalProcessed += row.amount;
       }
-      if (txn.type === 'commission' && txn.status === 'cleared') {
-        totalPlatformRevenue += txn.amount;
+      if (row._id.type === 'commission' && row._id.status === 'cleared') {
+        totalPlatformRevenue += row.amount;
       }
-      if (txn.type === 'vat' && txn.status === 'cleared') {
-        totalVatCollected += txn.amount;
+      if (row._id.type === 'vat' && row._id.status === 'cleared') {
+        totalVatCollected += row.amount;
       }
-      if (txn.type === 'payout' && txn.status === 'pending') {
-        totalPendingPayables += txn.amount;
+      if (row._id.type === 'payout' && row._id.status === 'pending') {
+        totalPendingPayables += row.amount;
       }
     });
 
@@ -46,7 +58,7 @@ const getAdminFinanceOverview = async (req, res) => {
         totalPendingPayables,
         totalVatCollected
       },
-      transactions: transactions.slice(0, 50),
+      transactions,
       orders: shopOrders,
       shopOrders,
       auctionOrders,

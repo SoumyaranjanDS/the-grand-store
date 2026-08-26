@@ -6,21 +6,27 @@ import {
   MapPin,
   Search,
   Truck,
-  Navigation,
-  ExternalLink,
 } from "lucide-react";
 import { formatCartPrice } from "../../data";
 import Price from '../../components/ui/Price';
+
+const SHIPMENT_STATUSES = [
+  'Order Confirmed',
+  'Preparing',
+  'Collected',
+  'In Transit',
+  'Out for Delivery',
+  'Delivered',
+  'Delayed',
+  'Failed',
+];
 
 export default function AdminOrders() {
   const { user } = useAuth();
   const [shipments, setShipments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-
-  const [vendorProfile, setVendorProfile] = useState(null);
-  const [postnetStores, setPostnetStores] = useState(null);
-  const [postnetLoading, setPostnetLoading] = useState(false);
+  const [updatingId, setUpdatingId] = useState(null);
 
   useEffect(() => {
     const fetchSales = async () => {
@@ -38,19 +44,8 @@ export default function AdminOrders() {
           setShipments(data);
         }
 
-        // Also fetch vendor profile to get address for PostNet Locator
-        const profRes = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/vendor/shipping-profile`,
-          {
-            headers: { Authorization: `Bearer ${user.token}` },
-          },
-        );
-        const profData = await profRes.json();
-        if (profRes.ok) {
-          setVendorProfile(profData);
-        }
       } catch (error) {
-        console.error("Failed to fetch sales or profile", error);
+        console.error("Failed to fetch retail orders", error);
       } finally {
         setLoading(false);
       }
@@ -60,38 +55,31 @@ export default function AdminOrders() {
     }
   }, [user]);
 
-  // Fetch PostNet stores when vendor profile is loaded and has an address
-  useEffect(() => {
-    const fetchPostnetStores = async () => {
-      if (!vendorProfile?.pickupAddress) return;
-      const addr = vendorProfile.pickupAddress;
-      const addressString = `${addr.city || ""}, ${addr.country || "South Africa"}`;
-
-      try {
-        setPostnetLoading(true);
-        let queryParams = `address=${encodeURIComponent(addressString)}`;
-        if (addr.lat && addr.lng) {
-            queryParams += `&lat=${addr.lat}&lng=${addr.lng}`;
-        }
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/postnet/locator?${queryParams}`,
-          {
-            headers: { Authorization: `Bearer ${user.token}` },
+  const updateStatus = async (shipmentId, status) => {
+    try {
+      setUpdatingId(shipmentId);
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/orders/vendor/sales/${shipmentId}/status`,
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            'Content-Type': 'application/json',
           },
-        );
-        const data = await res.json();
-        if (res.ok && data.stores) {
-          setPostnetStores(data.stores);
-        }
-      } catch (error) {
-        console.error("Failed to fetch PostNet stores:", error);
-      } finally {
-        setPostnetLoading(false);
-      }
-    };
-
-    fetchPostnetStores();
-  }, [vendorProfile, user.token]);
+          body: JSON.stringify({ status }),
+        },
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to update shipment');
+      setShipments((current) => current.map((shipment) => (
+        shipment._id === shipmentId ? { ...shipment, status: data.status } : shipment
+      )));
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   const goldTextClass =
     "text-[#c9a35b] ";
@@ -116,7 +104,7 @@ export default function AdminOrders() {
             <span className={`${goldTextClass} ml-2`}>Order History</span>
           </h1>
           <p className="text-[var(--color-ivory-muted)] text-sm max-w-2xl font-light">
-            View the order history for your retail products.
+            Review Grand Store retail shipments and update their fulfilment status.
           </p>
         </div>
 
@@ -152,71 +140,6 @@ export default function AdminOrders() {
         </div>
       ) : (
         <div className="space-y-10">
-          {/* PostNet Drop-off Stores Widget */}
-          {postnetLoading ? (
-            <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-6 text-center text-sm text-[var(--color-ivory-muted)]">
-              Locating nearest PostNet stores for drop-off...
-            </div>
-          ) : postnetStores && postnetStores.length === 0 ? (
-            <div className="bg-[#0a0a0a] border border-[var(--color-gold)]/20 rounded-2xl p-6 shadow-lg shadow-[var(--color-gold)]/5 flex items-center justify-center min-h-[100px]">
-              <p className="text-[var(--color-ivory-muted)] text-sm">No nearby PostNet stores found within 50km.</p>
-            </div>
-          ) : (
-            postnetStores &&
-            postnetStores.length > 0 && (
-              <div className="bg-[#0a0a0a] border border-[var(--color-gold)]/20 rounded-2xl p-6 shadow-lg shadow-[var(--color-gold)]/5 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--color-gold)]/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-
-                <div className="flex items-center gap-3 mb-6 relative z-10">
-                  <div className="p-2 bg-[var(--color-gold)]/10 text-[var(--color-gold)] rounded-lg">
-                    <Navigation size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-serif text-[var(--color-ivory)]">
-                      Nearest PostNet Drop-off Locations
-                    </h3>
-                    <p className="text-xs text-[var(--color-ivory-muted)]">
-                      Based on your pickup address:{" "}
-                      {vendorProfile?.pickupAddress?.city}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
-                  {postnetStores.map((store, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-white/[0.02] border border-white/10 hover:border-[var(--color-gold)]/30 rounded-xl p-4 transition-colors group"
-                    >
-                      <a 
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.store + ' ' + store.address)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex justify-between items-start gap-2"
-                      >
-                        <h4 className="text-sm font-bold text-[var(--color-ivory)] mb-1 group-hover:text-[#e1bd70] transition-colors">
-                          {store.store}
-                        </h4>
-                        <ExternalLink size={14} className="text-[var(--color-ivory-muted)] opacity-50 group-hover:text-[var(--color-gold)] transition-colors mt-0.5 flex-shrink-0" />
-                      </a>
-                      <p className="text-xs text-[var(--color-ivory-muted)] mb-3 leading-relaxed">
-                        {store.address}
-                      </p>
-                      <div className="flex justify-between items-center border-t border-white/5 pt-3">
-                        <span className="text-xs font-mono text-[var(--color-gold)]">
-                          {store.telephone}
-                        </span>
-                        <span className="text-[10px] uppercase tracking-widest bg-[var(--color-gold)]/10 text-[var(--color-gold)] px-2 py-1 rounded">
-                          {store.distance ? store.distance.toFixed(1) : "?"} KM
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )
-          )}
-
           <div className="space-y-6">
             {filteredShipments.map((shp) => (
               <div
@@ -252,9 +175,15 @@ export default function AdminOrders() {
                       <div className="text-[10px] text-[var(--color-ivory-muted)] uppercase tracking-widest mb-1">
                         Status
                       </div>
-                      <div className="text-sm text-[var(--color-ivory)] font-medium px-2 py-1 bg-gold/10 text-gold rounded border border-gold/20 inline-block">
-                        {shp.status}
-                      </div>
+                      <select
+                        value={shp.status}
+                        disabled={updatingId === shp._id}
+                        onChange={(event) => updateStatus(shp._id, event.target.value)}
+                        className="text-xs text-[var(--color-ivory)] bg-[#15130f] px-3 py-2 rounded border border-[var(--color-gold)]/25 outline-none disabled:opacity-50"
+                        aria-label={`Shipment status for ${shp.shipmentId}`}
+                      >
+                        {SHIPMENT_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
+                      </select>
                     </div>
                   </div>
                   <div className="text-left md:text-right">

@@ -1,6 +1,9 @@
 const Product = require('../models/Product');
 const Vendor = require('../models/Vendor');
 
+const INTERNAL_PRODUCT_ROLES = ['admin', 'super_admin', 'product_manager'];
+const canManageInternalProducts = (user) => INTERNAL_PRODUCT_ROLES.includes(user?.role);
+
 // @desc    Fetch all products
 // @route   GET /api/products
 // @access  Public
@@ -73,7 +76,7 @@ const getProductById = async (req, res) => {
 // @access  Private (Vendor/Admin)
 const createProduct = async (req, res) => {
   try {
-    if (!['vendor_active', 'admin', 'super_admin', 'product_manager'].includes(req.user.role)) {
+    if (req.user.role !== 'vendor_active' && !canManageInternalProducts(req.user)) {
       return res.status(403).json({ message: 'Only approved vendors or admins can add products' });
     }
 
@@ -103,7 +106,7 @@ const createProduct = async (req, res) => {
       gallery = [];
     }
 
-    if (type && type.toLowerCase() === 'wine' && !factSheetPdf && req.user.role !== 'admin') {
+    if (type && type.toLowerCase() === 'wine' && !factSheetPdf && !canManageInternalProducts(req.user)) {
       return res.status(400).json({ message: 'Fact Sheet PDF is required for Wine products' });
     }
 
@@ -122,7 +125,7 @@ const createProduct = async (req, res) => {
       flavorProfile: flavorProfile && typeof flavorProfile === 'string' ? JSON.parse(flavorProfile) : flavorProfile || [],
       foodPairing: foodPairing && typeof foodPairing === 'string' ? JSON.parse(foodPairing) : foodPairing || [],
       stock: Number(stock) || 0,
-      vendorId: ['admin', 'super_admin', 'product_manager'].includes(req.user.role) ? null : req.user._id,
+      vendorId: canManageInternalProducts(req.user) ? null : req.user._id,
       approvalStatus: 'approved'
     });
 
@@ -138,10 +141,10 @@ const createProduct = async (req, res) => {
 // @access  Private (Vendor/Admin)
 const getVendorProducts = async (req, res) => {
   try {
-    let filter = { vendorId: req.user._id };
-    if (['admin', 'super_admin', 'product_manager'].includes(req.user.role)) {
-      filter = {};
+    if (req.user.role !== 'vendor_active' && !canManageInternalProducts(req.user)) {
+      return res.status(403).json({ message: 'Product management access is required' });
     }
+    const filter = canManageInternalProducts(req.user) ? { vendorId: null } : { vendorId: req.user._id };
     const products = await Product.find(filter).sort({ createdAt: -1 });
     res.json(products);
   } catch (error) {
@@ -160,7 +163,9 @@ const updateProduct = async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    if (!['admin', 'super_admin', 'product_manager'].includes(req.user.role) && product.vendorId?.toString() !== req.user._id.toString()) {
+    const ownsVendorProduct = product.vendorId?.toString() === req.user._id.toString();
+    const managesInternalProduct = canManageInternalProducts(req.user) && !product.vendorId;
+    if (!ownsVendorProduct && !managesInternalProduct) {
       return res.status(403).json({ message: 'Not authorized to edit this product' });
     }
 
@@ -215,7 +220,9 @@ const deleteProduct = async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    if (!['admin', 'super_admin', 'product_manager'].includes(req.user.role) && product.vendorId?.toString() !== req.user._id.toString()) {
+    const ownsVendorProduct = product.vendorId?.toString() === req.user._id.toString();
+    const managesInternalProduct = canManageInternalProducts(req.user) && !product.vendorId;
+    if (!ownsVendorProduct && !managesInternalProduct) {
       return res.status(403).json({ message: 'Not authorized to delete this product' });
     }
 
