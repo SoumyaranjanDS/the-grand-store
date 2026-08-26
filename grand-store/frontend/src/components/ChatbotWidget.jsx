@@ -9,11 +9,32 @@ const QUICK_QUESTIONS = [
   'What is your return policy?',
   'How do I become a vendor?',
   'How do auctions work?',
+  'How do I place an order?',
+  'Can I cancel my order?',
+  'How do I get my invoice?',
+  'Can I modify my order after placing it?',
+  'What is PayFast and how does it work?',
+  'My payment failed. What should I do?',
+  'How do refunds work?',
+  'Where do you deliver?',
+  'Can I collect my order at a Postnet branch?',
+  'Do you offer free shipping?',
+  'I received a damaged item. What do I do?',
+  'I received the wrong item. What should I do?',
+  'A product I want is out of stock. When will it be available?',
+  'Do you sell alcohol?',
+  'Are your products genuine and authentic?',
+  'Can I leave a review for a product?',
+  'Can I compare products?',
+  'How do I add items to my wishlist?',
+  'How do I create an account?',
+  'I forgot my password. How do I reset it?',
 ];
 
 export default function ChatbotWidget() {
   const [open, setOpen] = useState(false);
   const [showTeaser, setShowTeaser] = useState(false);
+  const [showAllQuestions, setShowAllQuestions] = useState(false);
   const [input, setInput] = useState('');
   const { messages, loading, sendMessage } = useChatbot();
   const messagesEndRef = useRef(null);
@@ -293,7 +314,7 @@ export default function ChatbotWidget() {
                       Try one of these:
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                      {QUICK_QUESTIONS.map((q) => (
+                      {(showAllQuestions ? QUICK_QUESTIONS : QUICK_QUESTIONS.slice(0, 6)).map((q) => (
                         <button
                           key={q}
                           onClick={() => handleQuick(q)}
@@ -314,6 +335,26 @@ export default function ChatbotWidget() {
                           {q}
                         </button>
                       ))}
+                      {QUICK_QUESTIONS.length > 6 && (
+                        <button
+                          onClick={() => setShowAllQuestions(!showAllQuestions)}
+                          style={{
+                            padding: '5px 11px',
+                            backgroundColor: 'transparent',
+                            border: '1px dashed rgba(201,163,91,0.5)',
+                            borderRadius: '20px',
+                            color: '#c9a35b',
+                            fontSize: '11px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            letterSpacing: '0.02em',
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(201,163,91,0.05)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                        >
+                          {showAllQuestions ? 'Show Less' : `+${QUICK_QUESTIONS.length - 6} More`}
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -372,7 +413,7 @@ export default function ChatbotWidget() {
                 Popular questions
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {QUICK_QUESTIONS.map((q) => (
+                {(showAllQuestions ? QUICK_QUESTIONS : QUICK_QUESTIONS.slice(0, 6)).map((q) => (
                   <button
                     key={q}
                     onClick={() => handleQuick(q)}
@@ -393,6 +434,26 @@ export default function ChatbotWidget() {
                     {q}
                   </button>
                 ))}
+                {QUICK_QUESTIONS.length > 6 && (
+                  <button
+                    onClick={() => setShowAllQuestions(!showAllQuestions)}
+                    style={{
+                      padding: '6px 12px',
+                      backgroundColor: 'transparent',
+                      border: '1px dashed rgba(201,163,91,0.5)',
+                      borderRadius: '20px',
+                      color: '#c9a35b',
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      letterSpacing: '0.02em',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(201,163,91,0.05)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                  >
+                    {showAllQuestions ? 'Show Less' : `+${QUICK_QUESTIONS.length - 6} More`}
+                  </button>
+                )}
               </div>
             </div>
           )}
