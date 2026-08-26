@@ -405,8 +405,7 @@ export default function EditProduct({ onNotify }) {
                   <Building2 size={24} className="text-[#e1bd70]" />
                   Advanced Channels
                 </h2>
-                
-                <div className="border-b border-white/10 pb-6">
+                                <div className="border-b border-white/10 pb-6">
                   <h3 className="text-lg font-serif text-[var(--color-ivory)] mb-6">Wholesale & Trade Pricing</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
                     <div className="relative z-0 w-full group">
