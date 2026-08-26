@@ -1,9 +1,44 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
-import { Building2, PlusCircle, Package, Clock, CheckCircle2, XCircle, User, Eye, Edit, Trash2 } from 'lucide-react';
+import { Package, Clock, CheckCircle2, XCircle, Eye, Edit, Trash2, Search, X } from 'lucide-react';
 import Price from '../../components/ui/Price';
+
+const matchesProductSearch = (product, query) => {
+  const searchableFields = [
+    product.name,
+    product.brand,
+    product.type,
+    product.category,
+    product.subcategory,
+    product.country,
+    product.id,
+    product._id,
+    ...(Array.isArray(product.tags) ? product.tags : []),
+  ];
+
+  return searchableFields.some((value) =>
+    String(value || '').toLowerCase().includes(query)
+  );
+};
+
+const getProductSearchRank = (product, query) => {
+  const name = String(product.name || '').toLowerCase();
+  const brand = String(product.brand || '').toLowerCase();
+  const type = String(product.type || product.category || '').toLowerCase();
+  const productId = String(product.id || product._id || '').toLowerCase();
+
+  if (name === query) return 0;
+  if (name.startsWith(query)) return 1;
+  if (name.includes(query)) return 2;
+  if (brand.startsWith(query)) return 3;
+  if (brand.includes(query)) return 4;
+  if (type.startsWith(query)) return 5;
+  if (type.includes(query)) return 6;
+  if (productId.startsWith(query)) return 7;
+  return 8;
+};
 
 export default function AdminProducts() {
   const { user } = useAuth();
@@ -12,9 +47,32 @@ export default function AdminProducts() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const categories = ['All', ...new Set(products.map(p => p.type || 'Other'))];
-  const filteredProducts = selectedCategory === 'All' ? products : products.filter(p => (p.type || 'Other') === selectedCategory);
+  const categories = useMemo(
+    () => ['All', ...new Set(products.map((product) => product.type || 'Other'))],
+    [products]
+  );
+
+  const categoryProducts = useMemo(
+    () => selectedCategory === 'All'
+      ? products
+      : products.filter((product) => (product.type || 'Other') === selectedCategory),
+    [products, selectedCategory]
+  );
+
+  const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+  const filteredProducts = useMemo(() => {
+    if (!normalizedSearchTerm) return categoryProducts;
+
+    return categoryProducts
+      .filter((product) => matchesProductSearch(product, normalizedSearchTerm))
+      .sort((first, second) => {
+        const rankDifference = getProductSearchRank(first, normalizedSearchTerm)
+          - getProductSearchRank(second, normalizedSearchTerm);
+        return rankDifference || String(first.name || '').localeCompare(String(second.name || ''));
+      });
+  }, [categoryProducts, normalizedSearchTerm]);
 
   useEffect(() => {
     if (!user || user.role !== 'admin') {
@@ -91,7 +149,7 @@ export default function AdminProducts() {
 
       {/* Data Table Section */}
       <section className="w-full bg-[#0a0a0a] border border-white/5 rounded-2xl p-4 md:p-8 shadow-2xl">
-        <div className="pb-6 border-b border-white/[0.05] flex items-center justify-between">
+        <div className="pb-6 border-b border-white/[0.05] flex flex-col xl:flex-row xl:items-center justify-between gap-5">
           <h3 className="text-[var(--color-ivory)] font-serif text-2xl flex items-center gap-4">
             <div className="p-2 rounded-lg bg-[var(--color-gold)]/10 text-[#e1bd70]">
               <Package size={20} />
@@ -101,11 +159,36 @@ export default function AdminProducts() {
               {filteredProducts.length} Total
             </span>
           </h3>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full xl:w-auto">
+            <div className="relative w-full sm:w-80">
+              <div className="flex items-center gap-3 bg-[#1a1917] border border-white/10 rounded-lg px-3 transition-colors focus-within:border-[#c9a35b]/70 focus-within:ring-2 focus-within:ring-[#c9a35b]/10">
+                <Search size={17} className="text-[#918a7f] shrink-0" aria-hidden="true" />
+                <input
+                  type="search"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder="Search products..."
+                  aria-label="Search products"
+                  autoComplete="off"
+                  className="w-full bg-transparent py-2.5 text-sm text-[#eee8dd] placeholder:text-white/30 outline-none [&::-webkit-search-cancel-button]:hidden"
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm('')}
+                    className="text-[#918a7f] hover:text-white transition-colors"
+                    aria-label="Clear product search"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+            </div>
             <select 
               value={selectedCategory} 
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="bg-[#1a1917] border border-white/10 text-[#eee8dd] text-sm rounded-lg focus:ring-[#c9a35b] focus:border-[#c9a35b] block p-2.5 transition-colors"
+              aria-label="Filter products by category"
+              className="bg-[#1a1917] border border-white/10 text-[#eee8dd] text-sm rounded-lg focus:ring-[#c9a35b] focus:border-[#c9a35b] block p-2.5 transition-colors sm:max-w-48"
             >
               {categories.map(cat => (
                 <option key={cat} value={cat}>{cat}</option>
@@ -131,6 +214,24 @@ export default function AdminProducts() {
               className="px-8 py-3 rounded-full bg-[#c9a35b] text-black font-bold uppercase tracking-widest text-sm  transition-all"
             >
               Add your first product
+            </button>
+          </div>
+        ) : filteredProducts.length === 0 ? (
+          <div className="py-20 text-center flex flex-col items-center">
+            <Search size={30} className="mb-4 text-white/20" />
+            <h3 className="text-[var(--color-ivory)] font-serif text-2xl mb-2">No matching products</h3>
+            <p className="text-[var(--color-ivory-muted)] mb-6 text-sm">
+              Try another search term or category.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setSearchTerm('');
+                setSelectedCategory('All');
+              }}
+              className="px-5 py-2 rounded-full border border-[var(--color-gold)]/30 text-[#e1bd70] text-xs font-semibold uppercase tracking-widest hover:bg-[var(--color-gold)]/10 transition-colors"
+            >
+              Clear filters
             </button>
           </div>
         ) : (
