@@ -309,6 +309,7 @@ function App() {
   const isTradeRoute = location.pathname.startsWith('/trade')
   const isWineFarmRoute = location.pathname.startsWith('/winefarm') || location.pathname.startsWith('/wine-farm')
   const isDashboardRoute = location.pathname.startsWith('/customer') || location.pathname.startsWith('/vendor') || location.pathname.startsWith('/admin')
+  const isAdminRoute = location.pathname.startsWith('/admin')
   const isAuthRoute = location.pathname === '/login' || location.pathname === '/register'
   const isEstateRoute = location.pathname.startsWith('/estate')
 
@@ -532,7 +533,7 @@ function App() {
           </a>
         </>
       )}
-      <ChatbotWidget />
+      {!isAdminRoute && <ChatbotWidget />}
       <CookieConsent />
       {import.meta.env.DEV && <Agentation />}
     </div>
