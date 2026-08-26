@@ -235,14 +235,23 @@ const processOrderPayment = async (orderId) => {
   try {
     const { sendEmail } = require('../utils/emailService');
     const { orderConfirmationTemplate } = require('../utils/emailTemplates');
+    const { generateOrderReceiptBuffer } = require('../utils/pdfService');
     // We need user email, so let's populate user if not already
     const User = require('../models/User');
     const user = await User.findById(order.user);
     if (user) {
+      const pdfBuffer = await generateOrderReceiptBuffer(order, user);
       await sendEmail({
         to: user.email,
-        subject: `Order Confirmation #${order._id}`,
-        html: orderConfirmationTemplate(order)
+        subject: `Payment Receipt #${order.invoiceNumber || order.orderId || order._id}`,
+        html: orderConfirmationTemplate(order),
+        attachments: [
+          {
+            filename: `Receipt-${order.invoiceNumber || order._id}.pdf`,
+            content: pdfBuffer,
+            contentType: 'application/pdf'
+          }
+        ]
       });
     }
   } catch (err) {

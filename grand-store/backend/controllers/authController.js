@@ -69,7 +69,7 @@ const loginUser = async (req, res) => {
 
     const user = await User.findOne({ email });
 
-    if (user && (await bcrypt.compare(password, user.password))) {
+    if (user && user.password && (await bcrypt.compare(password, user.password))) {
       res.json({
         _id: user._id,
         name: user.name,
@@ -115,14 +115,16 @@ const updateUserProfile = async (req, res) => {
       // user.email = req.body.email || user.email;
 
       if (req.body.password) {
-        // Strict validation: Must provide currentPassword to change password
-        if (!req.body.currentPassword) {
-          return res.status(400).json({ message: 'Current password is required to change password' });
-        }
-        
-        const isMatch = await bcrypt.compare(req.body.currentPassword, user.password);
-        if (!isMatch) {
-          return res.status(401).json({ message: 'Incorrect current password' });
+        if (user.password) {
+          // Strict validation: Must provide currentPassword to change password
+          if (!req.body.currentPassword) {
+            return res.status(400).json({ message: 'Current password is required to change password' });
+          }
+          
+          const isMatch = await bcrypt.compare(req.body.currentPassword, user.password);
+          if (!isMatch) {
+            return res.status(401).json({ message: 'Incorrect current password' });
+          }
         }
 
         const salt = await bcrypt.genSalt(10);

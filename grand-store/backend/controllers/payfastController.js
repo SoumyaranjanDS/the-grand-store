@@ -7,6 +7,24 @@ const { processAuctionPayment } = require('./auctionController');
 const { processEventPayment } = require('./eventController');
 const { processVendorPayment } = require('./vendorController');
 
+const trimTrailingSlashes = (url) => url.replace(/\/+$/, '');
+
+const getFrontendUrl = (req) => trimTrailingSlashes(
+  process.env.FRONTEND_URL || req.headers.origin || 'http://localhost:5173'
+);
+
+const getBackendUrl = (req) => {
+  if (process.env.BACKEND_URL) {
+    return trimTrailingSlashes(process.env.BACKEND_URL);
+  }
+
+  // In production the API host that received this authenticated request is
+  // also the public host PayFast must call. This avoids silently emitting a
+  // localhost notify_url when BACKEND_URL has not been configured.
+  const forwardedProtocol = req.get('x-forwarded-proto')?.split(',')[0].trim();
+  return `${forwardedProtocol || req.protocol}://${req.get('host')}`;
+};
+
 // Helper to generate PayFast signature
 const generateSignature = (data, passphrase = null) => {
   // 1. Create parameter string
@@ -49,14 +67,15 @@ exports.generateShopPayment = async (req, res) => {
     if (order.isPaid) return res.status(400).json({ message: 'Order already paid' });
 
     const config = getPayfastConfig();
-    const frontendUrl = process.env.FRONTEND_URL || req.headers.origin || 'http://localhost:5173';
+    const frontendUrl = getFrontendUrl(req);
+    const backendUrl = getBackendUrl(req);
     
     const data = {
       merchant_id: config.merchant_id,
       merchant_key: config.merchant_key,
       return_url: `${frontendUrl}/customer/order/${order._id}?payment=success`,
       cancel_url: `${frontendUrl}/customer/order/${order._id}?payment=cancel`,
-      notify_url: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/payfast/itn`,
+      notify_url: `${backendUrl}/api/payfast/itn`,
       name_first: order.user.name.split(' ')[0],
       name_last: order.user.name.split(' ').slice(1).join(' ') || 'Customer',
       email_address: order.user.email,
@@ -90,14 +109,15 @@ exports.generateAuctionPayment = async (req, res) => {
     }
 
     const config = getPayfastConfig();
-    const frontendUrl = process.env.FRONTEND_URL || req.headers.origin || 'http://localhost:5173';
+    const frontendUrl = getFrontendUrl(req);
+    const backendUrl = getBackendUrl(req);
     
     const data = {
       merchant_id: config.merchant_id,
       merchant_key: config.merchant_key,
       return_url: `${frontendUrl}/auction/${lot._id}?payment=success`,
       cancel_url: `${frontendUrl}/auction/${lot._id}?payment=cancel`,
-      notify_url: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/payfast/itn`,
+      notify_url: `${backendUrl}/api/payfast/itn`,
       name_first: lot.winner.name.split(' ')[0],
       name_last: lot.winner.name.split(' ').slice(1).join(' ') || 'Winner',
       email_address: lot.winner.email,
@@ -131,14 +151,15 @@ exports.generateEventPayment = async (req, res) => {
     }
 
     const config = getPayfastConfig();
-    const frontendUrl = process.env.FRONTEND_URL || req.headers.origin || 'http://localhost:5173';
+    const frontendUrl = getFrontendUrl(req);
+    const backendUrl = getBackendUrl(req);
     
     const data = {
       merchant_id: config.merchant_id,
       merchant_key: config.merchant_key,
       return_url: `${frontendUrl}/customer/event-order/${booking._id}?payment=success`,
       cancel_url: `${frontendUrl}/customer/event-order/${booking._id}?payment=cancel`,
-      notify_url: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/payfast/itn`,
+      notify_url: `${backendUrl}/api/payfast/itn`,
       name_first: booking.user.name.split(' ')[0],
       name_last: booking.user.name.split(' ').slice(1).join(' ') || 'Customer',
       email_address: booking.user.email,
@@ -170,13 +191,15 @@ exports.generateVendorPayment = async (req, res) => {
     }
 
     const config = getPayfastConfig();
+    const frontendUrl = getFrontendUrl(req);
+    const backendUrl = getBackendUrl(req);
 
     const data = {
       merchant_id: config.merchant_id,
       merchant_key: config.merchant_key,
-      return_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/vendor/payment?success=true`,
-      cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/vendor/payment?success=false`,
-      notify_url: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/payfast/itn`,
+      return_url: `${frontendUrl}/vendor/payment?success=true`,
+      cancel_url: `${frontendUrl}/vendor/payment?success=false`,
+      notify_url: `${backendUrl}/api/payfast/itn`,
       name_first: vendor.userId.name.split(' ')[0],
       name_last: vendor.userId.name.split(' ').slice(1).join(' ') || 'Vendor',
       email_address: vendor.userId.email,
@@ -202,6 +225,11 @@ exports.itnWebhook = async (req, res) => {
   try {
     const payload = req.body;
     const config = getPayfastConfig();
+
+    if (!payload || typeof payload !== 'object' || !payload.m_payment_id || !payload.payment_status) {
+      console.error('PayFast ITN missing required form fields');
+      return res.status(400).send('Invalid payload');
+    }
     
     // In a production environment, you should verify the ITN by doing a POST back to PayFast.
     // For local development or simplified integration, we at least verify the signature locally.
@@ -220,9 +248,13 @@ exports.itnWebhook = async (req, res) => {
     const validSignature = generateSignature(dataObj, config.passphrase);
     
     if (payload.signature !== validSignature) {
-      console.error('PayFast ITN Signature mismatch', { expected: validSignature, received: payload.signature });
-      // Depending on PayFast, order of keys might matter. We will proceed if payment_status is COMPLETE 
-      // but in strict mode we would reject. Let's proceed carefully.
+      console.error('PayFast ITN signature mismatch');
+      return res.status(400).send('Invalid signature');
+    }
+
+    if (String(payload.merchant_id) !== String(config.merchant_id)) {
+      console.error('PayFast ITN merchant mismatch');
+      return res.status(400).send('Invalid merchant');
     }
 
     if (payload.payment_status === 'COMPLETE') {

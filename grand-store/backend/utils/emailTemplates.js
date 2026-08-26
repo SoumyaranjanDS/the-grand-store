@@ -2,6 +2,8 @@ const BRAND_COLOR_GOLD = '#c9a35b';
 const BRAND_COLOR_DARK = '#050505';
 const BRAND_COLOR_LIGHT = '#f5f5f5';
 
+const formatRand = (amount) => `R ${Number(amount || 0).toFixed(2)}`;
+
 const generateEmailTemplate = (title, content) => `
 <!DOCTYPE html>
 <html lang="en">
@@ -147,15 +149,17 @@ const newsletterWelcomeTemplate = () => {
 const orderConfirmationTemplate = (order) => {
   let itemsHtml = order.orderItems.map(item => `
     <tr>
-      <td style="padding: 10px 0; border-bottom: 1px solid #333;">${item.name} (x${item.qty})</td>
-      <td style="padding: 10px 0; border-bottom: 1px solid #333; text-align: right;">$${item.price}</td>
+      <td style="padding: 10px 0; border-bottom: 1px solid #333;">${item.name} (x${item.quantity || item.qty || 1})</td>
+      <td style="padding: 10px 0; border-bottom: 1px solid #333; text-align: right;">${formatRand(item.price * (item.quantity || item.qty || 1))}</td>
     </tr>
   `).join('');
+
+  const orderReference = order.invoiceNumber || order.orderId || order._id;
 
   const content = `
     <h1>Order Confirmation</h1>
     <p>Dear Customer,</p>
-    <p>Thank you for your purchase from The Grand Store. Your order <strong>#${order._id}</strong> has been successfully placed.</p>
+    <p>Thank you for your purchase from The Grand Store. Your payment for order <strong>#${orderReference}</strong> was successful. Your PDF receipt is attached to this email.</p>
     
     <div class="details-box">
       <h3 style="margin-top: 0;">Order Summary</h3>
@@ -163,15 +167,15 @@ const orderConfirmationTemplate = (order) => {
         ${itemsHtml}
         <tr>
           <td style="padding: 15px 0 5px; font-weight: bold;">Subtotal</td>
-          <td style="padding: 15px 0 5px; text-align: right;">$${order.itemsPrice}</td>
+          <td style="padding: 15px 0 5px; text-align: right;">${formatRand(order.subTotal)}</td>
         </tr>
         <tr>
           <td style="padding: 5px 0;">Shipping</td>
-          <td style="padding: 5px 0; text-align: right;">$${order.shippingPrice}</td>
+          <td style="padding: 5px 0; text-align: right;">${formatRand(order.shippingCost)}</td>
         </tr>
         <tr>
           <td style="padding: 5px 0; font-weight: bold; color: ${BRAND_COLOR_GOLD}; font-size: 16px;">Total</td>
-          <td style="padding: 5px 0; text-align: right; font-weight: bold; color: ${BRAND_COLOR_GOLD}; font-size: 16px;">$${order.totalPrice}</td>
+          <td style="padding: 5px 0; text-align: right; font-weight: bold; color: ${BRAND_COLOR_GOLD}; font-size: 16px;">${formatRand(order.totalPrice)}</td>
         </tr>
       </table>
     </div>
@@ -185,7 +189,7 @@ const orderConfirmationTemplate = (order) => {
     
     <p>We will notify you once your order has been dispatched.</p>
   `;
-  return generateEmailTemplate(`Order Confirmation #${order._id}`, content);
+  return generateEmailTemplate(`Payment Receipt #${orderReference}`, content);
 };
 
 const bankTransferInstructionsTemplate = (order, bankDetails) => {

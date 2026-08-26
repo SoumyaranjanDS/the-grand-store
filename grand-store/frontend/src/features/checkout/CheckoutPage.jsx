@@ -41,9 +41,9 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
     document.title = 'Checkout – The Grand Store';
     window.scrollTo({ top: 0, behavior: 'auto' });
     
-    // Prevent vendors from checking out
-    if (user && user.role && user.role.startsWith('vendor')) {
-      onNotify("Vendors cannot checkout. Please sign up as a customer.");
+    // Prevent vendors and admins from checking out
+    if (user && user.role && (user.role.startsWith('vendor') || user.role === 'admin')) {
+      onNotify("Vendors and admins cannot checkout. Please login as a customer to buy.");
       navigate('/register');
       return;
     }
@@ -95,16 +95,24 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
 
   const handleCourierSelect = (shipmentIndex, courierOption) => {
     if (!quote) return;
-    const newQuote = { ...quote };
-    newQuote.shipments[shipmentIndex].selectedCourier = courierOption;
     
-    // Recalculate defaultShippingTotal
-    let newShippingTotal = newQuote.shipments.reduce((sum, shp) => sum + (shp.selectedCourier ? shp.selectedCourier.cost : 0), 0);
-    newQuote.aggregatedTotals.shipping = newShippingTotal;
+    const newShipments = [...quote.shipments];
+    newShipments[shipmentIndex] = {
+      ...newShipments[shipmentIndex],
+      selectedCourier: courierOption
+    };
+
+    let newShippingTotal = newShipments.reduce((sum, shp) => sum + (shp.selectedCourier ? shp.selectedCourier.cost : 0), 0);
     
-    // Recalculate totalToPay
-    const { globalSubtotal, aggregatedTotals } = newQuote;
-    newQuote.aggregatedTotals.totalToPay = parseFloat((globalSubtotal + newShippingTotal + aggregatedTotals.vat).toFixed(2));
+    const newQuote = { 
+      ...quote,
+      shipments: newShipments,
+      aggregatedTotals: {
+        ...quote.aggregatedTotals,
+        shipping: newShippingTotal,
+        totalToPay: parseFloat((quote.globalSubtotal + newShippingTotal + quote.aggregatedTotals.vat).toFixed(2))
+      }
+    };
     
     setQuote(newQuote);
   };
@@ -165,17 +173,24 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
   const [uploadingProof, setUploadingProof] = useState(false);
   const [proofUrl, setProofUrl] = useState('');
 
+  const cartHash = JSON.stringify(vendorCartItems.map(i => ({ id: i.id || i._id, q: i.quantity, opt: i.option })));
+
   // Hydrate checkout state on mount
   useEffect(() => {
     const saved = sessionStorage.getItem('checkoutState');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed.checkoutStep && checkoutStep === 1) setCheckoutStep(parsed.checkoutStep);
-        if (parsed.quote && !quote) setQuote(parsed.quote);
-        if (parsed.formData && !formData.address) setFormData(parsed.formData);
-        if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod);
-        if (parsed.createdOrderId) setCreatedOrderId(parsed.createdOrderId);
+        if (parsed.cartHash === cartHash) {
+          if (parsed.checkoutStep && checkoutStep === 1) setCheckoutStep(parsed.checkoutStep);
+          if (parsed.quote && !quote) setQuote(parsed.quote);
+          if (parsed.formData && !formData.address) setFormData(parsed.formData);
+          if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod);
+          if (parsed.createdOrderId) setCreatedOrderId(parsed.createdOrderId);
+        } else {
+          sessionStorage.removeItem('checkoutState');
+          if (parsed.formData && !formData.address) setFormData(parsed.formData);
+        }
       } catch (e) {}
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -183,9 +198,9 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
   // Save state on change
   useEffect(() => {
     sessionStorage.setItem('checkoutState', JSON.stringify({
-      checkoutStep, quote, formData, paymentMethod, createdOrderId
+      checkoutStep, quote, formData, paymentMethod, createdOrderId, cartHash
     }));
-  }, [checkoutStep, quote, formData, paymentMethod, createdOrderId]);
+  }, [checkoutStep, quote, formData, paymentMethod, createdOrderId, cartHash]);
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
@@ -446,9 +461,10 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                         name="address" 
                         value={formData.address} 
                         onChange={handleChange} 
-                        onPlaceDetails={({ city, postalCode, country, lat, lng }) => {
+                        onPlaceDetails={({ address, city, postalCode, country, lat, lng }) => {
                           setFormData(prev => ({
                             ...prev,
+                            address: address || prev.address,
                             city: city,
                             postalCode: postalCode,
                             country: country
@@ -457,7 +473,7 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                              setMapLocation({ lat, lng });
                           }
                           fetchQuote({
-                            address: formData.address,
+                            address: address || formData.address,
                             city: city,
                             postalCode: postalCode,
                             country: country
@@ -480,6 +496,30 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                       <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-2">Country</label>
                       <input type="text" name="country" value={formData.country} onChange={handleChange} required className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--color-gold)]/50 focus:outline-none transition-colors text-white" />
                     </div>
+                    
+                    {!quote && (
+                      <div className="md:col-span-2 mt-2">
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            if (!formData.address || !formData.city || !formData.country) {
+                              onNotify("Please fill in address, city, and country to get a delivery quote.");
+                              return;
+                            }
+                            fetchQuote({
+                              address: formData.address,
+                              city: formData.city,
+                              postalCode: formData.postalCode,
+                              country: formData.country
+                            });
+                          }}
+                          disabled={quoteLoading}
+                          className="w-full bg-white/5 border border-white/10 text-white font-medium text-xs uppercase tracking-widest py-4 rounded-xl hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
+                        >
+                          {quoteLoading ? <><Loader2 size={16} className="animate-spin" /> Calculating...</> : 'Calculate Delivery Options'}
+                        </button>
+                      </div>
+                    )}
                     {/* Live Map */}
                     <div className="md:col-span-2">
                       <div className={`w-full transition-all duration-700 ease-in-out overflow-hidden rounded-xl border border-[var(--color-gold)]/20 ${mapLocation ? 'h-64 opacity-100 mt-4' : 'h-0 opacity-0 border-none'}`} ref={mapRef}></div>
@@ -538,10 +578,10 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                 
                 <button 
                   type="submit" 
-                  disabled={loading}
-                  className="w-full mt-8 bg-[#c9a35b] text-black font-bold uppercase tracking-widest text-xs py-4 rounded-xl hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all flex items-center justify-center gap-2"
+                  disabled={loading || !quote}
+                  className="w-full mt-8 bg-[#c9a35b] text-black font-bold uppercase tracking-widest text-xs py-4 rounded-xl hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : <>Place Order • <Price amount={quote?.aggregatedTotals.totalToPay || 0} /> <ArrowRight size={16} /></>}
+                  {loading ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : <>Place Order {quote ? <>• <Price amount={quote.aggregatedTotals.totalToPay} /></> : ''} <ArrowRight size={16} /></>}
                 </button>
                 
                 <PaymentForm paymentData={paymentData} payfastUrl={payfastUrl} />

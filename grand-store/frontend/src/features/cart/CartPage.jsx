@@ -20,8 +20,8 @@ export default function CartPage({ cartItems, onUpdateQuantity, onRemove, onClea
       navigate('/login');
       return;
     }
-    if (user.role && user.role.startsWith('vendor')) {
-      onNotify("Vendors cannot checkout. Please sign up as a customer.");
+    if (user.role && (user.role.startsWith('vendor') || user.role === 'admin')) {
+      onNotify("Vendors and admins cannot checkout. Please login as a customer to buy.");
       navigate('/register');
       return;
     }

@@ -64,7 +64,7 @@ export default function LocationInput({ name, value, onChange, placeholder, clas
           }
 
           if (onPlaceDetailsRef.current) {
-            onPlaceDetailsRef.current({ city, postalCode, country, lat, lng });
+            onPlaceDetailsRef.current({ address: place.formatted_address, city, postalCode, country, lat, lng });
           }
         }
       });

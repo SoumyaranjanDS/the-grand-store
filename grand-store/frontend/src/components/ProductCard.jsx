@@ -384,7 +384,7 @@ export default function ProductCard({
               </button>
             )}
             <Link
-              to="/checkout"
+              to="/customer/checkout"
               onClick={(e) => {
                 e.stopPropagation();
                 if (onAdd) onAdd(product);
