@@ -1,17 +1,19 @@
 const mongoose = require('mongoose');
-const Vendor = require('./models/Vendor');
-const User = require('./models/User');
 require('dotenv').config();
-
 mongoose.connect(process.env.MONGO_URI).then(async () => {
-  const users = await User.find({ role: { $in: ['vendor_active', 'vendor_pending', 'vendor_approved_unpaid'] } });
-  console.log('Users:', users.map(u => ({ id: u._id, name: u.name, role: u.role })));
+  const Product = require('./models/Product');
+  const Attribute = require('./models/Attribute');
+  
+  const p = await Product.findOne({ 'flavorProfile.0': { $exists: true } });
+  console.log(p.name);
+  console.log('flavorProfile:', p.flavorProfile);
+  console.log('foodPairing:', p.foodPairing);
+  
+  const attrFlavors = await Attribute.find({ type: 'flavor' });
+  console.log('Attributes in DB flavors:', attrFlavors.map(a => a.value));
 
-  const vendors = await Vendor.find();
-  console.log('Vendors:', vendors.map(v => ({ _id: v._id, userId: v.userId, businessName: v.businessInfo?.legalName })));
-  
-  const idToCheck = '6a83fa7e3b2661aa93c5132f';
-  console.log('ID in question:', idToCheck);
-  
-  process.exit(0);
+  const attrPair = await Attribute.find({ type: 'pairing' });
+  console.log('Attributes in DB pairing:', attrPair.map(a => a.value));
+
+  mongoose.disconnect();
 });
