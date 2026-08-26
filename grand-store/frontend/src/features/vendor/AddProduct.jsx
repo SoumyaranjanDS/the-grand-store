@@ -172,7 +172,11 @@ export default function AddProduct({ onNotify }) {
       });
 
       if (onNotify) onNotify('Product added successfully!');
-      setTimeout(() => navigate(`/product/${res.data._id}`), 2000);
+      if (user.role === 'admin') {
+        setTimeout(() => navigate('/admin/products'), 2000);
+      } else {
+        setTimeout(() => navigate('/vendor/products'), 2000);
+      }
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || err.message || 'Failed to add product');

@@ -213,7 +213,11 @@ export default function EditProduct({ onNotify }) {
 
       setSuccess(true);
       if (onNotify) onNotify('Product updated successfully!');
-      setTimeout(() => navigate(`/product/${id}`), 2000);
+      if (user.role === 'admin') {
+        setTimeout(() => navigate('/admin/products'), 2000);
+      } else {
+        setTimeout(() => navigate('/vendor/products'), 2000);
+      }
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || err.message || 'Failed to update product');
