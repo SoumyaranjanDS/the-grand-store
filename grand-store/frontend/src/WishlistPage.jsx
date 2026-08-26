@@ -18,15 +18,15 @@ function WishlistPage({ onAdd, onCompare, compareItems }) {
 
   return (
     <main className="min-h-[70vh] text-[#eee8dd] bg-[#0c0b09] bg-[radial-gradient(circle_at_80%_8%,rgba(167,103,28,0.14),transparent_29rem)]">
-      <section className="pt-[58px] pb-[54px] border-b border-[#e1bd70]/20 bg-[linear-gradient(110deg,rgba(41,29,13,0.72),rgba(10,9,7,0.92))] px-6 sm:px-0">
-        <div className="max-w-[1240px] mx-auto flex flex-col sm:flex-row items-start sm:items-end justify-between gap-11">
+      <section className="pt-[24px] pb-[20px] border-b border-[#e1bd70]/20 bg-[linear-gradient(110deg,rgba(41,29,13,0.72),rgba(10,9,7,0.92))] px-6 sm:px-0">
+        <div className="max-w-[1240px] mx-auto flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 sm:gap-8">
           <div>
-            <p className="uppercase tracking-[0.18em] text-[11px] font-semibold text-[#c9b79c] mb-3">Your private shortlist</p>
-            <h1 className="mt-[9px] text-[#f4eee3] text-[clamp(48px,5.7vw,82px)] font-normal leading-[0.87] tracking-[-0.04em]">Bottles worth<br /><em className="text-[#e1bd70] font-normal italic">remembering.</em></h1>
+            <p className="uppercase tracking-[0.18em] text-[10px] font-semibold text-[#c9b79c] mb-1.5">Your private shortlist</p>
+            <h1 className="mt-[4px] text-[#f4eee3] text-[clamp(32px,4vw,48px)] font-normal leading-[0.95] tracking-[-0.02em]">Bottles worth<br /><em className="text-[#e1bd70] font-normal italic">remembering.</em></h1>
           </div>
-          <div className="min-w-0 sm:min-w-[150px] py-[5px] pl-0 sm:pl-6 border-l-0 sm:border-l border-[#e1bd70]/40 grid mt-4 sm:mt-0">
-            <strong className="text-[#e1bd70] font-serif text-[57px] font-normal leading-[0.9]">{String(wishlistCount).padStart(2, '0')}</strong>
-            <span className="mt-[10px] text-[#a69d91] text-[10px] tracking-[0.17em] uppercase">{wishlistCount === 1 ? 'bottle' : 'bottles'} saved</span>
+          <div className="min-w-0 sm:min-w-[120px] py-[4px] pl-0 sm:pl-5 border-l-0 sm:border-l border-[#e1bd70]/40 grid mt-3 sm:mt-0">
+            <strong className="text-[#e1bd70] font-serif text-[40px] font-normal leading-[0.9]">{String(wishlistCount).padStart(2, '0')}</strong>
+            <span className="mt-[4px] text-[#a69d91] text-[9px] tracking-[0.17em] uppercase">{wishlistCount === 1 ? 'bottle' : 'bottles'} saved</span>
           </div>
         </div>
       </section>
