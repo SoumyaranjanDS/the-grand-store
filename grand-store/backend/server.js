@@ -59,8 +59,8 @@ app.use(
     credentials: true,
   }),
 );
-app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // Added for PayFast ITN form data
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' })); // Added for PayFast ITN form data
 app.use("/uploads", express.static("uploads"));
 
 // Database Connection
