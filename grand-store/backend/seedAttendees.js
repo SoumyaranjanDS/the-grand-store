@@ -35,7 +35,7 @@ mongoose.connect(process.env.MONGO_URI)
           benefits: ['Front row', 'Extra tasting']
         }
       ]
-    }, { upsert: true, new: true });
+    }, { upsert: true, returnDocument: 'after' });
     
     // Clear old bookings for this event just in case
     await Booking.deleteMany({ event: eventId });

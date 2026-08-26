@@ -10,7 +10,7 @@ const getNextSequence = async (sequenceName) => {
   const sequenceDocument = await Counter.findOneAndUpdate(
     { id: sequenceName },
     { $inc: { seq: 1 } },
-    { new: true, upsert: true }
+    { returnDocument: 'after', upsert: true }
   );
   return sequenceDocument.seq;
 };
