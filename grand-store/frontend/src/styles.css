@@ -9640,6 +9640,14 @@ video {
     grid-template-columns: 32px 1fr;
     gap: 10px;
   }
+
+  .supplied-article-section .button {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 20px;
+    padding: 16px;
+  }
 }
 
 /* Journal typography: readable, compact and consistent across cards and articles. */

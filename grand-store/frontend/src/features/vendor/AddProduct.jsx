@@ -410,8 +410,47 @@ export default function AddProduct({ onNotify }) {
                   <Building2 size={24} className="text-[#e1bd70]" />
                   Advanced Channels
                 </h2>
-                
-
+                                <div className="border-b border-white/10 pb-6">
+                  <h3 className="text-lg font-serif text-[var(--color-ivory)] mb-6">Wholesale & Trade Pricing</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                    <div className="relative z-0 w-full group">
+                      <input 
+                        type="number" 
+                        name="tradePrice" 
+                        id="tradePrice"
+                        value={formData.tradePrice} 
+                        onChange={handleChange} 
+                        min="0"
+                        className="block py-3 px-0 w-full text-base text-[var(--color-ivory)] bg-transparent border-0 border-b border-white/20 appearance-none focus:outline-none focus:ring-0 focus:border-[var(--color-gold)] peer" 
+                        placeholder=" " 
+                      />
+                      <label 
+                        htmlFor="tradePrice" 
+                        className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[#e1bd70] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                      >
+                        Trade Price (ZAR)
+                      </label>
+                    </div>
+                    <div className="relative z-0 w-full group">
+                      <input 
+                        type="number" 
+                        name="minOrderQuantity" 
+                        id="minOrderQuantity"
+                        value={formData.minOrderQuantity} 
+                        onChange={handleChange} 
+                        min="0"
+                        className="block py-3 px-0 w-full text-base text-[var(--color-ivory)] bg-transparent border-0 border-b border-white/20 appearance-none focus:outline-none focus:ring-0 focus:border-[var(--color-gold)] peer" 
+                        placeholder=" " 
+                      />
+                      <label 
+                        htmlFor="minOrderQuantity" 
+                        className="peer-focus:font-medium absolute text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[#e1bd70] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                      >
+                        Min. Order Quantity (Wholesale)
+                      </label>
+                    </div>
+                  </div>
+                </div>
 
                 <div className="py-6 border-b border-white/10 flex items-center justify-between">
                   <div>
