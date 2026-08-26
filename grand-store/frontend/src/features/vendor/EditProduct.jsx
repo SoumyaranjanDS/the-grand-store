@@ -76,9 +76,14 @@ export default function EditProduct({ onNotify }) {
             exportReady: product.exportReady || false
           });
           if (product.image) {
-            const initialPreviews = [`${import.meta.env.VITE_API_URL}${product.image}`];
+            const getImageUrl = (src) => {
+              if (!src) return '';
+              if (src.startsWith('http://') || src.startsWith('https://')) return src;
+              return `${import.meta.env.VITE_API_URL}${src}`;
+            };
+            const initialPreviews = [getImageUrl(product.image)];
             if (product.gallery && product.gallery.length > 0) {
-              product.gallery.forEach(img => initialPreviews.push(`${import.meta.env.VITE_API_URL}${img}`));
+              product.gallery.forEach(img => initialPreviews.push(getImageUrl(img)));
             }
             setImagePreviews(initialPreviews);
           }
