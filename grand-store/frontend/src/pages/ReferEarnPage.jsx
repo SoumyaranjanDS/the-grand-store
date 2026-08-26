@@ -24,7 +24,7 @@ export default function ReferEarnPage() {
           <p className="mb-3 text-xs uppercase tracking-[0.22em] text-[#d99d39]">Unlock Rewards</p>
           <h2 className="font-serif text-4xl leading-tight text-[#f2ede4]">Start referring now</h2>
           <p className="mt-5 leading-8 text-[#bcb3a7]">Invite friends to discover premium wines and spirits. They receive a welcome benefit, and you earn a reward for each successful referral.</p>
-          <Link className="mt-8 inline-flex items-center justify-center bg-[#e1bd70] px-8 py-4 text-sm font-bold uppercase tracking-widest text-black transition-all hover:bg-white hover:text-black hover:shadow-[0_0_20px_rgba(225,189,112,0.4)]" to="/customer/profile">Go to your dashboard</Link>
+          <Link className="mt-8 button button-gold inline-flex" to="/customer/profile">Go to your dashboard</Link>
         </div>
         <div className="grid gap-px overflow-hidden border border-white/10 bg-white/10 sm:grid-cols-2">
           {steps.map(({ icon: Icon, title, text }, index) => (
