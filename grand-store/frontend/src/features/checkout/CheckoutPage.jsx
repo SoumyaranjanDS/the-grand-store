@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { ChevronRight, ArrowRight, ShieldCheck, Lock, CreditCard, Loader2, Truck, AlertTriangle, CheckCircle2, ShoppingCart, MapPin, FileText, Download } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { formatCartPrice } from '../../data';
+import { getProductPrice } from '../../data';
 import LocationInput from '../../components/LocationInput';
+import CityInput from '../../components/CityInput';
 import PaymentForm from './PaymentForm';
 import Price from '../../components/ui/Price';
 import api from '../../api';
@@ -22,6 +23,7 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
   const [checkoutStep, setCheckoutStep] = useState(1);
   const [quote, setQuote] = useState(null);
   const [dutiesAccepted, setDutiesAccepted] = useState(false);
+  const [deliveryPreference, setDeliveryPreference] = useState('home');
 
   const [formData, setFormData] = useState({
     email: user ? user.email : '',
@@ -36,6 +38,7 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
   const [paymentData, setPaymentData] = useState(null);
   const [payfastUrl, setPayfastUrl] = useState(null);
 
+  const cartSubtotal = vendorCartItems.reduce((sum, item) => sum + (getProductPrice(item.price) * item.quantity), 0);
 
   useEffect(() => {
     document.title = 'Checkout – The Grand Store';
@@ -54,10 +57,24 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
   }, [vendorCartItems, navigate, user, onNotify, vendorId]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((current) => ({ ...current, [name]: value }));
+    if (['address', 'city', 'postalCode', 'country'].includes(name)) {
+      setQuote(null);
+      setDutiesAccepted(false);
+    }
   };
 
-    const fetchQuote = async (shippingAddress) => {
+  const selectDeliveryPreference = (preference) => {
+    setDeliveryPreference(preference);
+    setQuote(null);
+    setDutiesAccepted(false);
+    if (preference === 'postnet') {
+      setFormData((current) => ({ ...current, country: 'South Africa' }));
+    }
+  };
+
+  const fetchQuote = async (shippingAddress) => {
     if (!user) {
       onNotify("Please log in to continue checkout");
       navigate('/login?redirect=/customer/checkout');
@@ -75,13 +92,17 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
           option: item.option,
           image: item.image
         })),
-        shippingAddress
+        shippingAddress,
+        deliveryPreference
       };
 
       const res = await api.post(`/checkout/quote`, payload);
       const data = res.data;
 
       setQuote(data);
+      window.requestAnimationFrame(() => {
+        document.getElementById('delivery-rates')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
       // setCheckoutStep(2); -> removed
       
     } catch (error) {
@@ -99,7 +120,10 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
     const newShipments = [...quote.shipments];
     newShipments[shipmentIndex] = {
       ...newShipments[shipmentIndex],
-      selectedCourier: courierOption
+      selectedCourier: courierOption,
+      selectedPickupStore: courierOption.courierName === 'PostNet'
+        ? newShipments[shipmentIndex].selectedPickupStore
+        : null
     };
 
     let newShippingTotal = newShipments.reduce((sum, shp) => sum + (shp.selectedCourier ? shp.selectedCourier.cost : 0), 0);
@@ -110,11 +134,23 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
       aggregatedTotals: {
         ...quote.aggregatedTotals,
         shipping: newShippingTotal,
-        totalToPay: parseFloat((quote.globalSubtotal + newShippingTotal + quote.aggregatedTotals.vat).toFixed(2))
+        totalToPay: parseFloat((quote.globalSubtotal + newShippingTotal).toFixed(2))
       }
     };
     
     setQuote(newQuote);
+  };
+
+  const handlePostnetStoreSelect = (shipmentIndex, store) => {
+    if (!quote) return;
+
+    const newShipments = quote.shipments.map((shipment, index) => (
+      index === shipmentIndex
+        ? { ...shipment, selectedPickupStore: store }
+        : shipment
+    ));
+
+    setQuote({ ...quote, shipments: newShipments });
   };
 
     const [mapLocation, setMapLocation] = useState(null);
@@ -187,6 +223,7 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
           if (parsed.formData && !formData.address) setFormData(parsed.formData);
           if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod);
           if (parsed.createdOrderId) setCreatedOrderId(parsed.createdOrderId);
+          if (parsed.deliveryPreference) setDeliveryPreference(parsed.deliveryPreference);
         } else {
           sessionStorage.removeItem('checkoutState');
           if (parsed.formData && !formData.address) setFormData(parsed.formData);
@@ -198,12 +235,25 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
   // Save state on change
   useEffect(() => {
     sessionStorage.setItem('checkoutState', JSON.stringify({
-      checkoutStep, quote, formData, paymentMethod, createdOrderId, cartHash
+      checkoutStep, quote, formData, paymentMethod, createdOrderId, deliveryPreference, cartHash
     }));
-  }, [checkoutStep, quote, formData, paymentMethod, createdOrderId, cartHash]);
+  }, [checkoutStep, quote, formData, paymentMethod, createdOrderId, deliveryPreference, cartHash]);
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
+
+    if (!quote) {
+      onNotify("Please calculate and select a delivery option first.");
+      return;
+    }
+
+    const missingPostnetBranch = quote.shipments.some((shipment) => (
+      shipment.selectedCourier?.courierName === 'PostNet' && !shipment.selectedPickupStore
+    ));
+    if (missingPostnetBranch) {
+      onNotify("Please select a PostNet branch for every PostNet shipment.");
+      return;
+    }
     
     if (quote.hasInternational && !dutiesAccepted) {
       onNotify("Please accept the International Duties acknowledgment");
@@ -216,11 +266,12 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
       const orderData = {
         quote,
         shippingAddress: {
-          address: formData.address,
+          address: formData.address || quote.shipments.find((shipment) => shipment.selectedPickupStore)?.selectedPickupStore?.address,
           city: formData.city,
           postalCode: formData.postalCode,
           country: formData.country
         },
+        deliveryPreference,
         paymentMethod: paymentMethod === 'payfast' ? 'PayFast' : 'Bank Transfer',
         isGift,
         giftRecipientName,
@@ -302,30 +353,60 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
         <div className="max-w-4xl mx-auto flex flex-col gap-12 items-center w-full">
           
           
-          {/* Creative Top Summary */}
+          {/* Itemised order summary */}
           {checkoutStep !== 3 && (
-            <div className="w-full bg-[#111]/80 backdrop-blur-md border border-[var(--color-gold)]/20 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+            <div className="w-full bg-[#111]/80 backdrop-blur-md border border-[var(--color-gold)]/20 rounded-2xl p-5 md:p-7 shadow-2xl relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[var(--color-gold)] to-transparent opacity-50"></div>
-              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="flex -space-x-4">
-                  {cartItems.slice(0, 4).map((item, idx) => (
-                    <div key={idx} className="w-14 h-14 rounded-full border-2 border-black bg-[#222] overflow-hidden flex items-center justify-center p-2 z-[idx] relative">
-                       <img src={item.image} alt={item.name} className="max-w-full max-h-full object-contain" />
+              <div className="relative">
+                <div className="flex items-center justify-between gap-4 mb-5">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-gold)] mb-1">Your order</p>
+                    <h2 className="text-xl font-serif text-white">Price breakdown</h2>
+                  </div>
+                  <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-xs text-[var(--color-ivory-muted)]">
+                    {vendorCartItems.reduce((sum, item) => sum + item.quantity, 0)} item{vendorCartItems.reduce((sum, item) => sum + item.quantity, 0) === 1 ? '' : 's'}
+                  </span>
+                </div>
+
+                <div className="space-y-3 border-b border-white/10 pb-5">
+                  {vendorCartItems.map((item) => (
+                    <div key={`${item.id || item._id}-${item.option || ''}`} className="grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-3">
+                      <div className="w-11 h-11 rounded-lg border border-white/10 bg-black/40 p-1.5 flex items-center justify-center overflow-hidden">
+                        <img src={item.image} alt="" className="max-w-full max-h-full object-contain" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm text-white truncate">{item.fullName || item.name}</p>
+                        <p className="text-xs text-[var(--color-ivory-muted)]">Qty {item.quantity}{item.option ? ` · ${item.option}` : ''}</p>
+                      </div>
+                      <span className="text-sm text-white"><Price amount={getProductPrice(item.price) * item.quantity} /></span>
                     </div>
                   ))}
-                  {cartItems.length > 4 && (
-                    <div className="w-14 h-14 rounded-full border-2 border-black bg-[#333] text-[var(--color-gold)] text-xs font-bold flex items-center justify-center z-10 relative">
-                      +{cartItems.length - 4}
+                </div>
+
+                <div className="space-y-3 pt-5 text-sm">
+                  <div className="flex justify-between gap-4 text-[var(--color-ivory-muted)]">
+                    <span>Merchandise subtotal</span>
+                    <span className="text-white"><Price amount={quote?.globalSubtotal ?? cartSubtotal} /></span>
+                  </div>
+                  {quote ? quote.shipments.map((shipment, index) => (
+                    <div key={`${shipment.vendorId || index}-shipping`} className="flex justify-between gap-4 text-[var(--color-ivory-muted)]">
+                      <span className="min-w-0">Delivery {quote.shipments.length > 1 ? `${index + 1} ` : ''}<span className="text-white/50">· {shipment.selectedCourier?.courierName}</span></span>
+                      <span className="text-white shrink-0">{shipment.selectedCourier?.cost > 0 ? <Price amount={shipment.selectedCourier.cost} /> : 'FREE'}</span>
+                    </div>
+                  )) : (
+                    <div className="flex justify-between gap-4 text-[var(--color-ivory-muted)]">
+                      <span>Delivery</span>
+                      <span>Calculated after details</span>
                     </div>
                   )}
-                </div>
-                <div className="flex flex-col items-center md:items-end text-center md:text-right">
-                  <span className="text-[10px] uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Order Total</span>
-                  {quote ? (
-                    <span className="text-3xl font-serif text-gold-gradient"><Price amount={quote.aggregatedTotals.totalToPay} /></span>
-                  ) : (
-                    <span className="text-xl font-serif text-[var(--color-ivory-muted)]">Pending Address</span>
-                  )}
+
+                  <div className="flex items-end justify-between gap-4 border-t border-white/10 pt-4">
+                    <div>
+                      <p className="text-white font-medium">Pay now</p>
+                      <p className="text-[11px] text-[var(--color-ivory-muted)]">Products and selected delivery</p>
+                    </div>
+                    <span className="text-3xl font-serif text-gold-gradient"><Price amount={quote?.aggregatedTotals.totalToPay ?? cartSubtotal} /></span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -344,22 +425,64 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                     Delivery Method
                   </h2>
                   
+                  <p className="text-sm text-[var(--color-ivory-muted)] mb-5">Choose how you want to receive the order before entering delivery details.</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {[
+                      {
+                        value: 'home',
+                        title: 'Door delivery',
+                        description: 'Courier Guy locally or DHL for an international address.',
+                        icon: Truck
+                      },
+                      {
+                        value: 'postnet',
+                        title: 'PostNet pickup',
+                        description: 'South Africa only. Search your city, then choose a nearby branch.',
+                        icon: MapPin
+                      },
+                      {
+                        value: 'best',
+                        title: 'Compare all',
+                        description: 'See every available home and pickup rate together.',
+                        icon: ShoppingCart
+                      }
+                    ].map((method) => {
+                      const MethodIcon = method.icon;
+                      const selected = deliveryPreference === method.value;
+                      return (
+                        <button
+                          key={method.value}
+                          type="button"
+                          aria-pressed={selected}
+                          onClick={() => selectDeliveryPreference(method.value)}
+                          className={`relative rounded-2xl border p-5 text-left transition-all ${selected ? 'border-[var(--color-gold)] bg-[var(--color-gold)]/10 shadow-[0_0_20px_rgba(212,175,55,0.08)]' : 'border-white/10 bg-[#0a0a0a] hover:border-white/30'}`}
+                        >
+                          <span className={`mb-4 flex h-10 w-10 items-center justify-center rounded-full ${selected ? 'bg-[var(--color-gold)] text-black' : 'bg-white/5 text-white/60'}`}>
+                            <MethodIcon size={19} />
+                          </span>
+                          <span className="block text-sm font-medium text-white mb-1">{method.title}</span>
+                          <span className="block text-xs leading-relaxed text-[var(--color-ivory-muted)]">{method.description}</span>
+                          {selected && <CheckCircle2 size={17} className="absolute right-4 top-4 text-[var(--color-gold)]" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+
                   {!quote && !quoteLoading && (
-                    <div className="bg-[#0a0a0a] border border-white/10 rounded-xl p-6 flex flex-col items-center justify-center text-center gap-3">
-                      <Truck className="text-white/20" size={32} />
-                      <p className="text-sm text-[var(--color-ivory-muted)]">Please enter your delivery address below to view available shipping options and rates.</p>
+                    <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 text-xs text-[var(--color-ivory-muted)]">
+                      Next: add {deliveryPreference === 'postnet' ? 'your city and postal code' : 'the delivery address'} below, then calculate the available rate.
                     </div>
                   )}
 
                   {quoteLoading && (
                     <div className="flex flex-col items-center justify-center p-8 border border-white/10 rounded-xl bg-black/40">
                       <Loader2 size={32} className="animate-spin text-gold mb-4" />
-                      <p className="text-[var(--color-ivory-muted)]">Calculating dynamic rates from Courier Guy & DHL...</p>
+                      <p className="text-[var(--color-ivory-muted)]">Checking the available courier and PostNet rates...</p>
                     </div>
                   )}
 
                   {!quoteLoading && quote && quote.shipments.map((shp, index) => (
-                    <div key={index} className="bg-black/40 border border-white/10 rounded-xl p-6 mb-6 last:mb-0">
+                    <div id={index === 0 ? 'delivery-rates' : undefined} key={index} className="bg-black/40 border border-white/10 rounded-xl p-5 md:p-6 mt-5 mb-6 last:mb-0">
                       <h4 className="text-lg font-serif text-gold mb-4 flex items-center gap-2"><Truck size={18} /> Shipment {index + 1} — {shp.vendorName || 'The Grand Store'}</h4>
                       <p className="text-xs text-[var(--color-ivory-muted)] mb-4">Delivering from {shp.originCountry} to {shp.destCountry}</p>
                       
@@ -367,7 +490,7 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                         {shp.items.map((item, i) => (
                           <div key={i} className="flex justify-between text-sm mb-2">
                             <span>{item.quantity} × {item.name}</span>
-                            <span><Price amount={item.price * item.quantity} /></span>
+                            <span><Price amount={getProductPrice(item.price) * item.quantity} /></span>
                           </div>
                         ))}
                       </div>
@@ -402,7 +525,15 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                       {opt.stores.map(store => (
                                         <label key={store.id} className="block cursor-pointer">
-                                          <input type="radio" name={`postnet-store-${index}`} value={store.id} className="peer sr-only" required />
+                                          <input
+                                            type="radio"
+                                            name={`postnet-store-${index}`}
+                                            value={store.id}
+                                            checked={shp.selectedPickupStore?.id === store.id}
+                                            onChange={() => handlePostnetStoreSelect(index, store)}
+                                            className="peer sr-only"
+                                            required
+                                          />
                                           <div className="h-full border border-white/10 bg-[#0a0a0a] p-3 rounded-lg peer-checked:border-gold peer-checked:bg-gold/5 hover:border-white/30 transition-colors">
                                             <p className="text-sm font-medium text-white mb-1">{store.name}</p>
                                             <p className="text-xs text-[var(--color-ivory-muted)]">{store.address}</p>
@@ -444,7 +575,7 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                 <section className="border-t border-white/10 pt-8 mb-8">
                   <h2 className="text-xl font-serif mb-6 flex items-center gap-3">
                     <span className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-sm font-sans">2</span>
-                    Delivery Address
+                    Delivery Details
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -455,38 +586,62 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                       <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-2">Last Name</label>
                       <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} required className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--color-gold)]/50 focus:outline-none transition-colors" />
                     </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-2">Street Address</label>
-                      <LocationInput 
-                        name="address" 
-                        value={formData.address} 
-                        onChange={handleChange} 
-                        onPlaceDetails={({ address, city, postalCode, country, lat, lng }) => {
-                          setFormData(prev => ({
-                            ...prev,
-                            address: address || prev.address,
-                            city: city,
-                            postalCode: postalCode,
-                            country: country
-                          }));
-                          if (lat && lng) {
-                             setMapLocation({ lat, lng });
-                          }
-                          fetchQuote({
-                            address: address || formData.address,
-                            city: city,
-                            postalCode: postalCode,
-                            country: country
-                          });
-                        }}
-                        required 
-                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--color-gold)]/50 focus:outline-none transition-colors text-white" 
-                        placeholder="Start typing your address..." 
-                      />
-                    </div>
+                    {deliveryPreference !== 'postnet' ? (
+                      <div className="md:col-span-2">
+                        <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-2">Street Address</label>
+                        <LocationInput
+                          name="address"
+                          value={formData.address}
+                          onChange={handleChange}
+                          onPlaceDetails={({ address, city, postalCode, country, lat, lng }) => {
+                            setFormData((current) => ({
+                              ...current,
+                              address: address || current.address,
+                              city: city || current.city,
+                              postalCode: postalCode || current.postalCode,
+                              country: country || current.country
+                            }));
+                            setQuote(null);
+                            setDutiesAccepted(false);
+                            if (lat && lng) setMapLocation({ lat, lng });
+                          }}
+                          required
+                          className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--color-gold)]/50 focus:outline-none transition-colors text-white"
+                          placeholder="Start typing your address..."
+                        />
+                        <p className="mt-2 text-xs text-[var(--color-ivory-muted)]">Select a suggested address, review the fields below, then calculate the delivery rate.</p>
+                      </div>
+                    ) : (
+                      <div className="md:col-span-2 rounded-xl border border-[var(--color-gold)]/20 bg-[var(--color-gold)]/5 p-4 flex items-start gap-3">
+                        <MapPin size={18} className="mt-0.5 shrink-0 text-[var(--color-gold)]" />
+                        <div>
+                          <p className="text-sm text-white font-medium">No street address needed yet</p>
+                          <p className="mt-1 text-xs leading-relaxed text-[var(--color-ivory-muted)]">Enter your city and postal code. You will choose the exact PostNet branch after the branch search.</p>
+                        </div>
+                      </div>
+                    )}
                     <div>
                       <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-2">City</label>
-                      <input type="text" name="city" value={formData.city} onChange={handleChange} required className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--color-gold)]/50 focus:outline-none transition-colors" />
+                      <CityInput
+                        name="city"
+                        value={formData.city}
+                        onChange={handleChange}
+                        onCityDetails={({ city, country, lat, lng }) => {
+                          setFormData((current) => ({
+                            ...current,
+                            city,
+                            country: deliveryPreference === 'postnet' ? 'South Africa' : (country || current.country)
+                          }));
+                          setQuote(null);
+                          setDutiesAccepted(false);
+                          if (lat && lng) setMapLocation({ lat, lng });
+                        }}
+                        restrictToSouthAfrica={deliveryPreference === 'postnet'}
+                        required
+                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--color-gold)]/50 focus:outline-none transition-colors"
+                        placeholder={deliveryPreference === 'postnet' ? 'Search South African cities...' : 'Search for a city...'}
+                      />
+                      <p className="mt-2 text-xs text-[var(--color-ivory-muted)]">Start typing and select a city from the suggestions.</p>
                     </div>
                     <div>
                       <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-2">Postal Code</label>
@@ -494,16 +649,25 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                     </div>
                     <div className="md:col-span-2">
                       <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-2">Country</label>
-                      <input type="text" name="country" value={formData.country} onChange={handleChange} required className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--color-gold)]/50 focus:outline-none transition-colors text-white" />
+                      {deliveryPreference === 'postnet' ? (
+                        <div className="w-full bg-[#0a0a0a] border border-[var(--color-gold)]/25 rounded-xl px-4 py-3 text-sm text-white flex items-center justify-between gap-3">
+                          <span>South Africa</span>
+                          <span className="text-[10px] uppercase tracking-widest text-[var(--color-gold)]">PostNet only</span>
+                        </div>
+                      ) : (
+                        <input type="text" name="country" value={formData.country} onChange={handleChange} required className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--color-gold)]/50 focus:outline-none transition-colors text-white" />
+                      )}
                     </div>
                     
-                    {!quote && (
-                      <div className="md:col-span-2 mt-2">
+                    <div className="md:col-span-2 mt-2">
                         <button 
                           type="button" 
                           onClick={() => {
-                            if (!formData.address || !formData.city || !formData.country) {
-                              onNotify("Please fill in address, city, and country to get a delivery quote.");
+                            const needsStreetAddress = deliveryPreference !== 'postnet';
+                            if ((needsStreetAddress && !formData.address) || !formData.city || !formData.postalCode || !formData.country) {
+                              onNotify(needsStreetAddress
+                                ? "Please fill in the address, city, postal code, and country."
+                                : "Please fill in the city, postal code, and country to find PostNet branches.");
                               return;
                             }
                             fetchQuote({
@@ -516,10 +680,15 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                           disabled={quoteLoading}
                           className="w-full bg-white/5 border border-white/10 text-white font-medium text-xs uppercase tracking-widest py-4 rounded-xl hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
                         >
-                          {quoteLoading ? <><Loader2 size={16} className="animate-spin" /> Calculating...</> : 'Calculate Delivery Options'}
+                          {quoteLoading ? (
+                            <><Loader2 size={16} className="animate-spin" /> Calculating...</>
+                          ) : deliveryPreference === 'postnet' ? (
+                            quote ? 'Search PostNet Branches Again' : 'Find PostNet Branches & Price'
+                          ) : (
+                            quote ? 'Recalculate Delivery Price' : 'Calculate Delivery Price'
+                          )}
                         </button>
-                      </div>
-                    )}
+                    </div>
                     {/* Live Map */}
                     <div className="md:col-span-2">
                       <div className={`w-full transition-all duration-700 ease-in-out overflow-hidden rounded-xl border border-[var(--color-gold)]/20 ${mapLocation ? 'h-64 opacity-100 mt-4' : 'h-0 opacity-0 border-none'}`} ref={mapRef}></div>
@@ -587,7 +756,7 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                   disabled={loading || !quote}
                   className="w-full mt-8 bg-[#c9a35b] text-black font-bold uppercase tracking-widest text-xs py-4 rounded-xl hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : <>Place Order {quote ? <>• <Price amount={quote.aggregatedTotals.totalToPay} /></> : ''} <ArrowRight size={16} /></>}
+                  {loading ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : <>Place Order • <Price amount={quote ? quote.aggregatedTotals.totalToPay : cartSubtotal} /> <ArrowRight size={16} /></>}
                 </button>
                 
                 <PaymentForm paymentData={paymentData} payfastUrl={payfastUrl} />

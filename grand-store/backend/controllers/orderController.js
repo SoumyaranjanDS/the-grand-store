@@ -16,6 +16,10 @@ const addOrderItems = async (req, res) => {
     if (!quote || !quote.shipments || quote.shipments.length === 0) {
       return res.status(400).json({ message: 'Valid quote with shipments is required' });
     }
+
+    if (quote.shipments.some((shp) => shp.selectedCourier?.courierName === 'PostNet' && !shp.selectedPickupStore)) {
+      return res.status(400).json({ message: 'A PostNet branch must be selected for every PostNet shipment' });
+    }
     
     // Check expiration
     if (new Date(quote.expiresAt) < new Date()) {
@@ -133,7 +137,19 @@ const addOrderItems = async (req, res) => {
         vendorId: shp.vendorId,
         customerId: req.user._id,
         pickupAddress: { country: shp.originCountry },
-        deliveryAddress: shippingAddress,
+        deliveryAddress: shp.selectedPickupStore
+          ? { ...shippingAddress, address: shp.selectedPickupStore.address }
+          : shippingAddress,
+        deliveryMethod: shp.selectedCourier?.courierName === 'PostNet'
+          ? 'postnet_pickup'
+          : (shp.isInternational ? 'international_courier' : 'home_delivery'),
+        pickupLocation: shp.selectedPickupStore
+          ? {
+              locationId: shp.selectedPickupStore.id,
+              name: shp.selectedPickupStore.name,
+              address: shp.selectedPickupStore.address
+            }
+          : undefined,
         customerShippingCharge: shp.selectedCourier ? shp.selectedCourier.cost : 0,
         actualShippingCost: actualCost,
         legs: internalLegs,

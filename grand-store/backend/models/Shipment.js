@@ -29,6 +29,16 @@ const shipmentSchema = new mongoose.Schema(
       postalCode: String,
       country: String,
     },
+    deliveryMethod: {
+      type: String,
+      enum: ["home_delivery", "postnet_pickup", "international_courier"],
+      default: "home_delivery",
+    },
+    pickupLocation: {
+      locationId: String,
+      name: String,
+      address: String,
+    },
 
     packageDetails: {
       weight: Number,

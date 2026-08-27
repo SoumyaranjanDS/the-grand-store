@@ -13,13 +13,18 @@ const generateQuote = async (req, res) => {
     if (!settings) settings = await PlatformSettings.create({});
     const platformVatPct = settings.vatPct !== undefined ? settings.vatPct : 15;
 
-    const { cartItems, shippingAddress } = req.body;
+    const { cartItems, shippingAddress, deliveryPreference = 'best' } = req.body;
 
     if (!cartItems || cartItems.length === 0) {
       return res.status(400).json({ message: 'Cart is empty' });
     }
-    if (!shippingAddress || !shippingAddress.country) {
-      return res.status(400).json({ message: 'Valid shipping address with country is required' });
+    if (!shippingAddress || !shippingAddress.city || !shippingAddress.country) {
+      return res.status(400).json({ message: 'A city and country are required to calculate delivery' });
+    }
+    const destinationCountry = shippingAddress.country.trim().toLowerCase();
+    const isSouthAfricanDestination = ['south africa', 'za', 'rsa'].includes(destinationCountry);
+    if (deliveryPreference === 'postnet' && !isSouthAfricanDestination) {
+      return res.status(400).json({ message: 'PostNet pickup is only available within South Africa.' });
     }
 
     // 1. Enqueue products and group by vendor
@@ -103,6 +108,20 @@ const generateQuote = async (req, res) => {
         globalCustomsFees += shipmentCustoms;
       }
 
+      const availableQuotes = shippingData.quotes.filter((shippingQuote) => {
+        if (deliveryPreference === 'postnet') return shippingQuote.courierName === 'PostNet';
+        if (deliveryPreference === 'home') return shippingQuote.courierName !== 'PostNet';
+        return true;
+      });
+
+      if (availableQuotes.length === 0) {
+        return res.status(400).json({
+          message: deliveryPreference === 'postnet'
+            ? 'PostNet pickup is only available for deliveries within South Africa.'
+            : 'No delivery option is available for this destination.'
+        });
+      }
+
       shipments.push({
         vendorId: group.vendorId,
         vendorName: vendorName,
@@ -112,10 +131,11 @@ const generateQuote = async (req, res) => {
         destCountry: shippingData.destCountry,
         isInternational: shippingData.isInternational,
         taxData,
-        shippingQuotes: shippingData.quotes,
+        shippingQuotes: availableQuotes,
         landedCostEstimates: shippingData.landedCostEstimates,
         // Default selected courier is the first one
-        selectedCourier: shippingData.quotes.length > 0 ? shippingData.quotes[0] : null
+        selectedCourier: availableQuotes[0] || null,
+        selectedPickupStore: null
       });
     }
 
@@ -134,6 +154,7 @@ const generateQuote = async (req, res) => {
     res.json({
       quoteId,
       expiresAt,
+      deliveryPreference,
       globalSubtotal,
       hasInternational,
       aggregatedTotals: {
