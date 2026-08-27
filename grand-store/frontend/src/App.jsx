@@ -99,6 +99,8 @@ import AdminTradeEnquiries from './features/admin/AdminTradeEnquiries'
 import AdminAttributes from './features/admin/AdminAttributes'
 import AdminAdvertisementRequests from './features/admin/AdminAdvertisementRequests'
 import AdminAdvertisementRequestDetail from './features/admin/AdminAdvertisementRequestDetail'
+import AdvertisementFormPage from './features/advertisement/AdvertisementFormPage'
+import AdvertisedProductDetail from './features/advertisement/AdvertisedProductDetail'
 import AccessoriesPage from './features/shop/AccessoriesPage'
 import VendorMarketing from './features/vendor/VendorMarketing'
 import VendorAcademy from './features/vendor/VendorAcademy'
@@ -797,6 +799,8 @@ function App() {
         <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/faq" element={<FAQPage />} />
+        <Route path="/advertise" element={<AdvertisementFormPage />} />
+        <Route path="/discover/:id" element={<AdvertisedProductDetail />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/blogs" element={<BlogsPage />} />
         <Route path="/cocktail" element={<CocktailsPage />} />
