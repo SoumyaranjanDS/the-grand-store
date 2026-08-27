@@ -9,6 +9,7 @@ import {
   ShoppingBag,
   ChevronDown,
   ChevronRight,
+  ChevronLeft,
   ArrowRight,
   PackageCheck,
   X,
@@ -37,11 +38,16 @@ export default function Header({
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
+  const [mobileNavStack, setMobileNavStack] = useState([{ view: "root" }]);
   const [megaTrigger, setMegaTrigger] = useState("shop");
   const [activeCategory, setActiveCategory] = useState(null);
   const [activeBrand, setActiveBrand] = useState(null);
   const [megaActiveCategory, setMegaActiveCategory] = useState(null);
   const [hoveredItem, setHoveredItem] = useState(null);
+
+  const currentNav = mobileNavStack[mobileNavStack.length - 1];
+  const pushNav = (view, data = null) => setMobileNavStack(prev => [...prev, { view, data }]);
+  const popNav = () => setMobileNavStack(prev => prev.length > 1 ? prev.slice(0, -1) : prev);
 
   const previewProduct = useMemo(() => {
     if (!hoveredItem || !products.length) return null;
@@ -122,6 +128,7 @@ export default function Header({
   const closeMenus = () => {
     setMobileOpen(false);
     setMegaOpen(false);
+    setTimeout(() => setMobileNavStack([{ view: "root" }]), 300);
   };
 
   const scheduleClose = useCallback(() => {
@@ -190,6 +197,7 @@ export default function Header({
       return {
         name: cat,
         description: `Explore our premium collection of ${cat}`,
+        isAccessory: true,
         groups: [
           ...(subcats.length > 0 ? [{ title: 'Subcategories', items: subcats }] : []),
           ...(brands.length > 0 ? [{ title: 'Brands', items: brands }] : [])
@@ -837,165 +845,246 @@ export default function Header({
           aria-label="Close menu"
           onClick={closeMenus}
         />
-        <div className="drawer-panel">
-          <div className="drawer-head flex items-center justify-between">
-            <Link
-              to="/"
-              onClick={closeMenus}
-              className="inline-flex items-center"
-            >
-              <img
-                src="/logo.png"
-                alt="The Grand Store"
-                className="h-8 w-auto object-contain sm:h-10 md:h-[46px]"
-              />
-            </Link>
+        <div className="drawer-panel flex flex-col h-full bg-[#111]">
+          <div className="drawer-head flex items-center justify-between shrink-0 bg-[#0a0a0a] z-10 relative shadow-md">
+            {currentNav.view !== 'root' ? (
+              <button onClick={popNav} className="flex items-center text-white py-2 pr-4 font-medium hover:text-[#c9a35b] transition-colors -ml-1">
+                <ChevronLeft size={22} className="mr-1" />
+                Back
+              </button>
+            ) : (
+              <Link
+                to="/"
+                onClick={closeMenus}
+                className="inline-flex items-center"
+              >
+                <img
+                  src="/logo.png"
+                  alt="The Grand Store"
+                  className="h-8 w-auto object-contain sm:h-10 md:h-[46px]"
+                />
+              </Link>
+            )}
             <IconButton label="Close menu" onClick={closeMenus}>
               <X size={23} />
             </IconButton>
           </div>
-          <div
-            className="mobile-search-container relative"
-            ref={mobileSearchRef}
-          >
-            <form
-              className="mobile-search"
-              onSubmit={(event) => {
-                event.preventDefault();
-                if (mobileSearchQuery.trim()) {
-                  navigate(
-                    `/shop?search=${encodeURIComponent(mobileSearchQuery)}`,
-                  );
-                  closeMenus();
-                }
-              }}
-            >
-              <Search size={18} />
-              <input
-                aria-label="Search"
-                placeholder="Search the cellar"
-                value={mobileSearchQuery}
-                onChange={(e) => setMobileSearchQuery(e.target.value)}
-              />
-            </form>
-            <AnimatePresence>
-              {mobileSearchQuery.trim() && mobileSearchResults.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -5 }}
-                  className="absolute top-full left-0 w-full mt-2 bg-[#1a1a1a] border border-[#333] shadow-xl z-[100] rounded-sm overflow-hidden"
-                >
-                  {mobileSearchResults.map((product) => (
-                    <Link
-                      key={product.id || product._id}
-                      to={`/product/${product.slug || product.id || product._id}`}
-                      className="flex items-center justify-between p-3 border-b border-[#333] hover:bg-[#2a2a2a] transition-colors last:border-b-0"
-                      onClick={() => {
-                        setMobileSearchQuery("");
-                        closeMenus();
-                      }}
+          
+          <div className="flex-1 relative overflow-hidden flex flex-col">
+            <AnimatePresence mode="wait">
+              <motion.div 
+                key={currentNav.view + (currentNav.data?.name || '') + (currentNav.data?.item || '')}
+                initial={{ x: 20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -20, opacity: 0 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+                className="absolute inset-0 overflow-y-auto flex flex-col custom-scrollbar pb-10"
+              >
+                {currentNav.view === 'root' && (
+                  <>
+                    <div
+                      className="mobile-search-container relative mt-4"
+                      ref={mobileSearchRef}
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-10 bg-black flex items-center justify-center rounded border border-[#333] overflow-hidden shrink-0">
-                          {product.image ? (
-                            <img
-                              src={product.image}
-                              alt={product.name}
-                              className="max-w-full max-h-full object-contain"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-[#222]"></div>
-                          )}
-                        </div>
-                        <span
-                          className="text-sm text-[#eee] truncate"
-                          title={product.name}
-                        >
-                          {product.name}
-                        </span>
-                      </div>
-                      <span className="text-sm font-semibold text-white ml-4 shrink-0">
-                        <Price amount={product.price} />
-                      </span>
+                      <form
+                        className="mobile-search mx-5"
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          if (mobileSearchQuery.trim()) {
+                            navigate(
+                              `/shop?search=${encodeURIComponent(mobileSearchQuery)}`,
+                            );
+                            closeMenus();
+                          }
+                        }}
+                      >
+                        <Search size={18} />
+                        <input
+                          aria-label="Search"
+                          placeholder="Search the cellar"
+                          value={mobileSearchQuery}
+                          onChange={(e) => setMobileSearchQuery(e.target.value)}
+                        />
+                      </form>
+                      <AnimatePresence>
+                        {mobileSearchQuery.trim() && mobileSearchResults.length > 0 && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -5 }}
+                            className="absolute top-full left-5 right-5 mt-2 bg-[#1a1a1a] border border-[#333] shadow-xl z-[100] rounded-sm overflow-hidden"
+                          >
+                            {mobileSearchResults.map((product) => (
+                              <Link
+                                key={product.id || product._id}
+                                to={`/product/${product.slug || product.id || product._id}`}
+                                className="flex items-center justify-between p-3 border-b border-[#333] hover:bg-[#2a2a2a] transition-colors last:border-b-0"
+                                onClick={() => {
+                                  setMobileSearchQuery("");
+                                  closeMenus();
+                                }}
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className="w-8 h-10 bg-black flex items-center justify-center rounded border border-[#333] overflow-hidden shrink-0">
+                                    {product.image ? (
+                                      <img
+                                        src={product.image}
+                                        alt={product.name}
+                                        className="max-w-full max-h-full object-contain"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full bg-[#222]"></div>
+                                    )}
+                                  </div>
+                                  <span
+                                    className="text-sm text-[#eee] truncate"
+                                    title={product.name}
+                                  >
+                                    {product.name}
+                                  </span>
+                                </div>
+                                <span className="text-sm font-semibold text-white ml-4 shrink-0">
+                                  <Price amount={product.price} />
+                                </span>
+                              </Link>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                    <div className="drawer-links mt-2">
+                      <Link to="/" onClick={closeMenus}>
+                        Home
+                      </Link>
+                      <a role="button" className="flex items-center justify-between w-full text-left cursor-pointer" onClick={() => pushNav('shop')}>
+                        <span>Shop</span><ChevronRight size={16} className="text-[#666]"/>
+                      </a>
+                      <Link to="/offers" onClick={closeMenus}>
+                        Offers
+                      </Link>
+                      <Link to="/auction" onClick={closeMenus}>
+                        Auction
+                      </Link>
+                      <a role="button" className="flex items-center justify-between w-full text-left text-[#f0cf76] cursor-pointer" onClick={() => pushNav('accessories')}>
+                        <span>Accessories</span><ChevronRight size={16} className="text-[#666]"/>
+                      </a>
+                      <Link
+                        to="/events"
+                        onClick={closeMenus}
+                        className="font-bold text-[#f0cf76]"
+                      >
+                        Events
+                      </Link>
+                      <Link to="/vendor-portal" onClick={closeMenus}>
+                        Sell on The Grand Store
+                      </Link>
+                      <Link to="/events" onClick={closeMenus}>
+                        Book a tasting
+                      </Link>
+                      <Link
+                        to="/global-wines"
+                        onClick={closeMenus}
+                        className="text-[#f0cf76] font-bold"
+                      >
+                        🌍 Global Wines
+                      </Link>
+                      <Link to="/customer/wishlist" onClick={closeMenus}>
+                        Wishlist
+                      </Link>
+                    </div>
+                  </>
+                )}
+
+                {currentNav.view === 'shop' && (
+                  <div className="drawer-links pt-2">
+                    <div className="px-5 mb-4 border-b border-white/10 pb-4">
+                      <h2 className="text-2xl font-serif text-white">Shop the cellar</h2>
+                    </div>
+                    <Link to="/shop" onClick={closeMenus} className="text-[#c9a35b] font-bold text-sm tracking-widest uppercase pb-2 block">
+                      View All Shop Items <ArrowRight size={14} className="inline ml-1" />
                     </Link>
-                  ))}
-                </motion.div>
-              )}
+                    {dynamicMenuCategories.map(cat => (
+                      <a role="button" key={cat.name} className="flex items-center justify-between w-full text-left cursor-pointer" onClick={() => pushNav('category', cat)}>
+                        <span>{cat.name}</span><ChevronRight size={16} className="text-[#666]"/>
+                      </a>
+                    ))}
+                  </div>
+                )}
+
+                {currentNav.view === 'accessories' && (
+                  <div className="drawer-links pt-2">
+                    <div className="px-5 mb-4 border-b border-white/10 pb-4">
+                      <h2 className="text-2xl font-serif text-[#f0cf76]">Accessories</h2>
+                    </div>
+                    <Link to="/accessories" onClick={closeMenus} className="text-[#c9a35b] font-bold text-sm tracking-widest uppercase pb-2 block">
+                      View All Accessories <ArrowRight size={14} className="inline ml-1" />
+                    </Link>
+                    {dynamicAccessoryCategories.map(cat => (
+                      <a role="button" key={cat.name} className="flex items-center justify-between w-full text-left cursor-pointer" onClick={() => pushNav('category', cat)}>
+                        <span>{cat.name}</span><ChevronRight size={16} className="text-[#666]"/>
+                      </a>
+                    ))}
+                  </div>
+                )}
+
+                {currentNav.view === 'category' && (
+                  <div className="drawer-links pt-2">
+                    <div className="px-5 mb-4 border-b border-white/10 pb-4">
+                      <h2 className="text-2xl font-serif text-white">{currentNav.data.name}</h2>
+                    </div>
+                    <Link to={`/${currentNav.data.isAccessory ? 'accessories' : 'shop'}?category=${encodeURIComponent(currentNav.data.name)}`} onClick={closeMenus} className="text-[#c9a35b] font-bold text-sm tracking-widest uppercase pb-2 block">
+                      Shop All {currentNav.data.name} <ArrowRight size={14} className="inline ml-1" />
+                    </Link>
+                    {currentNav.data.groups.map(group => (
+                      <div key={group.title} className="mb-4">
+                        <h3 className="px-5 text-[#888] text-xs font-bold tracking-widest uppercase mb-1 mt-4">{group.title}</h3>
+                        {group.items.map(item => (
+                          <a role="button" key={item} className="flex items-center justify-between w-full text-left !py-3.5 !text-[15px] border-b border-white/5 cursor-pointer" onClick={() => pushNav('products', { category: currentNav.data, item })}>
+                            <span className="text-[#ddd]">{item}</span><ChevronRight size={14} className="text-[#555]"/>
+                          </a>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {currentNav.view === 'products' && (() => {
+                  const { category, item } = currentNav.data;
+                  const matchedProducts = products.filter(p => p.brand === item || p.subcategory === item).slice(0, 8);
+                  const isAccessory = category.isAccessory;
+                  return (
+                    <div className="drawer-links pt-2 pb-6">
+                      <div className="px-5 mb-4 border-b border-white/10 pb-4">
+                        <p className="text-[#888] text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5">{category.name}</p>
+                        <h2 className="text-xl font-serif text-white">{item}</h2>
+                      </div>
+                      <Link to={`/${isAccessory ? 'accessories' : 'shop'}?category=${encodeURIComponent(category.name)}&${isAccessory ? 'subcategory' : 'search'}=${encodeURIComponent(item)}`} onClick={closeMenus} className="text-[#c9a35b] font-bold text-sm tracking-widest uppercase pb-2 block mb-4">
+                        Shop all {item} <ArrowRight size={14} className="inline ml-1" />
+                      </Link>
+                      
+                      <div className="px-5 flex flex-col gap-5 mt-2">
+                        {matchedProducts.map(p => (
+                          <Link key={p.id || p._id} to={`/product/${p.slug || p.id || p._id}`} onClick={closeMenus} className="flex items-center gap-4 !p-0 !border-0 group !bg-transparent hover:!bg-transparent">
+                             <div className="w-[60px] h-[75px] bg-[#1a1a1a] rounded overflow-hidden shrink-0 border border-white/10 group-hover:border-white/30 transition-colors flex items-center justify-center">
+                               {p.image ? <img src={p.image} alt={p.name} className="max-w-full max-h-full object-contain p-1" /> : <div className="w-full h-full bg-[#222]"></div>}
+                             </div>
+                             <div className="flex-1 min-w-0">
+                               <p className="text-[#888] text-[10px] uppercase tracking-wider mb-1 truncate">{p.brand}</p>
+                               <h4 className="text-[#eee] text-[13px] line-clamp-2 leading-snug group-hover:text-[#c9a35b] transition-colors font-medium">{p.name}</h4>
+                               <p className="text-white font-bold text-[13px] mt-1.5"><Price amount={p.price}/></p>
+                             </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })()}
+              </motion.div>
             </AnimatePresence>
           </div>
-          <div className="drawer-links">
-            <Link to="/" onClick={closeMenus}>
-              Home
-            </Link>
-            <details>
-              <summary>
-                Shop
-                <ChevronDown size={15} />
-              </summary>
-              <div className="mobile-nest">
-                <strong>Shop the cellar</strong>
-                {storeCategories.map((category) => (
-                  <Link
-                    to={`/shop?category=${encodeURIComponent(category)}`}
-                    onClick={closeMenus}
-                    key={category}
-                  >
-                    {category}
-                  </Link>
-                ))}
-              </div>
-            </details>
-            <Link to="/offers" onClick={closeMenus}>
-              Offers
-            </Link>
-            <Link to="/auction" onClick={closeMenus}>
-              Auction
-            </Link>
-            <details>
-              <summary className="text-[#f0cf76]">
-                Accessories
-                <ChevronDown size={15} />
-              </summary>
-              <div className="mobile-nest">
-                <strong>Shop accessories</strong>
-                {Object.keys(accessoryCategories).map((category) => (
-                  <Link
-                    to={`/accessories?category=${encodeURIComponent(category)}`}
-                    onClick={closeMenus}
-                    key={category}
-                  >
-                    {category}
-                  </Link>
-                ))}
-              </div>
-            </details>
-            <Link
-              to="/events"
-              onClick={closeMenus}
-              className="font-bold text-[#f0cf76]"
-            >
-              Events
-            </Link>
-            <Link to="/vendor-portal" onClick={closeMenus}>
-              Sell on The Grand Store
-            </Link>
-            <Link to="/events" onClick={closeMenus}>
-              Book a tasting
-            </Link>
-            <Link
-              to="/global-wines"
-              onClick={closeMenus}
-              className="text-[#f0cf76] font-bold"
-            >
-              🌍 Global Wines
-            </Link>
-            <Link to="/customer/wishlist" onClick={closeMenus}>
-              Wishlist
-            </Link>
-          </div>
+
           <div
-            className="drawer-foot"
+            className="drawer-foot bg-[#0a0a0a] border-t border-white/10 shrink-0 z-10"
             onClick={() => {
               closeMenus();
               navigate(
