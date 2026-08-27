@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { DollarSign, ArrowUpRight, ArrowDownRight, TrendingUp, History, Download, FileSpreadsheet, Layers3 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { downloadAccountingWorkbook, downloadCategoryAccountingWorkbook } from '../../utils/accountingWorkbook';
+import { downloadAccountingWorkbook, downloadCategoryAccountingWorkbook, downloadAuctionsWorkbook, downloadEventsWorkbook, downloadVendorWorkbook, downloadLedgerWorkbook } from '../../utils/accountingWorkbook';
 
 export default function AdminFinancials({ hideHeader = false }) {
   const { user } = useAuth();
@@ -50,8 +50,16 @@ export default function AdminFinancials({ hideHeader = false }) {
     try {
       setExportError('');
       setExportingReport(reportType);
-      if (reportType === 'category') {
-        await downloadCategoryAccountingWorkbook({ shopOrders });
+      if (reportType === 'shop') {
+        await downloadCategoryAccountingWorkbook({ shopOrders, auctionOrders, eventBookings });
+      } else if (reportType === 'auctions') {
+        await downloadAuctionsWorkbook({ auctionOrders });
+      } else if (reportType === 'events') {
+        await downloadEventsWorkbook({ eventBookings });
+      } else if (reportType === 'vendor') {
+        await downloadVendorWorkbook({ vendorPayments });
+      } else if (reportType === 'transactions') {
+        await downloadLedgerWorkbook({ transactions });
       } else {
         await downloadAccountingWorkbook({ metrics, transactions, shopOrders, auctionOrders, eventBookings, vendorPayments });
       }
@@ -130,15 +138,27 @@ export default function AdminFinancials({ hideHeader = false }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 xl:min-w-[520px]">
             <button
               type="button"
-              onClick={() => exportToExcel('category')}
+              onClick={() => exportToExcel(activeTab)}
               disabled={Boolean(exportingReport)}
               className="min-h-12 px-4 py-3 border border-white/10 bg-white/[0.03] text-left hover:border-[#c9a35b]/60 hover:bg-[#c9a35b]/[0.06] disabled:opacity-50 transition-colors flex items-center gap-3"
-              title="Download retail sales grouped by product category"
+              title={`Download ${activeTab} report`}
             >
-              {exportingReport === 'category' ? <FileSpreadsheet size={18} className="text-[#c9a35b] animate-pulse shrink-0" /> : <Layers3 size={18} className="text-[#c9a35b] shrink-0" />}
+              {exportingReport === activeTab ? <FileSpreadsheet size={18} className="text-[#c9a35b] animate-pulse shrink-0" /> : <Layers3 size={18} className="text-[#c9a35b] shrink-0" />}
               <span>
-                <strong className="block text-white text-xs font-bold uppercase tracking-wider">Category-wise Excel</strong>
-                <small className="block text-[#777] text-[10px] mt-0.5">Category summary + item detail</small>
+                <strong className="block text-white text-xs font-bold uppercase tracking-wider">
+                  {activeTab === 'shop' && 'Category-wise Excel'}
+                  {activeTab === 'events' && 'Event Tickets Excel'}
+                  {activeTab === 'auctions' && 'Auctions Excel'}
+                  {activeTab === 'vendor' && 'Vendor Reg. Excel'}
+                  {activeTab === 'transactions' && 'Ledger Excel'}
+                </strong>
+                <small className="block text-[#777] text-[10px] mt-0.5">
+                  {activeTab === 'shop' && 'Category summary + item detail'}
+                  {activeTab === 'events' && 'All event bookings & payouts'}
+                  {activeTab === 'auctions' && 'All auction orders & payouts'}
+                  {activeTab === 'vendor' && 'Vendor registration payments'}
+                  {activeTab === 'transactions' && 'Master transaction ledger'}
+                </small>
               </span>
             </button>
             <button
