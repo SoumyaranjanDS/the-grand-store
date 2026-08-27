@@ -7,7 +7,7 @@ gsap.registerPlugin(ScrollTrigger)
 
 const destinations = [
   {
-    href: 'https://cigarconnoisseurclub.com/',
+    href: 'https://cigar.yogapranafitness.com/',
     image: '/assets/partners/cigar-connoisseur.webp',
     eyebrow: 'The Smoking Room',
     title: 'Cigar Connoisseur Club',
@@ -15,7 +15,7 @@ const destinations = [
     label: 'Explore the club',
   },
   {
-    href: 'https://millionairescollection.com/',
+    href: 'https://millionair.yogapranafitness.com/',
     image: '/assets/partners/millionaires-collection.webp',
     eyebrow: 'A Private World',
     title: 'Millionaires Collection',

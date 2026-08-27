@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import axios from 'axios';
 import api from '../api';
 
 const CurrencyContext = createContext();
@@ -34,7 +35,7 @@ export const CurrencyProvider = ({ children }) => {
 
         // 2. Determine User Location/Currency
         const savedCurrency = localStorage.getItem('userCurrency');
-        if (savedCurrency) {
+        if (savedCurrency && (savedCurrency === 'ZAR' || ratesRes.data?.rates?.[savedCurrency])) {
           setCurrency(savedCurrency);
         } else {
           // IP Geolocation API to get currency code
@@ -55,7 +56,7 @@ export const CurrencyProvider = ({ children }) => {
   }, []);
 
   const changeCurrency = (newCurrency) => {
-    if (rates && rates[newCurrency]) {
+    if (newCurrency === 'ZAR' || rates?.[newCurrency]) {
       setCurrency(newCurrency);
       localStorage.setItem('userCurrency', newCurrency);
     }
@@ -89,7 +90,9 @@ export const CurrencyProvider = ({ children }) => {
       loading,
       changeCurrency,
       formatPrice: convertAndFormat,
-      availableCurrencies: rates ? Object.keys(rates) : ['ZAR']
+      availableCurrencies: rates
+        ? Array.from(new Set(['ZAR', ...Object.keys(rates)])).sort()
+        : ['ZAR']
     }}>
       {children}
     </CurrencyContext.Provider>

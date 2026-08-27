@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import SectionHeading from '../components/SectionHeading';
 import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
@@ -7,6 +8,10 @@ function ProductShowcase({ id, eyebrow, title, intro, products, tone = 'dark', l
   const isDark = tone === 'dark';
   const [linkRef, linkVisible] = useIntersectionObserver({ threshold: 0.5 });
 
+  const handleClick = () => {
+    window.scrollTo(0, 0);
+  };
+
   return (
     <section className={`product-showcase product-showcase--${tone}`} id={id}>
       <div className="product-showcase__inner">
@@ -14,13 +19,14 @@ function ProductShowcase({ id, eyebrow, title, intro, products, tone = 'dark', l
         <div className="product-showcase__grid">
           {products.map((product, index) => <ProductCard key={product.name} product={product} index={index} />)}
         </div>
-        <a 
+        <Link 
           ref={linkRef}
           className={`product-showcase__all reveal-right ${linkVisible ? 'is-visible' : ''}`} 
-          href={linkUrl}
+          to={linkUrl}
+          onClick={handleClick}
         >
           View the complete collection
-        </a>
+        </Link>
       </div>
     </section>
   );

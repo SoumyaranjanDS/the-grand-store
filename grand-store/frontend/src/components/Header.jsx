@@ -21,6 +21,19 @@ import { storeCategories, accessoryCategories, menuCategories } from "../data";
 import { useAuth } from "../context/AuthContext";
 import { useProducts } from "../context/ProductContext";
 import { useGeoLocation } from "../context/LocationContext";
+import { useCurrency } from "../context/CurrencyContext";
+import LocaleSelector from "./LocaleSelector";
+
+const currencyFlagCountries = {
+  AED: 'AE', AUD: 'AU', BWP: 'BW', BRL: 'BR', CAD: 'CA', CHF: 'CH', CNY: 'CN',
+  EUR: 'EU', GBP: 'GB', GHS: 'GH', HKD: 'HK', INR: 'IN', JPY: 'JP', KES: 'KE',
+  KRW: 'KR', MUR: 'MU', MXN: 'MX', NAD: 'NA', NGN: 'NG', NZD: 'NZ', RUB: 'RU',
+  SAR: 'SA', SGD: 'SG', TRY: 'TR', USD: 'US', ZAR: 'ZA'
+};
+
+const currencyNames = typeof Intl !== 'undefined' && Intl.DisplayNames
+  ? new Intl.DisplayNames(['en'], { type: 'currency' })
+  : null;
 
 export default function Header({
   cartCount,
@@ -34,7 +47,21 @@ export default function Header({
   const navigate = useNavigate();
   const location = useLocation();
   const { products } = useProducts();
-  const { country_name, currency } = useGeoLocation();
+  const { country_code, countries, changeCountry } = useGeoLocation();
+  const { currency, availableCurrencies, changeCurrency, loading: currencyLoading } = useCurrency();
+
+  const countryOptions = useMemo(() => countries.map((country) => ({
+    value: country.code,
+    label: country.name,
+    flagCode: country.code
+  })), [countries]);
+
+  const currencyOptions = useMemo(() => availableCurrencies.map((currencyCode) => ({
+    value: currencyCode,
+    label: currencyNames?.of(currencyCode) || currencyCode,
+    flagCode: currencyFlagCountries[currencyCode],
+    icon: '¤'
+  })), [availableCurrencies]);
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
@@ -243,11 +270,23 @@ export default function Header({
             Private cellar sourcing available worldwide
           </p>
           <div className="announcement-actions font-bold tracking-widest uppercase text-[10px]">
-            <span className="flex items-center gap-1">
-              {country_name || "South Africa"}
-            </span>
+            <LocaleSelector
+              ariaLabel="Shopping country"
+              value={country_code || "ZA"}
+              options={countryOptions}
+              onChange={changeCountry}
+              searchPlaceholder="Search countries..."
+            />
             <span className="top-rule bg-black/20 mx-2" />
-            <span className="flex items-center gap-1">{currency}</span>
+            <LocaleSelector
+              ariaLabel="Display currency"
+              value={currency || "ZAR"}
+              options={currencyOptions}
+              onChange={changeCurrency}
+              searchPlaceholder="Search currencies..."
+              disabled={currencyLoading}
+              compact
+            />
           </div>
         </div>
       </div>
