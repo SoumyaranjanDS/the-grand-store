@@ -22,7 +22,7 @@ import { useAuth } from "../context/AuthContext";
 import { useProducts } from "../context/ProductContext";
 import { useGeoLocation } from "../context/LocationContext";
 import { useCurrency } from "../context/CurrencyContext";
-import LocaleSelector from "./LocaleSelector";
+import LocaleSelector, { LocaleIcon } from "./LocaleSelector";
 
 const currencyFlagCountries = {
   AED: 'AE', AUD: 'AU', BWP: 'BW', BRL: 'BR', CAD: 'CA', CHF: 'CH', CNY: 'CN',
@@ -62,6 +62,10 @@ export default function Header({
     flagCode: currencyFlagCountries[currencyCode],
     icon: '¤'
   })), [availableCurrencies]);
+
+  const selectedCountryOption = countryOptions.find(
+    (option) => option.value === (country_code || "ZA"),
+  ) || countryOptions[0];
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
@@ -269,7 +273,7 @@ export default function Header({
           <p className="announcement-message font-bold tracking-widest uppercase text-[10px]">
             Private cellar sourcing available worldwide
           </p>
-          <div className="announcement-actions font-bold tracking-widest uppercase text-[10px]">
+          <div className="announcement-actions announcement-actions--desktop font-bold tracking-widest uppercase text-[10px]">
             <LocaleSelector
               ariaLabel="Shopping country"
               value={country_code || "ZA"}
@@ -992,6 +996,20 @@ export default function Header({
                       </AnimatePresence>
                     </div>
                     <div className="drawer-links mt-2">
+                      <button
+                        type="button"
+                        className="drawer-locale-link"
+                        onClick={() => pushNav('locale')}
+                      >
+                        <span className="drawer-locale-link-icon" aria-hidden="true">
+                          {selectedCountryOption && <LocaleIcon option={selectedCountryOption} />}
+                        </span>
+                        <span className="drawer-locale-link-copy">
+                          <strong>Change country &amp; currency</strong>
+                          <small>{selectedCountryOption?.label || "South Africa"} &middot; {currency || "ZAR"}</small>
+                        </span>
+                        <ChevronRight size={16} aria-hidden="true" />
+                      </button>
                       <Link to="/" onClick={closeMenus}>
                         Home
                       </Link>
@@ -1032,6 +1050,41 @@ export default function Header({
                       </Link>
                     </div>
                   </>
+                )}
+
+                {currentNav.view === 'locale' && (
+                  <section className="drawer-locale-page" aria-labelledby="drawer-locale-title">
+                    <div className="drawer-locale-page-heading">
+                      <span>Shopping preferences</span>
+                      <h2 id="drawer-locale-title">Country &amp; currency</h2>
+                      <p>Choose where you are shopping and how you would like prices displayed.</p>
+                    </div>
+                    <div className="drawer-locale-page-fields">
+                      <div className="drawer-locale-field">
+                        <span className="drawer-locale-label">Country</span>
+                        <LocaleSelector
+                          ariaLabel="Shopping country"
+                          value={country_code || "ZA"}
+                          options={countryOptions}
+                          onChange={changeCountry}
+                          searchPlaceholder="Search countries..."
+                          embedded
+                        />
+                      </div>
+                      <div className="drawer-locale-field">
+                        <span className="drawer-locale-label">Currency</span>
+                        <LocaleSelector
+                          ariaLabel="Display currency"
+                          value={currency || "ZAR"}
+                          options={currencyOptions}
+                          onChange={changeCurrency}
+                          searchPlaceholder="Search currencies..."
+                          disabled={currencyLoading}
+                          embedded
+                        />
+                      </div>
+                    </div>
+                  </section>
                 )}
 
                 {currentNav.view === 'shop' && (

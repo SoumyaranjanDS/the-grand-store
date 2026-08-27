@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, ChevronDown, Search } from 'lucide-react';
 
-function LocaleIcon({ option, className = '' }) {
+export function LocaleIcon({ option, className = '' }) {
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
@@ -39,7 +39,8 @@ export default function LocaleSelector({
   onChange,
   searchPlaceholder,
   disabled = false,
-  compact = false
+  compact = false,
+  embedded = false
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -116,7 +117,7 @@ export default function LocaleSelector({
   };
 
   return (
-    <div className={`locale-picker ${compact ? 'locale-picker-compact' : ''}`} ref={rootRef}>
+    <div className={`locale-picker ${compact ? 'locale-picker-compact' : ''} ${embedded ? 'locale-picker-embedded' : ''}`} ref={rootRef}>
       <button
         ref={triggerRef}
         type="button"
