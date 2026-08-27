@@ -12,16 +12,16 @@ function ScrollVideoHero() {
       </div>
 
       <div className="hero-desktop-only">
-        <video 
-          className="scroll-film__video" 
-          muted 
-          playsInline 
-          autoPlay 
-          loop 
-          preload="auto" 
-          aria-label="Cigar smoke film"
+        <video
+          ref={videoRef}
+          className="scroll-video-hero__media"
+          muted
+          playsInline
+          loop
+          autoPlay
+          aria-hidden="true"
         >
-          <source src="/media/cigar-main-video.mp4" type="video/mp4" />
+          <source src="https://res.cloudinary.com/oioqrgj0/video/upload/v1787819585/cigar-store/hero/tqvn9t0up9y8vsxrlbix.mp4" type="video/mp4" />
         </video>
         <div className="scroll-film__shade" aria-hidden="true" />
         <div className="scroll-film__grain" aria-hidden="true" />

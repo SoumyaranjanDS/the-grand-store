@@ -17,6 +17,8 @@ const orderSchema = new mongoose.Schema({
       product: { type: String, required: true },
       vendorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
       name: { type: String, required: true },
+      category: { type: String, default: 'Uncategorised' },
+      subcategory: { type: String, default: '' },
       quantity: { type: Number, required: true },
       price: { type: Number, required: true },
       option: { type: String },

@@ -58,7 +58,9 @@ const generateQuote = async (req, res) => {
       vendorGroups[vId].items.push({
         ...item,
         price: itemPrice, // overriding with server price
-        vendorId: product.vendorId
+        vendorId: product.vendorId,
+        category: product.category || 'Uncategorised',
+        subcategory: product.subcategory || ''
       });
       vendorGroups[vId].subtotal += itemSubtotal;
       

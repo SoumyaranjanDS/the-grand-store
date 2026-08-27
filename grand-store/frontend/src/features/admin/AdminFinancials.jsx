@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { DollarSign, ArrowUpRight, ArrowDownRight, TrendingUp, History, Download, FileSpreadsheet } from 'lucide-react';
+import { DollarSign, ArrowUpRight, ArrowDownRight, TrendingUp, History, Download, FileSpreadsheet, Layers3 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { downloadAccountingWorkbook } from '../../utils/accountingWorkbook';
+import { downloadAccountingWorkbook, downloadCategoryAccountingWorkbook } from '../../utils/accountingWorkbook';
 
 export default function AdminFinancials({ hideHeader = false }) {
   const { user } = useAuth();
@@ -15,7 +15,8 @@ export default function AdminFinancials({ hideHeader = false }) {
   const [activeTab, setActiveTab] = useState('shop');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState('');
+  const [exportingReport, setExportingReport] = useState('');
 
   const formatMoney = (amount) => {
     return new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(amount || 0);
@@ -45,15 +46,20 @@ export default function AdminFinancials({ hideHeader = false }) {
     fetchFinanceData();
   }, [user?.token]);
 
-  const exportToExcel = async () => {
+  const exportToExcel = async (reportType) => {
     try {
-      setExporting(true);
-      await downloadAccountingWorkbook({ metrics, transactions, shopOrders, auctionOrders, eventBookings, vendorPayments });
+      setExportError('');
+      setExportingReport(reportType);
+      if (reportType === 'category') {
+        await downloadCategoryAccountingWorkbook({ shopOrders });
+      } else {
+        await downloadAccountingWorkbook({ metrics, transactions, shopOrders, auctionOrders, eventBookings, vendorPayments });
+      }
     } catch (exportError) {
       console.error(exportError);
-      setError('Could not create the Excel report. Please try again.');
+      setExportError('Could not create the Excel report. Please try again.');
     } finally {
-      setExporting(false);
+      setExportingReport('');
     }
   };
 
@@ -110,6 +116,49 @@ export default function AdminFinancials({ hideHeader = false }) {
         </div>
       </div>
 
+      {/* REPORT EXPORTS */}
+      <section className="bg-[#111] border border-white/10 rounded-sm px-6 py-5">
+        <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+          <div>
+            <div className="flex items-center gap-2 text-[#c9a35b] mb-1.5">
+              <FileSpreadsheet size={17} />
+              <span className="text-[10px] font-bold tracking-[0.18em] uppercase">Reports &amp; exports</span>
+            </div>
+            <h3 className="text-white font-serif text-xl">Download financial reports</h3>
+            <p className="text-[#888] text-xs mt-1">Choose the full accountant workbook or a retail sales report grouped by product category.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 xl:min-w-[520px]">
+            <button
+              type="button"
+              onClick={() => exportToExcel('category')}
+              disabled={Boolean(exportingReport)}
+              className="min-h-12 px-4 py-3 border border-white/10 bg-white/[0.03] text-left hover:border-[#c9a35b]/60 hover:bg-[#c9a35b]/[0.06] disabled:opacity-50 transition-colors flex items-center gap-3"
+              title="Download retail sales grouped by product category"
+            >
+              {exportingReport === 'category' ? <FileSpreadsheet size={18} className="text-[#c9a35b] animate-pulse shrink-0" /> : <Layers3 size={18} className="text-[#c9a35b] shrink-0" />}
+              <span>
+                <strong className="block text-white text-xs font-bold uppercase tracking-wider">Category-wise Excel</strong>
+                <small className="block text-[#777] text-[10px] mt-0.5">Category summary + item detail</small>
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => exportToExcel('overall')}
+              disabled={Boolean(exportingReport)}
+              className="min-h-12 px-4 py-3 bg-[#c9a35b] text-black text-left hover:bg-[#e1bd70] disabled:opacity-50 transition-colors flex items-center gap-3"
+              title="Download the complete accountant workbook"
+            >
+              {exportingReport === 'overall' ? <FileSpreadsheet size={18} className="animate-pulse shrink-0" /> : <Download size={18} className="shrink-0" />}
+              <span>
+                <strong className="block text-xs font-bold uppercase tracking-wider">Overall Excel report</strong>
+                <small className="block text-black/60 text-[10px] mt-0.5">All financial modules and ledger</small>
+              </span>
+            </button>
+          </div>
+        </div>
+        {exportError && <p className="text-red-400 text-xs mt-4" role="alert">{exportError}</p>}
+      </section>
+
       {/* ORDER FINANCIAL BREAKDOWN */}
       <div className="bg-[#111] border border-white/10 rounded-sm overflow-hidden mt-8">
         <div className="px-6 py-4 border-b border-white/10 bg-black/40 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
@@ -154,15 +203,6 @@ export default function AdminFinancials({ hideHeader = false }) {
               }`}
             >
               Ledger
-            </button>
-            <button
-              onClick={exportToExcel}
-              disabled={exporting}
-              className="px-4 py-2 text-xs font-bold tracking-wider uppercase rounded-sm bg-[#c9a35b] text-black hover:bg-[#e1bd70] disabled:opacity-50 transition-colors flex items-center gap-2"
-              title="Download the complete accountant workbook"
-            >
-              {exporting ? <FileSpreadsheet size={14} className="animate-pulse" /> : <Download size={14} />}
-              {exporting ? 'Creating…' : 'Excel report'}
             </button>
           </div>
         </div>

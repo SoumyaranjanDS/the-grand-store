@@ -1,8 +1,4 @@
-const REPORT_GOLD = 'C9A35B';
-const REPORT_DARK = '17130D';
-const REPORT_LIGHT = 'F5F1E8';
-const REPORT_MUTED = '7C7468';
-const CURRENCY_FORMAT = '"R" #,##0.00;[Red]("R" #,##0.00);-';
+const CURRENCY_FORMAT = '"R" #,##0.00';
 
 const numberValue = (value) => Number(value || 0);
 const dateValue = (value) => (value ? new Date(value) : null);
@@ -12,7 +8,7 @@ const shippingCost = (order) => numberValue(order.shippingCost);
 const actualShippingCost = (order) => (order.shipments || [])
   .reduce((sum, shipment) => sum + numberValue(shipment.actualShippingCost), 0);
 
-function styleDataSheet(worksheet, title, headers, rows, currencyColumns = []) {
+function legacyStyledDataSheet(worksheet, title, headers, rows, currencyColumns = []) {
   const lastColumn = String.fromCharCode(64 + headers.length);
   worksheet.mergeCells(`A1:${lastColumn}1`);
   worksheet.getCell('A1').value = title;
@@ -66,6 +62,41 @@ function styleDataSheet(worksheet, title, headers, rows, currencyColumns = []) {
       maxLength = Math.max(maxLength, value);
     });
     column.width = Math.min(Math.max(maxLength + 2, 12), 34);
+  });
+}
+
+function styleDataSheet(worksheet, _title, headers, rows, currencyColumns = []) {
+  const lastColumn = String.fromCharCode(64 + headers.length);
+  worksheet.addRow(headers);
+  rows.forEach((row) => worksheet.addRow(row));
+
+  const headerRow = worksheet.getRow(1);
+  headerRow.eachCell((cell) => {
+    cell.font = { name: 'Calibri', size: 11, bold: true };
+    cell.alignment = { vertical: 'middle', horizontal: 'left' };
+  });
+
+  for (let rowNumber = 2; rowNumber <= worksheet.rowCount; rowNumber += 1) {
+    worksheet.getRow(rowNumber).eachCell((cell, columnNumber) => {
+      cell.font = { name: 'Calibri', size: 11 };
+      cell.alignment = { vertical: 'middle' };
+      if (currencyColumns.includes(columnNumber)) {
+        cell.numFmt = CURRENCY_FORMAT;
+        cell.alignment = { vertical: 'middle', horizontal: 'right' };
+      }
+    });
+  }
+
+  worksheet.autoFilter = { from: 'A1', to: `${lastColumn}1` };
+  worksheet.views = [{ state: 'frozen', ySplit: 1 }];
+  worksheet.columns.forEach((column, index) => {
+    const headerLength = String(headers[index] || '').length;
+    let maxLength = headerLength;
+    column.eachCell({ includeEmpty: false }, (cell) => {
+      const value = cell.value instanceof Date ? 12 : String(cell.value ?? '').length;
+      maxLength = Math.max(maxLength, value);
+    });
+    column.width = Math.min(Math.max(maxLength + 2, 10), 30);
   });
 }
 
@@ -230,19 +261,164 @@ export async function buildAccountingWorkbook(data) {
   return workbook;
 }
 
-export async function downloadAccountingWorkbook(data) {
-  const workbook = await buildAccountingWorkbook(data);
+export function buildCategoryReportRows(shopOrders = []) {
+  const seenOrderCategories = new Set();
+  const details = shopOrders.flatMap((order, orderIndex) => {
+    const orderReference = order.orderId || order.transactionId || order._id || `Order ${orderIndex + 1}`;
+
+    return (order.orderItems || []).map((item) => {
+      const category = String(item.category || '').trim() || 'Uncategorised';
+      const quantity = numberValue(item.quantity);
+      const unitPrice = numberValue(item.price);
+      const categoryOrderKey = `${category}\u0000${orderReference}`;
+      const orderContribution = seenOrderCategories.has(categoryOrderKey) ? 0 : 1;
+      seenOrderCategories.add(categoryOrderKey);
+
+      return {
+        category,
+        subcategory: String(item.subcategory || '').trim(),
+        orderReference,
+        invoiceNumber: order.invoiceNumber || '',
+        date: dateValue(order.createdAt),
+        productName: item.name || '',
+        orderContribution,
+        quantity,
+        unitPrice,
+        productSales: quantity * unitPrice,
+        customerName: order.user?.name || '',
+        customerEmail: order.user?.email || '',
+        paymentStatus: order.paymentStatus || '',
+      };
+    });
+  }).sort((left, right) => left.category.localeCompare(right.category)
+    || numberValue(right.date?.getTime()) - numberValue(left.date?.getTime()));
+
+  const categoryMap = new Map();
+  details.forEach((row) => {
+    const current = categoryMap.get(row.category) || {
+      category: row.category,
+      orders: 0,
+      units: 0,
+      productSales: 0,
+    };
+    current.orders += row.orderContribution;
+    current.units += row.quantity;
+    current.productSales += row.productSales;
+    categoryMap.set(row.category, current);
+  });
+
+  const totalProductSales = [...categoryMap.values()]
+    .reduce((sum, row) => sum + row.productSales, 0);
+  const summary = [...categoryMap.values()]
+    .map((row) => ({
+      ...row,
+      salesShare: totalProductSales ? row.productSales / totalProductSales : 0,
+      averageUnitPrice: row.units ? row.productSales / row.units : 0,
+    }))
+    .sort((left, right) => right.productSales - left.productSales || left.category.localeCompare(right.category));
+
+  return { details, summary };
+}
+
+export async function buildCategoryAccountingWorkbook({ shopOrders = [] } = {}) {
+  const ExcelModule = await import('exceljs/dist/exceljs.min.js');
+  const ExcelJS = ExcelModule.default || ExcelModule;
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'The Grand Store';
+  workbook.company = 'The Grand Store';
+  workbook.subject = 'Retail sales report grouped by product category';
+  workbook.created = new Date();
+  workbook.modified = new Date();
+
+  const { details, summary } = buildCategoryReportRows(shopOrders);
+  const summarySheet = workbook.addWorksheet('Category Summary');
+  const detailSheet = workbook.addWorksheet('Category Detail');
+  styleDataSheet(detailSheet, 'Retail Product Sales by Category', [
+    'Category', 'Subcategory', 'Order Ref', 'Invoice', 'Date', 'Product', 'Order Count',
+    'Quantity', 'Unit Price', 'Product Sales', 'Customer', 'Customer Email', 'Payment Status',
+  ], details.map((row) => [
+    row.category,
+    row.subcategory,
+    row.orderReference,
+    row.invoiceNumber,
+    row.date,
+    row.productName,
+    row.orderContribution,
+    row.quantity,
+    row.unitPrice,
+    row.productSales,
+    row.customerName,
+    row.customerEmail,
+    row.paymentStatus,
+  ]), [9, 10]);
+  detailSheet.getColumn(5).numFmt = 'yyyy-mm-dd';
+  detailSheet.getColumn(7).numFmt = '#,##0';
+  detailSheet.getColumn(8).numFmt = '#,##0';
+
+  const detailEndRow = Math.max(5, details.length + 4);
+  const summaryEndRow = Math.max(5, summary.length + 4);
+  styleDataSheet(summarySheet, 'Category Sales Summary', [
+    'Category', 'Orders', 'Units Sold', 'Product Sales', 'Sales Share', 'Average Unit Price',
+  ], summary.map((row, index) => {
+    const rowNumber = index + 5;
+    return [
+      row.category,
+      {
+        formula: `SUMIFS('Category Detail'!$G$5:$G$${detailEndRow},'Category Detail'!$A$5:$A$${detailEndRow},A${rowNumber})`,
+        result: row.orders,
+      },
+      {
+        formula: `SUMIFS('Category Detail'!$H$5:$H$${detailEndRow},'Category Detail'!$A$5:$A$${detailEndRow},A${rowNumber})`,
+        result: row.units,
+      },
+      {
+        formula: `SUMIFS('Category Detail'!$J$5:$J$${detailEndRow},'Category Detail'!$A$5:$A$${detailEndRow},A${rowNumber})`,
+        result: row.productSales,
+      },
+      {
+        formula: `IFERROR(D${rowNumber}/SUM($D$5:$D$${summaryEndRow}),0)`,
+        result: row.salesShare,
+      },
+      {
+        formula: `IFERROR(D${rowNumber}/C${rowNumber},0)`,
+        result: row.averageUnitPrice,
+      },
+    ];
+  }), [4, 6]);
+  summarySheet.getColumn(2).numFmt = '#,##0';
+  summarySheet.getColumn(3).numFmt = '#,##0';
+  summarySheet.getColumn(5).numFmt = '0.0%';
+  summarySheet.columns[0].width = Math.max(summarySheet.columns[0].width || 12, 24);
+  summarySheet.views = [{ state: 'frozen', ySplit: 4, showGridLines: false }];
+
+  workbook.views = [{ activeTab: 0 }];
+
+  return workbook;
+}
+
+async function downloadWorkbook(workbook, filename) {
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  const stamp = new Date().toISOString().slice(0, 10);
   link.href = url;
-  link.download = `grand-store-accounting-${stamp}.xlsx`;
+  link.download = filename;
   document.body.appendChild(link);
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
+}
+
+export async function downloadAccountingWorkbook(data) {
+  const workbook = await buildAccountingWorkbook(data);
+  const stamp = new Date().toISOString().slice(0, 10);
+  await downloadWorkbook(workbook, `grand-store-accounting-${stamp}.xlsx`);
+}
+
+export async function downloadCategoryAccountingWorkbook(data) {
+  const workbook = await buildCategoryAccountingWorkbook(data);
+  const stamp = new Date().toISOString().slice(0, 10);
+  await downloadWorkbook(workbook, `grand-store-category-sales-${stamp}.xlsx`);
 }

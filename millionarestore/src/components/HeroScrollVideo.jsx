@@ -84,7 +84,7 @@ export default function HeroScrollVideo() {
 
         <div className="hero-desktop-only">
           <div className="hero-media" ref={mediaRef}>
-            <video src="/assets/Horse_and_wine_bottle_animation_202608241417.mp4" autoPlay loop muted playsInline preload="auto" aria-label="Millionaires Collection sparkling wine film sequence" />
+            <video src="https://res.cloudinary.com/oioqrgj0/video/upload/v1787819430/millionaire-store/hero/mgy82l4bxwmkq9o9pyvc.mp4" autoPlay loop muted playsInline preload="auto" aria-label="Millionaires Collection sparkling wine film sequence" />
             <div className="hero-film-shade" />
           </div>
 

@@ -3,6 +3,7 @@ const Wallet = require('../models/Wallet');
 const Order = require('../models/Order');
 const Shipment = require('../models/Shipment'); // Required so Mongoose registers the model before populate() is called
 const Booking = require('../models/Booking');
+const Product = require('../models/Product');
 
 // @desc    Get Admin Finance Overview
 // @route   GET /api/admin/finance
@@ -16,11 +17,51 @@ const getAdminFinanceOverview = async (req, res) => {
       .limit(limit)
       .populate('customer', 'name email')
       .populate('vendor', 'name email');
-    const shopOrders = await Order.find({ transactionId: { $regex: /SHP/ } })
+    const rawShopOrders = await Order.find({ transactionId: { $regex: /SHP/ } })
       .sort({ createdAt: -1 })
       .limit(limit)
       .populate('user', 'name email')
-      .populate('shipments');
+      .populate('shipments')
+      .lean();
+
+    // Older orders did not store category snapshots. Resolve their products here so
+    // category reporting remains useful for both historic and newly-created orders.
+    const productReferences = [...new Set(rawShopOrders.flatMap((order) =>
+      (order.orderItems || []).map((item) => String(item.product || '')).filter(Boolean)
+    ))];
+    const productNames = [...new Set(rawShopOrders.flatMap((order) =>
+      (order.orderItems || []).map((item) => item.name).filter(Boolean)
+    ))];
+    const objectIdReferences = productReferences.filter((reference) => /^[0-9a-fA-F]{24}$/.test(reference));
+    const productFilters = [];
+    if (productReferences.length) productFilters.push({ id: { $in: productReferences } });
+    if (objectIdReferences.length) productFilters.push({ _id: { $in: objectIdReferences } });
+    if (productNames.length) productFilters.push({ name: { $in: productNames } });
+
+    const categoryProducts = productFilters.length
+      ? await Product.find({ $or: productFilters }).select('_id id name category subcategory').lean()
+      : [];
+    const productLookup = new Map();
+    categoryProducts.forEach((product) => {
+      if (product._id) productLookup.set(String(product._id), product);
+      if (product.id) productLookup.set(String(product.id), product);
+      if (product.name) productLookup.set(`name:${product.name.toLocaleLowerCase()}`, product);
+    });
+
+    const shopOrders = rawShopOrders.map((order) => ({
+      ...order,
+      orderItems: (order.orderItems || []).map((item) => {
+        const product = productLookup.get(String(item.product || ''))
+          || productLookup.get(`name:${String(item.name || '').toLocaleLowerCase()}`);
+        return {
+          ...item,
+          category: item.category && item.category !== 'Uncategorised'
+            ? item.category
+            : (product?.category || 'Uncategorised'),
+          subcategory: item.subcategory || product?.subcategory || '',
+        };
+      }),
+    }));
     const auctionOrders = await Order.find({ transactionId: { $regex: /AUC/ } }).sort({ createdAt: -1 }).limit(limit).populate('user', 'name email');
     const eventBookings = await Booking.find().sort({ createdAt: -1 }).limit(limit).populate('user', 'name email');
     const vendorPayments = await Transaction.find({ module: 'vendor', type: 'payment' })
