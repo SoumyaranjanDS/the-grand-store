@@ -1,15 +1,11 @@
-import { useProducts } from '../../context/ProductContext'
-import React, { useState, useEffect, useRef } from 'react';
-import { Link, Navigate, useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { ChevronRight, ChevronLeft, ShoppingBag, ArrowRight, Minus, Plus, Trash2, Heart, ZoomIn, CheckCircle2, Truck, RotateCcw, ShieldCheck, Mail, MessageCircle, Share2, X, Gift, SlidersHorizontal, Grid3X3, GitCompareArrows, MapPin, Calendar, Clock, CreditCard, Droplets, PackageCheck } from 'lucide-react';
-import { brandyBrands, brands, menuCategories, tequilaBrands, getProductPrice, formatCartPrice } from '../../data';
-import { useWishlist } from '../../wishlistContext';
-import ProductCard from '../../components/ProductCard';
+import { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowRight, ChevronLeft, ChevronRight, Minus, PackageCheck, Plus, ShieldCheck, ShoppingBag, Trash2, Truck } from 'lucide-react';
+import { getProductPrice } from '../../data';
 import { useAuth } from '../../context/AuthContext';
 import Price from '../../components/ui/Price';
 
 export default function CartPage({ cartItems, onUpdateQuantity, onRemove, onClear, onNotify }) {
-  const { products } = useProducts();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -20,7 +16,8 @@ export default function CartPage({ cartItems, onUpdateQuantity, onRemove, onClea
       navigate('/login');
       return;
     }
-    if (user.role && (user.role.startsWith('vendor') || user.role === 'admin')) {
+    const nonCustomerRoles = ['admin', 'super_admin', 'accountant', 'product_manager'];
+    if (user.role && (user.role.startsWith('vendor') || nonCustomerRoles.includes(user.role))) {
       onNotify("Vendors and admins cannot checkout. Please login as a customer to buy.");
       navigate('/register');
       return;
