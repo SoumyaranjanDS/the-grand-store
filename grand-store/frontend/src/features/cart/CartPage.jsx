@@ -130,7 +130,17 @@ export default function CartPage({ cartItems, onUpdateQuantity, onRemove, onClea
               <p className="eyebrow">Order summary</p>
               <h2>Cart Total</h2>
               <dl>
-                <div><dt>Subtotal</dt><dd><Price amount={cartTotal} /></dd></div>
+                {cartItems.map((item, idx) => (
+                  <div key={idx}>
+                    <dt className="truncate max-w-[200px] xl:max-w-[250px]" title={item.fullName || item.name}>
+                      {item.quantity} × {item.fullName || item.name}
+                    </dt>
+                    <dd>
+                      <Price amount={getProductPrice(item.price) * item.quantity} />
+                    </dd>
+                  </div>
+                ))}
+                <div className="pt-4 mt-4 border-t border-white/10" style={{ marginTop: '1rem', paddingTop: '1rem' }}><dt>Subtotal</dt><dd><Price amount={cartTotal} /></dd></div>
                 <div><dt>Delivery</dt><dd>Calculated at checkout</dd></div>
                 <div className="cart-summary-total"><dt>Total</dt><dd><Price amount={cartTotal} /></dd></div>
               </dl>
