@@ -5,7 +5,8 @@ import { useWishlist } from '../context/wishlistContext';
 
 function ProductCard({ product, index }) {
   const navigate = useNavigate();
-  const isExternal = product.href.startsWith('http');
+  const productHref = product.href || `/product-details/${product.slug}`;
+  const isExternal = productHref.startsWith('http');
   const [ref, isVisible] = useIntersectionObserver({ threshold: 0.1 });
   const revealClass = index % 2 === 0 ? 'reveal-left' : 'reveal-right';
   const delay = { transitionDelay: `${index * 150}ms` };
@@ -13,23 +14,16 @@ function ProductCard({ product, index }) {
   const saved = isSaved(product);
 
   const handleClick = (e) => {
-    // If clicking the save button, do nothing (let the button handle it)
-    if (e.target.closest('button')) return;
+    // Buttons and links already handle their own action.
+    if (e.target.closest('button, a')) return;
     
-    // If it's an external link, open in new tab
     if (isExternal) {
-      window.open(product.href, '_blank', 'noreferrer');
+      window.open(productHref, '_blank', 'noopener,noreferrer');
       return;
     }
-
-    // Prevent default anchor behavior if they clicked an internal link
-    if (e.target.closest('a')) {
-      e.preventDefault();
-    }
     
-    // Scroll to top and navigate using React Router
     window.scrollTo(0, 0);
-    navigate(product.href);
+    navigate(productHref);
   };
 
   return (
@@ -52,11 +46,11 @@ function ProductCard({ product, index }) {
             <span>{saved ? 'Saved' : 'Save'}</span>
           </button>
           {isExternal ? (
-            <a href={product.href} aria-label={`View ${product.name}`} target="_blank" rel="noreferrer">
+            <a href={productHref} aria-label={`View ${product.name}`} target="_blank" rel="noreferrer">
               <img src={product.image} alt={product.name} loading="lazy" />
             </a>
           ) : (
-            <Link to={product.href} aria-label={`View ${product.name}`} onClick={(e) => e.preventDefault()}>
+            <Link to={productHref} aria-label={`View ${product.name}`} onClick={() => window.scrollTo(0, 0)}>
               <img src={product.image} alt={product.name} loading="lazy" />
             </Link>
           )}
@@ -65,17 +59,17 @@ function ProductCard({ product, index }) {
           <p>{product.brand}</p>
           <h3>
             {isExternal ? (
-              <a href={product.href} target="_blank" rel="noreferrer">{product.name}</a>
+              <a href={productHref} target="_blank" rel="noreferrer">{product.name}</a>
             ) : (
-              <Link to={product.href} onClick={(e) => e.preventDefault()}>{product.name}</Link>
+              <Link to={productHref} onClick={() => window.scrollTo(0, 0)}>{product.name}</Link>
             )}
           </h3>
           {isExternal ? (
-            <a className="product-card__link" href={product.href} target="_blank" rel="noreferrer">
+            <a className="product-card__link" href={productHref} target="_blank" rel="noreferrer">
               View selection <ArrowUpRight size={15} strokeWidth={1.4} />
             </a>
           ) : (
-            <Link className="product-card__link" to={product.href} onClick={(e) => e.preventDefault()}>
+            <Link className="product-card__link" to={productHref} onClick={() => window.scrollTo(0, 0)}>
               View selection <ArrowUpRight size={15} strokeWidth={1.4} />
             </Link>
           )}
