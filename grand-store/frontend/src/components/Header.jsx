@@ -73,6 +73,8 @@ export default function Header({
   const [megaTrigger, setMegaTrigger] = useState("shop");
   const [activeCategory, setActiveCategory] = useState(null);
   const [activeBrand, setActiveBrand] = useState(null);
+  const [activeSubcategory, setActiveSubcategory] = useState(null);
+  const [activeCountry, setActiveCountry] = useState(null);
   const [megaActiveCategory, setMegaActiveCategory] = useState(null);
   const [hoveredItem, setHoveredItem] = useState(null);
 
@@ -170,30 +172,39 @@ export default function Header({
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
   }, []);
 
-  // Build category→brands and subcategories map from live products
+  // Build category→brands, subcategories, and countries map from live products
   const getProductCategory = (p) => p.category || p.type || "";
   const categoryBrandsMap = {};
   const categorySubcategoriesMap = {};
+  const categoryCountriesMap = {};
+  
   for (const p of products) {
     const cat = getProductCategory(p);
     if (!cat) continue;
+    
     if (!categoryBrandsMap[cat]) categoryBrandsMap[cat] = new Set();
     if (p.brand) categoryBrandsMap[cat].add(p.brand);
     
     if (!categorySubcategoriesMap[cat]) categorySubcategoriesMap[cat] = new Set();
     if (p.subcategory) categorySubcategoriesMap[cat].add(p.subcategory);
+    
+    if (!categoryCountriesMap[cat]) categoryCountriesMap[cat] = new Set();
+    if (p.country) categoryCountriesMap[cat].add(p.country);
   }
+  
   const liveCategories = Object.keys(categoryBrandsMap).sort();
 
   const dynamicMenuCategories = liveCategories.map(cat => {
     const subcats = Array.from(categorySubcategoriesMap[cat] || []).sort();
     const brands = Array.from(categoryBrandsMap[cat] || []).sort();
+    const countries = Array.from(categoryCountriesMap[cat] || []).sort();
     
     return {
       name: cat,
       description: `Explore our collection of ${cat}`,
       groups: [
         ...(subcats.length > 0 ? [{ title: 'Subcategories', items: subcats }] : []),
+        ...(countries.length > 0 ? [{ title: 'Countries', items: countries }] : []),
         ...(brands.length > 0 ? [{ title: 'Brands', items: brands }] : [])
       ]
     };
@@ -619,7 +630,12 @@ export default function Header({
                       {dynamicMenuCategories.map((cat) => (
                         <button
                           key={cat.name}
-                          onMouseEnter={() => setMegaActiveCategory(cat)}
+                          onMouseEnter={() => {
+                            setMegaActiveCategory(cat);
+                            setActiveSubcategory(null);
+                            setActiveBrand(null);
+                            setActiveCountry(null);
+                          }}
                           onClick={() => {
                             closeMenus();
                             navigate(`/shop?category=${encodeURIComponent(cat.name)}`);
@@ -636,94 +652,159 @@ export default function Header({
                   <div className="flex-1 flex bg-[#111] relative overflow-hidden">
                     {megaActiveCategory && (
                       <>
-                        <div className="flex-1 py-10 px-12 h-full flex flex-col">
-                          <div className="mb-10">
-                            <h2 className="text-3xl font-serif text-white mb-2">{megaActiveCategory.name}</h2>
-                            <p className="text-[#888] text-[15px] max-w-lg">{megaActiveCategory.description}</p>
-                          </div>
-                        
-                        <div className="flex gap-12 flex-wrap">
-                          {megaActiveCategory?.groups?.map((group) => (
-                            <div key={group.title} className="flex-1 min-w-[240px] max-w-[340px]">
-                              <h4 className="text-white text-[13px] font-bold tracking-[0.05em] mb-5 pb-4 border-b border-white/10">
-                                {group.title}
-                              </h4>
-                              <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                                <ul className="columns-2 gap-6">
-                                  {group.items.map((item) => (
-                                    <li key={item} className="break-inside-avoid mb-3.5">
-                                      <Link
-                                        to={`/shop?category=${encodeURIComponent(megaActiveCategory.name)}&search=${encodeURIComponent(item)}`}
-                                        onClick={closeMenus}
-                                        onMouseEnter={() => setHoveredItem(item)}
-                                        className="text-[13px] text-[#999] hover:text-[#c9a35b] transition-colors block"
-                                      >
-                                        {item}
-                                      </Link>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            </div>
-                          ))}
+                        {(() => {
+                          const categoryProducts = products.filter(p => getProductCategory(p) === megaActiveCategory.name);
+                          const subcategories = Array.from(new Set(categoryProducts.map(p => p.subcategory).filter(Boolean))).sort();
                           
-                          {/* Products List (Identical UI to groups) */}
-                          {(() => {
-                            if (!hoveredItem) return null;
-                            const matchedProducts = products.filter(p => p.brand === hoveredItem || p.subcategory === hoveredItem);
-                            if (matchedProducts.length === 0) return null;
-                            
-                            const visibleProducts = matchedProducts.slice(0, 8);
-                            const hasMore = matchedProducts.length > 8;
-                            
-                            return (
-                              <div className="flex-1 min-w-[240px] max-w-[340px] animate-in fade-in slide-in-from-left-4 duration-200 flex flex-col">
-                                <h4 className="text-[#c9a35b] text-[13px] font-bold tracking-[0.05em] mb-5 pb-4 border-b border-white/10 uppercase">
-                                  Products
-                                </h4>
-                                <div>
-                                  <ul className="columns-2 gap-6">
-                                    {visibleProducts.map(p => (
-                                      <li key={p.id || p._id} className="break-inside-avoid mb-5">
+                          const subcatProducts = activeSubcategory ? categoryProducts.filter(p => p.subcategory === activeSubcategory) : [];
+                          const brands = Array.from(new Set(subcatProducts.map(p => p.brand).filter(Boolean))).sort();
+                          
+                          const brandProducts = activeBrand ? subcatProducts.filter(p => p.brand === activeBrand) : [];
+                          const countries = Array.from(new Set(brandProducts.map(p => p.country).filter(Boolean))).sort();
+                          
+                          const finalProducts = activeCountry ? brandProducts.filter(p => p.country === activeCountry).slice(0, 8) : [];
+                          
+                          return (
+                            <div className="flex-1 py-10 px-12 h-full flex flex-col">
+                              <div className="mb-10">
+                                <h2 className="text-3xl font-serif text-white mb-2">{megaActiveCategory.name}</h2>
+                                <p className="text-[#888] text-[15px] max-w-lg">{megaActiveCategory.description}</p>
+                              </div>
+                              
+                              <div className="flex gap-12">
+                                {/* Subcategories Column */}
+                                {subcategories.length > 0 && (
+                                  <div className="flex-1 min-w-[180px] max-w-[240px]">
+                                    <h4 className="text-white text-[13px] font-bold tracking-[0.05em] mb-5 pb-4 border-b border-white/10 uppercase">
+                                      Subcategories
+                                    </h4>
+                                    <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                      <ul className="flex flex-col gap-3.5">
+                                        {subcategories.map(item => (
+                                          <li key={item}>
+                                            <Link 
+                                              to={`/shop?category=${encodeURIComponent(megaActiveCategory.name)}&search=${encodeURIComponent(item)}`}
+                                              onClick={closeMenus}
+                                              onMouseEnter={() => {
+                                                setActiveSubcategory(item);
+                                                setActiveBrand(null);
+                                                setActiveCountry(null);
+                                              }}
+                                              className={`text-[13px] transition-colors block ${activeSubcategory === item ? 'text-[#c9a35b]' : 'text-[#999] hover:text-[#c9a35b]'}`}
+                                            >
+                                              {item}
+                                            </Link>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {/* Brands Column */}
+                                {activeSubcategory && brands.length > 0 && (
+                                  <div className="flex-1 min-w-[180px] max-w-[240px] animate-in fade-in slide-in-from-left-4 duration-200">
+                                    <h4 className="text-white text-[13px] font-bold tracking-[0.05em] mb-5 pb-4 border-b border-white/10 uppercase">
+                                      Brands
+                                    </h4>
+                                    <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                      <ul className="flex flex-col gap-3.5">
+                                        {brands.map(item => (
+                                          <li key={item}>
+                                            <Link 
+                                              to={`/shop?category=${encodeURIComponent(megaActiveCategory.name)}&search=${encodeURIComponent(item)}`}
+                                              onClick={closeMenus}
+                                              onMouseEnter={() => {
+                                                setActiveBrand(item);
+                                                setActiveCountry(null);
+                                              }}
+                                              className={`text-[13px] transition-colors block ${activeBrand === item ? 'text-[#c9a35b]' : 'text-[#999] hover:text-[#c9a35b]'}`}
+                                            >
+                                              {item}
+                                            </Link>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Countries Column */}
+                                {activeBrand && countries.length > 0 && (
+                                  <div className="flex-1 min-w-[180px] max-w-[240px] animate-in fade-in slide-in-from-left-4 duration-200">
+                                    <h4 className="text-white text-[13px] font-bold tracking-[0.05em] mb-5 pb-4 border-b border-white/10 uppercase">
+                                      Countries
+                                    </h4>
+                                    <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                      <ul className="flex flex-col gap-3.5">
+                                        {countries.map(item => (
+                                          <li key={item}>
+                                            <Link 
+                                              to={`/shop?category=${encodeURIComponent(megaActiveCategory.name)}&search=${encodeURIComponent(item)}`}
+                                              onClick={closeMenus}
+                                              onMouseEnter={() => setActiveCountry(item)}
+                                              className={`text-[13px] transition-colors block ${activeCountry === item ? 'text-[#c9a35b]' : 'text-[#999] hover:text-[#c9a35b]'}`}
+                                            >
+                                              {item}
+                                            </Link>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Final Products Column */}
+                                {activeCountry && finalProducts.length > 0 && (
+                                  <div className="flex-1 min-w-[200px] max-w-[280px] animate-in fade-in slide-in-from-left-4 duration-200">
+                                    <h4 className="text-[#c9a35b] text-[13px] font-bold tracking-[0.05em] mb-5 pb-4 border-b border-white/10 uppercase">
+                                      Products
+                                    </h4>
+                                    <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                      <ul className="flex flex-col gap-4">
+                                        {finalProducts.map(p => (
+                                          <li key={p.id || p._id} className="break-inside-avoid">
+                                            <Link 
+                                              to={`/product/${p.slug || p.id || p._id}`}
+                                              onClick={closeMenus}
+                                              className="flex flex-col gap-1 group"
+                                            >
+                                              <span className="text-[13px] text-[#eee] group-hover:text-[#c9a35b] transition-colors block line-clamp-2 leading-tight">
+                                                {p.name}
+                                              </span>
+                                            </Link>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                    {brandProducts.filter(p => p.country === activeCountry).length > 8 && (
+                                      <div className="mt-4 pt-4 border-t border-white/5">
                                         <Link
-                                          to={`/product/${p.slug || p.id || p._id}`}
+                                          to={`/shop?category=${encodeURIComponent(megaActiveCategory.name)}&subcategory=${encodeURIComponent(activeSubcategory)}&brand=${encodeURIComponent(activeBrand)}&country=${encodeURIComponent(activeCountry)}`}
                                           onClick={closeMenus}
-                                          className="text-[13px] text-[#999] hover:text-[#c9a35b] transition-colors block line-clamp-1"
-                                          title={p.name}
+                                          className="inline-flex items-center gap-1.5 text-[#c9a35b] text-[11px] font-bold tracking-[0.1em] uppercase hover:text-white transition-colors"
                                         >
-                                          {p.name}
+                                          View more <ArrowRight size={12} />
                                         </Link>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                                {hasMore && (
-                                  <div className="mt-2 pt-4 border-t border-white/5">
-                                    <Link
-                                      to={`/shop?category=${encodeURIComponent(megaActiveCategory.name)}&search=${encodeURIComponent(hoveredItem)}`}
-                                      onClick={closeMenus}
-                                      className="inline-flex items-center gap-1.5 text-[#c9a35b] text-[11px] font-bold tracking-[0.1em] uppercase hover:text-white transition-colors"
-                                    >
-                                      View more <ArrowRight size={12} />
-                                    </Link>
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>
-                            );
-                          })()}
-                        </div>
-                        
-                        {/* View All Button */}
-                        <div className="mt-auto pt-8">
-                          <Link 
-                            to={`/shop?category=${encodeURIComponent(megaActiveCategory.name)}`}
-                            onClick={closeMenus}
-                            className="inline-flex items-center gap-2 text-[#c9a35b] text-[12px] font-bold tracking-[0.15em] uppercase hover:text-white transition-colors"
-                          >
-                            Shop All {megaActiveCategory.name} <ArrowRight size={14} />
-                          </Link>
-                        </div>
-                      </div>
+
+                              {/* View All Button */}
+                              <div className="mt-auto pt-8">
+                                <Link 
+                                  to={`/shop?category=${encodeURIComponent(megaActiveCategory.name)}`}
+                                  onClick={closeMenus}
+                                  className="inline-flex items-center gap-2 text-[#c9a35b] text-[12px] font-bold tracking-[0.15em] uppercase hover:text-white transition-colors"
+                                >
+                                  Shop All {megaActiveCategory.name} <ArrowRight size={14} />
+                                </Link>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </>
                     )}
                   </div>

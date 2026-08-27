@@ -99,9 +99,11 @@ const payfastRoutes = require("./routes/payfastRoutes");
 const configRoutes = require("./routes/configRoutes");
 const newsletterRoutes = require("./routes/newsletterRoutes");
 const chatbotRoutes = require("./routes/chatbotRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/categories", categoryRoutes);
 app.use("/api/vendor", vendorRoutes);
 app.use("/api/auction", auctionRoutes);
 app.use("/api/events", eventRoutes);

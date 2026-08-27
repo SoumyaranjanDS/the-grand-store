@@ -60,8 +60,14 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
   const selectedCategories = searchParams
     .getAll("category")
     .filter(isVisibleFilterValue);
+  const selectedSubcategories = searchParams
+    .getAll("subcategory")
+    .filter(isVisibleFilterValue);
   const selectedBrands = searchParams
     .getAll("brand")
+    .filter(isVisibleFilterValue);
+  const selectedCountries = searchParams
+    .getAll("country")
     .filter(isVisibleFilterValue);
   const selectedSizes = searchParams
     .getAll("size")
@@ -79,13 +85,32 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
     ),
   ];
 
-  const productsForBrands =
+  const productsForSubcategories =
     selectedCategories.length > 0
       ? shopProducts.filter((p) =>
           selectedCategories.includes(getProductCategory(p)),
         )
       : shopProducts;
+
+  const subcategoryOptions = getFilterOptions(productsForSubcategories, "subcategory");
+
+  const productsForBrands =
+    selectedSubcategories.length > 0
+      ? productsForSubcategories.filter((p) =>
+          selectedSubcategories.includes(p.subcategory),
+        )
+      : productsForSubcategories;
+
   const brandOptions = getFilterOptions(productsForBrands, "brand");
+
+  const productsForCountries =
+    selectedBrands.length > 0
+      ? productsForBrands.filter((p) =>
+          selectedBrands.includes(p.brand),
+        )
+      : productsForBrands;
+
+  const countryOptions = getFilterOptions(productsForCountries, "country");
 
   const sizeOptions = getFilterOptions(shopProducts, "size");
 
@@ -121,7 +146,9 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
     return (
       (!selectedCategories.length ||
         selectedCategories.includes(getProductCategory(product))) &&
+      (!selectedSubcategories.length || selectedSubcategories.includes(product.subcategory)) &&
       (!selectedBrands.length || selectedBrands.includes(product.brand)) &&
+      (!selectedCountries.length || selectedCountries.includes(product.country)) &&
       (!selectedSizes.length || selectedSizes.includes(product.size)) &&
       priceValue(product) >= minP &&
       priceValue(product) <= maxP
@@ -145,7 +172,9 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
     (maxPriceInput !== "" && Number(maxPriceInput) < maxPrice);
   const activeFilterCount =
     selectedCategories.length +
+    selectedSubcategories.length +
     selectedBrands.length +
+    selectedCountries.length +
     selectedSizes.length +
     (isPriceFiltered ? 1 : 0);
 
@@ -201,10 +230,22 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
                 onToggle={(value) => toggleFilter("category", value)}
               />
               <FilterGroup
+                title="Subcategory"
+                options={subcategoryOptions}
+                selectedValues={selectedSubcategories}
+                onToggle={(value) => toggleFilter("subcategory", value)}
+              />
+              <FilterGroup
                 title="Brand"
                 options={brandOptions}
                 selectedValues={selectedBrands}
                 onToggle={(value) => toggleFilter("brand", value)}
+              />
+              <FilterGroup
+                title="Country"
+                options={countryOptions}
+                selectedValues={selectedCountries}
+                onToggle={(value) => toggleFilter("country", value)}
               />
               <FilterGroup
                 title="Bottle size"
