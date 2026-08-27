@@ -21,6 +21,7 @@ import BrandyShowcase from './features/home/components/BrandyShowcase'
 import CategoryShowcase from './features/home/components/CategoryShowcase'
 import PrivateCollection from './features/home/components/PrivateCollection'
 import EventAdvertisements from './features/home/components/EventAdvertisements'
+import AdvertisedProductsSection from './features/home/components/AdvertisedProductsSection'
 import PartnerDestinations from './features/home/components/PartnerDestinations'
 import WhyChooseUs from './features/home/components/WhyChooseUs'
 import Testimonials from './features/home/components/Testimonials'
@@ -529,6 +530,7 @@ function App() {
                 onCompare={addToCompare}
                 compareItems={compareItems}
               />
+              <AdvertisedProductsSection />
               <PrivateCollection />
               <EventAdvertisements />
               <PartnerDestinations />

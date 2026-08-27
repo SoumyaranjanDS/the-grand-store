@@ -70,7 +70,7 @@ function styleDataSheet(worksheet, title, headers, rows, currencyColumns = []) {
 }
 
 export async function buildAccountingWorkbook(data) {
-  const ExcelModule = await import('exceljs');
+  const ExcelModule = await import('exceljs/dist/exceljs.min.js');
   const ExcelJS = ExcelModule.default || ExcelModule;
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'The Grand Store';
