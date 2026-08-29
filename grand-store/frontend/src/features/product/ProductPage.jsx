@@ -319,90 +319,69 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             {product.fullName || product.name}
           </h1>
 
-          <div className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold uppercase tracking-[0.12em] sm:text-sm">
-            <span className="text-[#918a7f]">
-              SKU: {String(product.id).substring(0, 10).toUpperCase()}
-            </span>
-            <span className="text-white/20">—</span>
-            <span
-              className={
-                product.stock > 0 || product.stock === undefined
-                  ? "text-green-500"
-                  : "text-red-500"
-              }
-            >
-              {product.stock > 0 || product.stock === undefined
-                ? "In Stock"
-                : "Out of Stock"}
-            </span>
+          <div className="mb-5 text-xs font-semibold uppercase tracking-[0.12em] text-[#918a7f] sm:text-sm">
+            SKU: {String(product.id).substring(0, 10).toUpperCase()}
           </div>
 
-          <div className="mb-7 overflow-hidden border border-[#c9a35b]/25 bg-[#11100d] sm:mb-8 sm:grid sm:grid-cols-[minmax(0,1fr)_240px]">
+          <div className="mb-7 overflow-hidden border-y border-[#c9a35b]/25 bg-gradient-to-r from-[#14120e] to-[#0d0c0a] sm:mb-8 lg:grid lg:grid-cols-[minmax(0,1fr)_230px]">
             <div className="min-w-0 px-5 py-5 sm:px-6 sm:py-6">
-              <div className="flex items-center justify-between gap-4">
-                <p className="m-0 text-xs font-semibold uppercase tracking-[0.12em] text-[#918a7f]">
-                  Online price
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="m-0 flex items-center gap-2.5 text-xs font-bold uppercase tracking-[0.14em] text-[#aaa195]">
+                  <span className="h-4 w-0.5 bg-[#c9a35b]" aria-hidden="true" />
+                  Price
                 </p>
-                <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.08em] text-emerald-400">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.65)]" />
-                  Available now
+                <span
+                  className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.09em] ${
+                    product.stock > 0 || product.stock === undefined
+                      ? "border-emerald-400/25 bg-emerald-400/[0.07] text-emerald-400"
+                      : "border-red-400/25 bg-red-400/[0.07] text-red-400"
+                  }`}
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
+                  {product.stock > 0 || product.stock === undefined ? "In stock" : "Out of stock"}
                 </span>
               </div>
 
-              <div className="mt-2 min-w-0 text-[clamp(2.1rem,4.4vw,3rem)]">
+              <div className="mt-4 min-w-0 text-[clamp(2rem,10vw,3rem)] font-semibold leading-none text-[#e1bd70]">
                 <Price amount={product.price} presentation="product" />
               </div>
 
-              <dl className="mt-5 grid grid-cols-2 gap-x-5 gap-y-4 border-t border-white/10 pt-4 sm:grid-cols-3">
-                <div className="min-w-0">
-                  <dt className="text-xs font-semibold uppercase tracking-[0.1em] text-[#837b70]">Bottle</dt>
-                  <dd className="mt-1.5 truncate text-sm font-medium text-[#d8d0c4]">
-                    {identity.bottleSize || product.size || "Standard"}
-                  </dd>
-                </div>
-                <div className="min-w-0">
-                  <dt className="text-xs font-semibold uppercase tracking-[0.1em] text-[#837b70]">Origin</dt>
-                  <dd className="mt-1.5 truncate text-sm font-medium text-[#d8d0c4]">
-                    {identity.origin || product.country || "Not stated"}
-                  </dd>
-                </div>
-                <div className="col-span-2 min-w-0 sm:col-span-1">
-                  <dt className="text-xs font-semibold uppercase tracking-[0.1em] text-[#837b70]">Checkout</dt>
-                  <dd className="mt-1.5 text-sm font-medium text-[#d8d0c4]">Secure payment</dd>
-                </div>
-              </dl>
+              <p className="mt-4 border-t border-white/[0.08] pt-3 text-xs leading-relaxed text-[#837b70]">
+                Taxes included <span className="mx-2 text-[#c9a35b]/60">•</span> Delivery calculated at checkout
+              </p>
             </div>
 
             <button
               type="button"
               onClick={() => setShowCertificate(true)}
-              className="group flex w-full items-center gap-4 border-t border-[#c9a35b]/20 bg-[#c9a35b]/[0.055] px-5 py-4 text-left transition-colors hover:bg-[#c9a35b]/[0.1] sm:flex-col sm:justify-center sm:border-l sm:border-t-0 sm:px-6 sm:py-5 sm:text-center"
+              className="group flex w-full min-w-0 items-center justify-start gap-3 border-t border-[#c9a35b]/20 bg-[#c9a35b]/[0.045] px-5 py-3.5 text-left transition-colors hover:bg-[#c9a35b]/[0.09] sm:px-6 lg:flex-col lg:justify-center lg:border-l lg:border-t-0 lg:px-5 lg:py-5 lg:text-center"
               title="Click to view our 100% Satisfaction Guarantee"
               aria-label="View the Grandstore 100% satisfaction guarantee"
             >
-              <img
-                src="/grandstore-badge.png"
-                alt=""
-                aria-hidden="true"
-                className="h-16 w-16 shrink-0 object-contain transition-transform duration-300 group-hover:scale-105 sm:h-20 sm:w-20"
-              />
-              <span className="min-w-0">
-                <strong className="block text-sm uppercase tracking-[0.09em] text-[#e1bd70]">
+              <span className="grid h-12 w-12 shrink-0 place-items-center sm:h-14 sm:w-14 lg:h-16 lg:w-16" aria-hidden="true">
+                <img
+                  src="/grandstore-badge.png"
+                  alt=""
+                  className="!h-full !w-full max-w-none object-contain transition-transform duration-300 group-hover:scale-105"
+                />
+              </span>
+              <span className="min-w-0 flex-1 lg:flex-none">
+                <strong className="block break-words text-xs uppercase tracking-[0.08em] text-[#e1bd70]">
                   Grandstore guarantee
                 </strong>
-                <span className="mt-1.5 block text-xs leading-relaxed text-[#aaa195]">
-                  100% satisfaction certificate
+                <span className="mt-1.5 block break-words text-[11px] leading-relaxed text-[#918a7f]">
+                  Shop with our 100% satisfaction promise
                 </span>
-                <span className="mt-2 block text-[10px] font-bold uppercase tracking-[0.1em] text-[#d8d0c4]">
-                  View details →
-                </span>
+              </span>
+              <span className="shrink-0 text-lg text-[#c9a35b] transition-transform group-hover:translate-x-1 lg:hidden" aria-hidden="true">
+                →
               </span>
             </button>
           </div>
 
           {/* Bottle identity — the key facts customers need at a glance. */}
           <div className="mb-8 border border-[#c9a35b]/25 bg-[#11100d] p-5 sm:p-6">
-            <div className="mb-5 flex items-center justify-between gap-4 border-b border-white/10 pb-4">
+            <div className="mb-5 flex flex-col items-start gap-3 border-b border-white/10 pb-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#918a7f]">
                   At a glance
@@ -813,24 +792,26 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
       {/* Certificate Modal */}
       {showCertificate && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-8 bg-black/90 backdrop-blur-md overflow-y-auto"
+          className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-black/90 p-3 backdrop-blur-md sm:p-5 md:p-8"
           onClick={() => setShowCertificate(false)}
         >
           <div
-            className="relative w-full max-w-2xl mx-auto flex flex-col items-center animate-in fade-in zoom-in-95 duration-300 my-auto"
+            className="relative mx-auto my-auto flex w-full max-w-2xl animate-in flex-col items-center overflow-hidden fade-in zoom-in-95 duration-300"
             onClick={(e) => e.stopPropagation()}
           >
             <button
+              type="button"
               onClick={() => setShowCertificate(false)}
-              className="absolute -top-12 right-0 text-white/50 hover:text-white transition-colors z-10"
+              className="absolute right-3 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-black/75 text-white transition-colors hover:bg-black"
               title="Close Certificate"
+              aria-label="Close guarantee certificate"
             >
-              <X size={28} />
+              <X size={22} />
             </button>
 
             {/* Exact Image Certificate Layout */}
-            <div className="w-full bg-[#1a1a1a] p-2 md:p-3 shadow-2xl">
-              <div className="w-full bg-white relative p-3 md:p-5 lg:p-6 flex justify-center">
+            <div className="w-full bg-[#1a1a1a] p-2 shadow-2xl md:p-3">
+              <div className="relative flex w-full justify-center bg-white p-3 pt-14 sm:pt-5 md:p-5 lg:p-6">
                 {/* Inner Gold Border */}
                 <div className="relative flex min-h-[300px] w-full flex-col items-center justify-center border-[3px] border-[#d4af37] p-3 sm:p-6 md:p-8 lg:p-10">
                   {/* Corners */}

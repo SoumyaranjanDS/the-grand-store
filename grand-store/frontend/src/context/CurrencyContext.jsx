@@ -19,16 +19,8 @@ const CURRENCY_SYMBOLS = {
   CAD: 'C$'
 };
 
-const CURRENCY_LOCALES = {
-  ZAR: 'en-ZA',
-  INR: 'en-IN',
-  EUR: 'en-IE',
-  GBP: 'en-GB'
-};
-
 const formatCurrencyAmount = (amount, currencyCode) => {
-  const locale = CURRENCY_LOCALES[currencyCode] || 'en-US';
-  const formatted = new Intl.NumberFormat(locale, {
+  const formatted = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(amount);
