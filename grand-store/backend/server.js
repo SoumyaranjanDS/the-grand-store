@@ -4,7 +4,11 @@ dns.setServers(["8.8.8.8", "8.8.4.4"]);
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+const mongoSanitize = require("express-mongo-sanitize");
+const xssClean = require("xss-clean");
+const cookieParser = require("cookie-parser");
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
 const testimonialRoutes = require("./routes/testimonialRoutes");
@@ -61,6 +65,43 @@ app.use(
 );
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" })); // Added for PayFast ITN form data
+
+app.use(cookieParser());
+// NOTE: xss-clean is currently disabled because it crashes on Express 5.x 
+// due to trying to mutate the read-only req.query getter (same issue as mongo-sanitize).
+// app.use(xssClean());
+
+// Secure HTTP headers (allow cross-origin resources like Cloudinary images)
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+}));
+
+// Sanitize MongoDB data (prevent NoSQL injection)
+// NOTE: express-mongo-sanitize is currently disabled because it crashes on Express 5.x 
+// due to trying to mutate the read-only req.query getter.
+// app.use(mongoSanitize());
+
+// Global Rate Limiter
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 1000,
+  message: 'Too many requests from this IP, please try again after 15 minutes'
+});
+app.use(globalLimiter);
+
+// Specific limiters
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: 'Too many authentication attempts, please try again later'
+});
+
+const paymentLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 50,
+  message: 'Too many payment requests, please try again later'
+});
+
 app.use("/uploads", express.static("uploads"));
 
 // Database Connection
@@ -101,14 +142,14 @@ const newsletterRoutes = require("./routes/newsletterRoutes");
 const chatbotRoutes = require("./routes/chatbotRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/vendor", vendorRoutes);
 app.use("/api/auction", auctionRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/orders", orderRoutes);
-app.use("/api/checkout", checkoutRoutes);
+app.use("/api/checkout", paymentLimiter, checkoutRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/shop", shopRoutes);
@@ -116,7 +157,7 @@ app.use("/api/social-proof", socialProofRoutes);
 app.use("/api/estates", estateRoutes);
 app.use("/api/host-applications", hostApplicationRoutes);
 app.use("/api/postnet", postnetRoutes);
-app.use("/api/payfast", payfastRoutes);
+app.use("/api/payfast", paymentLimiter, payfastRoutes);
 app.use("/api/testimonials", testimonialRoutes);
 app.use("/api/attributes", attributeRoutes);
 app.use("/api/glossary", glossaryRoutes);

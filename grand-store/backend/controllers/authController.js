@@ -12,6 +12,35 @@ const generateToken = (id) => {
   });
 };
 
+const sendTokenResponse = (user, statusCode, res) => {
+  const token = generateToken(user._id);
+  const options = {
+    expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+    httpOnly: true,
+    secure: process.env.NODE_ENV !== 'development',
+    sameSite: 'strict'
+  };
+  res.status(statusCode).cookie('jwt', token, options).json({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    mustChangePassword: user?.mustChangePassword
+  });
+};
+
+// @desc    Logout user / clear cookie
+// @route   POST /api/auth/logout
+// @access  Public
+const logoutUser = (req, res) => {
+  res.cookie('jwt', 'none', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
+  res.status(200).json({ success: true, message: 'User logged out' });
+};
+
+
 // @desc    Register a new user
 // @route   POST /api/auth/register
 // @access  Public
@@ -44,13 +73,7 @@ const registerUser = async (req, res) => {
         html: welcomeEmailTemplate(user.name)
       }).catch(err => console.error('Failed to send welcome email:', err));
 
-      res.status(201).json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        token: generateToken(user._id),
-      });
+      sendTokenResponse(user, 201, res);
     } else {
       res.status(400).json({ message: 'Invalid user data' });
     }
@@ -70,14 +93,7 @@ const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && user.password && (await bcrypt.compare(password, user.password))) {
-      res.json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        mustChangePassword: user.mustChangePassword,
-        token: generateToken(user._id),
-      });
+      sendTokenResponse(user, 200, res);
     } else {
       res.status(401).json({ message: 'Invalid email or password' });
     }
@@ -86,6 +102,8 @@ const loginUser = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+
 
 // @desc    Get user profile
 // @route   GET /api/auth/profile
@@ -134,13 +152,7 @@ const updateUserProfile = async (req, res) => {
 
       const updatedUser = await user.save();
 
-      res.json({
-        _id: updatedUser._id,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        role: updatedUser.role,
-        token: generateToken(updatedUser._id),
-      });
+      sendTokenResponse(updatedUser, 200, res);
     } else {
       res.status(404).json({ message: 'User not found' });
     }
@@ -235,14 +247,7 @@ const googleAuth = async (req, res) => {
       }).catch(err => console.error('Failed to send welcome email:', err));
     }
 
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      mustChangePassword: user.mustChangePassword,
-      token: generateToken(user._id),
-    });
+    sendTokenResponse(user, 200, res);
 
   } catch (error) {
     console.error('Google Auth Error:', error);
@@ -253,6 +258,7 @@ const googleAuth = async (req, res) => {
 module.exports = {
   registerUser,
   loginUser,
+  logoutUser,
   getUserProfile,
   updateUserProfile,
   deleteUserProfile,

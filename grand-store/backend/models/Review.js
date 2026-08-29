@@ -37,6 +37,10 @@ const reviewSchema = new mongoose.Schema({
     url: String, // Photo URL or YouTube/Vimeo link
     caption: String
   }],
+  helpfulBy: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
   status: {
     type: String,
     enum: ['pending', 'approved', 'rejected'],

@@ -21,6 +21,7 @@ import ProductQnA from "../../components/social/ProductQnA";
 import ExpertReviewCard from "../../components/social/ExpertReviewCard";
 import Price from "../../components/ui/Price";
 import { getProductIdentity } from "../../utils/productTaxonomy";
+import api from "../../api";
 
 const preparedVendorImages = {
   '/uploads/images-1787292711461.png': '/assets/products/vendor/whisky-tona-full.png',
@@ -76,9 +77,8 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
   const [deliveryCountry, setDeliveryCountry] = useState("South Africa");
   const [shippingEstimate, setShippingEstimate] = useState(null);
 
-  // Mock social proof data (to be replaced by API calls in the future)
   const [reviews, setReviews] = useState([]);
-  const [qna, setQna] = useState([]);
+  const [reviewSummary, setReviewSummary] = useState({ averageRating: 0, reviewCount: 0 });
   const [expertReview, setExpertReview] = useState(null);
 
   useEffect(() => {
@@ -89,28 +89,56 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
     setIsZoomed(false);
     setZoomOrigin("50% 50%");
 
-    // Mock data for demo purposes
-    setExpertReview({
-      expertName: "James Sinclair",
-      expertTitle: "Whisky Specialist",
-      ratings: {
-        overall: 9.2,
-        criteria: [
-          { label: "Aroma", score: 9 },
-          { label: "Palate", score: 9.5 },
-          { label: "Finish", score: 9 },
-        ],
-      },
-      verdict:
-        "Excellent for collectors and experienced whisky drinkers. A truly remarkable expression that showcases the distillery character.",
-    });
-
     document.title = `${product.fullName || product.name} — The Grand Store`;
     window.scrollTo({ top: 0, behavior: "auto" });
     return () => {
       document.title = "The Grand Store — Luxury Wines & Spirits";
     };
   }, [product]);
+
+  useEffect(() => {
+    if (!product) return undefined;
+
+    let cancelled = false;
+    const publicProductId = product.id || product._id;
+    const databaseProductId = product._id || product.id;
+
+    setReviews([]);
+    setReviewSummary({ averageRating: 0, reviewCount: 0 });
+    setExpertReview(null);
+
+    const loadSocialProof = async () => {
+      const [reviewResult, expertResult] = await Promise.allSettled([
+        api.get(`/social-proof/reviews/product/${encodeURIComponent(publicProductId)}`),
+        api.get(`/social-proof/expert-reviews/${encodeURIComponent(databaseProductId)}`),
+      ]);
+
+      if (cancelled) return;
+
+      if (reviewResult.status === 'fulfilled' && reviewResult.value.data?.success) {
+        const payload = reviewResult.value.data;
+        setReviews(Array.isArray(payload.data) ? payload.data : []);
+        setReviewSummary({
+          averageRating: Number(payload.averageRating) || 0,
+          reviewCount: Number(payload.count) || 0,
+        });
+      } else if (reviewResult.status === 'rejected') {
+        console.error('Failed to load product reviews:', reviewResult.reason);
+      }
+
+      if (expertResult.status === 'fulfilled' && expertResult.value.data?.success) {
+        const expertReviews = expertResult.value.data.data;
+        setExpertReview(Array.isArray(expertReviews) ? expertReviews[0] || null : null);
+      } else if (expertResult.status === 'rejected') {
+        console.error('Failed to load expert review:', expertResult.reason);
+      }
+    };
+
+    loadSocialProof();
+    return () => {
+      cancelled = true;
+    };
+  }, [product?.id, product?._id]);
 
   // Mock shipping estimate effect
   useEffect(() => {
@@ -741,19 +769,22 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
 
       {/* Social Proof Engine Components */}
       <section className="mx-auto my-12 max-w-7xl sm:my-16">
-        <div className="border-t border-white/10 pt-10 sm:pt-16">
-          <ExpertReviewCard expertReview={expertReview} />
-        </div>
+        {expertReview && (
+          <div className="border-t border-white/10 pt-10 sm:pt-16">
+            <ExpertReviewCard expertReview={expertReview} />
+          </div>
+        )}
 
         <div className="mt-12 sm:mt-16">
-          <ProductQnA questions={qna} productId={product.id || product._id} />
+          <ProductQnA productId={product.id || product._id} />
         </div>
 
         <div className="mt-12 sm:mt-16">
           <ReviewSection
+            productId={product.id || product._id}
             reviews={reviews}
-            averageRating={product.averageRating || 4.8}
-            reviewCount={product.reviewCount || 124}
+            averageRating={reviewSummary.averageRating}
+            reviewCount={reviewSummary.reviewCount}
           />
         </div>
       </section>

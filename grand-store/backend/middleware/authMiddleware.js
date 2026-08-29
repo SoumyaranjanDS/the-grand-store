@@ -2,27 +2,33 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 const protect = async (req, res, next) => {
-  let token;
+  let token = req.cookies?.jwt;
 
+  // Fallback to Bearer token if no cookie is present (and ignore literal 'undefined')
   if (
+    !token &&
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
   ) {
-    try {
-      token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
-      req.user = await User.findById(decoded.id).select('-password');
-      next();
-    } catch (error) {
-      console.error(error);
-      res.status(401).json({ message: 'Not authorized, token failed' });
+    const headerToken = req.headers.authorization.split(' ')[1];
+    if (headerToken !== 'undefined' && headerToken !== 'null') {
+      token = headerToken;
     }
   }
 
-  if (!token) {
-    res.status(401).json({ message: 'Not authorized, no token' });
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      
+      req.user = await User.findById(decoded.id).select('-password');
+      return next();
+    } catch (error) {
+      console.error(error);
+      return res.status(401).json({ message: 'Not authorized, token failed' });
+    }
   }
+
+  res.status(401).json({ message: 'Not authorized, no token' });
 };
 
 const admin = (req, res, next) => {

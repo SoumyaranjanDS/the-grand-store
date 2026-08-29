@@ -1,70 +1,79 @@
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../api';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { useAuth } from '../../context/AuthContext';
 
 export const ProductQnA = ({ questions = [], productId }) => {
-  const [localQuestions, setLocalQuestions] = useState([]);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [localQuestions, setLocalQuestions] = useState(questions);
   const [expanded, setExpanded] = useState({});
   const [newQuestion, setNewQuestion] = useState('');
   const [replyTexts, setReplyTexts] = useState({});
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
+  const [replyingTo, setReplyingTo] = useState('');
 
   useEffect(() => {
+    setLocalQuestions(Array.isArray(questions) ? questions : []);
+  }, [questions, productId]);
+
+  useEffect(() => {
+    let cancelled = false;
     const fetchQuestions = async () => {
       if (!productId) return;
+      setFetching(true);
       try {
         const res = await api.get(`/social-proof/questions/${productId}`);
-        if (res.data.success) {
+        if (!cancelled && res.data.success) {
           setLocalQuestions(res.data.data);
         }
       } catch (error) {
         console.error("Failed to fetch QnA:", error);
+        if (!cancelled) setErrorMsg(error.response?.data?.message || 'Unable to load questions right now.');
+      } finally {
+        if (!cancelled) setFetching(false);
       }
     };
     fetchQuestions();
+    return () => {
+      cancelled = true;
+    };
   }, [productId]);
 
   const toggleExpand = (id) => {
     setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const getToken = () => {
-    try {
-      const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-      return userInfo.token;
-    } catch (e) {
-      return null;
-    }
-  };
-
   const handleAsk = async (e) => {
     e.preventDefault();
     if (!newQuestion.trim() || !productId) return;
+    if (!user) {
+      navigate('/login?redirect=' + window.location.pathname);
+      return;
+    }
     
     setLoading(true);
     setErrorMsg('');
+    setSuccessMsg('');
     try {
-      const token = getToken();
-      const res = await axios.post(
-        `${API_URL}/api/social-proof/questions`,
-        { productId, question: newQuestion },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await api.post('/social-proof/questions', {
+        productId,
+        question: newQuestion.trim()
+      });
       
       if (res.data.success) {
         setLocalQuestions(prev => [res.data.data, ...prev]);
+        setExpanded(prev => ({ ...prev, [res.data.data._id]: true }));
         setNewQuestion('');
         setSuccessMsg("Your question has been posted.");
-        setTimeout(() => setSuccessMsg(''), 3000);
       }
     } catch (error) {
       console.error("Failed to post question:", error);
-      setErrorMsg(error.response?.data?.error || "You must be logged in to ask a question.");
-      setTimeout(() => setErrorMsg(''), 4000);
+      setErrorMsg(error.response?.data?.message || error.response?.data?.error || "Unable to post your question.");
     } finally {
       setLoading(false);
     }
@@ -74,26 +83,29 @@ export const ProductQnA = ({ questions = [], productId }) => {
     e.preventDefault();
     const replyText = replyTexts[qId];
     if (!replyText || !replyText.trim()) return;
+    if (!user) {
+      navigate('/login?redirect=' + window.location.pathname);
+      return;
+    }
     
     setErrorMsg('');
+    setSuccessMsg('');
+    setReplyingTo(qId);
     try {
-      const token = getToken();
-      const res = await axios.post(
-        `${API_URL}/api/social-proof/questions/${qId}/answers`,
-        { text: replyText },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await api.post(`/social-proof/questions/${qId}/answers`, {
+        text: replyText.trim()
+      });
       
       if (res.data.success) {
         setLocalQuestions(prev => prev.map(q => q._id === qId ? res.data.data : q));
         setReplyTexts(prev => ({ ...prev, [qId]: '' }));
         setSuccessMsg("Your answer has been posted.");
-        setTimeout(() => setSuccessMsg(''), 3000);
       }
     } catch (error) {
       console.error("Failed to post answer:", error);
-      setErrorMsg(error.response?.data?.error || "You must be logged in to reply.");
-      setTimeout(() => setErrorMsg(''), 4000);
+      setErrorMsg(error.response?.data?.message || error.response?.data?.error || "Unable to post your answer.");
+    } finally {
+      setReplyingTo('');
     }
   };
 
@@ -126,20 +138,22 @@ export const ProductQnA = ({ questions = [], productId }) => {
           <button type="submit" disabled={loading} className="button button-gold w-full px-6 py-2 text-sm disabled:opacity-50 sm:w-auto">Ask</button>
         </form>
         {successMsg && (
-          <div className="absolute -bottom-8 left-0 text-green-400 text-xs tracking-wider flex items-center gap-1">
+          <div className="mt-4 flex items-center gap-2 text-xs tracking-wider text-green-400" role="status">
             <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>
             {successMsg}
           </div>
         )}
         {errorMsg && (
-          <div className="absolute -bottom-8 left-0 text-red-400 text-xs tracking-wider flex items-center gap-1">
+          <div className="mt-4 flex items-center gap-2 text-xs tracking-wider text-red-400" role="alert">
             <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
             {errorMsg}
           </div>
         )}
       </div>
 
-      {localQuestions.length === 0 ? (
+      {fetching ? (
+        <p className="text-[var(--color-ivory-muted)] italic">Loading questions...</p>
+      ) : localQuestions.length === 0 ? (
         <p className="text-[var(--color-ivory-muted)] italic">No questions have been asked yet. Be the first!</p>
       ) : (
         <div className="space-y-4">
@@ -184,7 +198,9 @@ export const ProductQnA = ({ questions = [], productId }) => {
                     value={replyTexts[q._id] || ''}
                     onChange={(e) => setReplyTexts(prev => ({ ...prev, [q._id]: e.target.value }))}
                   />
-                  <button type="submit" className="button button-gold w-full px-4 py-2 text-sm sm:w-auto">Reply</button>
+                  <button type="submit" disabled={replyingTo === q._id} className="button button-gold w-full px-4 py-2 text-sm disabled:opacity-50 sm:w-auto">
+                    {replyingTo === q._id ? 'Posting...' : 'Reply'}
+                  </button>
                 </form>
               )}
             </div>

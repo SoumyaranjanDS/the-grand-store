@@ -10,15 +10,15 @@ async function updateImages() {
   const updates = [
     {
       id: 'd5970438-e05c-4f5d-afaa-ad952ce06661',
-      image: '/uploads/delmaguey_transparent_full.png'
+      image: '/uploads/product-del-maguey-las-milpas.png'
     },
     {
       id: 'prod_1787654841808_342',
-      image: '/uploads/aberlour_transparent_full.png'
+      image: '/uploads/product-aberlour-18.png'
     },
     {
       id: 'prod_1787654842540_619',
-      image: '/uploads/ardbeg_transparent_full.png'
+      image: '/uploads/product-ardbeg-dolce.png'
     }
   ];
 

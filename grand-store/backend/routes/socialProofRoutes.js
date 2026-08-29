@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   submitReview,
   getReviews,
+  toggleReviewHelpful,
   submitQuestion,
   getProductQA,
   submitAnswer,
@@ -17,6 +18,7 @@ const protect = authMiddleware.protect || ((req, res, next) => next());
 const admin = authMiddleware.admin || ((req, res, next) => next());
 
 router.post('/reviews', protect, submitReview);
+router.post('/reviews/:id/helpful', protect, toggleReviewHelpful);
 router.get('/reviews/:type/:referenceId', getReviews);
 
 router.post('/questions', protect, submitQuestion);
