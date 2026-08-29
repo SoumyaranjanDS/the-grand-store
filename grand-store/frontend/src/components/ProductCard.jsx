@@ -8,6 +8,7 @@ import {
   Plus,
   Store,
   CreditCard,
+  Wine,
 } from "lucide-react";
 import IconButton from "./IconButton";
 import { useWishlist } from "../wishlistContext";
@@ -77,8 +78,10 @@ function VendorProductImage({ src, alt }) {
   const [displaySource, setDisplaySource] = useState(
     () => trimmedUploadCache.get(cacheKey) || resolvedSrc,
   );
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
+    setHasError(false);
     if (isPreparedSource) {
       setDisplaySource(resolvedSrc);
       return undefined;
@@ -86,7 +89,7 @@ function VendorProductImage({ src, alt }) {
 
     if (
       !resolvedSrc ||
-      (!resolvedSrc.includes("/uploads/") &&
+      (!resolvedSrc.includes(import.meta.env.VITE_API_URL || "http://localhost:5015") &&
         !resolvedSrc.includes("res.cloudinary.com")) ||
       trimmedUploadCache.has(cacheKey)
     ) {
@@ -225,6 +228,15 @@ function VendorProductImage({ src, alt }) {
     };
   }, [cacheKey, isPreparedSource, resolvedSrc]);
 
+  if (!resolvedSrc || hasError) {
+    return (
+      <span className="vendor-product-image-frame vendor-product-image-empty" role="img" aria-label={`${alt} image unavailable`}>
+        <Wine aria-hidden="true" size={42} strokeWidth={1.25} />
+        <small>Image coming soon</small>
+      </span>
+    );
+  }
+
   if (isPreparedSource) {
     return (
       <span
@@ -244,6 +256,7 @@ function VendorProductImage({ src, alt }) {
         alt={alt}
         loading="lazy"
         decoding="async"
+        onError={() => setHasError(true)}
       />
     </span>
   );

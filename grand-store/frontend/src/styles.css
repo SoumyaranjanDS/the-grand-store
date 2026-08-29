@@ -1633,6 +1633,31 @@ video {
   pointer-events: none;
 }
 
+.vendor-product-image-empty {
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  color: rgba(232, 201, 128, 0.64);
+}
+
+.vendor-product-image-empty svg,
+.vendor-product-image-empty small {
+  position: relative;
+  z-index: 1;
+}
+
+.vendor-product-image-empty small {
+  color: rgba(238, 232, 221, 0.55);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 .product-image-link .vendor-product-image-frame .vendor-product-image {
   position: absolute;
   z-index: 1;

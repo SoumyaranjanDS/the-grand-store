@@ -43,6 +43,9 @@ const productSchema = new mongoose.Schema(
       enum: ["not_requested", "pending", "complete", "failed", "skipped"],
       default: "not_requested",
     },
+    backgroundRemovalError: String,
+    backgroundRemovedAt: Date,
+    cloudinaryPublicId: String,
     gallery: [String],
     factSheetPdf: String,
     featured: {

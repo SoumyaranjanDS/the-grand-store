@@ -45,6 +45,14 @@ const parseNgfProductCards = (html) => {
   return [...new Map(cards.map((card) => [card.productUrl, card])).values()];
 };
 
+const parseNgfApiProducts = (payload) => (Array.isArray(payload) ? payload : [])
+  .map((product) => ({
+    productUrl: decodeEntities(product?.link),
+    image: decodeEntities(product?._embedded?.['wp:featuredmedia']?.[0]?.source_url),
+    title: cleanText(decodeEntities(product?.title?.rendered))
+  }))
+  .filter((product) => product.productUrl && product.image && product.title && !/gift card/i.test(product.title));
+
 const matchTokens = (value) => new Set(
   keyOf(value)
     .replace(/\b(\d+)\s*(?:years?\s*old|yrs?|yo)\b/g, '$1')
@@ -127,26 +135,36 @@ const buildSearchQueries = (name) => {
     .replace(/\s+/g, ' ')
     .trim();
   const withoutSize = unpacked.replace(/\b\d+(?:\.\d+)?\s*(?:ml|cl|l)\b/gi, '').replace(/\s+/g, ' ').trim();
+  const withoutOld = unpacked.replace(/\b(\d{1,2})\s+Year(?:s)?\s+Old\b/gi, '$1 Year').replace(/\s+/g, ' ').trim();
   const compact = withoutSize
     .replace(/\b(\d{1,2})\s+Year(?:s)?\s+Old\b/gi, '$1Yr')
     .replace(/\b(?:Single Malt|Blended Malt|Blended|Scotch|Irish)\s+(?:Scotch\s+)?Whisk(?:e)?y\b/gi, '')
     .replace(/\b(?:Cognac|Tequila|Champagne|Vodka|Gin|Rum|Brandy|Liqueur)\b/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
-  return [...new Set([cleaned, unpacked, withoutSize, compact].filter((query) => query.length >= 3))];
+  const ascii = keyOf(unpacked);
+  return [...new Set([cleaned, unpacked, withoutOld, withoutSize, compact, ascii].filter((query) => query.length >= 3))];
 };
 
 const findNgfImage = async (product) => {
   const queries = buildSearchQueries(product.name);
   const candidatesByUrl = new Map();
   for (const query of queries) {
-    const searchUrl = `${NGF_ORIGIN}/?s=${encodeURIComponent(query)}&post_type=product`;
-    const html = await fetchText(searchUrl);
-    parseNgfProductCards(html).forEach((candidate) => candidatesByUrl.set(candidate.productUrl, candidate));
+    const apiUrl = `${NGF_ORIGIN}/wp-json/wp/v2/product?search=${encodeURIComponent(query)}&per_page=20&_embed=wp:featuredmedia`;
+    const payload = JSON.parse(await fetchText(apiUrl));
+    parseNgfApiProducts(payload).forEach((candidate) => candidatesByUrl.set(candidate.productUrl, candidate));
     const currentBest = [...candidatesByUrl.values()]
       .map((candidate) => scoreCandidate(product.name, candidate.title))
       .sort((left, right) => right - left)[0];
     if (currentBest >= 0.86) break;
+  }
+  if (!candidatesByUrl.size) {
+    for (const query of queries) {
+      const searchUrl = `${NGF_ORIGIN}/?s=${encodeURIComponent(query)}&post_type=product`;
+      const html = await fetchText(searchUrl);
+      parseNgfProductCards(html).forEach((candidate) => candidatesByUrl.set(candidate.productUrl, candidate));
+      if (candidatesByUrl.size) break;
+    }
   }
   const candidates = [...candidatesByUrl.values()];
   if (!candidates.length) return { status: 'not_found' };
@@ -268,6 +286,7 @@ if (require.main === module) {
 module.exports = {
   buildSearchQueries,
   findNgfImage,
+  parseNgfApiProducts,
   parseNgfProductCards,
   scoreCandidate
 };
