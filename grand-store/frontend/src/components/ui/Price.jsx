@@ -26,11 +26,11 @@ const Price = ({ amount, className = "", forceZAR = false, presentation = "defau
 
   return (
     <span
-      className={`inline-flex min-w-0 items-baseline gap-[0.2em] whitespace-nowrap align-baseline font-sans ${className}`}
+      className={`inline-flex min-w-0 items-baseline gap-[0.16em] whitespace-nowrap align-baseline font-sans ${className}`}
       aria-label={String(displayValue)}
     >
       {currencyText && (
-        <span className="relative -top-[0.08em] text-[0.46em] font-bold leading-none tracking-[0.08em] text-[#c9a35b]">
+        <span className="text-[0.72em] font-semibold leading-none tracking-normal text-[#d8b76d]">
           {currencyText}
         </span>
       )}

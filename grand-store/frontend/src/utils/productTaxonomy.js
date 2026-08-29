@@ -85,7 +85,7 @@ const brandAliases = {
   bisquit: "Bisquit & Dubouché",
   dusse: "D'Ussé",
   espolon: "Espolòn",
-  "flor de cana": "Flor de Caña",
+  "flor de cana": "Flor de Cana",
   "jose cuervo": "José Cuervo",
   "laurent perrier": "Laurent-Perrier",
   "remy martin": "Rémy Martin",
@@ -105,14 +105,16 @@ export const normalizeProductName = (value) => cleanText(value)
   .replace(/\bAnejo\b/gi, "Añejo")
   .replace(/\bCuvee\b/gi, "Cuvée")
   .replace(/\bMillesime\b/gi, "Millésime")
-  .replace(/\bFlor De Cana\b/gi, "Flor de Caña")
+  .replace(/\bFlor De Cana\b/gi, "Flor de Cana")
   .replace(/\bDusse\b/g, "D'Ussé")
   .replace(/\bRemy Martin\b/g, "Rémy Martin")
   .replace(/\bAvion\b/g, "Avión")
   .replace(/\bEspolon\b/g, "Espolòn")
   .replace(/\bJose Cuervo\b/g, "José Cuervo")
   .replace(/\bVolcan De Mi Tierra\b/g, "Volcán de Mi Tierra")
-  .replace(/\bTriple 3\b/g, "Triple Three");
+  .replace(/\bTriple 3\b/g, "Triple Three")
+  .replace(/ñ/g, "n")
+  .replace(/Ñ/g, "N");
 
 const subcategoryAliases = {
   anejo: "Añejo",
