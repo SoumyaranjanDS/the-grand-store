@@ -9,6 +9,15 @@ const NGF_ORIGIN = 'https://www.ngf.co.za';
 const DEFAULT_CONCURRENCY = Math.max(1, Math.min(4, Number(process.env.NGF_SYNC_CONCURRENCY) || 2));
 const REQUEST_GAP_MS = Math.max(250, Number(process.env.NGF_SYNC_REQUEST_GAP_MS) || 750);
 const INVALID_IMAGE_VALUES = new Set(['', 'n', 'na', 'n/a', 'null', 'undefined', '-']);
+const NGF_DRAUGHT_MACHINE = {
+  image: 'https://www.ngf.co.za/wp-content/uploads/2023/11/wp-image-32778148708535.jpg',
+  productUrl: 'https://www.ngf.co.za/promotions/castle-lite-draught-machine/'
+};
+const NGF_IMAGE_OVERRIDES = {
+  // NGF's full Tobala PNG is over Cloudinary's 10 MB upload limit. This is
+  // NGF's own high-resolution, transparency-preserving WordPress derivative.
+  '57407677-836d-4ff0-9d20-d8aa4f9ec43e': 'https://www.ngf.co.za/wp-content/uploads/2024/08/127474-1366x2048.png'
+};
 let nextRequestAt = 0;
 
 const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -55,6 +64,10 @@ const parseNgfApiProducts = (payload) => (Array.isArray(payload) ? payload : [])
 
 const matchTokens = (value) => new Set(
   keyOf(value)
+    .replace(/\bd usse\b/g, 'dusse')
+    .replace(/\b(?:ki no bi|kino bi)\b/g, 'kinobi')
+    .replace(/\b(?:philipponnat|philippoinnat)\b/g, 'philipponnat')
+    .replace(/\b(?:yozakura|yozukura)\b/g, 'yozakura')
     .replace(/\b(\d+)\s*(?:years?\s*old|yrs?|yo)\b/g, '$1')
     .replace(/\b(\d+(?:\.\d+)?)\s*(ml|cl|l)\b/g, '$1$2')
     .split(' ')
@@ -136,6 +149,15 @@ const buildSearchQueries = (name) => {
     .trim();
   const withoutSize = unpacked.replace(/\b\d+(?:\.\d+)?\s*(?:ml|cl|l)\b/gi, '').replace(/\s+/g, ' ').trim();
   const withoutOld = unpacked.replace(/\b(\d{1,2})\s+Year(?:s)?\s+Old\b/gi, '$1 Year').replace(/\s+/g, ' ').trim();
+  const shortAge = unpacked.replace(/\b(\d{1,2})\s+Year(?:s)?\s+Old\b/gi, '$1').replace(/\s+/g, ' ').trim();
+  const withoutBundle = unpacked.replace(/\s*\[?Liq\]?\s*&\s*SAB\s+Draught\s+Machine\s+7\s+Days.*$/i, '').trim();
+  const ngfSpelling = unpacked
+    .replace(/\bPhilipponnat\b/gi, 'Philippoinnat')
+    .replace(/\bYozakura\b/gi, 'Yozukura');
+  const ngfShortName = ngfSpelling
+    .replace(/\b(\d{1,2})\s+Year(?:s)?\s+Old\b/gi, '$1Yr')
+    .replace(/\s+/g, ' ')
+    .trim();
   const compact = withoutSize
     .replace(/\b(\d{1,2})\s+Year(?:s)?\s+Old\b/gi, '$1Yr')
     .replace(/\b(?:Single Malt|Blended Malt|Blended|Scotch|Irish)\s+(?:Scotch\s+)?Whisk(?:e)?y\b/gi, '')
@@ -143,10 +165,15 @@ const buildSearchQueries = (name) => {
     .replace(/\s+/g, ' ')
     .trim();
   const ascii = keyOf(unpacked);
-  return [...new Set([cleaned, unpacked, withoutOld, withoutSize, compact, ascii].filter((query) => query.length >= 3))];
+  return [...new Set([
+    cleaned, unpacked, withoutBundle, withoutOld, shortAge, withoutSize, compact, ngfSpelling, ngfShortName, ascii
+  ].filter((query) => query.length >= 3))];
 };
 
 const findNgfImage = async (product) => {
+  if (/\b30\s*l\b.*\bkeg\b.*\bsab\s+draught\s+machine\b/i.test(cleanText(product.name))) {
+    return { status: 'matched', ...NGF_DRAUGHT_MACHINE, title: product.name, score: 1 };
+  }
   const queries = buildSearchQueries(product.name);
   const candidatesByUrl = new Map();
   for (const query of queries) {
@@ -176,7 +203,11 @@ const findNgfImage = async (product) => {
   if (!best || best.score < 0.7) {
     return { status: 'low_confidence', best, candidates: ranked.slice(0, 3) };
   }
-  return { status: 'matched', ...best };
+  return {
+    status: 'matched',
+    ...best,
+    image: NGF_IMAGE_OVERRIDES[product.id] || best.image
+  };
 };
 
 const mapWithConcurrency = async (items, concurrency, worker) => {
@@ -199,6 +230,10 @@ const main = async () => {
   const shouldApply = process.argv.includes('--apply');
   const missingOnly = process.argv.includes('--missing-only');
   const idArg = process.argv.find((arg) => arg.startsWith('--id='))?.slice(5);
+  const idsArg = process.argv.find((arg) => arg.startsWith('--ids='))?.slice(6)
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean);
   const limitArg = Number(process.argv.find((arg) => arg.startsWith('--limit='))?.slice(8));
 
   dns.setServers((process.env.MONGO_DNS_SERVERS || '1.1.1.1,8.8.8.8').split(',').map((item) => item.trim()).filter(Boolean));
@@ -206,8 +241,9 @@ const main = async () => {
 
   const query = { isCatalogDuplicate: { $ne: true } };
   if (idArg) query.id = idArg;
+  else if (idsArg?.length) query.id = { $in: idsArg };
   let products = await Product.find(query)
-    .select('_id id name image originalImage sourceUrl category country')
+    .select('_id id name image originalImage sourceUrl category country imageSource imageSourceUrl backgroundRemovalStatus')
     .sort({ name: 1 })
     .lean();
   if (missingOnly) products = products.filter((product) => isMissingImage(product.image));
@@ -229,7 +265,12 @@ const main = async () => {
   });
 
   const matched = results.filter((result) => result.status === 'matched');
-  const changed = matched.filter((result) => result.product.image !== result.image);
+  const changed = matched.filter((result) => (
+    result.product.image !== result.image ||
+    result.product.imageSource !== 'Norman Goodfellows' ||
+    result.product.imageSourceUrl !== result.productUrl ||
+    result.product.backgroundRemovalStatus !== 'not_requested'
+  ));
   if (shouldApply && changed.length) {
     await Product.bulkWrite(changed.map((result) => ({
       updateOne: {

@@ -19,6 +19,23 @@ const CURRENCY_SYMBOLS = {
   CAD: 'C$'
 };
 
+const CURRENCY_LOCALES = {
+  ZAR: 'en-ZA',
+  INR: 'en-IN',
+  EUR: 'en-IE',
+  GBP: 'en-GB'
+};
+
+const formatCurrencyAmount = (amount, currencyCode) => {
+  const locale = CURRENCY_LOCALES[currencyCode] || 'en-US';
+  const formatted = new Intl.NumberFormat(locale, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(amount);
+
+  return `${CURRENCY_SYMBOLS[currencyCode] || currencyCode} ${formatted}`;
+};
+
 export const CurrencyProvider = ({ children }) => {
   const [currency, setCurrency] = useState('ZAR'); // Default is ZAR
   const [rates, setRates] = useState(null);
@@ -70,7 +87,7 @@ export const CurrencyProvider = ({ children }) => {
 
     // If no rates loaded or viewing in base currency, just return ZAR formatted
     if (!rates || currency === 'ZAR') {
-      return `${CURRENCY_SYMBOLS['ZAR'] || 'R'} ${num.toFixed(2)}`;
+      return formatCurrencyAmount(num, 'ZAR');
     }
 
     // Convert: ZAR -> USD -> Target Currency
@@ -79,8 +96,7 @@ export const CurrencyProvider = ({ children }) => {
     const amountInUsd = num * rateZarToUsd;
     const amountInTarget = amountInUsd * rates[currency];
 
-    const symbol = CURRENCY_SYMBOLS[currency] || currency + ' ';
-    return `${symbol}${amountInTarget.toFixed(2)}`;
+    return formatCurrencyAmount(amountInTarget, currency);
   };
 
   return (

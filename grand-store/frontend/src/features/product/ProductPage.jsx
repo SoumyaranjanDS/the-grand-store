@@ -213,7 +213,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
         schema={productSchema}
       />
       {/* Top Breadcrumbs */}
-      <section className="mx-auto mb-4 flex max-w-7xl items-center gap-2 overflow-x-auto whitespace-nowrap pb-2 text-[9px] font-semibold uppercase tracking-[0.16em] text-[#918a7f] sm:mb-2 sm:gap-3 sm:text-[10px] sm:tracking-[0.2em]">
+      <section className="mx-auto mb-4 flex max-w-7xl items-center gap-3 overflow-x-auto whitespace-nowrap pb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#918a7f] sm:mb-3 sm:text-sm">
         <Link to="/" className="hover:text-gold-gradient transition-colors">
           Home
         </Link>
@@ -271,6 +271,28 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
               ))}
             </div>
           )}
+
+          {/* Desktop Description to fill space */}
+          <div className="hidden lg:block w-full max-w-lg mt-12 self-center text-left">
+            <div className="border-t border-[#c9a35b]/20 pt-8">
+              <h3 className="text-xl font-serif text-[#eee8dd] mb-6">About this {categoryLabel.toLowerCase()}</h3>
+              <div className="space-y-6 break-words text-base leading-relaxed text-[#aaa195]">
+                <p>{product.description}</p>
+                {product.tastingNotes && product.tastingNotes.length > 0 && (
+                  <div className="mt-6 border-t border-white/5 pt-6">
+                    <strong className="block text-[#d8b76d] mb-3 font-serif text-lg tracking-wide">
+                      Tasting Notes
+                    </strong>
+                    <ul className="list-disc pl-5 space-y-2 marker:text-[#c9a35b]">
+                      {product.tastingNotes.map((note) => (
+                        <li key={note}>{note}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Right: Product Info */}
@@ -281,12 +303,12 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
           />
 
           <div className="mb-4 flex flex-wrap gap-2" aria-label="Product classification">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-3 py-1.5 text-[9px] uppercase tracking-[0.16em] text-[#918a7f]">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-3 py-2 text-xs uppercase tracking-[0.1em] text-[#918a7f]">
               Category
               <strong className="font-semibold text-[#eee8dd]">{categoryLabel}</strong>
             </span>
             {taxonomySecondary.value && (
-              <span className="inline-flex items-center gap-2 rounded-full border border-[#c9a35b]/25 bg-[#c9a35b]/[0.06] px-3 py-1.5 text-[9px] uppercase tracking-[0.16em] text-[#918a7f]">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#c9a35b]/25 bg-[#c9a35b]/[0.06] px-3 py-2 text-xs uppercase tracking-[0.1em] text-[#918a7f]">
                 {taxonomySecondary.label}
                 <strong className="font-semibold text-[#e1bd70]">{taxonomySecondary.value}</strong>
               </span>
@@ -297,7 +319,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             {product.fullName || product.name}
           </h1>
 
-          <div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-semibold uppercase tracking-widest sm:text-xs">
+          <div className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold uppercase tracking-[0.12em] sm:text-sm">
             <span className="text-[#918a7f]">
               SKU: {String(product.id).substring(0, 10).toUpperCase()}
             </span>
@@ -315,69 +337,89 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             </span>
           </div>
 
-          <div className="mb-7 flex flex-wrap items-center md:items-end justify-between gap-3 sm:mb-8 sm:gap-4">
-            <div className="min-w-0 font-serif text-[clamp(2rem,10vw,2.625rem)] leading-none text-[#d8b76d]">
-              <Price amount={product.price} />
+          <div className="mb-7 overflow-hidden border border-[#c9a35b]/25 bg-[#11100d] sm:mb-8 sm:grid sm:grid-cols-[minmax(0,1fr)_240px]">
+            <div className="min-w-0 px-5 py-5 sm:px-6 sm:py-6">
+              <div className="flex items-center justify-between gap-4">
+                <p className="m-0 text-xs font-semibold uppercase tracking-[0.12em] text-[#918a7f]">
+                  Online price
+                </p>
+                <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.08em] text-emerald-400">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.65)]" />
+                  Available now
+                </span>
+              </div>
+
+              <div className="mt-2 min-w-0 text-[clamp(2.1rem,4.4vw,3rem)]">
+                <Price amount={product.price} presentation="product" />
+              </div>
+
+              <dl className="mt-5 grid grid-cols-2 gap-x-5 gap-y-4 border-t border-white/10 pt-4 sm:grid-cols-3">
+                <div className="min-w-0">
+                  <dt className="text-xs font-semibold uppercase tracking-[0.1em] text-[#837b70]">Bottle</dt>
+                  <dd className="mt-1.5 truncate text-sm font-medium text-[#d8d0c4]">
+                    {identity.bottleSize || product.size || "Standard"}
+                  </dd>
+                </div>
+                <div className="min-w-0">
+                  <dt className="text-xs font-semibold uppercase tracking-[0.1em] text-[#837b70]">Origin</dt>
+                  <dd className="mt-1.5 truncate text-sm font-medium text-[#d8d0c4]">
+                    {identity.origin || product.country || "Not stated"}
+                  </dd>
+                </div>
+                <div className="col-span-2 min-w-0 sm:col-span-1">
+                  <dt className="text-xs font-semibold uppercase tracking-[0.1em] text-[#837b70]">Checkout</dt>
+                  <dd className="mt-1.5 text-sm font-medium text-[#d8d0c4]">Secure payment</dd>
+                </div>
+              </dl>
             </div>
 
-            {/* Mobile View Pill */}
             <button
               type="button"
               onClick={() => setShowCertificate(true)}
-              className="group inline-flex md:hidden h-11 shrink-0 items-center gap-2 rounded-full border border-[#c9a35b]/40 bg-[#c9a35b]/[0.08] py-1.5 pl-1.5 pr-3 text-left transition-colors hover:border-[#c9a35b] hover:bg-[#c9a35b]/[0.14]"
-              title="Click to view our 100% Satisfaction Guarantee"
-              aria-label="View the Grandstore 100% satisfaction guarantee"
-            >
-              <span
-                aria-hidden="true"
-                className="h-8 w-8 shrink-0 bg-contain bg-center bg-no-repeat"
-                style={{ backgroundImage: "url('/grandstore-badge.png')" }}
-              />
-              <span className="leading-none">
-                <span className="block text-[9px] font-bold uppercase tracking-[0.13em] text-[#e1bd70]">
-                  100% Guarantee
-                </span>
-                <span className="mt-1 block text-[8px] uppercase tracking-[0.08em] text-[#918a7f]">
-                  View certificate
-                </span>
-              </span>
-            </button>
-
-            {/* PC View Old Image */}
-            <button
-              onClick={() => setShowCertificate(true)}
-              className="relative group hover:scale-105 transition-transform duration-300 shrink-0 hidden md:block"
+              className="group flex w-full items-center gap-4 border-t border-[#c9a35b]/20 bg-[#c9a35b]/[0.055] px-5 py-4 text-left transition-colors hover:bg-[#c9a35b]/[0.1] sm:flex-col sm:justify-center sm:border-l sm:border-t-0 sm:px-6 sm:py-5 sm:text-center"
               title="Click to view our 100% Satisfaction Guarantee"
               aria-label="View the Grandstore 100% satisfaction guarantee"
             >
               <img
                 src="/grandstore-badge.png"
-                alt="Grandstore Guarantee"
-                className="relative w-14 lg:w-16 h-auto"
+                alt=""
+                aria-hidden="true"
+                className="h-16 w-16 shrink-0 object-contain transition-transform duration-300 group-hover:scale-105 sm:h-20 sm:w-20"
               />
+              <span className="min-w-0">
+                <strong className="block text-sm uppercase tracking-[0.09em] text-[#e1bd70]">
+                  Grandstore guarantee
+                </strong>
+                <span className="mt-1.5 block text-xs leading-relaxed text-[#aaa195]">
+                  100% satisfaction certificate
+                </span>
+                <span className="mt-2 block text-[10px] font-bold uppercase tracking-[0.1em] text-[#d8d0c4]">
+                  View details →
+                </span>
+              </span>
             </button>
           </div>
 
           {/* Bottle identity — the key facts customers need at a glance. */}
-          <div className="mb-8 border border-[#c9a35b]/25 bg-[#11100d] p-4 sm:p-5">
-            <div className="mb-4 flex items-center justify-between gap-3 border-b border-white/10 pb-3">
+          <div className="mb-8 border border-[#c9a35b]/25 bg-[#11100d] p-5 sm:p-6">
+            <div className="mb-5 flex items-center justify-between gap-4 border-b border-white/10 pb-4">
               <div>
-                <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#918a7f]">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#918a7f]">
                   At a glance
                 </p>
-                <h2 className="mt-1 font-serif text-lg text-[#eee8dd]">Bottle identity</h2>
+                <h2 className="mt-2 font-serif text-xl text-[#eee8dd]">Bottle identity</h2>
               </div>
-              <span className="rounded-full border border-[#c9a35b]/35 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.15em] text-[#e1bd70]">
+              <span className="rounded-full border border-[#c9a35b]/35 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.1em] text-[#e1bd70]">
                 {product.brand || "The Grand Store"}
               </span>
             </div>
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3">
+            <dl className="grid grid-cols-2 gap-x-5 gap-y-5 sm:grid-cols-3">
               {identityItems.map((item) => (
                 <div className="min-w-0" key={item.label}>
-                  <dt className="mb-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-[#918a7f]">
+                  <dt className="mb-1.5 text-xs font-semibold uppercase tracking-[0.1em] text-[#918a7f]">
                     {item.label}
                   </dt>
-                  <dd className={`break-words text-sm font-medium ${item.value ? "text-[#eee8dd]" : "text-[#686158]"}`}>
+                  <dd className={`break-words text-base font-medium leading-snug ${item.value ? "text-[#eee8dd]" : "text-[#686158]"}`}>
                     {item.value || "Not stated"}
                   </dd>
                 </div>
@@ -388,7 +430,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
           {/* Select Options */}
           {product.options && product.options.length > 1 && (
             <div className="mb-6">
-              <label className="block text-[10px] text-[#918a7f] uppercase tracking-widest font-semibold mb-2">
+              <label className="mb-3 block text-xs font-semibold uppercase tracking-[0.1em] text-[#918a7f]">
                 Options
               </label>
               <select
@@ -431,7 +473,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             </div>
 
             <button
-              className={`order-3 col-span-2 h-[52px] w-full min-w-0 border border-[#eee8dd] bg-transparent text-[11px] font-bold uppercase tracking-widest text-[#eee8dd] sm:order-2 sm:flex-1 sm:min-w-[140px] ${product.stock === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-white/5 transition-colors'}`}
+              className={`order-3 col-span-2 h-[52px] w-full min-w-0 border border-[#eee8dd] bg-transparent text-xs font-bold uppercase tracking-[0.12em] text-[#eee8dd] sm:order-2 sm:flex-1 sm:min-w-[140px] ${product.stock === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-white/5 transition-colors'}`}
               type="button"
               onClick={() => product.stock !== 0 && onAdd && onAdd(product, quantity, selectedOption)}
               disabled={product.stock === 0}
@@ -440,7 +482,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             </button>
 
             <button
-              className={`order-4 col-span-2 h-[52px] w-full min-w-0 border border-[#222] bg-[#222] text-[11px] font-bold uppercase tracking-widest text-[#eee8dd] sm:order-3 sm:flex-1 sm:min-w-[140px] ${product.stock === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-[#333] transition-colors'}`}
+              className={`order-4 col-span-2 h-[52px] w-full min-w-0 border border-[#222] bg-[#222] text-xs font-bold uppercase tracking-[0.12em] text-[#eee8dd] sm:order-3 sm:flex-1 sm:min-w-[140px] ${product.stock === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-[#333] transition-colors'}`}
               type="button"
               onClick={() => {
                 if (product.stock !== 0 && onAdd) {
@@ -484,7 +526,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
                   </span>
                   org
                 </span>
-                <span className="text-[9px] tracking-widest opacity-90 font-normal mt-0.5">
+                <span className="mt-1 text-xs font-normal tracking-[0.12em] opacity-90">
                   www.aware.org.za
                 </span>
               </div>
@@ -493,14 +535,14 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             <div className="hidden xl:block w-px h-8 bg-white/20 shrink-0"></div>
 
             {/* Warning Text */}
-            <div className="text-[11px] sm:text-xs font-bold text-white tracking-[0.15em] text-center xl:text-left leading-snug uppercase">
+            <div className="text-center text-xs font-bold uppercase leading-relaxed tracking-[0.1em] text-white sm:text-sm xl:text-left">
               Drink responsibly. Not for persons under the age of 18.
             </div>
           </div>
 
           {/* Fulfilled By Widget */}
           <div className="mb-8 border border-white/10 bg-white/5 p-4 sm:p-5">
-            <h4 className="text-[10px] text-gold-gradient uppercase tracking-widest font-bold flex items-center gap-2 mb-3">
+            <h4 className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-gold-gradient">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="14"
@@ -520,7 +562,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             </h4>
             <div className="mb-4 grid grid-cols-2 gap-4 text-sm">
               <div className="min-w-0">
-                <span className="block text-[#918a7f] text-[10px] uppercase tracking-wider mb-1">
+                <span className="mb-1.5 block text-xs uppercase tracking-[0.08em] text-[#918a7f]">
                   Fulfilled By
                 </span>
                 <span className="break-words font-medium">
@@ -528,7 +570,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
                 </span>
               </div>
               <div className="min-w-0">
-                <span className="block text-[#918a7f] text-[10px] uppercase tracking-wider mb-1">
+                <span className="mb-1.5 block text-xs uppercase tracking-[0.08em] text-[#918a7f]">
                   Ships From
                 </span>
                 <span className="break-words font-medium">
@@ -538,12 +580,12 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             </div>
 
             <div className="border-t border-white/10 pt-4 mt-2">
-              <label className="block text-[#918a7f] text-[10px] uppercase tracking-wider mb-2">
+              <label className="mb-3 block text-xs uppercase tracking-[0.08em] text-[#918a7f]">
                 Estimate Delivery To
               </label>
               <div className="flex min-w-0 gap-2">
                 <select
-                  className="min-w-0 flex-1 border border-white/20 bg-[#0a0907] p-2 text-sm text-[#eee8dd] outline-none focus:border-[#c9a35b]"
+                  className="min-w-0 flex-1 border border-white/20 bg-[#0a0907] p-3 text-sm text-[#eee8dd] outline-none focus:border-[#c9a35b]"
                   value={deliveryCountry}
                   onChange={(e) => setDeliveryCountry(e.target.value)}
                 >
@@ -555,7 +597,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
                 </select>
               </div>
               {shippingEstimate && (
-                <div className="mt-3 flex flex-col gap-2 border border-white/10 bg-[#0a0907] p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                <div className="mt-3 flex flex-col gap-2 border border-white/10 bg-[#0a0907] p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <span className="text-[#918a7f] mr-2">Est. Time:</span>
                     <span className="font-medium">{shippingEstimate.time}</span>
@@ -572,7 +614,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
           </div>
 
           {/* Share Links */}
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px] font-semibold uppercase tracking-widest text-[#918a7f] sm:gap-6">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-semibold uppercase tracking-[0.1em] text-[#918a7f] sm:gap-6">
             <span>Share</span>
             <a
               href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`}
@@ -641,20 +683,20 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
               href={product.factSheetPdf}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex w-full items-center justify-center gap-3 rounded-full border border-[#c9a35b] px-5 py-4 text-center text-[10px] font-bold uppercase tracking-widest text-gold-gradient transition-colors hover:bg-gold-gradient hover:text-black sm:w-auto sm:px-8 sm:text-xs"
+              className="inline-flex w-full items-center justify-center gap-3 rounded-full border border-[#c9a35b] px-5 py-4 text-center text-xs font-bold uppercase tracking-[0.1em] text-gold-gradient transition-colors hover:bg-gold-gradient hover:text-black sm:w-auto sm:px-8 sm:text-sm"
             >
               Download Official Fact Sheet PDF <ArrowRight size={16} />
             </a>
           </div>
         )}
 
-        {/* Description Section */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-10 py-8 border-t border-b border-white/10">
+        {/* Description Section (Mobile/Tablet only) */}
+        <div className="lg:hidden grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-10 py-8 border-t border-b border-white/10">
           <div className="md:col-span-3">
             <h3 className="text-xl font-serif text-[#eee8dd]">Description</h3>
           </div>
           <div className="md:col-span-9">
-            <div className="max-w-3xl space-y-6 break-words text-sm leading-relaxed text-[#918a7f]">
+            <div className="max-w-3xl space-y-6 break-words text-base leading-relaxed text-[#aaa195]">
               <p>{product.description}</p>
               {product.tastingNotes && product.tastingNotes.length > 0 && (
                 <div className="mt-6">
@@ -682,35 +724,35 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
           <div className="md:col-span-9">
             <div className="grid grid-cols-2 gap-5 sm:gap-6 md:grid-cols-4">
               <div className="min-w-0 space-y-1">
-                <div className="text-[10px] text-[#918a7f] uppercase tracking-widest font-semibold">
+                <div className="text-xs font-semibold uppercase tracking-[0.1em] text-[#918a7f]">
                   Category
                 </div>
-                <div className="break-words text-sm font-medium">
+                <div className="break-words text-base font-medium">
                   {product.category || product.type || "N/A"}
                 </div>
               </div>
               <div className="min-w-0 space-y-1">
-                <div className="text-[10px] text-[#918a7f] uppercase tracking-widest font-semibold">
+                <div className="text-xs font-semibold uppercase tracking-[0.1em] text-[#918a7f]">
                   Brand
                 </div>
-                <div className="break-words text-sm font-medium">
+                <div className="break-words text-base font-medium">
                   {product.brand || product.name}
                 </div>
               </div>
               <div className="min-w-0 space-y-1">
-                <div className="text-[10px] text-[#918a7f] uppercase tracking-widest font-semibold">
+                <div className="text-xs font-semibold uppercase tracking-[0.1em] text-[#918a7f]">
                   Origin
                 </div>
-                <div className="break-words text-sm font-medium">
+                <div className="break-words text-base font-medium">
                   {identity.origin || product.country || "N/A"}
                 </div>
               </div>
               {detailEntries.map(([label, value]) => (
                 <div className="min-w-0 space-y-1" key={label}>
-                  <div className="text-[10px] text-[#918a7f] uppercase tracking-widest font-semibold">
+                  <div className="text-xs font-semibold uppercase tracking-[0.1em] text-[#918a7f]">
                     {label}
                   </div>
-                  <div className="break-words text-sm font-medium">{value}</div>
+                  <div className="break-words text-base font-medium">{value}</div>
                 </div>
               ))}
             </div>
@@ -745,7 +787,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
               Related Products
             </h2>
             <a
-              className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold-gradient transition-colors hover:text-[#e1bd70]"
+              className="text-xs font-bold uppercase tracking-[0.12em] text-gold-gradient transition-colors hover:text-[#e1bd70]"
               href="/#arrivals"
             >
               View More In This Category

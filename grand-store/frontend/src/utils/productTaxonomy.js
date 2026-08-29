@@ -96,8 +96,11 @@ const brandAliases = {
 export const normalizeBrand = (value) => brandAliases[keyOf(value)] || cleanText(value);
 
 export const normalizeProductName = (value) => cleanText(value)
+  .replace(/ñ/g, "n")
+  .replace(/Ñ/g, "N")
   .replace(/&\s*(2|two)\s+glasses\b/gi, (_, count) => `with ${count.toLowerCase() === "two" ? "Two" : count} Glasses`)
   .replace(/\b(\d{1,2})\s*(?:yrs?|year(?:s)?(?:\s+old)?)\b/gi, "$1 Year Old")
+  .replace(/\bOld\s+Old\b/gi, "Old")
   .replace(/\bAged\s+(\d{1,2})\s+Year Old\b/gi, "Aged $1 Years")
   .replace(/\bAnejo\b/gi, "Añejo")
   .replace(/\bCuvee\b/gi, "Cuvée")
@@ -291,6 +294,8 @@ export const normalizeProductForDisplay = (product = {}) => {
     country,
     brand: normalizeBrand(product.brand || product.storeName),
     subcategory: regionalizeWhiskey(normalizeSubcategory(product.subcategory, category, product)),
+    description: regionalizeWhiskey(product.description),
+    tags: Array.isArray(product.tags) ? product.tags.map(regionalizeWhiskey) : product.tags,
     size: normalizeBottleSize(product.size, product.name),
   };
   return { ...normalized, identity: getProductIdentity(normalized) };

@@ -1,12 +1,15 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, ShoppingBag, X } from 'lucide-react'
+import { ArrowRight, ShoppingBag, Wine, X } from 'lucide-react'
 import Price from './ui/Price'
 import { getProductIdentity } from '../utils/productTaxonomy'
 
 export default function ProductQuickView({ product, onClose, onAdd }) {
+  const [imageError, setImageError] = useState(false)
+
   useEffect(() => {
     if (!product) return undefined
+    setImageError(false)
     const previousOverflow = document.body.style.overflow
     const closeOnEscape = (event) => {
       if (event.key === 'Escape') onClose()
@@ -45,11 +48,19 @@ export default function ProductQuickView({ product, onClose, onAdd }) {
           <X size={22} />
         </button>
         <div className="grid min-h-[300px] md:min-h-[520px] lg:min-h-[570px] p-[35px] md:p-[28px] lg:p-[45px] items-start justify-items-center bg-[#181612] bg-[radial-gradient(circle,rgba(177,122,39,0.15),transparent_42%)]">
-          <img 
-            className="w-[80%] h-[270px] md:h-[420px] lg:h-[470px] object-contain drop-shadow-[0_28px_30px_rgba(0,0,0,0.58)]" 
-            src={product.image} 
-            alt={product.fullName || product.name} 
-          />
+          {product.image && !imageError ? (
+            <img
+              className="w-[80%] h-[270px] md:h-[420px] lg:h-[470px] object-contain drop-shadow-[0_28px_30px_rgba(0,0,0,0.58)]"
+              src={product.image}
+              alt={product.fullName || product.name}
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className="flex h-[270px] flex-col items-center justify-center gap-3 text-[#c9a35b]/65 md:h-[420px] lg:h-[470px]" role="img" aria-label={`${product.name} image unavailable`}>
+              <Wine size={56} strokeWidth={1.2} aria-hidden="true" />
+              <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">Image coming soon</span>
+            </div>
+          )}
         </div>
         <div className="self-center p-[30px_22px] sm:p-[clamp(42px,5vw,75px)]">
           <p className="flex items-center gap-3 m-0 mb-[19px] text-[#e1bd70] text-xs font-semibold tracking-[0.2em] uppercase">

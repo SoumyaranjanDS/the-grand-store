@@ -14,9 +14,8 @@ async function processProducts() {
   const Product = mongoose.model('Product', new mongoose.Schema({}, { strict: false }));
   
   const products = await Product.find({ 
-    image: { $regex: 'http', $not: /uploads/ },
-    $or: [{ backgroundRemovalStatus: 'not_requested' }, { backgroundRemovalStatus: { $exists: false } }]
-  }).limit(5);
+    id: { $in: ['prod_1787654842540_619', 'prod_1787654841808_342', 'd5970438-e05c-4f5d-afaa-ad952ce06661'] }
+  });
 
   console.log(`Found ${products.length} products to process.`);
 

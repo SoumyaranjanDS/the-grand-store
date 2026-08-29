@@ -211,6 +211,9 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
       return {
         ...currentQuote,
         shipments: currentQuote.shipments.map((shipment) => {
+          if (!store) {
+            return { ...shipment, selectedPickupStore: null };
+          }
           const postnetOption = shipment.shippingQuotes?.find((option) => option.courierName === 'PostNet');
           const matchingStore = postnetOption?.stores?.find((candidate) => candidate.id === store.id);
           return matchingStore ? { ...shipment, selectedPickupStore: matchingStore } : shipment;
@@ -678,39 +681,65 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
                               <div className="mt-2 pl-8 pr-3 pb-2 animate-in fade-in slide-in-from-top-2 duration-300">
                                 {opt.stores && opt.stores.length > 0 ? (
                                   <div className="mt-3">
-                                    <p className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-2">PostNet pickup branches</p>
-                                    {opt.usingNearestCity && (
+                                    <div className="flex items-center justify-between mb-2">
+                                      <p className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)]">PostNet pickup branches</p>
+                                      {shp.selectedPickupStore && (
+                                        <button 
+                                          type="button" 
+                                          onClick={() => handlePreferredPostnetStoreSelect(null)} 
+                                          className="text-[10px] font-bold uppercase tracking-widest text-gold hover:text-white transition-colors"
+                                        >
+                                          Change branch
+                                        </button>
+                                      )}
+                                    </div>
+
+                                    {opt.usingNearestCity && !shp.selectedPickupStore && (
                                       <div className="mb-3 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs leading-relaxed text-amber-200">
                                         No branch was found in {opt.searchedCity || formData.city}. These are the nearest PostNet alternatives.
                                       </div>
                                     )}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                      {opt.stores.map(store => (
-                                        <label key={store.id} className="block cursor-pointer">
-                                          <input
-                                            type="radio"
-                                            name={`postnet-store-${index}`}
-                                            value={store.id}
-                                            checked={shp.selectedPickupStore?.id === store.id}
-                                            onChange={() => handlePostnetStoreSelect(index, store)}
-                                            className="peer sr-only"
-                                            required
-                                          />
-                                          <div className="h-full border border-white/10 bg-[#0a0a0a] p-3 rounded-lg peer-checked:border-gold peer-checked:bg-gold/5 hover:border-white/30 transition-colors">
-                                            <p className="text-sm font-medium text-white mb-1">{store.name}</p>
-                                            <p className="text-xs text-[var(--color-ivory-muted)]">{store.address}</p>
-                                            <div className="mt-2 flex flex-wrap gap-2 text-[10px] uppercase tracking-wider">
-                                              <span className={store.isNearestAlternative ? 'text-amber-300' : 'text-emerald-300'}>
-                                                {store.isNearestAlternative ? `Nearest alternative${store.city ? ` · ${store.city}` : ''}` : `In ${opt.searchedCity || formData.city}`}
-                                              </span>
-                                              {store.distance !== null && store.distance !== undefined && (
-                                                <span className="text-white/50">{store.distance} km away</span>
-                                              )}
+
+                                    {shp.selectedPickupStore ? (
+                                      <div className="border border-gold bg-gold/5 p-3 rounded-lg">
+                                        <p className="text-sm font-medium text-white mb-1">{shp.selectedPickupStore.name}</p>
+                                        <p className="text-xs text-[var(--color-ivory-muted)]">{shp.selectedPickupStore.address}</p>
+                                        <div className="mt-2 flex flex-wrap gap-2 text-[10px] uppercase tracking-wider">
+                                          <span className="text-emerald-300">Selected for pickup</span>
+                                          {shp.selectedPickupStore.distance !== null && shp.selectedPickupStore.distance !== undefined && (
+                                            <span className="text-white/50">{shp.selectedPickupStore.distance} km away</span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {opt.stores.map(store => (
+                                          <label key={store.id} className="block cursor-pointer">
+                                            <input
+                                              type="radio"
+                                              name={`postnet-store-${index}`}
+                                              value={store.id}
+                                              checked={shp.selectedPickupStore?.id === store.id}
+                                              onChange={() => handlePreferredPostnetStoreSelect(store)}
+                                              className="peer sr-only"
+                                              required
+                                            />
+                                            <div className="h-full border border-white/10 bg-[#0a0a0a] p-3 rounded-lg peer-checked:border-gold peer-checked:bg-gold/5 hover:border-white/30 transition-colors">
+                                              <p className="text-sm font-medium text-white mb-1">{store.name}</p>
+                                              <p className="text-xs text-[var(--color-ivory-muted)]">{store.address}</p>
+                                              <div className="mt-2 flex flex-wrap gap-2 text-[10px] uppercase tracking-wider">
+                                                <span className={store.isNearestAlternative ? 'text-amber-300' : 'text-emerald-300'}>
+                                                  {store.isNearestAlternative ? `Nearest alternative${store.city ? ` · ${store.city}` : ''}` : `In ${opt.searchedCity || formData.city}`}
+                                                </span>
+                                                {store.distance !== null && store.distance !== undefined && (
+                                                  <span className="text-white/50">{store.distance} km away</span>
+                                                )}
+                                              </div>
                                             </div>
-                                          </div>
-                                        </label>
-                                      ))}
-                                    </div>
+                                          </label>
+                                        ))}
+                                      </div>
+                                    )}
                                   </div>
                                 ) : (
                                   <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3 text-red-400 text-sm mt-2 flex items-start gap-2">
@@ -787,8 +816,12 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
                       <div className="md:col-span-2 rounded-xl border border-[var(--color-gold)]/20 bg-[var(--color-gold)]/5 p-4 flex items-start gap-3">
                         <MapPin size={18} className="mt-0.5 shrink-0 text-[var(--color-gold)]" />
                         <div>
-                          <p className="text-sm text-white font-medium">No street address needed yet</p>
-                          <p className="mt-1 text-xs leading-relaxed text-[var(--color-ivory-muted)]">Enter your city and postal code. You will choose the exact PostNet branch after the branch search.</p>
+                          <p className="text-sm text-white font-medium">
+                            {preferredPostnetStore ? `Pickup at ${preferredPostnetStore.name}` : "No street address needed yet"}
+                          </p>
+                          <p className="mt-1 text-xs leading-relaxed text-[var(--color-ivory-muted)]">
+                            {preferredPostnetStore ? preferredPostnetStore.address : "Enter your city and postal code. You will choose the exact PostNet branch after the branch search."}
+                          </p>
                         </div>
                       </div>
                     )}

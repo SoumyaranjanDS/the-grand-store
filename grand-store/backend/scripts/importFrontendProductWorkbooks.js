@@ -301,6 +301,23 @@ const normalizeExistingCatalog = async () => {
 
 const main = async () => {
   const shouldApply = process.argv.includes('--apply');
+  const normalizeOnly = process.argv.includes('--normalize-only');
+
+  if (normalizeOnly) {
+    if (!shouldApply) throw new Error('--normalize-only requires --apply.');
+    if (!process.env.MONGO_URI) throw new Error('MONGO_URI is not configured.');
+    if (process.env.MONGO_URI.startsWith('mongodb+srv://')) {
+      const dnsServers = (process.env.MONGO_DNS_SERVERS || '1.1.1.1,8.8.8.8')
+        .split(',')
+        .map((server) => server.trim())
+        .filter(Boolean);
+      if (dnsServers.length) dns.setServers(dnsServers);
+    }
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log(JSON.stringify({ applied: await normalizeExistingCatalog() }, null, 2));
+    return;
+  }
+
   const plan = buildImportPlan();
   const validationErrors = validateImportPlan(plan);
   console.log(JSON.stringify({ summary: summarizePlan(plan), validationErrors }, null, 2));
