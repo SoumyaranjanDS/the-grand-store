@@ -1,0 +1,297 @@
+const cleanText = (value) => String(value ?? "")
+  .normalize("NFC")
+  .replace(/&amp;/gi, "&")
+  .replace(/&#39;|&apos;/gi, "'")
+  .replace(/&quot;/gi, '"')
+  .replace(/&nbsp;/gi, " ")
+  .replace(/\u00a0/g, " ")
+  .replace(/[ \t]+/g, " ")
+  .trim();
+
+const keyOf = (value) => cleanText(value)
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "")
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, " ")
+  .trim();
+
+export const normalizeCategory = (value) => {
+  const aliases = { scotch: "Whisky", whiskey: "Whisky", whisky: "Whisky" };
+  return aliases[keyOf(value)] || cleanText(value);
+};
+
+const countryAliases = {
+  "american whiskey": "USA",
+  "american whisky": "USA",
+  "united states": "USA",
+  "united states of america": "USA",
+  usa: "USA",
+  "irish whiskey": "Ireland",
+  "irish whisky": "Ireland",
+  "israeli whisky": "Israel",
+  "japanese whisky": "Japan",
+  "scotch whisky": "Scotland",
+  "scotland scotch": "Scotland",
+  "south african whisky": "South Africa",
+  "taiwanese whisky": "Taiwan",
+  "welsh whisky": "Wales",
+  "belgian beer": "Belgium",
+  "dutch beer": "Netherlands",
+  "german beer": "Germany",
+  "south african beer": "South Africa",
+};
+
+const countryNames = {
+  armenia: "Armenia",
+  belgium: "Belgium",
+  china: "China",
+  france: "France",
+  germany: "Germany",
+  ireland: "Ireland",
+  israel: "Israel",
+  jamaica: "Jamaica",
+  japan: "Japan",
+  mexico: "Mexico",
+  netherlands: "Netherlands",
+  nicaragua: "Nicaragua",
+  scotland: "Scotland",
+  "south africa": "South Africa",
+  taiwan: "Taiwan",
+  usa: "USA",
+  wales: "Wales",
+};
+
+export const normalizeCountry = (value, category = "") => {
+  const original = cleanText(value);
+  const keyed = keyOf(original);
+  if (countryAliases[keyed]) return countryAliases[keyed];
+  if (countryNames[keyed]) return countryNames[keyed];
+
+  const suffixes = [
+    normalizeCategory(category),
+    "Whisky", "Whiskey", "Scotch", "Beer", "Brandy", "Champagne",
+    "Cognac", "Gin", "Liqueur", "Rum", "Spirits", "Tequila", "Vodka",
+  ].filter(Boolean);
+  let normalized = original;
+  suffixes.forEach((suffix) => {
+    const escaped = suffix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    normalized = normalized.replace(new RegExp(`\\s+${escaped}$`, "i"), "").trim();
+  });
+  return countryNames[keyOf(normalized)] || normalized;
+};
+
+const brandAliases = {
+  avion: "Avión",
+  bisquit: "Bisquit & Dubouché",
+  dusse: "D'Ussé",
+  espolon: "Espolòn",
+  "flor de cana": "Flor de Caña",
+  "jose cuervo": "José Cuervo",
+  "laurent perrier": "Laurent-Perrier",
+  "remy martin": "Rémy Martin",
+  "triple 3": "Triple Three",
+  "volcan de mi tierra": "Volcán de Mi Tierra",
+};
+
+export const normalizeBrand = (value) => brandAliases[keyOf(value)] || cleanText(value);
+
+export const normalizeProductName = (value) => cleanText(value)
+  .replace(/&\s*(2|two)\s+glasses\b/gi, (_, count) => `with ${count.toLowerCase() === "two" ? "Two" : count} Glasses`)
+  .replace(/\b(\d{1,2})\s*(?:yrs?|year(?:s)?(?:\s+old)?)\b/gi, "$1 Year Old")
+  .replace(/\bAged\s+(\d{1,2})\s+Year Old\b/gi, "Aged $1 Years")
+  .replace(/\bAnejo\b/gi, "Añejo")
+  .replace(/\bCuvee\b/gi, "Cuvée")
+  .replace(/\bMillesime\b/gi, "Millésime")
+  .replace(/\bFlor De Cana\b/gi, "Flor de Caña")
+  .replace(/\bDusse\b/g, "D'Ussé")
+  .replace(/\bRemy Martin\b/g, "Rémy Martin")
+  .replace(/\bAvion\b/g, "Avión")
+  .replace(/\bEspolon\b/g, "Espolòn")
+  .replace(/\bJose Cuervo\b/g, "José Cuervo")
+  .replace(/\bVolcan De Mi Tierra\b/g, "Volcán de Mi Tierra")
+  .replace(/\bTriple 3\b/g, "Triple Three");
+
+const subcategoryAliases = {
+  anejo: "Añejo",
+  "extra anejo": "Extra Añejo",
+  "blanc de blanc": "Blanc de Blancs",
+  "brut rose": "Brut Rosé",
+  "demi sec": "Demi-Sec",
+  "single barrel bourbon": "Bourbon",
+  "blended irish whiskey": "Blended Irish Whiskey",
+  "blended irish whisky": "Blended Irish Whiskey",
+  "blended malt": "Blended Malt Whisky",
+  "blended whisky": "Blended Whisky",
+  plain: "Plain Vodka",
+};
+
+const inferSubcategory = (product, category) => {
+  const search = keyOf([product.name, product.description, ...(product.tags || [])].join(" "));
+  if (category === "Whisky") {
+    if (search.includes("single malt scotch")) return "Single Malt Scotch";
+    if (search.includes("blended malt scotch")) return "Blended Malt Scotch";
+    if (search.includes("blended scotch")) return "Blended Scotch";
+    if (search.includes("bourbon")) return "Bourbon";
+    if (search.includes("rye whiskey") || search.includes("rye whisky")) return "Rye Whisky";
+    if (search.includes("single pot still")) return "Single Pot Still";
+    if (search.includes("single malt")) return "Single Malt";
+    if (search.includes("blended")) return "Blended Whisky";
+  }
+  if (category === "Cognac") {
+    if (/\bxxo\b/.test(search)) return "XXO";
+    if (/\bvsop\b/.test(search)) return "VSOP";
+    if (/\bxo\b/.test(search)) return "XO";
+    if (/\bvs\b/.test(search)) return "VS";
+  }
+  if (category === "Tequila") {
+    if (search.includes("extra anejo")) return "Extra Añejo";
+    if (search.includes("anejo")) return "Añejo";
+    if (search.includes("reposado")) return "Reposado";
+    if (search.includes("blanco") || search.includes("plata")) return "Blanco";
+    if (search.includes("mezcal")) return "Mezcal";
+  }
+  if (category === "Champagne") {
+    if (search.includes("blanc de blanc")) return "Blanc de Blancs";
+    if (search.includes("demi sec")) return "Demi-Sec";
+    if (search.includes("extra brut")) return "Extra Brut";
+    if (search.includes("brut rose")) return "Brut Rosé";
+    if (search.includes("rose")) return "Rosé";
+    if (search.includes("brut")) return "Brut";
+  }
+  if (category === "Beer") {
+    if (search.includes("cider")) return "Cider";
+    if (search.includes("lager")) return "Lager";
+    if (search.includes("stout")) return "Stout";
+    if (search.includes("wheat")) return "Wheat Beer";
+    if (search.includes("ale")) return "Ale";
+    if (search.includes("ready to drink") || search.includes("rtd")) return "Ready to Drink";
+  }
+  if (category === "Rum" && /\b\d{1,2} (?:year|yr)/.test(search)) return "Aged Rum";
+  if (category === "Gin" && search.includes("flavour")) return "Flavoured Gin";
+  if (category === "Gin" && search.includes("dry gin")) return "Dry Gin";
+  if (category === "Vodka") return "Plain Vodka";
+  if (["Whisky", "Cognac", "Tequila", "Champagne", "Rum", "Gin", "Beer", "Brandy", "Liqueur"].includes(category)) {
+    return `Other ${category}`;
+  }
+  return "";
+};
+
+export const normalizeSubcategory = (value, category = "", product = {}) => {
+  const cleanCategory = normalizeCategory(category);
+  const categoryKey = keyOf(cleanCategory);
+  const parts = cleanText(value)
+    .split(/\s*(?:>|›|→|\||\/)\s*/)
+    .map(cleanText)
+    .filter(Boolean);
+  const cleaned = [...parts].reverse().find((part) => keyOf(part) !== categoryKey) || "";
+  return subcategoryAliases[keyOf(cleaned)] || cleaned || inferSubcategory(product, cleanCategory);
+};
+
+export const normalizeBottleSize = (size, name = "") => {
+  const source = cleanText(size) || cleanText(name).match(/\b\d+(?:\.\d+)?\s*(?:ml|cl|l)\b/i)?.[0] || "";
+  const match = source.match(/(\d+(?:\.\d+)?)\s*(ml|cl|l)/i);
+  if (!match) return source;
+  const unit = match[2].toLowerCase();
+  return `${match[1]}${unit === "l" ? "L" : unit}`;
+};
+
+const findAge = (product, category, subcategory) => {
+  if (/blanton/i.test(`${product.brand} ${product.name}`)) return "6+ Years";
+  const search = keyOf(`${product.name || ""} ${product.description || ""} ${subcategory}`);
+  if (category === "Cognac") {
+    if (/\bxxo\b/.test(search)) return "Minimum 14 Years";
+    if (/\bxo\b/.test(search)) return "Minimum 10 Years";
+    if (/\bvsop\b/.test(search)) return "Minimum 4 Years";
+    if (/\bvs\b/.test(search)) return "Minimum 2 Years";
+  }
+  const match = `${product.name || ""} ${product.description || ""}`.match(/\b(?:aged\s+)?(\d{1,2})\s*(?:year(?:s)?(?:\s+old)?|yrs?)\b/i);
+  return match ? `${match[1]} Years` : "";
+};
+
+const findAbv = (product) => {
+  if (/blanton gold/i.test(product.name || "")) return "51.5%";
+  if (/blanton.*(?:original|single barrel)/i.test(product.name || "") || /blanton/i.test(product.brand || "")) return "46.5%";
+  if (keyOf(product.brand).includes("remy martin") && /\bvsop\b/i.test(`${product.name || ""} ${product.description || ""}`)) return "40%";
+  const match = `${product.name || ""} ${product.description || ""}`.match(/\b(\d{1,2}(?:\.\d+)?)\s*%\s*(?:abv)?\b/i);
+  return match ? `${match[1]}%` : "";
+};
+
+const findProduction = (search) => [
+  ["single barrel", "Single Barrel"],
+  ["small batch", "Small Batch"],
+  ["double cask", "Double Cask"],
+  ["triple cask", "Triple Cask"],
+  ["sherry cask", "Sherry Cask"],
+  ["cask strength", "Cask Strength"],
+  ["bottled in bond", "Bottled in Bond"],
+  ["limited edition", "Limited Edition"],
+  ["vintage", "Vintage"],
+].find(([needle]) => search.includes(needle))?.[1] || "";
+
+export const getProductIdentity = (product = {}) => {
+  const category = normalizeCategory(product.category || product.type);
+  const country = normalizeCountry(product.country || product.origin, category);
+  const brand = normalizeBrand(product.brand);
+  const subcategory = normalizeSubcategory(product.subcategory, category, product);
+  const search = keyOf([product.name, product.description, subcategory, ...(product.tags || [])].join(" "));
+  let type = category;
+  if (category === "Whisky") {
+    if (search.includes("bourbon")) type = "Bourbon";
+    else if (country === "Scotland") type = "Scotch Whisky";
+    else if (country === "Ireland") type = "Irish Whiskey";
+  } else if (category === "Spirits" && (search.includes("baijiu") || search.includes("moutai"))) {
+    type = "Baijiu";
+  }
+
+  const region = /blanton/i.test(brand) ? "Kentucky" : [
+    ["speyside", "Speyside"], ["islay", "Islay"], ["campbeltown", "Campbeltown"],
+    ["highland", "Highlands"], ["lowland", "Lowlands"], ["island", "Islands"],
+  ].find(([needle]) => search.includes(needle))?.[1] ||
+    (category === "Cognac" && country === "France" ? "Cognac" : "") ||
+    (category === "Champagne" && country === "France" ? "Champagne" : "");
+  let production = findProduction(search);
+  if (!production && category === "Cognac" && (search.includes("fine champagne") || (keyOf(brand).includes("remy martin") && subcategory === "VSOP"))) {
+    production = "Fine Champagne Blend";
+  }
+  const inferred = {
+    type,
+    style: type === "Bourbon" && (/blanton/i.test(brand) || search.includes("straight bourbon"))
+      ? "Straight Bourbon"
+      : (subcategory && keyOf(subcategory) !== keyOf(type) && !keyOf(subcategory).startsWith("other ") ? subcategory : ""),
+    production,
+    origin: [region, country].filter(Boolean).join(", "),
+    age: findAge(product, category, subcategory),
+    bottleSize: normalizeBottleSize(product.size, product.name),
+    abv: findAbv(product),
+  };
+
+  const storedIdentity = { ...product.identity };
+  storedIdentity.style = normalizeSubcategory(storedIdentity.style, category, product);
+  if (keyOf(storedIdentity.style).startsWith("other ")) storedIdentity.style = "";
+  return Object.fromEntries(Object.entries(inferred).map(([key, value]) => [
+    key,
+    cleanText(storedIdentity[key]) || value,
+  ]));
+};
+
+export const normalizeProductForDisplay = (product = {}) => {
+  const category = normalizeCategory(product.category || product.type);
+  const country = normalizeCountry(product.country || product.origin, category);
+  const regionalizeWhiskey = (value) => {
+    const text = cleanText(value);
+    return ["USA", "Ireland"].includes(country)
+      ? text.replace(/\bWhisky\b/gi, "Whiskey")
+      : text;
+  };
+  const normalized = {
+    ...product,
+    name: regionalizeWhiskey(normalizeProductName(product.name)),
+    type: category,
+    category,
+    country,
+    brand: normalizeBrand(product.brand || product.storeName),
+    subcategory: regionalizeWhiskey(normalizeSubcategory(product.subcategory, category, product)),
+    size: normalizeBottleSize(product.size, product.name),
+  };
+  return { ...normalized, identity: getProductIdentity(normalized) };
+};

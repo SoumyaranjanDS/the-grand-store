@@ -1,7 +1,9 @@
+import { useRef } from 'react';
 import { ArrowDown, ArrowUpRight } from 'lucide-react';
 import './ScrollVideoHero.css';
 
 function ScrollVideoHero() {
+  const videoRef = useRef(null);
   return (
     <section className="scroll-film" aria-label="Cigar Connoisseur Club film">
       <div className="hero-mobile-only">
@@ -14,7 +16,7 @@ function ScrollVideoHero() {
       <div className="hero-desktop-only">
         <video
           ref={videoRef}
-          className="scroll-video-hero__media"
+          className="scroll-film__video"
           muted
           playsInline
           loop

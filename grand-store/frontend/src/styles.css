@@ -1490,7 +1490,7 @@ video {
 
 .section {
   @apply relative;
-  padding: 122px 0;
+  padding: 48px 0;
 }
 
 @media (max-width: 768px) {
@@ -1500,10 +1500,15 @@ video {
 }
 
 .arrivals {
+  padding-bottom: 0 !important;
   background:
     linear-gradient(180deg, #0b0a08 0%, transparent 24%),
     radial-gradient(circle at 50% 20%, rgba(135, 94, 34, 0.12), transparent 31rem),
     #0c0b09;
+}
+
+.tequila-showcase {
+  padding-top: 40px !important;
 }
 
 /* Preserve the original cellar editorial palette inside product rows only. */

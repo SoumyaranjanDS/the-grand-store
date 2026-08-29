@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { ChevronRight, ArrowRight, ShieldCheck, Lock, CreditCard, Loader2, Truck, AlertTriangle, CheckCircle2, ShoppingCart, MapPin, FileText, Download } from 'lucide-react';
+import { ChevronRight, ArrowRight, ShieldCheck, Lock, CreditCard, Loader2, Truck, AlertTriangle, CheckCircle2, ShoppingCart, MapPin, FileText, Download, Plus, Minus, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getProductPrice } from '../../data';
 import LocationInput from '../../components/LocationInput';
 import CityInput from '../../components/CityInput';
+import PostalCodeInput from '../../components/PostalCodeInput';
 import PaymentForm from './PaymentForm';
 import Price from '../../components/ui/Price';
 import api from '../../api';
 
-export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, onNotify }) {
+export default function CheckoutPage({ cartItems, updateCartQuantity, removeFromCart, onClearCart, clearVendorCart, onNotify }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const vendorId = searchParams.get('vendor');
@@ -32,13 +33,36 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
     address: '',
     city: '',
     postalCode: '',
-    country: ''
+    country: '',
+    lat: null,
+    lng: null
   });
+  const [postnetPreview, setPostnetPreview] = useState({
+    loading: false,
+    stores: [],
+    searchedCity: '',
+    hasCityMatch: false,
+    usingNearestCity: false,
+    error: ''
+  });
+  const [preferredPostnetStore, setPreferredPostnetStore] = useState(null);
 
   const [paymentData, setPaymentData] = useState(null);
   const [payfastUrl, setPayfastUrl] = useState(null);
 
   const cartSubtotal = vendorCartItems.reduce((sum, item) => sum + (getProductPrice(item.price) * item.quantity), 0);
+
+  const handleUpdateQuantity = (productId, option, newQuantity) => {
+    if (updateCartQuantity) updateCartQuantity(productId, option, newQuantity);
+    setQuote(null);
+    setDutiesAccepted(false);
+  };
+
+  const handleRemoveItem = (item) => {
+    if (removeFromCart) removeFromCart(item);
+    setQuote(null);
+    setDutiesAccepted(false);
+  };
 
   useEffect(() => {
     document.title = 'Checkout – The Grand Store';
@@ -50,10 +74,6 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
       navigate('/register');
       return;
     }
-
-    if (vendorCartItems.length === 0) {
-      navigate('/customer/cart');
-    }
   }, [vendorCartItems, navigate, user, onNotify, vendorId]);
 
   const handleChange = (e) => {
@@ -63,6 +83,28 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
       setQuote(null);
       setDutiesAccepted(false);
     }
+  };
+
+  const handleCityChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((current) => ({
+      ...current,
+      [name]: value,
+      postalCode: '',
+      lat: null,
+      lng: null
+    }));
+    setPreferredPostnetStore(null);
+    setPostnetPreview({
+      loading: false,
+      stores: [],
+      searchedCity: value,
+      hasCityMatch: false,
+      usingNearestCity: false,
+      error: ''
+    });
+    setQuote(null);
+    setDutiesAccepted(false);
   };
 
   const selectDeliveryPreference = (preference) => {
@@ -98,6 +140,14 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
 
       const res = await api.post(`/checkout/quote`, payload);
       const data = res.data;
+
+      if (preferredPostnetStore) {
+        data.shipments = data.shipments.map((shipment) => {
+          const postnetOption = shipment.shippingQuotes?.find((option) => option.courierName === 'PostNet');
+          const matchingStore = postnetOption?.stores?.find((store) => store.id === preferredPostnetStore.id);
+          return matchingStore ? { ...shipment, selectedPickupStore: matchingStore } : shipment;
+        });
+      }
 
       setQuote(data);
       window.requestAnimationFrame(() => {
@@ -143,6 +193,7 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
 
   const handlePostnetStoreSelect = (shipmentIndex, store) => {
     if (!quote) return;
+    setPreferredPostnetStore(store);
 
     const newShipments = quote.shipments.map((shipment, index) => (
       index === shipmentIndex
@@ -153,7 +204,22 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
     setQuote({ ...quote, shipments: newShipments });
   };
 
-    const [mapLocation, setMapLocation] = useState(null);
+  const handlePreferredPostnetStoreSelect = (store) => {
+    setPreferredPostnetStore(store);
+    setQuote((currentQuote) => {
+      if (!currentQuote) return currentQuote;
+      return {
+        ...currentQuote,
+        shipments: currentQuote.shipments.map((shipment) => {
+          const postnetOption = shipment.shippingQuotes?.find((option) => option.courierName === 'PostNet');
+          const matchingStore = postnetOption?.stores?.find((candidate) => candidate.id === store.id);
+          return matchingStore ? { ...shipment, selectedPickupStore: matchingStore } : shipment;
+        })
+      };
+    });
+  };
+
+  const [mapLocation, setMapLocation] = useState(null);
   const [isGift, setIsGift] = useState(false);
   const [giftRecipientName, setGiftRecipientName] = useState("");
   const [giftMessage, setGiftMessage] = useState("");
@@ -203,6 +269,66 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
       }
     }
   }, [mapLocation]);
+
+  useEffect(() => {
+    const isSouthAfricanCity = ['south africa', 'za', 'rsa'].includes(String(formData.country || '').trim().toLowerCase());
+    const shouldFindPostnet = user
+      && deliveryPreference !== 'home'
+      && isSouthAfricanCity
+      && formData.city
+      && formData.lat !== null
+      && formData.lat !== undefined
+      && formData.lat !== ''
+      && formData.lng !== null
+      && formData.lng !== undefined
+      && formData.lng !== ''
+      && Number.isFinite(Number(formData.lat))
+      && Number.isFinite(Number(formData.lng));
+
+    if (!shouldFindPostnet) return undefined;
+
+    let cancelled = false;
+    setPostnetPreview((current) => ({ ...current, loading: true, error: '', stores: [], searchedCity: formData.city }));
+
+    api.get('/postnet/locator', {
+      params: {
+        address: `${formData.city}, South Africa`,
+        city: formData.city,
+        lat: formData.lat,
+        lng: formData.lng
+      }
+    }).then((response) => {
+      if (cancelled) return;
+      setPostnetPreview({
+        loading: false,
+        stores: response.data?.stores || [],
+        searchedCity: response.data?.searchedCity || formData.city,
+        hasCityMatch: Boolean(response.data?.hasCityMatch),
+        usingNearestCity: Boolean(response.data?.usingNearestCity),
+        error: ''
+      });
+    }).catch((error) => {
+      if (cancelled) return;
+      setPostnetPreview({
+        loading: false,
+        stores: [],
+        searchedCity: formData.city,
+        hasCityMatch: false,
+        usingNearestCity: false,
+        error: error.response?.data?.message || 'PostNet branches could not be loaded. Please try again.'
+      });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [deliveryPreference, formData.city, formData.country, formData.lat, formData.lng, user]);
+
+  const postnetPostalCodes = useMemo(() => (
+    [...new Set(postnetPreview.stores.filter((store) => store.isInSelectedCity).map((store) => (
+      store.postalCode || String(store.address || '').match(/\b\d{4}\b/)?.[0]
+    )).filter(Boolean))]
+  ), [postnetPreview.stores]);
 
   const [paymentMethod, setPaymentMethod] = useState('payfast'); // 'payfast' or 'bank_transfer'
   const [createdOrderId, setCreatedOrderId] = useState(null);
@@ -329,7 +455,26 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
     }
   };
 
+  if (vendorCartItems.length === 0) {
     return (
+      <main className="pt-32 pb-16 min-h-screen bg-[#050505]">
+        <div className="max-w-6xl mx-auto px-6 mb-12">
+          <div className="flex flex-col items-center justify-center text-center space-y-6 py-20 border border-white/10 bg-black/40 rounded-3xl">
+            <ShoppingCart size={48} className="text-white/20" />
+            <div>
+              <h2 className="text-3xl font-serif text-white mb-2">Your cart is empty</h2>
+              <p className="text-[var(--color-ivory-muted)]">Add some items before checking out.</p>
+            </div>
+            <Link to="/shop" className="bg-[#c9a35b] text-black font-bold uppercase tracking-widest text-xs py-4 px-8 rounded-xl hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all flex items-center justify-center gap-2">
+              Shop More <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  return (
     <main className="pt-32 pb-16 min-h-screen bg-[#050505]">
       <div className="max-w-6xl mx-auto px-6 mb-12">
         <div className="mb-6">
@@ -368,17 +513,29 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                   </span>
                 </div>
 
-                <div className="space-y-3 border-b border-white/10 pb-5">
+                <div className="space-y-4 border-b border-white/10 pb-5">
                   {vendorCartItems.map((item) => (
-                    <div key={`${item.id || item._id}-${item.option || ''}`} className="grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-3">
-                      <div className="w-11 h-11 rounded-lg border border-white/10 bg-black/40 p-1.5 flex items-center justify-center overflow-hidden">
-                        <img src={item.image} alt="" className="max-w-full max-h-full object-contain" />
+                    <div key={`${item.id || item._id}-${item.option || ''}`} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/[0.02] border border-white/5 p-3 rounded-xl">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="w-12 h-12 rounded-lg border border-white/10 bg-black/40 p-1.5 flex items-center justify-center overflow-hidden shrink-0">
+                          <img src={item.image} alt="" className="max-w-full max-h-full object-contain" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm text-white truncate font-medium">{item.fullName || item.name}</p>
+                          <p className="text-xs text-[var(--color-ivory-muted)]">{item.option || 'Pack of 1'}</p>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-sm text-white truncate">{item.fullName || item.name}</p>
-                        <p className="text-xs text-[var(--color-ivory-muted)]">Qty {item.quantity}{item.option ? ` · ${item.option}` : ''}</p>
+                      <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
+                        <div className="flex items-center gap-3 bg-black/50 border border-white/10 rounded-lg px-2 py-1">
+                          <button type="button" onClick={() => handleUpdateQuantity(item.id || item._id, item.option, item.quantity - 1)} className="text-white/60 hover:text-white p-1 transition-colors" aria-label="Decrease quantity"><Minus size={14} /></button>
+                          <span className="text-sm font-medium text-white w-4 text-center">{item.quantity}</span>
+                          <button type="button" onClick={() => handleUpdateQuantity(item.id || item._id, item.option, item.quantity + 1)} className="text-white/60 hover:text-white p-1 transition-colors" aria-label="Increase quantity"><Plus size={14} /></button>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className="text-sm font-medium text-[var(--color-gold)] min-w-[60px] text-right"><Price amount={getProductPrice(item.price) * item.quantity} /></span>
+                          <button type="button" onClick={() => handleRemoveItem(item)} className="text-red-400/60 hover:text-red-400 p-1.5 bg-red-400/5 hover:bg-red-400/10 rounded-lg transition-colors" aria-label="Remove item"><Trash2 size={16} /></button>
+                        </div>
                       </div>
-                      <span className="text-sm text-white"><Price amount={getProductPrice(item.price) * item.quantity} /></span>
                     </div>
                   ))}
                 </div>
@@ -521,7 +678,12 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                               <div className="mt-2 pl-8 pr-3 pb-2 animate-in fade-in slide-in-from-top-2 duration-300">
                                 {opt.stores && opt.stores.length > 0 ? (
                                   <div className="mt-3">
-                                    <p className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-3">Nearby PostNet Locations</p>
+                                    <p className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-2">PostNet pickup branches</p>
+                                    {opt.usingNearestCity && (
+                                      <div className="mb-3 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs leading-relaxed text-amber-200">
+                                        No branch was found in {opt.searchedCity || formData.city}. These are the nearest PostNet alternatives.
+                                      </div>
+                                    )}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                       {opt.stores.map(store => (
                                         <label key={store.id} className="block cursor-pointer">
@@ -537,6 +699,14 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                                           <div className="h-full border border-white/10 bg-[#0a0a0a] p-3 rounded-lg peer-checked:border-gold peer-checked:bg-gold/5 hover:border-white/30 transition-colors">
                                             <p className="text-sm font-medium text-white mb-1">{store.name}</p>
                                             <p className="text-xs text-[var(--color-ivory-muted)]">{store.address}</p>
+                                            <div className="mt-2 flex flex-wrap gap-2 text-[10px] uppercase tracking-wider">
+                                              <span className={store.isNearestAlternative ? 'text-amber-300' : 'text-emerald-300'}>
+                                                {store.isNearestAlternative ? `Nearest alternative${store.city ? ` · ${store.city}` : ''}` : `In ${opt.searchedCity || formData.city}`}
+                                              </span>
+                                              {store.distance !== null && store.distance !== undefined && (
+                                                <span className="text-white/50">{store.distance} km away</span>
+                                              )}
+                                            </div>
                                           </div>
                                         </label>
                                       ))}
@@ -545,7 +715,7 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                                 ) : (
                                   <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3 text-red-400 text-sm mt-2 flex items-start gap-2">
                                     <AlertTriangle size={16} className="shrink-0 mt-0.5" />
-                                    <p>No PostNet stores are available near your address. Please select another delivery option.</p>
+                                    <p>{opt.storeLookupError || 'No PostNet branch could be loaded for this city. Please retry the branch search.'}</p>
                                   </div>
                                 )}
                               </div>
@@ -599,7 +769,9 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                               address: address || current.address,
                               city: city || current.city,
                               postalCode: postalCode || current.postalCode,
-                              country: country || current.country
+                              country: country || current.country,
+                              lat: lat ?? current.lat,
+                              lng: lng ?? current.lng
                             }));
                             setQuote(null);
                             setDutiesAccepted(false);
@@ -625,13 +797,17 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                       <CityInput
                         name="city"
                         value={formData.city}
-                        onChange={handleChange}
+                        onChange={handleCityChange}
                         onCityDetails={({ city, country, lat, lng }) => {
                           setFormData((current) => ({
                             ...current,
                             city,
-                            country: deliveryPreference === 'postnet' ? 'South Africa' : (country || current.country)
+                            postalCode: '',
+                            country: deliveryPreference === 'postnet' ? 'South Africa' : (country || current.country),
+                            lat,
+                            lng
                           }));
+                          setPreferredPostnetStore(null);
                           setQuote(null);
                           setDutiesAccepted(false);
                           if (lat && lng) setMapLocation({ lat, lng });
@@ -645,8 +821,82 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                     </div>
                     <div>
                       <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-2">Postal Code</label>
-                      <input type="text" name="postalCode" value={formData.postalCode} onChange={handleChange} required className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--color-gold)]/50 focus:outline-none transition-colors" />
+                      <PostalCodeInput
+                        name="postalCode"
+                        value={formData.postalCode}
+                        city={formData.city}
+                        cityLat={formData.lat}
+                        cityLng={formData.lng}
+                        suggestedPostalCodes={postnetPostalCodes}
+                        onChange={handleChange}
+                        onPostalDetails={({ postalCode }) => {
+                          setFormData((current) => ({
+                            ...current,
+                            postalCode
+                          }));
+                          setQuote(null);
+                          setDutiesAccepted(false);
+                        }}
+                        restrictToSouthAfrica={deliveryPreference === 'postnet' || String(formData.country).toLowerCase() === 'south africa'}
+                        required
+                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--color-gold)]/50 focus:outline-none transition-colors"
+                        placeholder="Search postal code..."
+                      />
                     </div>
+                    {deliveryPreference !== 'home' && formData.city && (
+                      <div className="md:col-span-2 rounded-2xl border border-white/10 bg-[#0a0a0a] p-4 md:p-5">
+                        <div className="flex items-start gap-3">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-gold)]/10 text-[var(--color-gold)]">
+                            {postnetPreview.loading ? <Loader2 size={17} className="animate-spin" /> : <MapPin size={17} />}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-white">PostNet branches near {formData.city}</p>
+                            {postnetPreview.loading ? (
+                              <p className="mt-1 text-xs text-[var(--color-ivory-muted)]">Checking the selected city and nearby areas...</p>
+                            ) : postnetPreview.error ? (
+                              <p className="mt-1 text-xs text-red-400">{postnetPreview.error}</p>
+                            ) : postnetPreview.stores.length > 0 ? (
+                              <>
+                                <p className={`mt-1 text-xs ${postnetPreview.usingNearestCity ? 'text-amber-300' : 'text-[var(--color-ivory-muted)]'}`}>
+                                  {postnetPreview.usingNearestCity
+                                    ? `There is no PostNet branch listed in ${formData.city}. Choose one of the nearest alternatives below.`
+                                    : `Branches listed in ${formData.city}. You can choose one now or after the delivery price is calculated.`}
+                                </p>
+                                <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                  {postnetPreview.stores.map((store) => {
+                                    const selected = preferredPostnetStore?.id === store.id;
+                                    return (
+                                      <button
+                                        type="button"
+                                        key={store.id}
+                                        onClick={() => handlePreferredPostnetStoreSelect(store)}
+                                        className={`rounded-xl border p-3 text-left transition-colors ${selected ? 'border-[var(--color-gold)] bg-[var(--color-gold)]/10' : 'border-white/10 bg-black/30 hover:border-white/30'}`}
+                                      >
+                                        <span className="flex items-center justify-between gap-3">
+                                          <span className="text-sm font-medium text-white">{store.name}</span>
+                                          {selected && <CheckCircle2 size={15} className="shrink-0 text-[var(--color-gold)]" />}
+                                        </span>
+                                        <span className="mt-1 block text-xs leading-relaxed text-[var(--color-ivory-muted)]">{store.address}</span>
+                                        <span className="mt-2 flex flex-wrap gap-2 text-[10px] uppercase tracking-wider">
+                                          <span className={store.isNearestAlternative ? 'text-amber-300' : 'text-emerald-300'}>
+                                            {store.isNearestAlternative ? `Nearest alternative${store.city ? ` · ${store.city}` : ''}` : `In ${formData.city}`}
+                                          </span>
+                                          {store.distance !== null && store.distance !== undefined && (
+                                            <span className="text-white/50">{store.distance} km away</span>
+                                          )}
+                                        </span>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </>
+                            ) : (
+                              <p className="mt-1 text-xs text-[var(--color-ivory-muted)]">Select a city suggestion to load PostNet branches.</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     <div className="md:col-span-2">
                       <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-2">Country</label>
                       {deliveryPreference === 'postnet' ? (
@@ -674,7 +924,9 @@ export default function CheckoutPage({ cartItems, onClearCart, clearVendorCart, 
                               address: formData.address,
                               city: formData.city,
                               postalCode: formData.postalCode,
-                              country: formData.country
+                              country: formData.country,
+                              lat: formData.lat,
+                              lng: formData.lng
                             });
                           }}
                           disabled={quoteLoading}

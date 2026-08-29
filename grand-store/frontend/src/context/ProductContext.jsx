@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import api from '../api';
 import { products as catalogProducts } from "../data";
+import { normalizeProductForDisplay } from "../utils/productTaxonomy";
 
 const ProductContext = createContext();
 const catalogProductsById = new Map(
@@ -18,12 +19,12 @@ const hydrateProductMetadata = (product) => {
       )
     : null;
 
-  return {
+  return normalizeProductForDisplay({
     ...hydratedProduct,
     category: hydratedProduct.category || hydratedProduct.type,
     brand: hydratedProduct.brand || hydratedProduct.storeName,
     size: hydratedProduct.size || firstOption,
-  };
+  });
 };
 
 export const ProductProvider = ({ children }) => {

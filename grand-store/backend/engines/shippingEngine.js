@@ -11,7 +11,7 @@ const isSouthAfrica = (country) => {
   return c === 'south africa' || c === 'za' || c === 'rsa';
 };
 
-const getShippingQuotes = async (vendorId, customerAddress, shipmentItemsSubtotal, totalWeightKg) => {
+const getShippingQuotes = async (vendorId, customerAddress, shipmentItemsSubtotal, totalWeightKg, options = {}) => {
   try {
     let vendor = null;
     if (vendorId && /^[0-9a-fA-F]{24}$/.test(vendorId.toString())) {
@@ -74,23 +74,19 @@ const getShippingQuotes = async (vendorId, customerAddress, shipmentItemsSubtota
         ]
       });
       
-      // Always add PostNet option for domestic
-      const city = customerAddress.city || '';
-      // Mock logic: return stores for most cities, but empty for some to show the error
-      const hasStores = city.toLowerCase() !== 'nowhere' && city.length % 3 !== 1;
-      
-      const mockStores = hasStores ? [
-        { id: 'pn-1', name: `PostNet ${city} Central`, address: `1 Main Road, ${city}` },
-        { id: 'pn-2', name: `PostNet ${city} Mall`, address: `Shop 42, The Mall, ${city}` },
-        { id: 'pn-3', name: `PostNet ${city} North`, address: `10 North Street, ${city}` }
-      ] : [];
-
+      // PostNet branches are resolved once by the checkout controller. If the
+      // selected city has no branch, the locator supplies the nearest real ones.
+      const postnetLookup = options.postnetLookup || {};
       quotes.push({
         courierName: 'PostNet',
         serviceLevel: 'PostNet to PostNet',
         cost: expressCost,
         estimatedDays: '1-3 business days',
-        stores: mockStores,
+        stores: postnetLookup.stores || [],
+        searchedCity: postnetLookup.searchedCity || customerAddress.city || '',
+        hasCityMatch: Boolean(postnetLookup.hasCityMatch),
+        usingNearestCity: Boolean(postnetLookup.usingNearestCity),
+        storeLookupError: postnetLookup.error || '',
         legs: [
           {
             courierName: 'PostNet Express',

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import IconButton from "./IconButton";
+import { getCountryDisplayName } from '../utils/countryHelpers';
 import { storeCategories, accessoryCategories, menuCategories } from "../data";
 import { useAuth } from "../context/AuthContext";
 import { useProducts } from "../context/ProductContext";
@@ -203,8 +204,8 @@ export default function Header({
       name: cat,
       description: `Explore our collection of ${cat}`,
       groups: [
-        ...(subcats.length > 0 ? [{ title: 'Subcategories', items: subcats }] : []),
         ...(countries.length > 0 ? [{ title: 'Countries', items: countries }] : []),
+        ...(subcats.length > 0 ? [{ title: 'Subcategories', items: subcats }] : []),
         ...(brands.length > 0 ? [{ title: 'Brands', items: brands }] : [])
       ]
     };
@@ -654,15 +655,16 @@ export default function Header({
                       <>
                         {(() => {
                           const categoryProducts = products.filter(p => getProductCategory(p) === megaActiveCategory.name);
-                          const subcategories = Array.from(new Set(categoryProducts.map(p => p.subcategory).filter(Boolean))).sort();
+                          const countries = Array.from(new Set(categoryProducts.map(p => p.country).filter(Boolean))).sort();
+
+                          const countryProducts = activeCountry ? categoryProducts.filter(p => p.country === activeCountry) : [];
+                          const subcategories = Array.from(new Set(countryProducts.map(p => p.subcategory).filter(Boolean))).sort();
                           
-                          const subcatProducts = activeSubcategory ? categoryProducts.filter(p => p.subcategory === activeSubcategory) : [];
+                          const subcatProducts = activeSubcategory ? countryProducts.filter(p => p.subcategory === activeSubcategory) : [];
                           const brands = Array.from(new Set(subcatProducts.map(p => p.brand).filter(Boolean))).sort();
                           
                           const brandProducts = activeBrand ? subcatProducts.filter(p => p.brand === activeBrand) : [];
-                          const countries = Array.from(new Set(brandProducts.map(p => p.country).filter(Boolean))).sort();
-                          
-                          const finalProducts = activeCountry ? brandProducts.filter(p => p.country === activeCountry).slice(0, 8) : [];
+                          const finalProducts = activeBrand ? brandProducts.slice(0, 8) : [];
                           
                           return (
                             <div className="flex-1 py-10 px-12 h-full flex flex-col">
@@ -672,9 +674,38 @@ export default function Header({
                               </div>
                               
                               <div className="flex gap-12">
-                                {/* Subcategories Column */}
-                                {subcategories.length > 0 && (
+                                {/* Countries Column */}
+                                {countries.length > 0 && (
                                   <div className="flex-1 min-w-[180px] max-w-[240px]">
+                                    <h4 className="text-white text-[13px] font-bold tracking-[0.05em] mb-5 pb-4 border-b border-white/10 uppercase">
+                                      Countries
+                                    </h4>
+                                    <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                      <ul className="flex flex-col gap-3.5">
+                                        {countries.map(item => (
+                                          <li key={item}>
+                                            <Link 
+                                              to={`/shop?category=${encodeURIComponent(megaActiveCategory.name)}&country=${encodeURIComponent(item)}`}
+                                              onClick={closeMenus}
+                                              onMouseEnter={() => {
+                                                setActiveCountry(item);
+                                                setActiveSubcategory(null);
+                                                setActiveBrand(null);
+                                              }}
+                                              className={`text-[13px] transition-colors block ${activeCountry === item ? 'text-[#c9a35b]' : 'text-[#999] hover:text-[#c9a35b]'}`}
+                                            >
+                                              {getCountryDisplayName(item, megaActiveCategory.name)}
+                                            </Link>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {/* Subcategories Column */}
+                                {activeCountry && subcategories.length > 0 && (
+                                  <div className="flex-1 min-w-[180px] max-w-[240px] animate-in fade-in slide-in-from-left-4 duration-200">
                                     <h4 className="text-white text-[13px] font-bold tracking-[0.05em] mb-5 pb-4 border-b border-white/10 uppercase">
                                       Subcategories
                                     </h4>
@@ -683,12 +714,11 @@ export default function Header({
                                         {subcategories.map(item => (
                                           <li key={item}>
                                             <Link 
-                                              to={`/shop?category=${encodeURIComponent(megaActiveCategory.name)}&search=${encodeURIComponent(item)}`}
+                                              to={`/shop?category=${encodeURIComponent(megaActiveCategory.name)}&country=${encodeURIComponent(activeCountry)}&subcategory=${encodeURIComponent(item)}`}
                                               onClick={closeMenus}
                                               onMouseEnter={() => {
                                                 setActiveSubcategory(item);
                                                 setActiveBrand(null);
-                                                setActiveCountry(null);
                                               }}
                                               className={`text-[13px] transition-colors block ${activeSubcategory === item ? 'text-[#c9a35b]' : 'text-[#999] hover:text-[#c9a35b]'}`}
                                             >
@@ -700,7 +730,7 @@ export default function Header({
                                     </div>
                                   </div>
                                 )}
-                                
+
                                 {/* Brands Column */}
                                 {activeSubcategory && brands.length > 0 && (
                                   <div className="flex-1 min-w-[180px] max-w-[240px] animate-in fade-in slide-in-from-left-4 duration-200">
@@ -712,12 +742,9 @@ export default function Header({
                                         {brands.map(item => (
                                           <li key={item}>
                                             <Link 
-                                              to={`/shop?category=${encodeURIComponent(megaActiveCategory.name)}&search=${encodeURIComponent(item)}`}
+                                              to={`/shop?category=${encodeURIComponent(megaActiveCategory.name)}&country=${encodeURIComponent(activeCountry)}&subcategory=${encodeURIComponent(activeSubcategory)}&brand=${encodeURIComponent(item)}`}
                                               onClick={closeMenus}
-                                              onMouseEnter={() => {
-                                                setActiveBrand(item);
-                                                setActiveCountry(null);
-                                              }}
+                                              onMouseEnter={() => setActiveBrand(item)}
                                               className={`text-[13px] transition-colors block ${activeBrand === item ? 'text-[#c9a35b]' : 'text-[#999] hover:text-[#c9a35b]'}`}
                                             >
                                               {item}
@@ -729,33 +756,8 @@ export default function Header({
                                   </div>
                                 )}
 
-                                {/* Countries Column */}
-                                {activeBrand && countries.length > 0 && (
-                                  <div className="flex-1 min-w-[180px] max-w-[240px] animate-in fade-in slide-in-from-left-4 duration-200">
-                                    <h4 className="text-white text-[13px] font-bold tracking-[0.05em] mb-5 pb-4 border-b border-white/10 uppercase">
-                                      Countries
-                                    </h4>
-                                    <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                                      <ul className="flex flex-col gap-3.5">
-                                        {countries.map(item => (
-                                          <li key={item}>
-                                            <Link 
-                                              to={`/shop?category=${encodeURIComponent(megaActiveCategory.name)}&search=${encodeURIComponent(item)}`}
-                                              onClick={closeMenus}
-                                              onMouseEnter={() => setActiveCountry(item)}
-                                              className={`text-[13px] transition-colors block ${activeCountry === item ? 'text-[#c9a35b]' : 'text-[#999] hover:text-[#c9a35b]'}`}
-                                            >
-                                              {item}
-                                            </Link>
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  </div>
-                                )}
-
                                 {/* Final Products Column */}
-                                {activeCountry && finalProducts.length > 0 && (
+                                {activeBrand && finalProducts.length > 0 && (
                                   <div className="flex-1 min-w-[200px] max-w-[280px] animate-in fade-in slide-in-from-left-4 duration-200">
                                     <h4 className="text-[#c9a35b] text-[13px] font-bold tracking-[0.05em] mb-5 pb-4 border-b border-white/10 uppercase">
                                       Products
@@ -777,10 +779,10 @@ export default function Header({
                                         ))}
                                       </ul>
                                     </div>
-                                    {brandProducts.filter(p => p.country === activeCountry).length > 8 && (
+                                    {brandProducts.length > 8 && (
                                       <div className="mt-4 pt-4 border-t border-white/5">
                                         <Link
-                                          to={`/shop?category=${encodeURIComponent(megaActiveCategory.name)}&subcategory=${encodeURIComponent(activeSubcategory)}&brand=${encodeURIComponent(activeBrand)}&country=${encodeURIComponent(activeCountry)}`}
+                                          to={`/shop?category=${encodeURIComponent(megaActiveCategory.name)}&country=${encodeURIComponent(activeCountry)}&subcategory=${encodeURIComponent(activeSubcategory)}&brand=${encodeURIComponent(activeBrand)}`}
                                           onClick={closeMenus}
                                           className="inline-flex items-center gap-1.5 text-[#c9a35b] text-[11px] font-bold tracking-[0.1em] uppercase hover:text-white transition-colors"
                                         >
@@ -1200,28 +1202,142 @@ export default function Header({
                   </div>
                 )}
 
-                {currentNav.view === 'category' && (
-                  <div className="drawer-links pt-2">
-                    <div className="px-5 mb-4 border-b border-white/10 pb-4">
-                      <h2 className="text-2xl font-serif text-white">{currentNav.data.name}</h2>
-                    </div>
-                    <Link to={`/${currentNav.data.isAccessory ? 'accessories' : 'shop'}?category=${encodeURIComponent(currentNav.data.name)}`} onClick={closeMenus} className="text-[#c9a35b] font-bold text-sm tracking-widest uppercase pb-2 block">
-                      Shop All {currentNav.data.name} <ArrowRight size={14} className="inline ml-1" />
-                    </Link>
-                    {currentNav.data.groups.map(group => (
-                      <div key={group.title} className="mb-4">
-                        <h3 className="px-5 text-[#888] text-xs font-bold tracking-widest uppercase mb-1 mt-4">{group.title}</h3>
-                        {group.items.map(item => (
-                          <a role="button" key={item} className="flex items-center justify-between w-full text-left !py-3.5 !text-[15px] border-b border-white/5 cursor-pointer" onClick={() => pushNav('products', { category: currentNav.data, item })}>
-                            <span className="text-[#ddd]">{item}</span><ChevronRight size={14} className="text-[#555]"/>
+                {currentNav.view === 'category' && (() => {
+                  const catName = currentNav.data.name;
+                  const isAccessory = currentNav.data.isAccessory;
+                  if (isAccessory) {
+                    return (
+                      <div className="drawer-links pt-2">
+                        <div className="px-5 mb-4 border-b border-white/10 pb-4">
+                          <h2 className="text-2xl font-serif text-white">{catName}</h2>
+                        </div>
+                        <Link to={`/accessories?category=${encodeURIComponent(catName)}`} onClick={closeMenus} className="text-[#c9a35b] font-bold text-sm tracking-widest uppercase pb-2 block">
+                          Shop All {catName} <ArrowRight size={14} className="inline ml-1" />
+                        </Link>
+                        {currentNav.data.groups.map(group => (
+                          <div key={group.title} className="mb-4">
+                            <h3 className="px-5 text-[#888] text-xs font-bold tracking-widest uppercase mb-1 mt-4">{group.title}</h3>
+                            {group.items.map(item => (
+                              <a role="button" key={item} className="flex items-center justify-between w-full text-left !py-3.5 !text-[15px] border-b border-white/5 cursor-pointer" onClick={() => pushNav('products_old', { category: currentNav.data, item })}>
+                                <span className="text-[#ddd]">{item}</span><ChevronRight size={14} className="text-[#555]"/>
+                              </a>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  }
+
+                  const categoryProducts = products.filter(p => getProductCategory(p) === catName);
+                  const countries = Array.from(new Set(categoryProducts.map(p => p.country).filter(Boolean))).sort();
+                  return (
+                    <div className="drawer-links pt-2">
+                      <div className="px-5 mb-4 border-b border-white/10 pb-4">
+                        <h2 className="text-2xl font-serif text-white">{catName}</h2>
+                      </div>
+                      <Link to={`/shop?category=${encodeURIComponent(catName)}`} onClick={closeMenus} className="text-[#c9a35b] font-bold text-sm tracking-widest uppercase pb-2 block">
+                        Shop All {catName} <ArrowRight size={14} className="inline ml-1" />
+                      </Link>
+
+                      <div className="mb-4">
+                        <h3 className="px-5 text-[#888] text-xs font-bold tracking-widest uppercase mb-1 mt-4">Countries</h3>
+                        {countries.map(country => (
+                          <a role="button" key={country} className="flex items-center justify-between w-full text-left !py-3.5 !text-[15px] border-b border-white/5 cursor-pointer" onClick={() => pushNav('country', { category: catName, country })}>
+                            <span className="text-[#ddd]">{getCountryDisplayName(country, catName)}</span><ChevronRight size={14} className="text-[#555]"/>
                           </a>
                         ))}
                       </div>
-                    ))}
-                  </div>
-                )}
+                    </div>
+                  );
+                })()}
 
-                {currentNav.view === 'products' && (() => {
+                {currentNav.view === 'country' && (() => {
+                  const { category, country } = currentNav.data;
+                  const countryProducts = products.filter(p => getProductCategory(p) === category && p.country === country);
+                  const subcategories = Array.from(new Set(countryProducts.map(p => p.subcategory).filter(Boolean))).sort();
+
+                  return (
+                    <div className="drawer-links pt-2">
+                      <div className="px-5 mb-4 border-b border-white/10 pb-4">
+                        <p className="text-[#888] text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5">{category}</p>
+                        <h2 className="text-2xl font-serif text-white">{getCountryDisplayName(country, category)}</h2>
+                      </div>
+                      <Link to={`/shop?category=${encodeURIComponent(category)}&country=${encodeURIComponent(country)}`} onClick={closeMenus} className="text-[#c9a35b] font-bold text-sm tracking-widest uppercase pb-2 block">
+                        Shop All {getCountryDisplayName(country, category)} <ArrowRight size={14} className="inline ml-1" />
+                      </Link>
+
+                      <div className="mb-4">
+                        <h3 className="px-5 text-[#888] text-xs font-bold tracking-widest uppercase mb-1 mt-4">Subcategories</h3>
+                        {subcategories.map(subcat => (
+                          <a role="button" key={subcat} className="flex items-center justify-between w-full text-left !py-3.5 !text-[15px] border-b border-white/5 cursor-pointer" onClick={() => pushNav('subcategory', { category, country, subcategory: subcat })}>
+                            <span className="text-[#ddd]">{subcat}</span><ChevronRight size={14} className="text-[#555]"/>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {currentNav.view === 'subcategory' && (() => {
+                  const { category, country, subcategory } = currentNav.data;
+                  const subcatProducts = products.filter(p => getProductCategory(p) === category && p.country === country && p.subcategory === subcategory);
+                  const brands = Array.from(new Set(subcatProducts.map(p => p.brand).filter(Boolean))).sort();
+
+                  return (
+                    <div className="drawer-links pt-2">
+                      <div className="px-5 mb-4 border-b border-white/10 pb-4">
+                        <p className="text-[#888] text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5">{getCountryDisplayName(country, category)}</p>
+                        <h2 className="text-2xl font-serif text-white">{subcategory}</h2>
+                      </div>
+                      <Link to={`/shop?category=${encodeURIComponent(category)}&country=${encodeURIComponent(country)}&subcategory=${encodeURIComponent(subcategory)}`} onClick={closeMenus} className="text-[#c9a35b] font-bold text-sm tracking-widest uppercase pb-2 block">
+                        Shop All {subcategory} <ArrowRight size={14} className="inline ml-1" />
+                      </Link>
+
+                      <div className="mb-4">
+                        <h3 className="px-5 text-[#888] text-xs font-bold tracking-widest uppercase mb-1 mt-4">Brands</h3>
+                        {brands.map(brand => (
+                          <a role="button" key={brand} className="flex items-center justify-between w-full text-left !py-3.5 !text-[15px] border-b border-white/5 cursor-pointer" onClick={() => pushNav('brand', { category, country, subcategory, brand })}>
+                            <span className="text-[#ddd]">{brand}</span><ChevronRight size={14} className="text-[#555]"/>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {currentNav.view === 'brand' && (() => {
+                  const { category, country, subcategory, brand } = currentNav.data;
+                  const brandProducts = products.filter(p => getProductCategory(p) === category && p.country === country && p.subcategory === subcategory && p.brand === brand);
+
+                  return (
+                    <div className="drawer-links pt-2 pb-6">
+                      <div className="px-5 mb-4 border-b border-white/10 pb-4">
+                        <p className="text-[#888] text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5">{subcategory}</p>
+                        <h2 className="text-xl font-serif text-white">{brand}</h2>
+                      </div>
+                      <Link to={`/shop?category=${encodeURIComponent(category)}&country=${encodeURIComponent(country)}&subcategory=${encodeURIComponent(subcategory)}&brand=${encodeURIComponent(brand)}`} onClick={closeMenus} className="text-[#c9a35b] font-bold text-sm tracking-widest uppercase pb-2 block mb-4">
+                        Shop all {brand} <ArrowRight size={14} className="inline ml-1" />
+                      </Link>
+
+                      <div className="px-5 flex flex-col gap-5 mt-2">
+                        {brandProducts.slice(0, 8).map(p => (
+                          <Link key={p.id || p._id} to={`/product/${p.slug || p.id || p._id}`} onClick={closeMenus} className="flex items-center gap-4 !p-0 !border-0 group !bg-transparent hover:!bg-transparent">
+                             <div className="w-[60px] h-[75px] bg-[#1a1a1a] rounded overflow-hidden shrink-0 border border-white/10 group-hover:border-white/30 transition-colors flex items-center justify-center">
+                               {p.image ? <img src={p.image} alt={p.name} className="max-w-full max-h-full object-contain p-1" /> : <div className="w-full h-full bg-[#222]"></div>}
+                             </div>
+                             <div className="flex-1 min-w-0">
+                               <p className="text-[#888] text-[10px] uppercase tracking-wider mb-1 truncate">{p.brand}</p>
+                               <h4 className="text-[#eee] text-[13px] line-clamp-2 leading-snug group-hover:text-[#c9a35b] transition-colors font-medium">{p.name}</h4>
+                               <p className="text-white font-bold text-[13px] mt-1.5"><Price amount={p.price}/></p>
+                             </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {currentNav.view === 'products_old' && (() => {
                   const { category, item } = currentNav.data;
                   const matchedProducts = products.filter(p => p.brand === item || p.subcategory === item).slice(0, 8);
                   const isAccessory = category.isAccessory;

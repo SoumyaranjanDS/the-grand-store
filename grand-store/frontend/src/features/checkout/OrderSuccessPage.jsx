@@ -410,8 +410,10 @@ export default function OrderSuccessPage({ onClearCart }) {
           ["Pending", "Awaiting_Approval"].includes(order.paymentStatus)
         ) && (
           <>
-            <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-8 md:p-12 relative">
-              <div className="flex flex-col md:flex-row justify-between items-start border-b border-white/10 pb-8 mb-8">
+            <div className="bg-gradient-to-br from-[#161616] to-[#0a0a0a] text-white border border-[#c9a35b]/20 shadow-[0_8px_30px_rgba(212,175,55,0.05)] rounded-2xl p-8 md:p-12 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#c9a35b]/5 rounded-full blur-3xl pointer-events-none"></div>
+              
+              <div className="relative z-10 flex flex-col md:flex-row justify-between items-start border-b border-white/10 pb-8 mb-8">
                 <div>
                   <img
                     src="/logo.png"
@@ -429,24 +431,24 @@ export default function OrderSuccessPage({ onClearCart }) {
                   <div className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">
                     Invoice Number
                   </div>
-                  <div className="font-mono text-white">
+                  <div className="font-mono text-white font-medium">
                     {order.invoiceNumber || order._id}
                   </div>
                   <div className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mt-4 mb-1">
                     Date
                   </div>
-                  <div className="text-white">
+                  <div className="text-white font-medium">
                     {new Date(order.createdAt).toLocaleDateString()}
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 border-b border-white/10 pb-8">
+              <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 border-b border-white/10 pb-8">
                 <div>
                   <div className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-2">
                     Billed To
                   </div>
-                  <div className="text-sm text-white">{order.user?.name}</div>
+                  <div className="text-sm font-semibold text-white">{order.user?.name}</div>
                   <div className="text-sm text-[var(--color-ivory-muted)]">
                     {order.user?.email}
                   </div>
@@ -455,7 +457,7 @@ export default function OrderSuccessPage({ onClearCart }) {
                   <div className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-2">
                     Shipped To
                   </div>
-                  <div className="text-sm text-white">
+                  <div className="text-sm font-semibold text-white">
                     {order.shippingAddress?.address}
                   </div>
                   <div className="text-sm text-[var(--color-ivory-muted)]">
@@ -468,20 +470,20 @@ export default function OrderSuccessPage({ onClearCart }) {
                 </div>
               </div>
 
-              <div className="mb-8">
+              <div className="relative z-10 mb-8">
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-white/10 text-[var(--color-ivory-muted)]">
-                      <th className="pb-3 font-normal uppercase tracking-widest text-xs">
+                      <th className="pb-3 font-semibold uppercase tracking-widest text-xs">
                         Item
                       </th>
-                      <th className="pb-3 font-normal uppercase tracking-widest text-xs text-right hidden md:table-cell">
+                      <th className="pb-3 font-semibold uppercase tracking-widest text-xs text-right hidden md:table-cell">
                         Qty
                       </th>
-                      <th className="pb-3 font-normal uppercase tracking-widest text-xs text-right">
+                      <th className="pb-3 font-semibold uppercase tracking-widest text-xs text-right">
                         Price
                       </th>
-                      <th className="pb-3 font-normal uppercase tracking-widest text-xs text-right">
+                      <th className="pb-3 font-semibold uppercase tracking-widest text-xs text-right">
                         Total
                       </th>
                     </tr>
@@ -499,11 +501,11 @@ export default function OrderSuccessPage({ onClearCart }) {
                               />
                             )}
                             <div>
-                              <div className="text-white font-medium">
+                              <div className="text-white font-semibold">
                                 {item.name}
                               </div>
                               {item.vendorName && (
-                                <div className="text-xs text-gray-500">
+                                <div className="text-xs text-[var(--color-ivory-muted)]">
                                   Sold by {item.vendorName}
                                 </div>
                               )}
@@ -513,13 +515,13 @@ export default function OrderSuccessPage({ onClearCart }) {
                             </div>
                           </div>
                         </td>
-                        <td className="py-4 text-right text-white hidden md:table-cell">
+                        <td className="py-4 text-right text-white font-medium hidden md:table-cell">
                           {item.qty || item.quantity}
                         </td>
-                        <td className="py-4 text-right text-white">
+                        <td className="py-4 text-right text-white font-medium">
                           <Price amount={item.price} />
                         </td>
-                        <td className="py-4 text-right text-white">
+                        <td className="py-4 text-right text-white font-medium">
                           <Price
                             amount={
                               item.price * (item.qty || item.quantity || 1)
@@ -532,17 +534,17 @@ export default function OrderSuccessPage({ onClearCart }) {
                 </table>
               </div>
 
-              <div className="flex justify-end border-t border-white/10 pt-6">
-                <div className="w-full md:w-64 space-y-2">
-                  <div className="flex justify-between py-2 text-sm text-[var(--color-ivory-muted)]">
+              <div className="relative z-10 flex justify-end pt-6 mb-8">
+                <div className="w-full md:w-80 space-y-2">
+                  <div className="flex justify-between items-center py-2 text-sm text-[var(--color-ivory-muted)]">
                     <span>Subtotal</span>
-                    <span>
+                    <span className="font-mono text-base font-medium text-white">
                       <Price amount={order.totalPrice - order.shippingCost} />
                     </span>
                   </div>
-                  <div className="flex justify-between py-2 text-sm text-[var(--color-ivory-muted)] border-b border-white/10">
+                  <div className="flex justify-between items-center py-2 text-sm text-[var(--color-ivory-muted)] border-b border-white/10">
                     <span>Shipping</span>
-                    <span>
+                    <span className="font-mono text-base font-medium text-white">
                       {order.shippingCost === 0 ? (
                         "Complimentary"
                       ) : (
@@ -550,16 +552,27 @@ export default function OrderSuccessPage({ onClearCart }) {
                       )}
                     </span>
                   </div>
-                  <div className="flex justify-between py-4 text-xl font-serif text-gold-gradient">
-                    <span>Total</span>
-                    <span>
+                  <div className="flex justify-between items-center py-4 text-xl text-[#c9a35b] font-bold">
+                    <span className="font-serif">Total</span>
+                    <span className="font-mono text-2xl">
                       <Price amount={order.totalPrice} />
                     </span>
                   </div>
-                  <div className="flex justify-between py-2 text-xs text-[var(--color-ivory-muted)]">
+                  <div className="flex justify-between items-center py-2 text-xs text-[var(--color-ivory-muted)]">
                     <span>Payment Method</span>
-                    <span>{order.paymentMethod} (Paid)</span>
+                    <span className="font-medium text-white whitespace-nowrap">{order.paymentMethod} (Paid)</span>
                   </div>
+                </div>
+              </div>
+
+              {/* Footer Section */}
+              <div className="relative z-10 mt-8 pt-8 border-t border-dashed border-white/20 text-center text-xs text-[var(--color-ivory-muted)] space-y-2">
+                <p className="font-medium text-white">Thank you for shopping with The Grand Store.</p>
+                <p>All sales are subject to our standard terms and conditions.</p>
+                <div className="flex items-center justify-center gap-4 mt-4 pt-2">
+                  <Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
+                  <span className="w-1 h-1 bg-white/20 rounded-full"></span>
+                  <Link to="/terms-and-conditions" className="hover:text-white transition-colors">Terms & Conditions</Link>
                 </div>
               </div>
             </div>

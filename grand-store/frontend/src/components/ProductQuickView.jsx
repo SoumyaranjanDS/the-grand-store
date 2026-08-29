@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, ShoppingBag, X } from 'lucide-react'
 import Price from './ui/Price'
+import { getProductIdentity } from '../utils/productTaxonomy'
 
 export default function ProductQuickView({ product, onClose, onAdd }) {
   useEffect(() => {
@@ -19,6 +20,7 @@ export default function ProductQuickView({ product, onClose, onAdd }) {
   }, [product, onClose])
 
   if (!product) return null
+  const identity = getProductIdentity(product)
 
   return (
     <div 
@@ -51,7 +53,7 @@ export default function ProductQuickView({ product, onClose, onAdd }) {
         </div>
         <div className="self-center p-[30px_22px] sm:p-[clamp(42px,5vw,75px)]">
           <p className="flex items-center gap-3 m-0 mb-[19px] text-[#e1bd70] text-xs font-semibold tracking-[0.2em] uppercase">
-            {product.brand} • {product.origin}
+            {product.brand} • {identity.origin || product.country || 'Origin not stated'}
           </p>
           <h2 id="quick-view-title" className="m-[0_0_20px] font-serif text-[36px] md:text-[clamp(38px,4vw,58px)] font-medium tracking-[-0.035em] leading-[0.98] text-[#eee8dd]">
             {product.fullName || product.name}
@@ -65,11 +67,11 @@ export default function ProductQuickView({ product, onClose, onAdd }) {
           <dl className="m-[0_0_25px]">
             <div className="flex justify-between py-2.5 border-b border-white/10">
               <dt className="text-[#746e65] text-[10px] tracking-[0.12em] uppercase">Style</dt>
-              <dd className="m-0 text-[#d8d0c4] font-serif">{product.details?.style || product.category}</dd>
+              <dd className="m-0 text-[#d8d0c4] font-serif">{identity.style || 'Not stated'}</dd>
             </div>
             <div className="flex justify-between py-2.5 border-b border-white/10">
               <dt className="text-[#746e65] text-[10px] tracking-[0.12em] uppercase">Size</dt>
-              <dd className="m-0 text-[#d8d0c4] font-serif">{product.size}</dd>
+              <dd className="m-0 text-[#d8d0c4] font-serif">{identity.bottleSize || product.size || 'Not stated'}</dd>
             </div>
             <div className="flex justify-between py-2.5 border-b border-white/10">
               <dt className="text-[#746e65] text-[10px] tracking-[0.12em] uppercase">SKU</dt>

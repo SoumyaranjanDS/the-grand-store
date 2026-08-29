@@ -34,6 +34,15 @@ const productSchema = new mongoose.Schema(
       type: String,
     },
     image: String,
+    imageSource: String,
+    imageSourceUrl: String,
+    imageSyncedAt: Date,
+    originalImage: String,
+    backgroundRemovalStatus: {
+      type: String,
+      enum: ["not_requested", "pending", "complete", "failed", "skipped"],
+      default: "not_requested",
+    },
     gallery: [String],
     factSheetPdf: String,
     featured: {
@@ -45,6 +54,15 @@ const productSchema = new mongoose.Schema(
     tastingNotes: [String],
     flavorProfile: [String],
     foodPairing: [String],
+    identity: {
+      type: { type: String, default: "" },
+      style: { type: String, default: "" },
+      production: { type: String, default: "" },
+      origin: { type: String, default: "" },
+      age: { type: String, default: "" },
+      bottleSize: { type: String, default: "" },
+      abv: { type: String, default: "" },
+    },
     stock: {
       type: Number,
       default: 0,
@@ -76,6 +94,22 @@ const productSchema = new mongoose.Schema(
       type: String,
       enum: ["pending", "approved", "rejected"],
       default: "approved", // Default to approved for the seeded products
+    },
+    catalogManaged: {
+      type: Boolean,
+      default: false,
+    },
+    sourceWorkbooks: [String],
+    sourceUrl: String,
+    importedAt: Date,
+    isCatalogDuplicate: {
+      type: Boolean,
+      default: false,
+    },
+    catalogDuplicateOf: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      default: null,
     },
   },
   { timestamps: true },

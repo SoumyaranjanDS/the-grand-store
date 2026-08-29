@@ -5,6 +5,7 @@ import { SlidersHorizontal, Grid3X3, X } from "lucide-react";
 import ProductCard from "../../components/ProductCard";
 import FilterGroup from "./FilterGroup";
 import Price from "../../components/ui/Price";
+import { getCountryDisplayName } from "../../utils/countryHelpers";
 
 const isVisibleFilterValue = (value) =>
   typeof value === "string" &&
@@ -85,12 +86,21 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
     ),
   ];
 
-  const productsForSubcategories =
+  const productsForCountries =
     selectedCategories.length > 0
       ? shopProducts.filter((p) =>
           selectedCategories.includes(getProductCategory(p)),
         )
       : shopProducts;
+
+  const countryOptions = getFilterOptions(productsForCountries, "country");
+
+  const productsForSubcategories =
+    selectedCountries.length > 0
+      ? productsForCountries.filter((p) =>
+          selectedCountries.includes(p.country),
+        )
+      : productsForCountries;
 
   const subcategoryOptions = getFilterOptions(productsForSubcategories, "subcategory");
 
@@ -102,15 +112,6 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
       : productsForSubcategories;
 
   const brandOptions = getFilterOptions(productsForBrands, "brand");
-
-  const productsForCountries =
-    selectedBrands.length > 0
-      ? productsForBrands.filter((p) =>
-          selectedBrands.includes(p.brand),
-        )
-      : productsForBrands;
-
-  const countryOptions = getFilterOptions(productsForCountries, "country");
 
   const sizeOptions = getFilterOptions(shopProducts, "size");
 
@@ -229,24 +230,31 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
                 selectedValues={selectedCategories}
                 onToggle={(value) => toggleFilter("category", value)}
               />
-              <FilterGroup
-                title="Subcategory"
-                options={subcategoryOptions}
-                selectedValues={selectedSubcategories}
-                onToggle={(value) => toggleFilter("subcategory", value)}
-              />
-              <FilterGroup
-                title="Brand"
-                options={brandOptions}
-                selectedValues={selectedBrands}
-                onToggle={(value) => toggleFilter("brand", value)}
-              />
-              <FilterGroup
-                title="Country"
-                options={countryOptions}
-                selectedValues={selectedCountries}
-                onToggle={(value) => toggleFilter("country", value)}
-              />
+              {selectedCategories.length > 0 && (
+                <FilterGroup
+                  title="Country"
+                  options={countryOptions}
+                  selectedValues={selectedCountries}
+                  onToggle={(value) => toggleFilter("country", value)}
+                  formatLabel={(country) => getCountryDisplayName(country, selectedCategories[0])}
+                />
+              )}
+              {selectedCountries.length > 0 && (
+                <FilterGroup
+                  title="Subcategory"
+                  options={subcategoryOptions}
+                  selectedValues={selectedSubcategories}
+                  onToggle={(value) => toggleFilter("subcategory", value)}
+                />
+              )}
+              {selectedSubcategories.length > 0 && (
+                <FilterGroup
+                  title="Brand"
+                  options={brandOptions}
+                  selectedValues={selectedBrands}
+                  onToggle={(value) => toggleFilter("brand", value)}
+                />
+              )}
               <FilterGroup
                 title="Bottle size"
                 options={sizeOptions}

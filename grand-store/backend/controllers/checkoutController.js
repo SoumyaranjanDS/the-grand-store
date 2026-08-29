@@ -3,6 +3,7 @@ const Vendor = require('../models/Vendor');
 const PlatformSettings = require('../models/PlatformSettings');
 const { calculateTax } = require('../engines/taxEngine');
 const { getShippingQuotes } = require('../engines/shippingEngine');
+const { findNearestPostnetStores } = require('../services/postnetLocator');
 
 // @desc    Generate a checkout quote (locked price)
 // @route   POST /api/checkout/quote
@@ -25,6 +26,35 @@ const generateQuote = async (req, res) => {
     const isSouthAfricanDestination = ['south africa', 'za', 'rsa'].includes(destinationCountry);
     if (deliveryPreference === 'postnet' && !isSouthAfricanDestination) {
       return res.status(400).json({ message: 'PostNet pickup is only available within South Africa.' });
+    }
+
+    let postnetLookup = null;
+    if (isSouthAfricanDestination && deliveryPreference !== 'home') {
+      const postnetSearchAddress = [
+        shippingAddress.address,
+        shippingAddress.city,
+        shippingAddress.postalCode,
+        'South Africa'
+      ].filter(Boolean).join(', ');
+
+      try {
+        postnetLookup = await findNearestPostnetStores({
+          address: postnetSearchAddress,
+          lat: shippingAddress.lat,
+          lng: shippingAddress.lng,
+          city: shippingAddress.city,
+          limit: 6
+        });
+      } catch (error) {
+        console.error('PostNet quote lookup error:', error.message);
+        postnetLookup = {
+          stores: [],
+          searchedCity: shippingAddress.city,
+          hasCityMatch: false,
+          usingNearestCity: false,
+          error: 'PostNet branches could not be loaded right now. Please retry the search.'
+        };
+      }
     }
 
     // 1. Enqueue products and group by vendor
@@ -91,7 +121,8 @@ const generateQuote = async (req, res) => {
         group.vendorId, 
         shippingAddress, 
         group.subtotal, 
-        group.totalWeightKg
+        group.totalWeightKg,
+        { postnetLookup }
       );
 
       if (shippingData.isInternational) hasInternational = true;

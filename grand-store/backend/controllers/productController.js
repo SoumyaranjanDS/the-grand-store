@@ -9,7 +9,7 @@ const canManageInternalProducts = (user) => INTERNAL_PRODUCT_ROLES.includes(user
 // @access  Public
 const getProducts = async (req, res) => {
   try {
-    const query = {};
+    const query = { isCatalogDuplicate: { $ne: true } };
     if (req.query.type) {
       query.type = req.query.type;
     }
@@ -144,7 +144,9 @@ const getVendorProducts = async (req, res) => {
     if (req.user.role !== 'vendor_active' && !canManageInternalProducts(req.user)) {
       return res.status(403).json({ message: 'Product management access is required' });
     }
-    const filter = canManageInternalProducts(req.user) ? { vendorId: null } : { vendorId: req.user._id };
+    const filter = canManageInternalProducts(req.user)
+      ? { vendorId: null, isCatalogDuplicate: { $ne: true } }
+      : { vendorId: req.user._id, isCatalogDuplicate: { $ne: true } };
     const products = await Product.find(filter).sort({ createdAt: -1 });
     res.json(products);
   } catch (error) {

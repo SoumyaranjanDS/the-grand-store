@@ -586,6 +586,8 @@ function App() {
           element={
             <CheckoutPage
               cartItems={cartItems}
+              updateCartQuantity={updateCartQuantity}
+              removeFromCart={removeFromCart}
               onClearCart={clearCart}
               clearVendorCart={clearVendorCart}
               onNotify={showToast}

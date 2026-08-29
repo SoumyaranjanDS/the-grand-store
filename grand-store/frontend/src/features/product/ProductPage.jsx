@@ -20,6 +20,7 @@ import ReviewSection from "../../components/social/ReviewSection";
 import ProductQnA from "../../components/social/ProductQnA";
 import ExpertReviewCard from "../../components/social/ExpertReviewCard";
 import Price from "../../components/ui/Price";
+import { getProductIdentity } from "../../utils/productTaxonomy";
 
 const preparedVendorImages = {
   '/uploads/images-1787292711461.png': '/assets/products/vendor/whisky-tona-full.png',
@@ -128,6 +129,22 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
     .filter((item) => item.id !== product.id)
     .slice(0, 4);
   const detailEntries = product.details ? Object.entries(product.details) : [];
+  const identity = getProductIdentity(product);
+  const identityItems = [
+    { label: "Type", value: identity.type },
+    { label: "Style", value: identity.style },
+    { label: "Production", value: identity.production },
+    { label: "Origin", value: identity.origin },
+    { label: "Age", value: identity.age },
+    { label: "Bottle Size", value: identity.bottleSize },
+    { label: "ABV", value: identity.abv },
+  ];
+  const categoryLabel = product.category || product.type || "Collection";
+  const hasDistinctStyle = identity.style &&
+    identity.style.trim().toLowerCase() !== categoryLabel.trim().toLowerCase();
+  const taxonomySecondary = hasDistinctStyle
+    ? { label: "Style", value: identity.style }
+    : { label: "Origin", value: identity.origin || product.country };
 
   const productUrl = typeof window === "undefined" ? "" : window.location.href;
   const encodedUrl = encodeURIComponent(productUrl);
@@ -149,14 +166,6 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
   // Format price
   const formattedPrice = Number(product.price).toFixed(2);
 
-  // Generate grid items
-  const gridItems = [
-    { label: "Category", value: product.category || product.type || "N/A" },
-    { label: "Brand", value: product.brand || "The Grand Store" },
-    { label: "Origin", value: product.origin || "N/A" },
-    ...detailEntries.map(([k, v]) => ({ label: k, value: v })),
-  ];
-
   // Define Product Schema for SEO
   const productSchema = {
     "@context": "https://schema.org",
@@ -176,11 +185,18 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
       priceCurrency: "ZAR",
       price: product.price,
       availability:
-        product.stock > 0
-          ? "https://schema.org/InStock"
-          : "https://schema.org/OutOfStock",
+        product.stock === 0
+          ? "https://schema.org/OutOfStock"
+          : "https://schema.org/InStock",
       itemCondition: "https://schema.org/NewCondition",
     },
+    additionalProperty: identityItems
+      .filter((item) => item.value)
+      .map((item) => ({
+        "@type": "PropertyValue",
+        name: item.label,
+        value: item.value,
+      })),
   };
 
   return (
@@ -264,6 +280,19 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             className="mb-4"
           />
 
+          <div className="mb-4 flex flex-wrap gap-2" aria-label="Product classification">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-3 py-1.5 text-[9px] uppercase tracking-[0.16em] text-[#918a7f]">
+              Category
+              <strong className="font-semibold text-[#eee8dd]">{categoryLabel}</strong>
+            </span>
+            {taxonomySecondary.value && (
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#c9a35b]/25 bg-[#c9a35b]/[0.06] px-3 py-1.5 text-[9px] uppercase tracking-[0.16em] text-[#918a7f]">
+                {taxonomySecondary.label}
+                <strong className="font-semibold text-[#e1bd70]">{taxonomySecondary.value}</strong>
+              </span>
+            )}
+          </div>
+
           <h1 className="mb-4 break-words font-serif text-[clamp(2rem,10vw,3rem)] leading-[1.08] text-[#eee8dd] md:text-5xl lg:text-[54px]">
             {product.fullName || product.name}
           </h1>
@@ -329,16 +358,31 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             </button>
           </div>
 
-          {/* Details Grid */}
-          <div className="mb-8 grid grid-cols-2 gap-x-4 gap-y-5 md:grid-cols-3 md:gap-y-6">
-            {gridItems.slice(0, 6).map((item, idx) => (
-              <div className="min-w-0" key={idx}>
-                <div className="text-[10px] text-[#918a7f] uppercase tracking-widest font-semibold mb-1.5">
-                  {item.label}
-                </div>
-                <div className="break-words text-sm font-medium">{item.value}</div>
+          {/* Bottle identity — the key facts customers need at a glance. */}
+          <div className="mb-8 border border-[#c9a35b]/25 bg-[#11100d] p-4 sm:p-5">
+            <div className="mb-4 flex items-center justify-between gap-3 border-b border-white/10 pb-3">
+              <div>
+                <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#918a7f]">
+                  At a glance
+                </p>
+                <h2 className="mt-1 font-serif text-lg text-[#eee8dd]">Bottle identity</h2>
               </div>
-            ))}
+              <span className="rounded-full border border-[#c9a35b]/35 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.15em] text-[#e1bd70]">
+                {product.brand || "The Grand Store"}
+              </span>
+            </div>
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3">
+              {identityItems.map((item) => (
+                <div className="min-w-0" key={item.label}>
+                  <dt className="mb-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-[#918a7f]">
+                    {item.label}
+                  </dt>
+                  <dd className={`break-words text-sm font-medium ${item.value ? "text-[#eee8dd]" : "text-[#686158]"}`}>
+                    {item.value || "Not stated"}
+                  </dd>
+                </div>
+              ))}
+            </dl>
           </div>
 
           {/* Select Options */}
@@ -419,7 +463,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
 
           {/* South Africa Legal Drinking Warning Banner */}
           <div className="w-full bg-[#0a0a0a] border border-white/10 p-3 sm:p-4 flex flex-col xl:flex-row items-center justify-center gap-4 xl:gap-6 mb-8 rounded">
-            <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+            <a href="https://www.aware.org.za/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 sm:gap-4 shrink-0 hover:opacity-80 transition-opacity">
               {/* #NO 18 Logo */}
               <div className="flex items-center text-[#e84c22] font-black tracking-tighter">
                 <span className="text-3xl leading-none">#N</span>
@@ -444,7 +488,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
                   www.aware.org.za
                 </span>
               </div>
-            </div>
+            </a>
 
             <div className="hidden xl:block w-px h-8 bg-white/20 shrink-0"></div>
 
@@ -658,7 +702,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
                   Origin
                 </div>
                 <div className="break-words text-sm font-medium">
-                  {product.origin || "N/A"}
+                  {identity.origin || product.country || "N/A"}
                 </div>
               </div>
               {detailEntries.map(([label, value]) => (

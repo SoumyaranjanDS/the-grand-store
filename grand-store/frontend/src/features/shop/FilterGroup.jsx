@@ -6,6 +6,7 @@ export default function FilterGroup({
   options,
   selectedValues,
   onToggle,
+  formatLabel,
 }) {
   return (
     <div className="border-b border-white/5 pb-8 mb-8 last:border-0 last:mb-0 last:pb-0">
@@ -43,7 +44,7 @@ export default function FilterGroup({
               <span
                 className={`text-sm font-medium tracking-wide transition-all duration-300 ${isSelected ? "text-white translate-x-1" : "text-white/60 group-hover:text-white group-hover:translate-x-1"}`}
               >
-                {option}
+                {formatLabel ? formatLabel(option) : option}
               </span>
             </label>
           );
