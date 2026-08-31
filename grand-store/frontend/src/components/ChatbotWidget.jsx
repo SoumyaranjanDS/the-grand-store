@@ -292,6 +292,9 @@ export default function ChatbotWidget() {
                 </div>
                 {/* WhatsApp CTA */}
                 {msg.whatsapp && (
+                  <a
+                    href={`https://wa.me/${msg.whatsapp.replace(/\D/g, '')}?text=Hi, I need help with my question.`}
+                    target="_blank"
                     rel="noopener noreferrer"
                     style={{
                       display: 'inline-flex',

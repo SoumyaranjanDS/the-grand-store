@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Copy, Check, Users, Gift, Clock3, MessageCircle, Twitter, Facebook, Mail } from 'lucide-react';
+import { Copy, Check, Users, Gift, Clock3, MessageCircle, Mail } from 'lucide-react';
 import Price from '../../components/ui/Price';
 import api from '../../api';
 
@@ -98,18 +98,18 @@ export default function ReferralsTab() {
             <a 
               href={`https://twitter.com/intent/tweet?text=${encodeURIComponent('Check out The Grand Store! Sign up using my referral link to get a welcome discount: ')}&url=${encodeURIComponent(referralLink)}`} 
               target="_blank" rel="noopener noreferrer" 
-              className="w-10 h-10 rounded-full bg-black/60 border border-white/10 flex items-center justify-center text-white/70 hover:bg-[var(--color-gold)] hover:text-black hover:border-[var(--color-gold)] transition-all"
+              className="w-10 h-10 rounded-full bg-black/60 border border-white/10 flex items-center justify-center text-white/70 hover:bg-[var(--color-gold)] hover:text-black hover:border-[var(--color-gold)] transition-all font-bold font-serif"
               title="Share on X (Twitter)"
             >
-              <Twitter size={18} />
+              X
             </a>
             <a 
               href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralLink)}`} 
               target="_blank" rel="noopener noreferrer" 
-              className="w-10 h-10 rounded-full bg-black/60 border border-white/10 flex items-center justify-center text-white/70 hover:bg-[var(--color-gold)] hover:text-black hover:border-[var(--color-gold)] transition-all"
+              className="w-10 h-10 rounded-full bg-black/60 border border-white/10 flex items-center justify-center text-white/70 hover:bg-[var(--color-gold)] hover:text-black hover:border-[var(--color-gold)] transition-all font-bold font-serif"
               title="Share on Facebook"
             >
-              <Facebook size={18} />
+              f
             </a>
             <a 
               href={`mailto:?subject=${encodeURIComponent('Invitation to The Grand Store')}&body=${encodeURIComponent('Hi,\n\nI thought you might like The Grand Store. Sign up using my referral link to get a welcome discount!\n\n' + referralLink)}`} 
