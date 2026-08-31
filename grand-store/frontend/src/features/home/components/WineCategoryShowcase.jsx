@@ -2,11 +2,11 @@ import { Link } from 'react-router-dom';
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 const categories = [
-  { name: 'Red Wine', image: '/assets/wine_categories/red_wine.jpg', href: '/shop?category=Wine&style=Red' },
-  { name: 'White Wine', image: '/assets/wine_categories/white_wine.jpg', href: '/shop?category=Wine&style=White' },
-  { name: 'Rosé', image: '/assets/wine_categories/rose_wine.jpg', href: '/shop?category=Wine&style=Rose' },
-  { name: 'Sparkling Wine', image: '/assets/wine_categories/sparkling_wine.jpg', href: '/shop?category=Wine&style=Sparkling' },
-  { name: 'Fortified Wine', image: '/assets/wine_categories/fortified_wine.jpg', href: '/shop?category=Wine&style=Fortified' },
+  { name: 'Red Wine', image: 'https://res.cloudinary.com/oioqrgj0/image/upload/v1788172071/grand-store/assets/kw6gbh0wvlqetm5wjiei.jpg', href: '/shop?category=Wine&style=Red' },
+  { name: 'White Wine', image: 'https://res.cloudinary.com/oioqrgj0/image/upload/v1788172073/grand-store/assets/jexjcokjcfay8nf0x8ln.jpg', href: '/shop?category=Wine&style=White' },
+  { name: 'Rosé', image: 'https://res.cloudinary.com/oioqrgj0/image/upload/v1788172074/grand-store/assets/oslwjrhdlyszwqmizcpy.jpg', href: '/shop?category=Wine&style=Rose' },
+  { name: 'Sparkling Wine', image: 'https://res.cloudinary.com/oioqrgj0/image/upload/v1788172075/grand-store/assets/tmeyeilofkqdlkgfi73q.jpg', href: '/shop?category=Wine&style=Sparkling' },
+  { name: 'Fortified Wine', image: 'https://res.cloudinary.com/oioqrgj0/image/upload/v1788172076/grand-store/assets/xdzemq49etwlkg0gark8.jpg', href: '/shop?category=Wine&style=Fortified' },
 ];
 
 export default function WineCategoryShowcase() {

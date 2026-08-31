@@ -10,7 +10,7 @@ export default function AuctionCampaign() {
     >
       <img 
         className="absolute inset-0 -z-20 w-full h-full object-cover lg:object-center object-[68%_center]" 
-        src="/images/auction-campaign-banner.jpg" 
+        src="https://res.cloudinary.com/oioqrgj0/image/upload/v1788172078/grand-store/assets/cu4jebfyyjt80fbqjzk0.jpg" 
         alt="Exclusive vintage cognac in a luxury auction room" 
       />
       <div 

@@ -10,7 +10,7 @@ export default function LuxuryBannerSection() {
     >
       <img 
         className="absolute inset-0 -z-20 w-full h-full object-cover lg:object-center object-[68%_center]" 
-        src="/images/shop-theme-banner.jpg" 
+        src="https://res.cloudinary.com/oioqrgj0/image/upload/v1788172077/grand-store/assets/xxvwe50zmbqo9jkrwhsj.jpg" 
         alt="Premium wine and luxury lifestyle selections" 
       />
       <div 
