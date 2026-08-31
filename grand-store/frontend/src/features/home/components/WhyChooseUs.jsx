@@ -226,7 +226,7 @@ export default function WhyChooseUs() {
               <div className="p-1.5 rounded-md bg-[var(--color-gold)]/10 text-[#dfbd72] border border-[var(--color-gold)]/20 group-hover:bg-[var(--color-gold)]/20 transition-colors shrink-0">
                 <CheckCircle2 size={14} />
               </div>
-              <span className="truncate text-[12px] font-semibold uppercase tracking-[0.13em] text-[var(--color-ivory)] sm:text-[13px]">
+              <span className="text-[11px] sm:text-[13px] font-semibold uppercase tracking-[0.05em] sm:tracking-[0.13em] text-[var(--color-ivory)] leading-snug break-words">
                 {item}
               </span>
             </div>

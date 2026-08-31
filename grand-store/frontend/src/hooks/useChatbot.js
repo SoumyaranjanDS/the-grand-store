@@ -29,6 +29,7 @@ export default function useChatbot() {
           from: 'bot',
           text: data.answer,
           whatsapp: data.whatsapp || null,
+          sources: Array.isArray(data.sources) ? data.sources : [],
           showSuggestions: !data.matched, // show quick questions again on no match
         },
       ]);

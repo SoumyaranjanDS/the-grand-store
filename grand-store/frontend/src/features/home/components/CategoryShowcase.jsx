@@ -67,8 +67,8 @@ export default function CategoryShowcase({
     <>
       <section className="section tequila-showcase home-product-editorial" id={categoryId.toLowerCase()} ref={sectionRef}>
         <div className="shell">
-          <div className="section-heading flex flex-col items-center text-center md:flex-row md:text-left md:justify-between md:items-end gap-3 md:gap-0">
-            <div className="flex flex-col items-center md:items-start">
+          <div className="section-heading flex flex-col items-start text-left md:flex-row md:text-left md:justify-between md:items-end gap-3 md:gap-0">
+            <div className="flex flex-col items-start md:items-start w-full">
               <p className="eyebrow hidden md:block">{eyebrow}</p>
               <h2>{title}</h2>
               <p className="section-intro hidden md:block">{description}</p>
@@ -100,9 +100,9 @@ export default function CategoryShowcase({
 
       {brands.length > 0 && (
         <section className="relative py-8 md:py-10 border-t border-white/10 bg-[#0b0a08] overflow-hidden" aria-labelledby={`${categoryId}-brands-title`}>
-          <div className="relative max-w-[1440px] mx-auto text-center px-6 sm:px-8 lg:px-7">
-            <div className="relative border border-white/10 rounded-2xl py-8 bg-white/[0.01]">
-              <div className="mb-8 relative">
+          <div className="relative max-w-[1440px] mx-auto text-center sm:px-8 lg:px-7">
+            <div className="relative border-y sm:border border-white/10 sm:rounded-2xl py-8 bg-white/[0.01]">
+              <div className="mb-8 relative px-6 sm:px-0">
                 <h2 id={`${categoryId}-brands-title`} className="m-0 font-serif text-[clamp(24px,2.5vw,36px)] font-medium tracking-[-0.02em] leading-[1.05] text-[#eee8dd] relative z-10">
                   Top {title} Brands
                 </h2>

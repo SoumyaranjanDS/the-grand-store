@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 
 const images = [
-  "/assets/mobile-hero/premium-bar.jpg",
-  "/assets/mobile-hero/champagne-pour.jpg",
-  "/assets/mobile-hero/moet-ice.jpg"
+  "https://res.cloudinary.com/oioqrgj0/image/upload/v1788172726/grand-store/mobile-hero/y9huqamz2qmi19eztxvv.jpg",
+  "https://res.cloudinary.com/oioqrgj0/image/upload/v1788172727/grand-store/mobile-hero/yxgydyne6gxvictqucig.jpg",
+  "https://res.cloudinary.com/oioqrgj0/image/upload/v1788172728/grand-store/mobile-hero/n9uovcqrpnvvvnr0cxnj.jpg"
 ];
 
 export default function HeroMobile() {

@@ -1,88 +1,74 @@
-const ChatbotFAQ = require("../models/ChatbotFAQ");
+const ChatbotFAQ = require('../models/ChatbotFAQ');
+const {
+  buildWebsiteKnowledge,
+  cleanText
+} = require('../services/chatbotKnowledgeService');
+const {
+  generateGroundedAnswer,
+  getProviderOrder
+} = require('../services/chatbotAiService');
 
-// @desc  Match user message to best FAQ entry
+const SUPPORT_WHATSAPP = process.env.SUPPORT_WHATSAPP || '+27765809522';
+
+// @desc  Answer a customer using current public website data and managed FAQs
 // @route POST /api/chatbot/message
 // @access Public
 exports.getAnswer = async (req, res) => {
   try {
-    const { message } = req.body;
-    if (!message || !message.trim()) {
-      return res.status(400).json({ message: "Message is required" });
+    const message = cleanText(req.body?.message, 800);
+    if (!message) {
+      return res.status(400).json({ message: 'Message is required' });
     }
 
-    const faqs = await ChatbotFAQ.find({ isActive: true }).sort({
-      priority: -1,
-    });
+    const faqs = await ChatbotFAQ.find({ isActive: true })
+      .sort({ priority: -1 })
+      .lean();
+    const knowledge = await buildWebsiteKnowledge({ message, faqs });
 
-    // Normalize user input
-    const normalized = message.toLowerCase().replace(/[^a-z0-9\s]/g, " ");
-    const words = normalized.split(/\s+/).filter(Boolean);
-
-    let bestMatch = null;
-    let bestScore = 0;
-
-    for (const faq of faqs) {
-      let score = 0;
-      for (const keyword of faq.keywords) {
-        const kw = keyword.toLowerCase().trim();
-
-        // 1. Exact phrase found in the full normalized message — highest value
-        if (normalized.includes(kw)) {
-          score += kw.split(/\s+/).length * 3;
-          continue;
-        }
-
-        // 2. Word-by-word stem/prefix matching:
-        //    "methods" starts with "method" ✓
-        //    "auctions" starts with "auction" ✓
-        //    "tracking" starts with "track" ✓
-        const kwWords = kw.split(/\s+/);
-        let matchedWords = 0;
-        for (const kwWord of kwWords) {
-          for (const userWord of words) {
-            if (
-              userWord === kwWord ||
-              userWord.startsWith(kwWord) ||
-              kwWord.startsWith(userWord)
-            ) {
-              matchedWords++;
-              break;
-            }
-          }
-        }
-        // Award points proportional to how many keyword words matched
-        if (kwWords.length > 0 && matchedWords > 0) {
-          const ratio = matchedWords / kwWords.length;
-          if (ratio >= 0.5) {
-            score += matchedWords * 2;
-          }
-        }
-      }
-      if (score > bestScore) {
-        bestScore = score;
-        bestMatch = faq;
+    if (getProviderOrder().length) {
+      try {
+        const result = await generateGroundedAnswer({
+          message,
+          context: knowledge.context
+        });
+        return res.json({
+          matched: knowledge.hasDirectEvidence,
+          grounded: true,
+          answer: result.answer,
+          provider: result.provider,
+          sources: knowledge.sources
+        });
+      } catch (error) {
+        console.warn('Chatbot AI providers unavailable:', error.failures || error.message);
       }
     }
 
-    if (bestMatch && bestScore > 0) {
+    // Keep the chatbot useful if every external AI provider is unavailable.
+    if (knowledge.bestFaq) {
       return res.json({
         matched: true,
-        question: bestMatch.question,
-        answer: bestMatch.answer,
-        category: bestMatch.category,
+        grounded: true,
+        question: knowledge.bestFaq.question,
+        answer: knowledge.bestFaq.answer,
+        category: knowledge.bestFaq.category,
+        provider: 'faq',
+        sources: knowledge.sources
       });
     }
 
-    // No match — WhatsApp fallback
     return res.json({
       matched: false,
-      answer:
-        "I'm sorry, I couldn't find an answer to that. Please chat with us directly on WhatsApp and we'll be happy to help!",
-      whatsapp: "+27765809522",
+      grounded: false,
+      answer: "I couldn't confirm that from the current website information. Please contact our team on WhatsApp and we'll be happy to help.",
+      whatsapp: SUPPORT_WHATSAPP,
+      sources: [
+        { label: 'Contact support', url: '/contact-us' },
+        { label: 'Help & FAQs', url: '/faq' }
+      ]
     });
   } catch (error) {
-    console.error("Chatbot error:", error);
-    res.status(500).json({ message: "Server error" });
+    console.error('Chatbot error:', error);
+    return res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -92,11 +78,11 @@ exports.getAnswer = async (req, res) => {
 exports.getPublicFAQs = async (req, res) => {
   try {
     const faqs = await ChatbotFAQ.find({ isActive: true })
-      .select("category question")
+      .select('category question')
       .sort({ category: 1, priority: -1 });
     res.json(faqs);
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -108,7 +94,7 @@ exports.getAllFAQs = async (req, res) => {
     const faqs = await ChatbotFAQ.find().sort({ category: 1, priority: -1 });
     res.json(faqs);
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -117,19 +103,18 @@ exports.getAllFAQs = async (req, res) => {
 // @access Admin
 exports.createFAQ = async (req, res) => {
   try {
-    const { category, keywords, question, answer, isActive, priority } =
-      req.body;
+    const { category, keywords, question, answer, isActive, priority } = req.body;
     const faq = await ChatbotFAQ.create({
       category,
       keywords,
       question,
       answer,
       isActive,
-      priority,
+      priority
     });
     res.status(201).json(faq);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
@@ -140,12 +125,12 @@ exports.updateFAQ = async (req, res) => {
   try {
     const faq = await ChatbotFAQ.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
-      runValidators: true,
+      runValidators: true
     });
-    if (!faq) return res.status(404).json({ message: "FAQ not found" });
+    if (!faq) return res.status(404).json({ message: 'FAQ not found' });
     res.json(faq);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
@@ -155,9 +140,9 @@ exports.updateFAQ = async (req, res) => {
 exports.deleteFAQ = async (req, res) => {
   try {
     const faq = await ChatbotFAQ.findByIdAndDelete(req.params.id);
-    if (!faq) return res.status(404).json({ message: "FAQ not found" });
-    res.json({ message: "FAQ deleted" });
+    if (!faq) return res.status(404).json({ message: 'FAQ not found' });
+    res.json({ message: 'FAQ deleted' });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

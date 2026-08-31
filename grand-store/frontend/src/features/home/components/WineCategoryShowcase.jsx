@@ -52,7 +52,7 @@ export default function WineCategoryShowcase() {
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      <div className="categories-copy" style={{ textAlign: 'center', marginBottom: '3rem' }}>
+      <div className="categories-copy text-left md:text-center" style={{ marginBottom: '3rem' }}>
         <h2 style={{ fontSize: '2.5rem', fontFamily: 'var(--font-serif)', color: '#eee8dd', margin: '0 0 1rem 0' }}>
           Explore Top <em style={{ color: 'var(--gold)', fontStyle: 'italic' }}>Wine Categories</em>
         </h2>

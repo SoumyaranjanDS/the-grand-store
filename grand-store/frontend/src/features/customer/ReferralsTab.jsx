@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Copy, Check, Users, Gift, Clock3 } from 'lucide-react';
+import { Copy, Check, Users, Gift, Clock3, MessageCircle, Twitter, Facebook, Mail } from 'lucide-react';
 import Price from '../../components/ui/Price';
 import api from '../../api';
 
@@ -69,7 +69,7 @@ export default function ReferralsTab() {
             Your Referral Link
           </h2>
           
-          <div className="flex flex-col sm:flex-row items-stretch gap-4 relative z-10 mb-8">
+          <div className="flex flex-col sm:flex-row items-stretch gap-4 relative z-10 mb-4">
             <div className="flex-1 bg-black/50 border border-white/20 rounded-lg px-4 py-3 flex items-center overflow-hidden">
               <span className="text-[var(--color-ivory-muted)] font-mono text-sm whitespace-nowrap overflow-x-auto select-all">
                 {referralLink || (loadingProfile ? 'Loading your link…' : 'Referral link unavailable')}
@@ -83,6 +83,41 @@ export default function ReferralsTab() {
               {copied ? <Check size={18} /> : <Copy size={18} />}
               {copied ? 'Copied!' : 'Copy Link'}
             </button>
+          </div>
+
+          <div className="flex items-center gap-3 relative z-10 mb-8">
+            <span className="text-xs text-[var(--color-ivory-muted)] uppercase tracking-widest mr-2">Share:</span>
+            <a 
+              href={`https://wa.me/?text=${encodeURIComponent('Check out The Grand Store! Sign up using my referral link to get a welcome discount: ' + referralLink)}`} 
+              target="_blank" rel="noopener noreferrer" 
+              className="w-10 h-10 rounded-full bg-black/60 border border-white/10 flex items-center justify-center text-white/70 hover:bg-[var(--color-gold)] hover:text-black hover:border-[var(--color-gold)] transition-all"
+              title="Share on WhatsApp"
+            >
+              <MessageCircle size={18} />
+            </a>
+            <a 
+              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent('Check out The Grand Store! Sign up using my referral link to get a welcome discount: ')}&url=${encodeURIComponent(referralLink)}`} 
+              target="_blank" rel="noopener noreferrer" 
+              className="w-10 h-10 rounded-full bg-black/60 border border-white/10 flex items-center justify-center text-white/70 hover:bg-[var(--color-gold)] hover:text-black hover:border-[var(--color-gold)] transition-all"
+              title="Share on X (Twitter)"
+            >
+              <Twitter size={18} />
+            </a>
+            <a 
+              href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralLink)}`} 
+              target="_blank" rel="noopener noreferrer" 
+              className="w-10 h-10 rounded-full bg-black/60 border border-white/10 flex items-center justify-center text-white/70 hover:bg-[var(--color-gold)] hover:text-black hover:border-[var(--color-gold)] transition-all"
+              title="Share on Facebook"
+            >
+              <Facebook size={18} />
+            </a>
+            <a 
+              href={`mailto:?subject=${encodeURIComponent('Invitation to The Grand Store')}&body=${encodeURIComponent('Hi,\n\nI thought you might like The Grand Store. Sign up using my referral link to get a welcome discount!\n\n' + referralLink)}`} 
+              className="w-10 h-10 rounded-full bg-black/60 border border-white/10 flex items-center justify-center text-white/70 hover:bg-[var(--color-gold)] hover:text-black hover:border-[var(--color-gold)] transition-all"
+              title="Share via Email"
+            >
+              <Mail size={18} />
+            </a>
           </div>
 
           {loadError && <p className="mb-5 text-sm text-red-400 relative z-10">{loadError}</p>}

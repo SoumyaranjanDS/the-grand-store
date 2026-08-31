@@ -18,6 +18,8 @@ export const ReviewSection = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
+  const [mediaList, setMediaList] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -58,6 +60,33 @@ export const ReviewSection = ({
     setIsModalOpen(true);
   };
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setSubmitError('');
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const response = await api.post('/social-proof/upload', formData);
+
+      if (response.data?.success && response.data?.url) {
+        setMediaList((current) => [...current, { type: 'photo', url: response.data.url }]);
+      } else {
+        throw new Error('Upload failed');
+      }
+    } catch (error) {
+      console.error(error);
+      setSubmitError('Failed to upload image. Please try again.');
+    } finally {
+      setIsUploading(false);
+      e.target.value = null; // reset input
+    }
+  };
+
   const handleSubmitReview = async (e) => {
     e.preventDefault();
     if (!rating || !comment.trim()) {
@@ -74,7 +103,8 @@ export const ReviewSection = ({
         type: 'product',
         referenceId: productId,
         ratings: { overall: rating },
-        comment: comment.trim()
+        comment: comment.trim(),
+        media: mediaList
       });
 
       if (!response.data?.success || !response.data?.data) {
@@ -86,6 +116,8 @@ export const ReviewSection = ({
       setIsModalOpen(false);
       setComment('');
       setRating(5);
+      setMediaList([]);
+      setMediaUrl('');
       setSuccessMessage('Thank you. Your review is now published.');
     } catch (error) {
       console.error(error);
@@ -158,7 +190,7 @@ export const ReviewSection = ({
               className={`flex items-center gap-2 rounded-full border px-3 py-2 text-xs sm:px-4 sm:text-sm ${filter === 'with_media' ? 'border-gold-500 bg-gold-500/10 text-gold-400' : 'border-white/20 hover:border-white/50'}`}
               onClick={() => setFilter('with_media')}
             >
-              <ImageIcon size={14} /> With Photos/Video
+              <ImageIcon size={14} /> With Photos
             </button>
             <button 
               className={`flex items-center gap-2 rounded-full border px-3 py-2 text-xs sm:px-4 sm:text-sm ${filter === 'verified' ? 'border-gold-500 bg-gold-500/10 text-gold-400' : 'border-white/20 hover:border-white/50'}`}
@@ -307,6 +339,37 @@ export const ReviewSection = ({
                   className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-white/30 focus:outline-none focus:border-gold-500/50 min-h-[120px]"
                   required
                 />
+              </div>
+              
+              <div>
+                <label className="block text-sm text-white/70 mb-2">Add Photo (Optional)</label>
+                <div className="flex flex-col gap-2 mb-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    disabled={isUploading}
+                    className="bg-white/5 border border-white/10 rounded px-3 py-2 text-white text-sm w-full"
+                  />
+                  {isUploading && <span className="text-xs text-gold-400">Uploading photo...</span>}
+                </div>
+                {mediaList.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {mediaList.map((media, idx) => (
+                      <div key={idx} className="flex items-center gap-2 bg-white/10 border border-white/20 px-3 py-1.5 rounded-full text-xs">
+                        <span className="text-gold-400 capitalize">Photo</span>
+                        <img src={media.url} alt="Review upload" className="h-6 w-6 object-cover rounded" />
+                        <button
+                          type="button"
+                          onClick={() => setMediaList(mediaList.filter((_, i) => i !== idx))}
+                          className="ml-1 text-white/50 hover:text-white flex items-center justify-center"
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               
               <button 

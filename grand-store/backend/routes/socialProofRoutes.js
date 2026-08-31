@@ -1,5 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const { storage } = require('../config/cloudinary');
+const upload = multer({ storage });
 const {
   submitReview,
   getReviews,
@@ -20,6 +23,13 @@ const admin = authMiddleware.admin || ((req, res, next) => next());
 router.post('/reviews', protect, submitReview);
 router.post('/reviews/:id/helpful', protect, toggleReviewHelpful);
 router.get('/reviews/:type/:referenceId', getReviews);
+
+router.post('/upload', protect, upload.single('image'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: 'No file uploaded' });
+  }
+  res.status(200).json({ success: true, url: req.file.path });
+});
 
 router.post('/questions', protect, submitQuestion);
 router.post('/questions/:id/answers', protect, submitAnswer);

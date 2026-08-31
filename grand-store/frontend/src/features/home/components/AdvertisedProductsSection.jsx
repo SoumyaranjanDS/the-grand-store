@@ -162,8 +162,8 @@ export default function AdvertisedProductsSection() {
       <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[#e1bd70]/5 pointer-events-none rounded-full blur-[120px] opacity-60 z-0"></div>
 
       <div className="shell relative z-10">
-        <div className="section-heading flex flex-col items-center text-center md:flex-row md:text-left md:justify-between md:items-end gap-3 md:gap-0">
-          <div className="flex flex-col items-center md:items-start">
+        <div className="section-heading flex flex-col items-start text-left md:flex-row md:text-left md:justify-between md:items-end gap-3 md:gap-0">
+          <div className="flex flex-col items-start md:items-start w-full">
             <p className="eyebrow hidden md:block">Exclusive Showcases</p>
             <h2>Featured Partnerships</h2>
             <p className="section-intro hidden md:block">
@@ -171,8 +171,7 @@ export default function AdvertisedProductsSection() {
             </p>
           </div>
           <Link className="text-link arrow-link flex items-center gap-1" to="/advertise">
-            <span className="hidden md:inline">Advertise With Us</span>
-            <span className="inline md:hidden">Advertise</span> 
+            <span>Advertise With Us</span>
             <ArrowRight size={16} />
           </Link>
         </div>
@@ -190,17 +189,12 @@ export default function AdvertisedProductsSection() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mt-12">
+            <div className="flex overflow-x-auto md:grid md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8 mt-8 md:mt-12 snap-x snap-mandatory pb-6 md:pb-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden -mx-4 px-4 sm:mx-0 sm:px-0">
               {products.map((product) => (
-                <ProductCard key={product._id} product={product} />
+                <div key={product._id} className="min-w-[85vw] sm:min-w-[400px] md:min-w-0 snap-center shrink-0">
+                  <ProductCard product={product} />
+                </div>
               ))}
-            </div>
-            
-            {/* Mobile Advertise Link */}
-            <div className="mt-12 text-center sm:hidden">
-              <Link className="text-link arrow-link inline-flex" to="/advertise">
-                Advertise With Us <ArrowRight size={16} />
-              </Link>
             </div>
           </>
         )}

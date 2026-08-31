@@ -2,6 +2,18 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Loader2, ExternalLink } from 'lucide-react';
 import useChatbot from '../hooks/useChatbot';
 
+const renderMessageText = (text) => {
+  if (!text) return null;
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
+    // Also handle line breaks if they exist
+    return <span key={i}>{part.split('\n').map((line, j) => <React.Fragment key={j}>{j > 0 && <br />}{line}</React.Fragment>)}</span>;
+  });
+};
+
 const QUICK_QUESTIONS = [
   'How do I track my order?',
   'What payment methods do you accept?',
@@ -276,13 +288,10 @@ export default function ChatbotWidget() {
                     fontWeight: msg.from === 'user' ? 500 : 400,
                   }}
                 >
-                  {msg.text}
+                  {renderMessageText(msg.text)}
                 </div>
                 {/* WhatsApp CTA */}
                 {msg.whatsapp && (
-                  <a
-                    href={`https://wa.me/${msg.whatsapp.replace(/\D/g, '')}?text=Hi, I need help with my question.`}
-                    target="_blank"
                     rel="noopener noreferrer"
                     style={{
                       display: 'inline-flex',
@@ -305,6 +314,33 @@ export default function ChatbotWidget() {
                     💬 Chat on WhatsApp
                     <ExternalLink size={12} />
                   </a>
+                )}
+
+                {Array.isArray(msg.sources) && msg.sources.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+                    {msg.sources.slice(0, 4).map((source) => (
+                      <a
+                        key={`${source.url}-${source.label}`}
+                        href={source.url}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '5px 9px',
+                          backgroundColor: 'rgba(201,163,91,0.08)',
+                          border: '1px solid rgba(201,163,91,0.22)',
+                          borderRadius: '12px',
+                          color: '#c9a35b',
+                          fontSize: '10px',
+                          lineHeight: 1.2,
+                          textDecoration: 'none',
+                        }}
+                      >
+                        {source.label}
+                        <ExternalLink size={10} />
+                      </a>
+                    ))}
+                  </div>
                 )}
 
                 {/* Suggestion chips after no-match */}

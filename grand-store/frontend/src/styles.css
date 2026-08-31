@@ -11659,3 +11659,10 @@ video {
   right: 20px;
 }
 
+@media (max-width: 768px) {
+  .category-arrow-btn {
+    top: 70%;
+    opacity: 1; /* Ensure arrows are always visible on touch devices */
+  }
+}
+
