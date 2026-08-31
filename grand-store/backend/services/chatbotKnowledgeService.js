@@ -7,11 +7,17 @@ const EstateProfile = require('../models/EstateProfile');
 const SITE_ORIGIN = process.env.PUBLIC_SITE_URL || 'https://grandstore.yogapranafitness.com';
 const SUPPORT_WHATSAPP = process.env.SUPPORT_WHATSAPP || '+27765809522';
 const STOP_WORDS = new Set([
-  'a', 'about', 'all', 'an', 'and', 'any', 'are', 'can', 'could', 'do', 'does',
-  'for', 'from', 'have', 'help', 'how', 'i', 'in', 'is', 'it', 'me', 'my', 'of',
-  'on', 'please', 'show', 'tell', 'that', 'the', 'this', 'to', 'what', 'when',
-  'where', 'which', 'with', 'you', 'your'
+  'a', 'about', 'above', 'all', 'an', 'and', 'any', 'are', 'below', 'can', 'could',
+  'detail', 'details', 'do', 'does', 'for', 'from', 'give', 'have', 'help', 'how', 'i', 'in',
+  'info', 'information', 'is', 'it', 'me', 'my', 'of', 'old',
+  'less', 'max', 'maximum', 'min', 'minimum', 'on', 'over', 'please', 'show',
+  'tell', 'than', 'that', 'the', 'this', 'to', 'under', 'what', 'when',
+  'where', 'which', 'with', 'year', 'years', 'you', 'your'
 ]);
+const TOKEN_ALIASES = {
+  african: 'africa',
+  scottish: 'scotland'
+};
 
 const SITE_GUIDE = [
   `Official website: ${SITE_ORIGIN}`,
@@ -29,6 +35,8 @@ const cleanText = (value, maxLength = 500) => String(value || '')
   .slice(0, maxLength);
 
 const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const tokenPattern = (token) => new RegExp(`(?:^|[^a-z0-9])${escapeRegex(token)}(?:$|[^a-z0-9])`, 'i');
+const textHasToken = (text, token) => tokenPattern(token).test(text);
 
 const getSearchTokens = (message) => [...new Set(
   cleanText(message, 800)
@@ -36,7 +44,9 @@ const getSearchTokens = (message) => [...new Set(
     .replace(/[^a-z0-9\s'-]/g, ' ')
     .split(/\s+/)
     .map((token) => token.replace(/^['-]+|['-]+$/g, ''))
-    .filter((token) => token.length >= 3 && !STOP_WORDS.has(token))
+    .map((token) => TOKEN_ALIASES[token] || token)
+    .filter((token) => !/^r\d+(?:[.,]\d+)?$/.test(token))
+    .filter((token) => (token.length >= 3 || /^\d{2,4}$/.test(token)) && !STOP_WORDS.has(token))
 )].slice(0, 8);
 
 const scoreFaq = (message, faq) => {
@@ -62,21 +72,98 @@ const rankFaqs = (message, faqs, limit = 8) => [...faqs]
   .sort((left, right) => right.score - left.score || (right.faq.priority || 0) - (left.faq.priority || 0))
   .slice(0, limit);
 
+const baseProductQuery = {
+  isCatalogDuplicate: { $ne: true },
+  approvalStatus: { $ne: 'rejected' }
+};
+
+const productFieldClauses = (pattern) => [
+  { name: pattern }, { brand: pattern }, { category: pattern },
+  { subcategory: pattern }, { country: pattern }, { tags: pattern },
+  { tastingNotes: pattern }, { flavorProfile: pattern }, { foodPairing: pattern },
+  { description: pattern }
+];
+
 const productSearchQuery = (tokens) => {
-  const base = {
-    isCatalogDuplicate: { $ne: true },
-    approvalStatus: { $ne: 'rejected' }
-  };
+  const base = { ...baseProductQuery };
   if (!tokens.length) return { ...base, featured: true };
-  const patterns = tokens.map((token) => new RegExp(escapeRegex(token), 'i'));
+  const patterns = tokens.map(tokenPattern);
   return {
     ...base,
-    $or: patterns.flatMap((pattern) => [
-      { name: pattern }, { brand: pattern }, { category: pattern },
-      { subcategory: pattern }, { country: pattern }, { tags: pattern },
-      { tastingNotes: pattern }, { flavorProfile: pattern }, { foodPairing: pattern }
-    ])
+    $or: patterns.flatMap(productFieldClauses)
   };
+};
+
+const productSearchText = (product) => ({
+  name: cleanText(product.name, 180).toLowerCase(),
+  brand: cleanText(product.brand, 120).toLowerCase(),
+  category: cleanText(product.category || product.type, 100).toLowerCase(),
+  subcategory: cleanText(product.subcategory, 140).toLowerCase(),
+  country: cleanText(product.country, 100).toLowerCase(),
+  details: cleanText([
+    product.description,
+    ...(product.tags || []),
+    ...(product.tastingNotes || []),
+    ...(product.flavorProfile || []),
+    ...(product.foodPairing || [])
+  ].join(' '), 2200).toLowerCase()
+});
+
+const scoreProduct = (product, tokens) => {
+  const fields = productSearchText(product);
+  let score = product.featured ? 2 : 0;
+  let matchedTokens = 0;
+
+  for (const token of tokens) {
+    let tokenScore = 0;
+    if (textHasToken(fields.name, token)) tokenScore = Math.max(tokenScore, 14);
+    if (textHasToken(fields.brand, token)) tokenScore = Math.max(tokenScore, 12);
+    if (textHasToken(fields.subcategory, token)) tokenScore = Math.max(tokenScore, 8);
+    if (textHasToken(fields.category, token)) tokenScore = Math.max(tokenScore, 7);
+    if (textHasToken(fields.country, token)) tokenScore = Math.max(tokenScore, 7);
+    if (textHasToken(fields.details, token)) tokenScore = Math.max(tokenScore, 3);
+    if (tokenScore) {
+      matchedTokens += 1;
+      score += tokenScore;
+    }
+  }
+
+  if (tokens.length && matchedTokens === tokens.length) score += 30;
+  score += matchedTokens * 4;
+  if (Number(product.stock) > 0) score += 1;
+  return score;
+};
+
+const PRODUCT_SELECTION = 'id name type category country subcategory brand size description price stock tags tastingNotes flavorProfile foodPairing featured';
+
+const getRelevantProducts = async (tokens) => {
+  if (!tokens.length) {
+    return Product.find(productSearchQuery(tokens))
+      .select(PRODUCT_SELECTION)
+      .sort({ stock: -1, createdAt: -1 })
+      .limit(10)
+      .lean();
+  }
+
+  const patterns = tokens.map(tokenPattern);
+  const strictQuery = {
+    ...baseProductQuery,
+    $and: patterns.map((pattern) => ({ $or: productFieldClauses(pattern) }))
+  };
+  const [strictMatches, broadMatches] = await Promise.all([
+    Product.find(strictQuery).select(PRODUCT_SELECTION).limit(40).lean(),
+    Product.find(productSearchQuery(tokens)).select(PRODUCT_SELECTION).limit(160).lean()
+  ]);
+
+  const candidates = [...new Map(
+    [...strictMatches, ...broadMatches].map((product) => [String(product._id || product.id), product])
+  ).values()];
+
+  return candidates
+    .map((product) => ({ product, score: scoreProduct(product, tokens) }))
+    .sort((left, right) => right.score - left.score || Number(right.product.stock) - Number(left.product.stock))
+    .slice(0, 10)
+    .map(({ product }) => product);
 };
 
 const formatPrice = (price) => {
@@ -118,7 +205,7 @@ const getTaxonomy = async () => Product.aggregate([
 
 const getRelevantGlossary = async (tokens) => {
   if (!tokens.length) return [];
-  const patterns = tokens.map((token) => new RegExp(escapeRegex(token), 'i'));
+  const patterns = tokens.map(tokenPattern);
   return Glossary.find({
     $or: patterns.flatMap((pattern) => [{ term: pattern }, { definition: pattern }])
   }).select('term definition').limit(6).lean();
@@ -150,7 +237,7 @@ const getRelevantEstates = async (message, tokens) => {
   if (!/\b(estate|estates|winery|wineries|wine farm|vineyard|vineyards)\b/i.test(message)) return [];
   const query = { isPublished: true };
   if (tokens.length) {
-    const patterns = tokens.map((token) => new RegExp(escapeRegex(token), 'i'));
+    const patterns = tokens.map(tokenPattern);
     query.$or = patterns.flatMap((pattern) => [
       { estateName: pattern }, { region: pattern }, { country: pattern },
       { 'vineyard.grapeVarieties': pattern }
@@ -170,11 +257,7 @@ const buildWebsiteKnowledge = async ({ message, faqs }) => {
   const tokens = getSearchTokens(message);
   const rankedFaqs = rankFaqs(message, faqs);
   const [products, taxonomy, glossary, events, auctions, estates] = await Promise.all([
-    Product.find(productSearchQuery(tokens))
-      .select('id name type category country subcategory brand size description price stock tastingNotes flavorProfile foodPairing featured')
-      .sort({ featured: -1, stock: -1, createdAt: -1 })
-      .limit(10)
-      .lean(),
+    getRelevantProducts(tokens),
     getTaxonomy(),
     getRelevantGlossary(tokens),
     getRelevantEvents(message),

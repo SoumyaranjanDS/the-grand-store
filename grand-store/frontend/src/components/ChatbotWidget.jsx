@@ -283,8 +283,9 @@ export default function ChatbotWidget() {
                     backgroundColor: msg.from === 'user' ? '#c9a35b' : '#1a1a1a',
                     color: msg.from === 'user' ? '#000' : '#f5ede0',
                     fontSize: '13px',
-                    lineHeight: '1.55',
-                    border: msg.from === 'bot' ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                     lineHeight: '1.55',
+                     whiteSpace: 'pre-line',
+                     border: msg.from === 'bot' ? '1px solid rgba(255,255,255,0.05)' : 'none',
                     fontWeight: msg.from === 'user' ? 500 : 400,
                   }}
                 >

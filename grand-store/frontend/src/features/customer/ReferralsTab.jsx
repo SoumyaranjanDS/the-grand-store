@@ -122,24 +122,24 @@ export default function ReferralsTab() {
 
           {loadError && <p className="mb-5 text-sm text-red-400 relative z-10">{loadError}</p>}
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 relative z-10">
-            <div className="bg-black/60 border border-[var(--color-gold)]/30 p-6 rounded-xl text-center">
-              <Users className="text-[var(--color-gold)] mx-auto mb-3" size={24} />
-              <p className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Friends Joined</p>
-              <p className="text-3xl font-serif text-white">{summary?.totalSignups ?? 0}</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 relative z-10">
+            <div className="bg-black/60 border border-[var(--color-gold)]/20 p-4 sm:p-6 rounded-xl text-center col-span-1 order-2 sm:order-1">
+              <Users className="text-[var(--color-gold)] mx-auto mb-2 sm:mb-3" size={20} />
+              <p className="text-[10px] sm:text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Friends</p>
+              <p className="text-2xl sm:text-3xl font-serif text-white">{summary?.totalSignups ?? 0}</p>
             </div>
-            <div className="bg-black/60 border border-[var(--color-gold)]/30 p-6 rounded-xl text-center">
-              <Check className="text-green-400 mx-auto mb-3" size={24} />
-              <p className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Successful</p>
-              <p className="text-3xl font-serif text-white">{summary?.successfulReferrals ?? user.totalReferrals ?? 0}</p>
+            <div className="bg-black/60 border border-[var(--color-gold)]/20 p-4 sm:p-6 rounded-xl text-center col-span-1 order-3 sm:order-2">
+              <Check className="text-green-400 mx-auto mb-2 sm:mb-3" size={20} />
+              <p className="text-[10px] sm:text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Success</p>
+              <p className="text-2xl sm:text-3xl font-serif text-white">{summary?.successfulReferrals ?? user.totalReferrals ?? 0}</p>
             </div>
-            <div className="bg-black/60 border border-[var(--color-gold)]/30 p-6 rounded-xl text-center">
-              <Gift className="text-[var(--color-gold)] mx-auto mb-3" size={24} />
-              <p className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Reward Balance</p>
-              <p className="text-3xl font-serif text-green-400">
+            <div className="bg-gradient-to-b from-[var(--color-gold)]/10 to-black/60 border border-[var(--color-gold)]/40 p-5 sm:p-6 rounded-xl text-center col-span-2 sm:col-span-1 order-1 sm:order-3 flex flex-col justify-center">
+              <Gift className="text-[var(--color-gold)] mx-auto mb-2 sm:mb-3" size={24} />
+              <p className="text-[11px] sm:text-xs uppercase tracking-widest text-[var(--color-ivory)] mb-1 font-bold">Reward Balance</p>
+              <p className="text-3xl sm:text-4xl font-serif text-[#dfbd72]">
                 <Price amount={summary?.rewardBalance ?? user.rewardBalance ?? 0} />
               </p>
-              <p className="text-[10px] text-white/40 mt-2">Available for your next purchase</p>
+              <p className="text-[10px] text-white/40 mt-1">Available for your next purchase</p>
             </div>
           </div>
         </div>

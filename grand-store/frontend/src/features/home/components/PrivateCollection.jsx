@@ -29,9 +29,6 @@ export default function PrivateCollection() {
             <p className="eyebrow">The private collection</p>
             <h2>Chosen with intention</h2>
           </div>
-          <p className="section-intro">
-            Thoughtful edits for remarkable tables, important milestones and the pleasure of an undiscovered favourite.
-          </p>
         </div>
 
         <div className="collection-grid">

@@ -60,15 +60,15 @@ export default function MyTickets() {
       </section>
 
           {tickets.length === 0 ? (
-            <div className="text-center py-20 bg-white/[0.02] backdrop-blur-2xl rounded-3xl border border-white/[0.05] shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex flex-col items-center">
+            <div className="text-center py-12 md:py-20 px-6 bg-white/[0.02] backdrop-blur-md md:backdrop-blur-2xl rounded-3xl border border-white/[0.05] shadow-lg md:shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex flex-col items-center mx-4 md:mx-0">
               <Ticket size={48} className="text-[var(--color-gold)]/50 mb-6" />
               <h3 className="text-2xl font-serif text-[var(--color-ivory)] mb-3">Your Event Calendar is Empty</h3>
-              <p className="text-[var(--color-ivory-muted)] text-lg font-light mb-8 max-w-md mx-auto">
+              <p className="text-[var(--color-ivory-muted)] text-base md:text-lg font-light mb-8 max-w-md mx-auto">
                 Discover exclusive tastings, masterclasses, and private dinners hosted by our master sommeliers and partner estates.
               </p>
               <button 
                 onClick={() => navigate('/events')}
-                className="px-8 py-4 bg-gold-gradient text-black rounded-xl font-bold uppercase tracking-widest hover:brightness-110 transition-all shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+                className="px-6 py-4 md:px-8 bg-[var(--color-gold)] md:bg-gold-gradient text-black rounded-xl font-bold uppercase tracking-widest hover:brightness-110 transition-all shadow-[0_0_15px_rgba(212,175,55,0.2)] md:shadow-[0_0_20px_rgba(212,175,55,0.3)] w-full sm:w-auto text-xs md:text-sm"
               >
                 Explore Upcoming Events
               </button>
