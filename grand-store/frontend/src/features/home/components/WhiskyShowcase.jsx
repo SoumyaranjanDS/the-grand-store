@@ -90,9 +90,9 @@ export default function WhiskyShowcase({ onAdd, onWish, onCompare, compareItems 
       </section>
 
       <section className="relative py-8 md:py-10 border-t border-white/10 bg-[#0b0a08] overflow-hidden" aria-labelledby="whisky-brands-title">
-        <div className="relative max-w-[1440px] mx-auto text-center px-6 sm:px-8 lg:px-7">
-          <div className="relative border border-white/10 rounded-2xl py-8 bg-white/[0.01]">
-            <div className="mb-8 relative">
+        <div className="relative max-w-[1440px] mx-auto text-center sm:px-8 lg:px-7">
+          <div className="relative border-y sm:border border-white/10 sm:rounded-2xl py-8 bg-white/[0.01]">
+            <div className="mb-8 relative px-6 sm:px-0">
               <h2 id="whisky-brands-title" className="m-0 font-serif text-[clamp(24px,2.5vw,36px)] font-medium tracking-[-0.02em] leading-[1.05] text-[#eee8dd] relative z-10">
                 Top Whisky Brands
               </h2>
