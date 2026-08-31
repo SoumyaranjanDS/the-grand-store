@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { Package, Clock, CheckCircle2, XCircle, Eye, Edit, Trash2, Search, X } from 'lucide-react';
 import Price from '../../components/ui/Price';
@@ -82,11 +82,7 @@ export default function AdminProducts() {
 
     const fetchProducts = async () => {
       try {
-        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-        const token = userInfo?.token || user?.token;
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/products/vendor/me`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await api.get(`/products/vendor/me`);
         setProducts(res.data);
       } catch (err) {
         console.error(err);
@@ -102,11 +98,7 @@ export default function AdminProducts() {
   const handleDeleteProduct = async (id) => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
     try {
-      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-      const token = userInfo?.token || user?.token;
-      await axios.delete(`${import.meta.env.VITE_API_URL}/api/products/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete(`/products/${id}`);
       setProducts(products.filter(p => p._id !== id && p.id !== id));
     } catch (err) {
       console.error('Failed to delete product', err);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from '../../api';
 import {
   FileText,
   CheckCircle,
@@ -32,7 +32,7 @@ export default function AdminBankTransfers() {
       const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
       const token = userInfo.token;
       const API_URL = import.meta.env.VITE_API_URL || "";
-      const res = await axios.get(`${API_URL}/api/admin/bank-transfers`, {
+      const res = await api.get(`${API_URL}/api/admin/bank-transfers`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setOrders(res.data);
@@ -72,7 +72,7 @@ export default function AdminBankTransfers() {
       const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
       const token = userInfo.token;
       const API_URL = import.meta.env.VITE_API_URL || "";
-      await axios.post(
+      await api.post(
         `${API_URL}/api/orders/${orderId}/bank-transfer/approve`,
         {},
         {
@@ -99,7 +99,7 @@ export default function AdminBankTransfers() {
       const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
       const token = userInfo.token;
       const API_URL = import.meta.env.VITE_API_URL || "";
-      await axios.post(
+      await api.post(
         `${API_URL}/api/orders/${orderId}/bank-transfer/reject`,
         { reason: rejectReason },
         {

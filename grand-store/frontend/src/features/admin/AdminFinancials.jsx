@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api';
 import { DollarSign, ArrowUpRight, ArrowDownRight, TrendingUp, History, Download, FileSpreadsheet, Layers3 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { downloadAccountingWorkbook, downloadCategoryAccountingWorkbook, downloadAuctionsWorkbook, downloadEventsWorkbook, downloadVendorWorkbook, downloadLedgerWorkbook } from '../../utils/accountingWorkbook';
@@ -26,7 +26,7 @@ export default function AdminFinancials({ hideHeader = false }) {
     const fetchFinanceData = async () => {
       try {
         const API_URL = import.meta.env.VITE_API_URL || '';
-        const res = await axios.get(`${API_URL}/api/admin/finance?limit=2000`, {
+        const res = await api.get(`${API_URL}/api/admin/finance?limit=2000`, {
           headers: { Authorization: `Bearer ${user?.token}` }
         });
         setMetrics(res.data.metrics);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { Gavel, CheckCircle2 } from 'lucide-react';
 import Price from '../../components/ui/Price';
@@ -24,15 +24,11 @@ export default function AdminAuctionPanel({ onNotify }) {
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
       const token = userInfo?.token || user?.token;
       
-      const pendingRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/auction/admin/lots`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const pendingRes = await api.get(`/auction/admin/lots`);
       const pendingLots = pendingRes.data;
       setLots(pendingLots);
 
-      const allRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/auction/admin/all`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const allRes = await api.get(`/auction/admin/all`);
       setAllLots(allRes.data);
       
       
@@ -68,9 +64,7 @@ export default function AdminAuctionPanel({ onNotify }) {
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
       const token = userInfo?.token || user?.token;
       const form = approvalForms[id];
-      await axios.put(`${import.meta.env.VITE_API_URL}/api/auction/${id}/approve`, form, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.put(`/auction/${id}/approve`, form);
       onNotify('Lot approved successfully!');
       fetchLots(); // Refresh list
     } catch (err) {

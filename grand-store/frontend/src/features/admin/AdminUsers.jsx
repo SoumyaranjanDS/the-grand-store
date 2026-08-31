@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from '../../api';
 import { useAuth } from "../../context/AuthContext";
 import { Search, Shield, User as UserIcon, Building2 } from "lucide-react";
 
@@ -13,7 +13,7 @@ export default function AdminUsers() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/users`, {
+        const res = await api.get(`/admin/users`, {
           headers: { Authorization: `Bearer ${user.token}` }
         });
         setUsers(res.data);

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from '../../api';
 import { useAuth } from "../../context/AuthContext";
 import { Search, Shield, User as UserIcon, Plus, Edit2 } from "lucide-react";
 
@@ -17,7 +17,7 @@ export default function AdminStaff() {
   const fetchStaff = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/staff`, {
+      const res = await api.get(`/admin/staff`, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       setStaff(res.data);
@@ -54,13 +54,13 @@ export default function AdminStaff() {
     try {
       if (formData.id) {
         // Update
-        await axios.put(`${import.meta.env.VITE_API_URL}/api/admin/staff/${formData.id}`, formData, {
+        await api.put(`/admin/staff/${formData.id}`, formData, {
           headers: { Authorization: `Bearer ${user.token}` }
         });
         setMessage("Staff updated successfully.");
       } else {
         // Create
-        await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/staff`, formData, {
+        await api.post(`/admin/staff`, formData, {
           headers: { Authorization: `Bearer ${user.token}` }
         });
         setMessage("Staff created successfully.");

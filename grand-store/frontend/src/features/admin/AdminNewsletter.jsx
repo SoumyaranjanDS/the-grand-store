@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api';
 import { Mail, Loader2, Calendar } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -16,7 +16,7 @@ export default function AdminNewsletter() {
 
   const fetchSubscribers = async () => {
     try {
-      const { data } = await axios.get(`${import.meta.env.VITE_API_URL || ''}/api/newsletter/subscribers`, {
+      const { data } = await api.get(`${import.meta.env.VITE_API_URL || ''}/api/newsletter/subscribers`, {
         headers: {
           Authorization: `Bearer ${user.token}`
         }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api';
 import { DollarSign, ArrowUpRight, ArrowDownRight, TrendingUp, History } from 'lucide-react';
 
 export default function AdminFinance() {
@@ -17,9 +17,7 @@ export default function AdminFinance() {
       try {
         const token = localStorage.getItem('token');
         const API_URL = import.meta.env.VITE_API_URL || '';
-        const res = await axios.get(`${API_URL}/api/admin/finance`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await api.get(`${API_URL}/api/admin/finance`);
         setMetrics(res.data.metrics);
         setTransactions(res.data.transactions);
       } catch (err) {

@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from '../../api';
 import { useAuth } from "../../context/AuthContext";
 import { Users, Building2, TrendingUp, DollarSign, Activity } from "lucide-react";
 import AdminFinancials from "./AdminFinancials"; // We reuse the detailed ledger here!
@@ -15,7 +15,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/dashboard`, {
+        const res = await api.get(`/admin/dashboard`, {
           headers: { Authorization: `Bearer ${user.token}` }
         });
         setStats(res.data);

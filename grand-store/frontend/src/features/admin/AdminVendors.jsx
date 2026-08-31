@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from '../../api';
 import { useAuth } from "../../context/AuthContext";
 import { CheckCircle, XCircle, Clock, Search, FileText, ChevronDown, ChevronUp, Link as LinkIcon } from "lucide-react";
 
@@ -15,7 +15,7 @@ export default function AdminVendors() {
   const goldText = "text-[#c9a35b]";
   const fetchVendors = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/vendors`, {
+      const res = await api.get(`/admin/vendors`, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       setVendors(res.data);
@@ -39,7 +39,7 @@ export default function AdminVendors() {
         payload.registrationFee = Number(feeAmount);
       }
 
-      await axios.put(`${import.meta.env.VITE_API_URL}/api/admin/vendors/${vendorId}/status`, 
+      await api.put(`/admin/vendors/${vendorId}/status`, 
         payload,
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
