@@ -63,11 +63,11 @@ export default function CustomerOrdersPage() {
 
   const filteredOrders = orders.filter(
     (order) =>
-      (order.invoiceNumber || order._id)
+      String(order.invoiceNumber || order._id)
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
       order.orderItems?.some((item) =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()),
+        item?.name?.toLowerCase().includes(searchTerm.toLowerCase()),
       ),
   );
 

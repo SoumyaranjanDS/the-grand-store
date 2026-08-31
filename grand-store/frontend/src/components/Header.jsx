@@ -605,18 +605,7 @@ export default function Header({
             >
               Sell on The Grand Store
             </Link>
-            <Link
-              className={
-                location.pathname === "/events/tasting" ? "active" : ""
-              }
-              to="/events"
-              onMouseEnter={() => {
-                cancelClose();
-                setMegaOpen(false);
-              }}
-            >
-              Book a tasting
-            </Link>
+
             <Link
               to="/global-wines"
               className={`font-bold hover:text-white transition-colors ${location.pathname.startsWith("/global-wines") ? "text-[#f0cf76] active" : ""}`}
@@ -1154,9 +1143,7 @@ export default function Header({
                       <Link to="/vendor-portal" onClick={closeMenus}>
                         Sell on The Grand Store
                       </Link>
-                      <Link to="/events" onClick={closeMenus}>
-                        Book a tasting
-                      </Link>
+
                       <Link
                         to="/global-wines"
                         onClick={closeMenus}

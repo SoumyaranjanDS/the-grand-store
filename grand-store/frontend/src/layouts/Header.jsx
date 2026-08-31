@@ -135,7 +135,7 @@ export default function Header({ cartCount, compareCount, wishlistCount, onBagCl
             <button className="flex items-center gap-1 hover:text-gold transition-colors uppercase tracking-wide" type="button" onClick={() => toggleMegaMenu('accessories', 'Accessories')}>Accessories <ChevronDown size={14} /></button>
             <a className="hover:text-gold transition-colors" href="/#private-collection">Offers</a>
             <Link className="hover:text-gold transition-colors" to="/auction">Auction</Link>
-            <Link className="hover:text-gold transition-colors" to="/bookatasting">Book a tasting</Link>
+            <Link className="hover:text-gold transition-colors" to="/events">Events</Link>
           </div>
         </nav>
       </header>

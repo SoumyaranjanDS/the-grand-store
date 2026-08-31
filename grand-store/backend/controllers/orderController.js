@@ -291,8 +291,8 @@ const processOrderPayment = async (orderId) => {
   
       const referringUser = await User.findById(user.referredBy);
       if (referringUser) {
-        referringUser.rewardBalance += reward;
-        referringUser.totalReferrals += 1;
+        referringUser.rewardBalance = (Number(referringUser.rewardBalance) || 0) + reward;
+        referringUser.totalReferrals = (Number(referringUser.totalReferrals) || 0) + 1;
         await referringUser.save();
         console.log(`Credited R${reward} to referrer ${referringUser.email}`);
       }
