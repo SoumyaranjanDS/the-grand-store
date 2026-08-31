@@ -66,6 +66,23 @@ const userSchema = new mongoose.Schema({
   allowedHostLimit: {
     type: Number,
     default: 0
+  },
+  referralCode: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  referredBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  rewardBalance: {
+    type: Number,
+    default: 0
+  },
+  totalReferrals: {
+    type: Number,
+    default: 0
   }
 }, { timestamps: true });
 

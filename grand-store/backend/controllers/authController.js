@@ -2,7 +2,24 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { OAuth2Client } = require('google-auth-library');
+const crypto = require('crypto');
 const axios = require('axios');
+
+const normalizeReferralCode = (value) => String(value || '').trim().toUpperCase();
+
+const generateUniqueReferralCode = async () => {
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const code = crypto.randomBytes(4).toString('hex').toUpperCase();
+    if (!await User.exists({ referralCode: code })) return code;
+  }
+  throw new Error('Unable to generate a unique referral code');
+};
+
+const findReferrer = async (value) => {
+  const code = normalizeReferralCode(value);
+  if (!code) return null;
+  return User.findOne({ referralCode: code }).select('_id name referralCode');
+};
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -17,14 +34,18 @@ const sendTokenResponse = (user, statusCode, res) => {
   const options = {
     expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
     httpOnly: true,
-    secure: process.env.NODE_ENV !== 'development',
-    sameSite: 'strict'
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
   };
   res.status(statusCode).cookie('jwt', token, options).json({
     _id: user._id,
     name: user.name,
     email: user.email,
     role: user.role,
+    referralCode: user.referralCode,
+    rewardBalance: user.rewardBalance || 0,
+    totalReferrals: user.totalReferrals || 0,
+    hasReferrer: Boolean(user.referredBy),
     mustChangePassword: user?.mustChangePassword
   });
 };
@@ -36,6 +57,8 @@ const logoutUser = (req, res) => {
   res.cookie('jwt', 'none', {
     expires: new Date(Date.now() + 10 * 1000),
     httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
   });
   res.status(200).json({ success: true, message: 'User logged out' });
 };
@@ -47,6 +70,9 @@ const logoutUser = (req, res) => {
 const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
+    // `referredBy` was briefly used by the frontend. Accept it as a backwards-
+    // compatible alias while keeping referralCode as the public API contract.
+    const submittedReferralCode = req.body.referralCode ?? req.body.referredBy;
 
     const userExists = await User.findOne({ email });
 
@@ -54,13 +80,26 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
+    let referredBy = null;
+    if (normalizeReferralCode(submittedReferralCode)) {
+      const referringUser = await findReferrer(submittedReferralCode);
+      if (!referringUser) {
+        return res.status(400).json({ message: 'Referral code is invalid or no longer active' });
+      }
+      referredBy = referringUser._id;
+    }
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newReferralCode = await generateUniqueReferralCode();
 
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
+      referralCode: newReferralCode,
+      referredBy
     });
 
     if (user) {
@@ -112,6 +151,10 @@ const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('-password');
     if (user) {
+      if (!user.referralCode) {
+        user.referralCode = await generateUniqueReferralCode();
+        await user.save();
+      }
       res.json(user);
     } else {
       res.status(404).json({ message: 'User not found' });
@@ -188,6 +231,7 @@ const deleteUserProfile = async (req, res) => {
 const googleAuth = async (req, res) => {
   try {
     const { token, role = 'customer' } = req.body;
+    const submittedReferralCode = req.body.referralCode ?? req.body.referredBy;
     
     if (!token) {
       return res.status(400).json({ message: 'Google token is required' });
@@ -228,12 +272,25 @@ const googleAuth = async (req, res) => {
         await user.save();
       }
     } else {
+      let referredBy = null;
+      if (normalizeReferralCode(submittedReferralCode)) {
+        const referringUser = await findReferrer(submittedReferralCode);
+        if (!referringUser) {
+          return res.status(400).json({ message: 'Referral code is invalid or no longer active' });
+        }
+        referredBy = referringUser._id;
+      }
+
+      const newReferralCode = await generateUniqueReferralCode();
+
       // Create new user
       user = await User.create({
         name,
         email,
         googleId,
         role: role,
+        referralCode: newReferralCode,
+        referredBy
         // password is required: false in schema, so we can omit it
       });
 
@@ -255,6 +312,66 @@ const googleAuth = async (req, res) => {
   }
 };
 
+// @desc    Get the logged-in user's referral dashboard and current program rules
+// @route   GET /api/auth/referrals
+// @access  Private
+const getReferralSummary = async (req, res) => {
+  try {
+    const Order = require('../models/Order');
+    const PlatformSettings = require('../models/PlatformSettings');
+    const user = await User.findById(req.user._id).select(
+      'referralCode referredBy rewardBalance totalReferrals'
+    );
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (!user.referralCode) {
+      user.referralCode = await generateUniqueReferralCode();
+      await user.save();
+    }
+
+    const referredUsers = await User.find({ referredBy: user._id })
+      .select('name createdAt')
+      .sort({ createdAt: -1 })
+      .lean();
+    const referredUserIds = referredUsers.map((referredUser) => referredUser._id);
+    const paidUserIds = referredUserIds.length
+      ? await Order.distinct('user', { user: { $in: referredUserIds }, isPaid: true })
+      : [];
+    const paidUserIdSet = new Set(paidUserIds.map((id) => id.toString()));
+    const successfulReferrals = referredUsers.filter((referredUser) => (
+      paidUserIdSet.has(referredUser._id.toString())
+    )).length;
+
+    let settings = await PlatformSettings.findOne();
+    if (!settings) settings = await PlatformSettings.create({});
+    const ownPaidOrders = await Order.countDocuments({ user: user._id, isPaid: true });
+
+    res.json({
+      referralCode: user.referralCode,
+      rewardBalance: Math.max(0, Number(user.rewardBalance) || 0),
+      totalSignups: referredUsers.length,
+      successfulReferrals,
+      pendingReferrals: Math.max(0, referredUsers.length - successfulReferrals),
+      welcomeDiscountEligible: Boolean(user.referredBy) && ownPaidOrders === 0,
+      program: {
+        rewardAmount: settings.referralRewardAmount,
+        rewardType: settings.referralRewardType,
+        welcomeDiscount: settings.referralWelcomeDiscount,
+        welcomeDiscountType: settings.referralWelcomeDiscountType
+      },
+      referrals: referredUsers.slice(0, 20).map((referredUser) => ({
+        id: referredUser._id,
+        name: referredUser.name,
+        joinedAt: referredUser.createdAt,
+        status: paidUserIdSet.has(referredUser._id.toString()) ? 'successful' : 'pending'
+      }))
+    });
+  } catch (error) {
+    console.error('Get Referral Summary Error:', error);
+    res.status(500).json({ message: 'Server error loading referral details' });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -263,4 +380,5 @@ module.exports = {
   updateUserProfile,
   deleteUserProfile,
   googleAuth,
+  getReferralSummary,
 };

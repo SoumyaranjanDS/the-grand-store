@@ -258,9 +258,15 @@ export default function Header({
       cancelClose();
       setMegaTrigger(trigger);
       setMegaOpen(true);
-      // Auto-select first category + first brand so panels aren't empty on open
+      setActiveCountry(null);
+      setActiveSubcategory(null);
+      setActiveBrand(null);
+      setHoveredItem(null);
+      // Auto-select the relevant live category so panels are never hardcoded.
       if (trigger === "shop") {
         setMegaActiveCategory(dynamicMenuCategories[0]);
+      } else if (trigger === "wine") {
+        setMegaActiveCategory(dynamicMenuCategories.find((category) => category.name.toLowerCase() === 'wine') || null);
       } else if (trigger === "accessories") {
         setMegaActiveCategory(dynamicAccessoryCategories[0]);
       } else {
@@ -524,6 +530,20 @@ export default function Header({
               </Link>
             </div>
 
+            {/* Wine uses the same live Country → Subcategory → Brand → Product tree as Shop. */}
+            <div
+              className="nav-shop-control"
+              onMouseEnter={() => openMega("wine")}
+            >
+              <Link
+                className={`nav-shop-link font-bold hover:text-white transition-colors ${new URLSearchParams(location.search).get('category') === 'Wine' ? "text-[#f0cf76] active" : ""}`}
+                to="/shop?category=Wine"
+                onClick={() => setMegaOpen(false)}
+              >
+                WINE
+              </Link>
+            </div>
+
             <Link
               className={
                 location.pathname.startsWith("/offers") ? "active" : ""
@@ -612,7 +632,7 @@ export default function Header({
 
         {/* ── SHOP MEGA MENU ── */}
         <AnimatePresence>
-          {megaOpen && megaTrigger === "shop" && (
+          {megaOpen && ["shop", "wine"].includes(megaTrigger) && (
             <motion.div
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
@@ -624,7 +644,8 @@ export default function Header({
             >
               <div className="w-full bg-[#111] shadow-[0_20px_60px_rgba(0,0,0,0.8)] border-t border-white/10">
                 <div className="w-full max-w-[1400px] mx-auto flex min-h-[420px]">
-                  {/* Left Sidebar */}
+                  {/* Shop shows all categories; Wine opens directly into its own hierarchy. */}
+                  {megaTrigger === "shop" && (
                   <div className="w-[380px] shrink-0 border-r border-white/10 py-8 pl-10 pr-6 flex flex-col bg-[#0a0a0a]">
                     <h3 className="text-[11px] font-bold tracking-[0.2em] text-[#888] uppercase mb-4 pl-4">Shop By Category</h3>
                     <div className="columns-2 gap-2">
@@ -648,6 +669,7 @@ export default function Header({
                       ))}
                     </div>
                   </div>
+                  )}
 
                   {/* Right Content */}
                   <div className="flex-1 flex bg-[#111] relative overflow-hidden">
@@ -1098,6 +1120,20 @@ export default function Header({
                       </Link>
                       <a role="button" className="flex items-center justify-between w-full text-left cursor-pointer" onClick={() => pushNav('shop')}>
                         <span>Shop</span><ChevronRight size={16} className="text-[#666]"/>
+                      </a>
+                      <a
+                        role="button"
+                        className="flex items-center justify-between w-full text-left cursor-pointer"
+                        onClick={() => {
+                          const wine = dynamicMenuCategories.find((category) => category.name.toLowerCase() === 'wine');
+                          if (wine) pushNav('category', wine);
+                          else {
+                            closeMenus();
+                            navigate('/shop?category=Wine');
+                          }
+                        }}
+                      >
+                        <span>Wine</span><ChevronRight size={16} className="text-[#666]"/>
                       </a>
                       <Link to="/offers" onClick={closeMenus}>
                         Offers

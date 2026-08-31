@@ -52,6 +52,7 @@ import WhiskeyBlogPage from './features/blog/WhiskeyBlogPage'
 import LoginPage from './features/auth/LoginPage'
 import RegisterPage from './features/auth/RegisterPage'
 import ProfilePage from './features/customer/ProfilePage'
+import ReferralsTab from './features/customer/ReferralsTab'
 import CustomerOrdersPage from './features/customer/CustomerOrdersPage'
 import UserAuctionDashboard from './features/customer/UserAuctionDashboard'
 import CustomerLayout from './features/customer/CustomerLayout'
@@ -629,6 +630,7 @@ function App() {
         {/* Customer Profile & Related */}
         <Route element={<CustomerLayout />}>
           <Route path="/customer/profile" element={<ProfilePage />} />
+          <Route path="/customer/referrals" element={<ReferralsTab />} />
           <Route path="/customer/orders" element={<CustomerOrdersPage />} />
           <Route path="/customer/auctions" element={<UserAuctionDashboard />} />
           <Route path="/customer/tickets" element={<MyTickets />} />

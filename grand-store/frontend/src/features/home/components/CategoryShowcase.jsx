@@ -67,14 +67,16 @@ export default function CategoryShowcase({
     <>
       <section className="section tequila-showcase home-product-editorial" id={categoryId.toLowerCase()} ref={sectionRef}>
         <div className="shell">
-          <div className="section-heading tequila-heading">
-            <div>
-              <p className="eyebrow">{eyebrow}</p>
+          <div className="section-heading flex flex-col items-center text-center md:flex-row md:text-left md:justify-between md:items-end gap-3 md:gap-0">
+            <div className="flex flex-col items-center md:items-start">
+              <p className="eyebrow hidden md:block">{eyebrow}</p>
               <h2>{title}</h2>
-              <p className="section-intro">{description}</p>
+              <p className="section-intro hidden md:block">{description}</p>
             </div>
-            <Link className="text-link arrow-link" to={`/shop?category=${encodeURIComponent(categoryId)}`}>
-              View all {categoryId.toLowerCase()} <ArrowRight size={16} />
+            <Link className="text-link arrow-link flex items-center gap-1" to={`/shop?category=${encodeURIComponent(categoryId)}`}>
+              <span className="hidden md:inline">View all {categoryId.toLowerCase()}</span>
+              <span className="inline md:hidden">View all</span> 
+              <ArrowRight size={16} />
             </Link>
           </div>
 

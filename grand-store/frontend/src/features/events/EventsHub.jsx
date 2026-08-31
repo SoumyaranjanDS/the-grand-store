@@ -4,6 +4,55 @@ import api from '../../api';
 import { Calendar, Filter, MapPin, Users } from 'lucide-react';
 import Price from '../../components/ui/Price';
 
+const getStartingPrice = (ticketTiers = []) => {
+  const prices = ticketTiers
+    .map((tier) => Number(tier.price))
+    .filter((price) => Number.isFinite(price));
+  return prices.length ? Math.min(...prices) : null;
+};
+
+const EventCard = ({ event }) => {
+  const startingPrice = getStartingPrice(event.ticketTiers);
+  return (
+    <article className="group flex flex-col overflow-hidden border border-white/10 bg-[#12110e] transition-colors hover:border-[#c9a35b]/60">
+      <div className="relative aspect-[16/10] overflow-hidden bg-[#1a1814]">
+        {event.image ? (
+          <img src={`${import.meta.env.VITE_API_URL}${event.image}`} alt={event.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center border-b border-white/10"><span className="font-serif text-xl text-[#aaa296]">The Grand Store</span></div>
+        )}
+        <div className="absolute left-4 top-4 border border-white/15 bg-[#0b0a08] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#d8b76d]">{event.type}</div>
+        {event.format === 'Virtual' && (
+          <div className="absolute right-4 top-4 border border-[#d8b76d] bg-[#c9a35b] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#0b0a08]">Virtual</div>
+        )}
+      </div>
+      <div className="flex flex-grow flex-col p-6 md:p-7">
+        <div className="mb-4 flex items-center justify-between gap-4 text-[11px] font-bold uppercase tracking-[0.16em] text-[#aaa296]">
+          <span>{new Date(event.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+          <span>{event.startTime}</span>
+        </div>
+        <h2 className="line-clamp-2 font-serif text-2xl leading-tight text-[#f4efe6] md:text-[1.7rem]">{event.title}</h2>
+        <div className="mt-6 space-y-3 text-sm text-[#aaa296]">
+          <div className="flex items-center gap-3">
+            <MapPin size={17} className="shrink-0 text-[#d8b76d]" />
+            <span className="truncate">{event.format === 'Virtual' ? 'Online Experience' : `${event.city || 'Local'}, ${event.location}`}</span>
+          </div>
+          {event.capacity && (
+            <div className="flex items-center gap-3"><Users size={17} className="shrink-0 text-[#d8b76d]" /><span>Limited to {event.capacity} places</span></div>
+          )}
+        </div>
+        <div className="mt-8 flex items-end justify-between gap-5 border-t border-white/10 pt-5">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#777066]">From</p>
+            <p className="mt-1 font-serif text-2xl text-[#d8b76d]">{startingPrice === null ? 'Enquire' : <Price amount={startingPrice} />}</p>
+          </div>
+          <Link to={`/events/${event._id}`} className="border border-[#c9a35b] bg-[#c9a35b] px-6 py-3 text-xs font-bold uppercase tracking-[0.16em] text-[#0b0a08] transition-colors hover:bg-[#e1bd70]">View event</Link>
+        </div>
+      </div>
+    </article>
+  );
+};
+
 export default function EventsHub() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,13 +78,11 @@ export default function EventsHub() {
 
   const categories = ['All', 'Wine Tasting', 'Whisky Experience', 'Masterclass', 'Virtual'];
 
-  const getStartingPrice = (ticketTiers = []) => {
-    const prices = ticketTiers
-      .map((tier) => Number(tier.price))
-      .filter((price) => Number.isFinite(price));
-
-    return prices.length ? Math.min(...prices) : null;
-  };
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  
+  const activeEvents = filteredEvents.filter(e => new Date(e.date) >= now && e.status !== 'completed' && e.status !== 'cancelled');
+  const pastEvents = filteredEvents.filter(e => new Date(e.date) < now || e.status === 'completed');
 
   return (
     <main className="min-h-screen bg-[#0b0a08] text-[#eee8dd]">
@@ -86,82 +133,35 @@ export default function EventsHub() {
               <p className="mt-3 text-[#aaa296]">Check back soon for new tastings and masterclasses.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-7 md:grid-cols-2 lg:grid-cols-3">
-              {filteredEvents.map((event) => {
-                const startingPrice = getStartingPrice(event.ticketTiers);
+            <>
+              {activeEvents.length > 0 && (
+                <div className="grid grid-cols-1 gap-7 md:grid-cols-2 lg:grid-cols-3 mb-16">
+                  {activeEvents.map((event) => (
+                    <EventCard key={event._id} event={event} />
+                  ))}
+                </div>
+              )}
+              {activeEvents.length === 0 && pastEvents.length > 0 && (
+                <div className="border border-white/10 bg-[#11100d] px-6 py-12 text-center mb-16">
+                  <h2 className="font-serif text-2xl text-[#f4efe6]">No active events</h2>
+                  <p className="mt-2 text-[#aaa296]">All events in this category have concluded.</p>
+                </div>
+              )}
 
-                return (
-                  <article
-                    key={event._id}
-                    className="group flex flex-col overflow-hidden border border-white/10 bg-[#12110e] transition-colors hover:border-[#c9a35b]/60"
-                  >
-                    <div className="relative aspect-[16/10] overflow-hidden bg-[#1a1814]">
-                      {event.image ? (
-                        <img
-                          src={`${import.meta.env.VITE_API_URL}${event.image}`}
-                          alt={event.title}
-                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center border-b border-white/10">
-                          <span className="font-serif text-xl text-[#aaa296]">The Grand Store</span>
-                        </div>
-                      )}
-
-                      <div className="absolute left-4 top-4 border border-white/15 bg-[#0b0a08] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#d8b76d]">
-                        {event.type}
-                      </div>
-                      {event.format === 'Virtual' && (
-                        <div className="absolute right-4 top-4 border border-[#d8b76d] bg-[#c9a35b] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#0b0a08]">
-                          Virtual
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex flex-grow flex-col p-6 md:p-7">
-                      <div className="mb-4 flex items-center justify-between gap-4 text-[11px] font-bold uppercase tracking-[0.16em] text-[#aaa296]">
-                        <span>{new Date(event.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                        <span>{event.startTime}</span>
-                      </div>
-
-                      <h2 className="line-clamp-2 font-serif text-2xl leading-tight text-[#f4efe6] md:text-[1.7rem]">
-                        {event.title}
-                      </h2>
-
-                      <div className="mt-6 space-y-3 text-sm text-[#aaa296]">
-                        <div className="flex items-center gap-3">
-                          <MapPin size={17} className="shrink-0 text-[#d8b76d]" />
-                          <span className="truncate">
-                            {event.format === 'Virtual' ? 'Online Experience' : `${event.city || 'Local'}, ${event.location}`}
-                          </span>
-                        </div>
-                        {event.capacity && (
-                          <div className="flex items-center gap-3">
-                            <Users size={17} className="shrink-0 text-[#d8b76d]" />
-                            <span>Limited to {event.capacity} places</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="mt-8 flex items-end justify-between gap-5 border-t border-white/10 pt-5">
-                        <div>
-                          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#777066]">From</p>
-                          <p className="mt-1 font-serif text-2xl text-[#d8b76d]">
-                            {startingPrice === null ? 'Enquire' : <Price amount={startingPrice} />}
-                          </p>
-                        </div>
-                        <Link
-                          to={`/events/${event._id}`}
-                          className="border border-[#c9a35b] bg-[#c9a35b] px-6 py-3 text-xs font-bold uppercase tracking-[0.16em] text-[#0b0a08] transition-colors hover:bg-[#e1bd70]"
-                        >
-                          View event
-                        </Link>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
+              {pastEvents.length > 0 && (
+                <div className="mt-12">
+                  <div className="mb-8 border-b border-white/10 pb-4">
+                    <h2 className="font-serif text-3xl text-[#f4efe6]">Past Events</h2>
+                    <p className="mt-2 text-sm text-[#aaa296]">Discover our previous tastings and masterclasses.</p>
+                  </div>
+                  <div className="grid grid-cols-1 gap-7 md:grid-cols-2 lg:grid-cols-3 opacity-60">
+                    {pastEvents.map((event) => (
+                      <EventCard key={event._id} event={event} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>

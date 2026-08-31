@@ -25,6 +25,7 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
   const [quote, setQuote] = useState(null);
   const [dutiesAccepted, setDutiesAccepted] = useState(false);
   const [deliveryPreference, setDeliveryPreference] = useState('home');
+  const [applyRewards, setApplyRewards] = useState(false);
 
   const [formData, setFormData] = useState({
     email: user ? user.email : '',
@@ -404,7 +405,8 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
         paymentMethod: paymentMethod === 'payfast' ? 'PayFast' : 'Bank Transfer',
         isGift,
         giftRecipientName,
-        giftMessage
+        giftMessage,
+        applyRewards
       };
 
       const res = await api.post(`/orders`, orderData);
@@ -564,8 +566,13 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
                     <div>
                       <p className="text-white font-medium">Pay now</p>
                       <p className="text-[11px] text-[var(--color-ivory-muted)]">Products and selected delivery</p>
+                      {applyRewards && user?.rewardBalance > 0 && (
+                        <p className="text-[11px] text-green-400 mt-1">Applying up to <Price amount={user.rewardBalance} /> in rewards</p>
+                      )}
                     </div>
-                    <span className="text-3xl font-serif text-gold-gradient"><Price amount={quote?.aggregatedTotals.totalToPay ?? cartSubtotal} /></span>
+                    <span className="text-3xl font-serif text-gold-gradient">
+                      <Price amount={Math.max(0, (quote?.aggregatedTotals.totalToPay ?? cartSubtotal) - (applyRewards ? (user?.rewardBalance || 0) : 0))} />
+                    </span>
                   </div>
                 </div>
               </div>
@@ -999,6 +1006,19 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
                         </div>
                       )}
                     </div>
+                    
+                    {/* Rewards */}
+                    {user?.rewardBalance > 0 && (
+                      <div className="md:col-span-2 mt-2 bg-[var(--color-gold)]/5 border border-[var(--color-gold)]/20 p-5 rounded-xl">
+                        <label className="flex items-center gap-3 cursor-pointer select-none">
+                          <input type="checkbox" checked={applyRewards} onChange={(e) => setApplyRewards(e.target.checked)} className="w-5 h-5 accent-[var(--color-gold)] rounded bg-black border-[var(--color-gold)]/20" />
+                          <div>
+                            <span className="text-[var(--color-gold)] font-medium text-sm flex items-center gap-2">Apply Referral Rewards</span>
+                            <p className="text-xs text-[var(--color-ivory-muted)] mt-1">You have <Price amount={user.rewardBalance} /> available. This will be deducted from your total.</p>
+                          </div>
+                        </label>
+                      </div>
+                    )}
                   </div>
                 </section>
                 

@@ -55,17 +55,19 @@ export default function Arrivals({ onAdd, onWish, onCompare, compareItems }) {
       ref={sectionRef}
     >
       <div className="shell">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Fresh from the cellar</p>
+        <div className="section-heading flex flex-col items-center text-center md:flex-row md:text-left md:justify-between md:items-end gap-3 md:gap-0">
+          <div className="flex flex-col items-center md:items-start">
+            <p className="eyebrow hidden md:block">Fresh from the cellar</p>
             <h2>New arrivals</h2>
-            <p className="section-intro">
+            <p className="section-intro hidden md:block">
               Newly discovered, quietly exceptional. Meet the bottles our
               curators cannot stop talking about.
             </p>
           </div>
-          <Link className="text-link arrow-link" to="/shop">
-            View all bottles <ArrowRight size={16} />
+          <Link className="text-link arrow-link flex items-center gap-1" to="/shop">
+            <span className="hidden md:inline">View all bottles</span>
+            <span className="inline md:hidden">View all</span> 
+            <ArrowRight size={16} />
           </Link>
         </div>
 

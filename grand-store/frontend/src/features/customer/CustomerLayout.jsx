@@ -108,6 +108,19 @@ export default function CustomerLayout() {
       >
         <Gavel size={16} /> Auction Bids
       </button>
+      <button
+        onClick={() => {
+          navigate("/customer/referrals");
+          setMobileMenuOpen(false);
+        }}
+        className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all text-left text-xs uppercase tracking-widest border ${
+          location.pathname === "/customer/referrals"
+            ? "bg-white/[0.05] text-gold-gradient shadow-[0_0_15px_rgba(212,175,55,0.05)] font-semibold border-white/[0.05]"
+            : "text-[var(--color-ivory-muted)] hover:bg-white/[0.03] hover:text-[var(--color-ivory)] border-transparent"
+        }`}
+      >
+        <Ticket size={16} /> Refer & Earn
+      </button>
 
       {user?.role === "vendor_active" && (
         <div className="mt-8 pt-8 border-t border-white/[0.05]">

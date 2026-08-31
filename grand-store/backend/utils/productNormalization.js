@@ -46,7 +46,8 @@ const normalizeCategory = (category) => {
     rum: 'Rum',
     spirits: 'Spirits',
     tequila: 'Tequila',
-    vodka: 'Vodka'
+    vodka: 'Vodka',
+    wine: 'Wine'
   };
   return aliases[key] || cleanText(category);
 };
@@ -74,20 +75,33 @@ const COUNTRY_ALIASES = {
 
 const COUNTRY_NAMES = {
   armenia: 'Armenia',
+  argentina: 'Argentina',
+  australia: 'Australia',
+  austria: 'Austria',
   belgium: 'Belgium',
+  canada: 'Canada',
+  chile: 'Chile',
   china: 'China',
   france: 'France',
+  georgia: 'Georgia',
   germany: 'Germany',
+  greece: 'Greece',
   ireland: 'Ireland',
   israel: 'Israel',
+  italy: 'Italy',
   jamaica: 'Jamaica',
   japan: 'Japan',
   mexico: 'Mexico',
   netherlands: 'Netherlands',
+  'new zealand': 'New Zealand',
   nicaragua: 'Nicaragua',
+  portugal: 'Portugal',
   scotland: 'Scotland',
   'south africa': 'South Africa',
+  spain: 'Spain',
   taiwan: 'Taiwan',
+  uk: 'United Kingdom',
+  'united kingdom': 'United Kingdom',
   usa: 'USA',
   wales: 'Wales'
 };
@@ -112,7 +126,8 @@ const normalizeCountry = (country, category = '') => {
     'Rum',
     'Spirits',
     'Tequila',
-    'Vodka'
+    'Vodka',
+    'Wine'
   ].filter(Boolean);
   let stripped = original;
   for (const suffix of suffixes) {
@@ -177,6 +192,26 @@ const SUBCATEGORY_ALIASES = {
   'demi sec': 'Demi-Sec',
   'extra brut': 'Extra Brut',
   rose: 'Rosé',
+  'rose wine': 'Rosé',
+  'sparkling rose': 'Sparkling Rosé',
+  prosecco: 'Prosecco',
+  cava: 'Cava',
+  'general sparkling wine': 'General Sparkling Wine',
+  'cabernet sauvignon': 'Cabernet Sauvignon',
+  'chenin blanc': 'Chenin Blanc',
+  'sauvignon blanc': 'Sauvignon Blanc',
+  'pinot noir': 'Pinot Noir',
+  shiraz: 'Shiraz / Syrah',
+  syrah: 'Shiraz / Syrah',
+  'shiraz syrah': 'Shiraz / Syrah',
+  'rhone blend': 'Rhone Blend',
+  'white blend': 'White Blend',
+  'late harvest wine': 'Late Harvest Wine',
+  'ice wine': 'Ice Wine',
+  'non alcoholic rose wine': 'Non-Alcoholic Rosé Wine',
+  'non alcoholic white wine alternative': 'Non-Alcoholic White Wine Alternative',
+  'non alcoholic red wine alternative': 'Non-Alcoholic Red Wine Alternative',
+  'non alcoholic sparkling white wine alternative': 'Non-Alcoholic Sparkling White Wine Alternative',
   'single barrel bourbon': 'Bourbon',
   'blended irish whiskey': 'Blended Irish Whiskey',
   'blended irish whisky': 'Blended Irish Whiskey',
@@ -235,6 +270,39 @@ const normalizeSubcategory = (subcategory, product = {}) => {
     if (/\bxo\b/.test(search)) return 'XO';
     if (/\bvs\b/.test(search)) return 'VS';
     return 'Other Cognac';
+  }
+  if (category === 'Wine') {
+    if (search.includes('non alcoholic sparkling red wine')) return 'Non-Alcoholic Sparkling Red Wine';
+    if (search.includes('non alcoholic sparkling white')) return 'Non-Alcoholic Sparkling White Wine Alternative';
+    if (search.includes('non alcoholic rose')) return 'Non-Alcoholic Rosé Wine';
+    if (search.includes('non alcoholic white')) return 'Non-Alcoholic White Wine Alternative';
+    if (search.includes('non alcoholic red')) return 'Non-Alcoholic Red Wine Alternative';
+    if (search.includes('prosecco')) return 'Prosecco';
+    if (search.includes('cava')) return 'Cava';
+    if (search.includes('sparkling')) return 'General Sparkling Wine';
+    if (search.includes('cabernet sauvignon')) return 'Cabernet Sauvignon';
+    if (search.includes('chenin blanc')) return 'Chenin Blanc';
+    if (search.includes('sauvignon blanc')) return 'Sauvignon Blanc';
+    if (search.includes('pinot noir')) return 'Pinot Noir';
+    if (search.includes('shiraz') || search.includes('syrah')) return 'Shiraz / Syrah';
+    if (search.includes('malbec')) return 'Malbec';
+    if (search.includes('tempranillo')) return 'Tempranillo';
+    if (search.includes('zinfandel')) return 'Zinfandel';
+    if (search.includes('chardonnay')) return 'Chardonnay';
+    if (search.includes('riesling')) return 'Riesling';
+    if (search.includes('rhone blend')) return 'Rhone Blend';
+    if (search.includes('white blend')) return 'White Blend';
+    if (search.includes('grenache')) return 'Grenache';
+    if (search.includes('rose')) return 'Rosé';
+    if (search.includes('vermouth')) return 'Vermouth';
+    if (search.includes('madeira')) return 'Madeira';
+    if (search.includes('sherry')) return 'Sherry';
+    if (search.includes('port')) return 'Port';
+    if (search.includes('late harvest')) return 'Late Harvest Wine';
+    if (search.includes('ice wine')) return 'Ice Wine';
+    if (search.includes('sauternes')) return 'Sauternes';
+    if (search.includes('moscato')) return 'Moscato';
+    return 'Other Wine';
   }
   if (category === 'Champagne') {
     if (search.includes('non dose')) return 'Non-Dosé';
@@ -329,6 +397,24 @@ const findRegion = (search, brand, category, country) => {
   if (region) return region;
   if (category === 'Cognac' && country === 'France') return 'Cognac';
   if (category === 'Champagne' && country === 'France') return 'Champagne';
+  if (category === 'Wine') {
+    const wineRegions = [
+      ['stellenbosch', 'Stellenbosch'],
+      ['franschhoek', 'Franschhoek'],
+      ['constantia', 'Constantia'],
+      ['bordeaux', 'Bordeaux'],
+      ['burgundy', 'Burgundy'],
+      ['rhone', 'Rhône'],
+      ['mosel', 'Mosel'],
+      ['marlborough', 'Marlborough'],
+      ['mendoza', 'Mendoza'],
+      ['rioja', 'Rioja'],
+      ['tuscany', 'Tuscany'],
+      ['veneto', 'Veneto'],
+      ['douro', 'Douro']
+    ];
+    return wineRegions.find(([needle]) => search.includes(needle))?.[1] || '';
+  }
   return '';
 };
 
@@ -344,6 +430,10 @@ const findProduction = (search) => {
     ['cask strength', 'Cask Strength'],
     ['bottled in bond', 'Bottled in Bond'],
     ['limited edition', 'Limited Edition'],
+    ['traditional method', 'Traditional Method'],
+    ['tank method', 'Tank Method'],
+    ['cap classique', 'Méthode Cap Classique'],
+    ['late harvest', 'Late Harvest'],
     ['vintage', 'Vintage']
   ];
   return methods.find(([needle]) => search.includes(needle))?.[1] || '';

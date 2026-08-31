@@ -6,14 +6,24 @@ import { Building2, Package, UploadCloud, CheckCircle2, AlertCircle, PlusCircle,
 import { storeCategories } from '../../data';
 import api from '../../api';
 import DynamicIcon from '../../components/DynamicIcon';
+import CatalogHierarchyFields from '../../components/CatalogHierarchyFields';
+import ProductImageManager from '../../components/ProductImageManager';
 
 export default function AddProduct({ onNotify }) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isInternalProductManager = ['admin', 'super_admin', 'product_manager'].includes(user?.role);
   
   const [formData, setFormData] = useState({
     name: '',
     type: '', // Empty initially for floating label to work well
+    country: '',
+    subcategory: '',
+    brand: '',
+    size: '',
+    abv: '',
+    production: '',
+    origin: '',
     description: '',
     price: '',
     stock: '',
@@ -27,8 +37,7 @@ export default function AddProduct({ onNotify }) {
     exportReady: false
   });
   
-  const [imageFiles, setImageFiles] = useState([]);
-  const [imagePreviews, setImagePreviews] = useState([]);
+  const [imageEntries, setImageEntries] = useState([]);
   const [pdfFile, setPdfFile] = useState(null);
   
   const [submitting, setSubmitting] = useState(false);
@@ -51,7 +60,7 @@ export default function AddProduct({ onNotify }) {
     fetchAttributes();
   }, []);
 
-  if (!user || (user.role !== 'vendor_active' && user.role !== 'admin')) {
+  if (!user || (user.role !== 'vendor_active' && !isInternalProductManager)) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
         <div className="p-8 border border-red-500/20 bg-red-950/10 text-[var(--color-ivory)] max-w-md w-full flex items-center gap-4">
@@ -89,28 +98,6 @@ export default function AddProduct({ onNotify }) {
     });
   };
 
-  const handleImageChange = (e) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const files = Array.from(e.target.files).slice(0, 5); // Max 5
-      setImageFiles(files);
-      
-      const previews = [];
-      files.forEach(file => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          previews.push(reader.result);
-          if (previews.length === files.length) {
-            setImagePreviews([...previews]);
-          }
-        };
-        reader.readAsDataURL(file);
-      });
-    } else {
-      setImageFiles([]);
-      setImagePreviews([]);
-    }
-  };
-
   const handlePdfChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setPdfFile(e.target.files[0]);
@@ -126,13 +113,29 @@ export default function AddProduct({ onNotify }) {
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
       const token = userInfo?.token || user?.token;
 
-      if ((formData.type || '').toLowerCase() === 'wine' && !pdfFile) {
+      if ((formData.type || '').toLowerCase() === 'wine' && !isInternalProductManager && !pdfFile) {
         throw new Error('Fact Sheet PDF is required for Wine products.');
+      }
+      if (imageEntries.length === 0) {
+        throw new Error('At least one product image is required.');
       }
 
       const payload = new FormData();
       payload.append('name', formData.name);
       payload.append('type', formData.type || 'Whisky');
+      payload.append('category', formData.type || 'Whisky');
+      payload.append('country', formData.country);
+      payload.append('subcategory', formData.subcategory);
+      payload.append('brand', formData.brand);
+      payload.append('size', formData.size);
+      payload.append('identity', JSON.stringify({
+        type: formData.type,
+        style: formData.subcategory,
+        production: formData.production,
+        origin: formData.origin || formData.country,
+        bottleSize: formData.size,
+        abv: formData.abv
+      }));
       payload.append('description', formData.description);
       payload.append('price', formData.price);
       payload.append('stock', formData.stock);
@@ -156,11 +159,14 @@ export default function AddProduct({ onNotify }) {
       if (formData.minOrderQuantity) payload.append('minOrderQuantity', formData.minOrderQuantity);
       payload.append('exportReady', formData.exportReady);
 
-      if (imageFiles && imageFiles.length > 0) {
-        imageFiles.forEach(file => {
-          payload.append('images', file);
-        });
-      }
+      let uploadIndex = 0;
+      const imageOrder = imageEntries.map((entry) => {
+        const orderEntry = { kind: 'upload', index: uploadIndex };
+        uploadIndex += 1;
+        payload.append('images', entry.file);
+        return orderEntry;
+      });
+      payload.append('imageOrder', JSON.stringify(imageOrder));
       if (pdfFile) {
         payload.append('factSheetPdf', pdfFile);
       }
@@ -265,6 +271,12 @@ export default function AddProduct({ onNotify }) {
                     </select>
                   </div>
                 </div>
+
+                <CatalogHierarchyFields
+                  formData={formData}
+                  onChange={handleChange}
+                  idPrefix="add-product"
+                />
 
                 <div className="w-full group mt-8">
                   <label 
@@ -475,32 +487,15 @@ export default function AddProduct({ onNotify }) {
                   Media & Documents
                 </h2>
                 
-                <div>
-                  <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-4 font-semibold">Product Images (Up to 5) *</label>
-                  <div className="flex flex-col md:flex-row items-start gap-6">
-                    <div className="flex flex-wrap gap-4">
-                      {imagePreviews.map((preview, idx) => (
-                        <div key={idx} className="w-24 h-24 rounded-2xl overflow-hidden border border-[var(--color-gold)]/30 shrink-0 bg-black/40">
-                          <img src={preview} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
-                        </div>
-                      ))}
-                    </div>
-                    <input 
-                      type="file" 
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      required
-                      multiple
-                      className="w-full text-sm text-[var(--color-ivory-muted)] file:mr-6 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-[10px] file:uppercase file:tracking-widest file:font-bold file:bg-[var(--color-gold)]/10 file:text-[#e1bd70] hover:file:bg-[var(--color-gold)]/20 transition-all cursor-pointer mt-4"
-                    />
-                  </div>
-                </div>
+                <ProductImageManager entries={imageEntries} onChange={setImageEntries} required />
 
                 {formData.type.toLowerCase() === 'wine' && (
                   <div className="border border-[var(--color-gold)]/20 p-8 relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-1 bg-[var(--color-gold)]/40"></div>
-                    <label className="block text-[10px] uppercase tracking-widest text-[#e1bd70] mb-2 font-bold">Fact Sheet PDF (Required for Wine) *</label>
-                    <p className="text-sm text-[var(--color-ivory-muted)] mb-6 font-light">Please upload the official vineyard fact sheet or authentication document.</p>
+                    <label className="block text-[10px] uppercase tracking-widest text-[#e1bd70] mb-2 font-bold">
+                      Fact Sheet PDF {isInternalProductManager ? '(Optional for internal catalog)' : '(Required for Wine) *'}
+                    </label>
+                    <p className="text-sm text-[var(--color-ivory-muted)] mb-6 font-light">Please upload the official vineyard fact sheet or authentication document when available.</p>
                     <input 
                       type="file" 
                       accept="application/pdf"

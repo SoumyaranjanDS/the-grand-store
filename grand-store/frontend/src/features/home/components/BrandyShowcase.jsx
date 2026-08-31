@@ -56,16 +56,18 @@ export default function BrandyShowcase({ onAdd, onWish, onCompare, compareItems 
     <>
       <section className="section tequila-showcase brandy-showcase home-product-editorial" id="brandy" ref={sectionRef}>
         <div className="shell">
-          <div className="section-heading tequila-heading">
-            <div>
-              <p className="eyebrow">Distilled patience · South African soul</p>
+          <div className="section-heading flex flex-col items-center text-center md:flex-row md:text-left md:justify-between md:items-end gap-3 md:gap-0">
+            <div className="flex flex-col items-center md:items-start">
+              <p className="eyebrow hidden md:block">Distilled patience · South African soul</p>
               <h2>Top Brandy</h2>
-              <p className="section-intro">
+              <p className="section-intro hidden md:block">
                 Polished Cape potstill, aged estate releases and a French classic—chosen for a cabinet with character.
               </p>
             </div>
-            <Link className="text-link arrow-link" to="/shop?category=Brandy">
-              View all brandy <ArrowRight size={16} />
+            <Link className="text-link arrow-link flex items-center gap-1" to="/shop?category=Brandy">
+              <span className="hidden md:inline">View all brandy</span>
+              <span className="inline md:hidden">View all</span> 
+              <ArrowRight size={16} />
             </Link>
           </div>
 
@@ -105,12 +107,12 @@ export default function BrandyShowcase({ onAdd, onWish, onCompare, compareItems 
               <div className="flex w-max animate-[marquee_20s_linear_infinite] sm:animate-[marquee_24s_linear_infinite] group-hover:[animation-play-state:paused] will-change-transform items-center">
                 {marqueeBrands.map((brand, index) => (
                   <div
-                    className="relative flex items-center justify-center max-sm:flex-[0_0_185px] sm:flex-[0_0_300px] md:flex-[0_0_360px] max-sm:min-h-[105px] sm:min-h-[165px] md:min-h-[190px] max-sm:mx-3 sm:mx-8 md:mx-10 transition-all duration-300 hover:scale-110 hover:-translate-y-1 group/brand select-none"
+                    className="relative flex items-center justify-center max-sm:flex-[0_0_260px] sm:flex-[0_0_280px] md:flex-[0_0_320px] max-sm:min-h-[180px] sm:min-h-[165px] md:min-h-[190px] max-sm:mx-0 sm:mx-4 md:mx-6 transition-all duration-300 hover:scale-110 hover:-translate-y-1 group/brand select-none"
                     key={`${brand.name}-${index}`}
                     aria-label={`View ${brand.name}`}
                   >
                     <img
-                      className="w-auto h-auto max-sm:max-w-[175px] sm:max-w-[280px] md:max-w-[340px] max-sm:max-h-[85px] sm:max-h-[145px] md:max-h-[170px] object-contain filter contrast-[1.08] brightness-[0.95] group-hover/brand:brightness-110 group-hover/brand:drop-shadow-[0_10px_30px_rgba(225,189,112,0.45)] transition-all duration-300"
+                      className="w-auto h-auto max-sm:max-w-[250px] sm:max-w-[260px] md:max-w-[300px] max-sm:max-h-[160px] sm:max-h-[145px] md:max-h-[170px] max-sm:scale-125 object-contain filter contrast-[1.08] brightness-[0.95] group-hover/brand:brightness-110 group-hover/brand:drop-shadow-[0_10px_30px_rgba(225,189,112,0.45)] transition-all duration-300"
                       src={brand.image}
                       alt={brand.name}
                       loading="lazy"

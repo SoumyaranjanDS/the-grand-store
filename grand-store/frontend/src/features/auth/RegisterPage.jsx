@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ArrowRight, Lock, Mail, User, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
@@ -11,6 +11,8 @@ export default function RegisterPage() {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [searchParams] = useSearchParams();
+  const [referralCode, setReferralCode] = useState((searchParams.get('ref') || '').trim().toUpperCase());
   const { register, googleLogin } = useAuth();
   const navigate = useNavigate();
 
@@ -19,7 +21,7 @@ export default function RegisterPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const userData = await register(name, email, password);
+      const userData = await register(name, email, password, referralCode);
       
       let defaultRoute = '/customer/profile';
       if (userData.role === 'admin') defaultRoute = '/admin/auctions';
@@ -38,7 +40,7 @@ export default function RegisterPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const userData = await googleLogin(tokenResponse.credential || tokenResponse.access_token, 'customer');
+        const userData = await googleLogin(tokenResponse.credential || tokenResponse.access_token, 'customer', referralCode);
         let defaultRoute = '/customer/profile';
         if (userData.role === 'admin') defaultRoute = '/admin/auctions';
         if (userData.role === 'vendor_active') defaultRoute = '/vendor/dashboard';
@@ -141,6 +143,24 @@ export default function RegisterPage() {
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[var(--color-ivory-muted)] text-[10px] font-bold uppercase tracking-widest mb-2">
+                Referral Code (Optional)
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <User className="h-5 w-5 text-white/20" />
+                </div>
+                <input
+                  type="text"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value.trimStart().toUpperCase())}
+                  className="block w-full pl-10 pr-3 py-4 border-b border-white/10 bg-transparent text-[var(--color-ivory)] placeholder-white/20 focus:outline-none focus:border-[var(--color-gold)] sm:text-sm transition-colors rounded-none"
+                  placeholder="Enter a friend's referral code"
+                />
               </div>
             </div>
 

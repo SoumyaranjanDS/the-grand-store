@@ -16,7 +16,7 @@ const keyOf = (value) => cleanText(value)
   .trim();
 
 export const normalizeCategory = (value) => {
-  const aliases = { scotch: "Whisky", whiskey: "Whisky", whisky: "Whisky" };
+  const aliases = { scotch: "Whisky", whiskey: "Whisky", whisky: "Whisky", wine: "Wine" };
   return aliases[keyOf(value)] || cleanText(value);
 };
 
@@ -43,20 +43,33 @@ const countryAliases = {
 
 const countryNames = {
   armenia: "Armenia",
+  argentina: "Argentina",
+  australia: "Australia",
+  austria: "Austria",
   belgium: "Belgium",
+  canada: "Canada",
+  chile: "Chile",
   china: "China",
   france: "France",
+  georgia: "Georgia",
   germany: "Germany",
+  greece: "Greece",
   ireland: "Ireland",
   israel: "Israel",
+  italy: "Italy",
   jamaica: "Jamaica",
   japan: "Japan",
   mexico: "Mexico",
   netherlands: "Netherlands",
+  "new zealand": "New Zealand",
   nicaragua: "Nicaragua",
+  portugal: "Portugal",
   scotland: "Scotland",
   "south africa": "South Africa",
+  spain: "Spain",
   taiwan: "Taiwan",
+  uk: "United Kingdom",
+  "united kingdom": "United Kingdom",
   usa: "USA",
   wales: "Wales",
 };
@@ -70,7 +83,7 @@ export const normalizeCountry = (value, category = "") => {
   const suffixes = [
     normalizeCategory(category),
     "Whisky", "Whiskey", "Scotch", "Beer", "Brandy", "Champagne",
-    "Cognac", "Gin", "Liqueur", "Rum", "Spirits", "Tequila", "Vodka",
+    "Cognac", "Gin", "Liqueur", "Rum", "Spirits", "Tequila", "Vodka", "Wine",
   ].filter(Boolean);
   let normalized = original;
   suffixes.forEach((suffix) => {
@@ -127,6 +140,26 @@ const subcategoryAliases = {
   "blended irish whisky": "Blended Irish Whiskey",
   "blended malt": "Blended Malt Whisky",
   "blended whisky": "Blended Whisky",
+  "rose wine": "Rosé",
+  "sparkling rose": "Sparkling Rosé",
+  prosecco: "Prosecco",
+  cava: "Cava",
+  "general sparkling wine": "General Sparkling Wine",
+  "cabernet sauvignon": "Cabernet Sauvignon",
+  "chenin blanc": "Chenin Blanc",
+  "sauvignon blanc": "Sauvignon Blanc",
+  "pinot noir": "Pinot Noir",
+  shiraz: "Shiraz / Syrah",
+  syrah: "Shiraz / Syrah",
+  "shiraz syrah": "Shiraz / Syrah",
+  "rhone blend": "Rhone Blend",
+  "white blend": "White Blend",
+  "late harvest wine": "Late Harvest Wine",
+  "ice wine": "Ice Wine",
+  "non alcoholic rose wine": "Non-Alcoholic Rosé Wine",
+  "non alcoholic white wine alternative": "Non-Alcoholic White Wine Alternative",
+  "non alcoholic red wine alternative": "Non-Alcoholic Red Wine Alternative",
+  "non alcoholic sparkling white wine alternative": "Non-Alcoholic Sparkling White Wine Alternative",
   plain: "Plain Vodka",
 };
 
@@ -155,6 +188,38 @@ const inferSubcategory = (product, category) => {
     if (search.includes("blanco") || search.includes("plata")) return "Blanco";
     if (search.includes("mezcal")) return "Mezcal";
   }
+  if (category === "Wine") {
+    if (search.includes("non alcoholic sparkling red wine")) return "Non-Alcoholic Sparkling Red Wine";
+    if (search.includes("non alcoholic sparkling white")) return "Non-Alcoholic Sparkling White Wine Alternative";
+    if (search.includes("non alcoholic rose")) return "Non-Alcoholic Rosé Wine";
+    if (search.includes("non alcoholic white")) return "Non-Alcoholic White Wine Alternative";
+    if (search.includes("non alcoholic red")) return "Non-Alcoholic Red Wine Alternative";
+    if (search.includes("prosecco")) return "Prosecco";
+    if (search.includes("cava")) return "Cava";
+    if (search.includes("sparkling")) return "General Sparkling Wine";
+    if (search.includes("cabernet sauvignon")) return "Cabernet Sauvignon";
+    if (search.includes("chenin blanc")) return "Chenin Blanc";
+    if (search.includes("sauvignon blanc")) return "Sauvignon Blanc";
+    if (search.includes("pinot noir")) return "Pinot Noir";
+    if (search.includes("shiraz") || search.includes("syrah")) return "Shiraz / Syrah";
+    if (search.includes("malbec")) return "Malbec";
+    if (search.includes("tempranillo")) return "Tempranillo";
+    if (search.includes("zinfandel")) return "Zinfandel";
+    if (search.includes("chardonnay")) return "Chardonnay";
+    if (search.includes("riesling")) return "Riesling";
+    if (search.includes("rhone blend")) return "Rhone Blend";
+    if (search.includes("white blend")) return "White Blend";
+    if (search.includes("grenache")) return "Grenache";
+    if (search.includes("rose")) return "Rosé";
+    if (search.includes("vermouth")) return "Vermouth";
+    if (search.includes("madeira")) return "Madeira";
+    if (search.includes("sherry")) return "Sherry";
+    if (search.includes("port")) return "Port";
+    if (search.includes("late harvest")) return "Late Harvest Wine";
+    if (search.includes("ice wine")) return "Ice Wine";
+    if (search.includes("sauternes")) return "Sauternes";
+    if (search.includes("moscato")) return "Moscato";
+  }
   if (category === "Champagne") {
     if (search.includes("blanc de blanc")) return "Blanc de Blancs";
     if (search.includes("demi sec")) return "Demi-Sec";
@@ -175,7 +240,7 @@ const inferSubcategory = (product, category) => {
   if (category === "Gin" && search.includes("flavour")) return "Flavoured Gin";
   if (category === "Gin" && search.includes("dry gin")) return "Dry Gin";
   if (category === "Vodka") return "Plain Vodka";
-  if (["Whisky", "Cognac", "Tequila", "Champagne", "Rum", "Gin", "Beer", "Brandy", "Liqueur"].includes(category)) {
+  if (["Whisky", "Cognac", "Tequila", "Champagne", "Rum", "Gin", "Beer", "Brandy", "Liqueur", "Wine"].includes(category)) {
     return `Other ${category}`;
   }
   return "";
@@ -230,6 +295,10 @@ const findProduction = (search) => [
   ["cask strength", "Cask Strength"],
   ["bottled in bond", "Bottled in Bond"],
   ["limited edition", "Limited Edition"],
+  ["traditional method", "Traditional Method"],
+  ["tank method", "Tank Method"],
+  ["cap classique", "Méthode Cap Classique"],
+  ["late harvest", "Late Harvest"],
   ["vintage", "Vintage"],
 ].find(([needle]) => search.includes(needle))?.[1] || "";
 
@@ -248,12 +317,21 @@ export const getProductIdentity = (product = {}) => {
     type = "Baijiu";
   }
 
+  const wineRegion = category === "Wine" ? [
+    ["stellenbosch", "Stellenbosch"], ["franschhoek", "Franschhoek"],
+    ["constantia", "Constantia"], ["bordeaux", "Bordeaux"],
+    ["burgundy", "Burgundy"], ["rhone", "Rhône"], ["mosel", "Mosel"],
+    ["marlborough", "Marlborough"], ["mendoza", "Mendoza"],
+    ["rioja", "Rioja"], ["tuscany", "Tuscany"], ["veneto", "Veneto"],
+    ["douro", "Douro"],
+  ].find(([needle]) => search.includes(needle))?.[1] : "";
   const region = /blanton/i.test(brand) ? "Kentucky" : [
     ["speyside", "Speyside"], ["islay", "Islay"], ["campbeltown", "Campbeltown"],
     ["highland", "Highlands"], ["lowland", "Lowlands"], ["island", "Islands"],
   ].find(([needle]) => search.includes(needle))?.[1] ||
     (category === "Cognac" && country === "France" ? "Cognac" : "") ||
-    (category === "Champagne" && country === "France" ? "Champagne" : "");
+    (category === "Champagne" && country === "France" ? "Champagne" : "") ||
+    wineRegion;
   let production = findProduction(search);
   if (!production && category === "Cognac" && (search.includes("fine champagne") || (keyOf(brand).includes("remy martin") && subcategory === "VSOP"))) {
     production = "Fine Champagne Blend";

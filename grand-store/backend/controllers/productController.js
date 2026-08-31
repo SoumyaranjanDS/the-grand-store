@@ -1,8 +1,55 @@
 const Product = require('../models/Product');
 const Vendor = require('../models/Vendor');
+const { normalizeProduct } = require('../utils/productNormalization');
 
 const INTERNAL_PRODUCT_ROLES = ['admin', 'super_admin', 'product_manager'];
 const canManageInternalProducts = (user) => INTERNAL_PRODUCT_ROLES.includes(user?.role);
+
+const parseJsonValue = (value, fallback) => {
+  if (value === undefined || value === null || value === '') return fallback;
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+};
+
+const mergeIdentity = (derivedIdentity, identity) => {
+  const supplied = parseJsonValue(identity, {});
+  return Object.fromEntries(Object.entries({ ...derivedIdentity, ...supplied }).map(([key, value]) => [
+    key,
+    String(value || '').trim()
+  ]));
+};
+
+const cleanImageList = (images) => [...new Set(images
+  .map((value) => String(value || '').trim())
+  .filter(Boolean))].slice(0, 5);
+
+const getOrderedImages = ({ imageOrder, uploadedImages = [], existingImages = [], suppliedImages = [] }) => {
+  const order = parseJsonValue(imageOrder, null);
+  const allowedExistingImages = new Set(cleanImageList(existingImages));
+
+  if (Array.isArray(order)) {
+    const orderedImages = order.map((entry) => {
+      if (entry?.kind === 'upload') {
+        const uploadIndex = Number(entry.index);
+        return Number.isInteger(uploadIndex) ? uploadedImages[uploadIndex] : '';
+      }
+      if (entry?.kind === 'existing') {
+        const url = String(entry.url || '').trim();
+        return allowedExistingImages.has(url) ? url : '';
+      }
+      return '';
+    });
+    return cleanImageList(orderedImages);
+  }
+
+  if (uploadedImages.length) return cleanImageList(uploadedImages);
+  if (suppliedImages.length) return cleanImageList(suppliedImages);
+  return cleanImageList(existingImages);
+};
 
 // @desc    Fetch all products
 // @route   GET /api/products
@@ -80,50 +127,84 @@ const createProduct = async (req, res) => {
       return res.status(403).json({ message: 'Only approved vendors or admins can add products' });
     }
 
-    const { name, type, description, price, options, tags, tastingNotes, stock, flavorProfile, foodPairing } = req.body;
+    const {
+      name, type, category, country, subcategory, brand, size, identity, imageOrder,
+      description, price, options, tags, tastingNotes, stock, flavorProfile, foodPairing
+    } = req.body;
     let { image, gallery } = req.body; // Allows passing image links from frontend for admins
 
-    // Check if type is whisky and ensure fact sheet is provided
+    // Cloudinary storage returns persistent HTTPS URLs in each uploaded file's path.
     let factSheetPdf = null;
+    let uploadedImages = [];
     
     // If files are uploaded (multipart/form-data)
     if (req.files) {
       if (req.files.images && req.files.images.length > 0) {
-        image = req.files.images[0].path;
-        if (req.files.images.length > 1) {
-          gallery = req.files.images.slice(1).map(f => f.path);
-        }
+        uploadedImages = req.files.images.map((file) => file.path);
       }
       if (req.files.factSheetPdf && req.files.factSheetPdf[0]) {
         factSheetPdf = req.files.factSheetPdf[0].path;
       }
     }
 
-    // Admins might pass gallery as a string or array of links
-    if (typeof gallery === 'string') {
-      gallery = [gallery];
-    } else if (!gallery) {
-      gallery = [];
+    const suppliedGallery = parseJsonValue(gallery, gallery ? [gallery] : []);
+    const finalImages = getOrderedImages({
+      imageOrder,
+      uploadedImages,
+      suppliedImages: [image, ...(Array.isArray(suppliedGallery) ? suppliedGallery : [])]
+    });
+    image = finalImages[0] || '';
+    gallery = finalImages.slice(1);
+    if (!image) {
+      return res.status(400).json({ message: 'At least one product image is required.' });
     }
 
-    if (type && type.toLowerCase() === 'wine' && !factSheetPdf && !canManageInternalProducts(req.user)) {
+    const requestedCategory = String(category || type || '').trim();
+    if (requestedCategory.toLowerCase() === 'wine' && !factSheetPdf && !canManageInternalProducts(req.user)) {
       return res.status(400).json({ message: 'Fact Sheet PDF is required for Wine products' });
     }
 
+    if (requestedCategory.toLowerCase() === 'wine' && (!country || !subcategory || !brand || !size)) {
+      return res.status(400).json({
+        message: 'Wine products require country, subcategory, brand and bottle size.'
+      });
+    }
+
+    const normalizedProduct = normalizeProduct({
+      name,
+      type: requestedCategory,
+      category: requestedCategory,
+      country,
+      subcategory,
+      brand,
+      size,
+      description,
+      tags: parseJsonValue(tags, []),
+      tastingNotes: parseJsonValue(tastingNotes, []),
+      flavorProfile: parseJsonValue(flavorProfile, []),
+      foodPairing: parseJsonValue(foodPairing, [])
+    });
+
     const newProduct = new Product({
       id: `prod_${Date.now()}`,
-      name,
-      type,
-      description,
+      name: normalizedProduct.name,
+      type: normalizedProduct.type,
+      category: normalizedProduct.category,
+      country: normalizedProduct.country,
+      subcategory: normalizedProduct.subcategory,
+      brand: normalizedProduct.brand,
+      size: normalizedProduct.size,
+      identity: mergeIdentity(normalizedProduct.identity, identity),
+      description: normalizedProduct.description,
       price,
       image,
       gallery,
       factSheetPdf,
-      options: options && typeof options === 'string' ? JSON.parse(options) : options || [],
-      tags: tags && typeof tags === 'string' ? JSON.parse(tags) : tags || [],
-      tastingNotes: tastingNotes && typeof tastingNotes === 'string' ? JSON.parse(tastingNotes) : tastingNotes || [],
-      flavorProfile: flavorProfile && typeof flavorProfile === 'string' ? JSON.parse(flavorProfile) : flavorProfile || [],
-      foodPairing: foodPairing && typeof foodPairing === 'string' ? JSON.parse(foodPairing) : foodPairing || [],
+      options: parseJsonValue(options, []),
+      tags: normalizedProduct.tags,
+      tastingNotes: normalizedProduct.tastingNotes,
+      flavorProfile: normalizedProduct.flavorProfile,
+      foodPairing: normalizedProduct.foodPairing,
       stock: Number(stock) || 0,
       vendorId: canManageInternalProducts(req.user) ? null : req.user._id,
       approvalStatus: 'approved'
@@ -171,37 +252,68 @@ const updateProduct = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to edit this product' });
     }
 
-    const { name, type, description, price, options, tags, tastingNotes, stock, image: imageLink, gallery: galleryLinks, flavorProfile, foodPairing } = req.body;
+    const {
+      name, type, category, country, subcategory, brand, size, identity, imageOrder,
+      description, price, options, tags, tastingNotes, stock,
+      image: imageLink, gallery: galleryLinks, flavorProfile, foodPairing
+    } = req.body;
 
-    product.name = name || product.name;
-    product.type = type || product.type;
-    product.description = description !== undefined ? description : product.description;
+    const normalizedProduct = normalizeProduct({
+      ...product.toObject(),
+      name: name || product.name,
+      type: category || type || product.category || product.type,
+      category: category || type || product.category || product.type,
+      country: country !== undefined ? country : product.country,
+      subcategory: subcategory !== undefined ? subcategory : product.subcategory,
+      brand: brand !== undefined ? brand : product.brand,
+      size: size !== undefined ? size : product.size,
+      description: description !== undefined ? description : product.description,
+      tags: parseJsonValue(tags, product.tags),
+      tastingNotes: parseJsonValue(tastingNotes, product.tastingNotes),
+      flavorProfile: parseJsonValue(flavorProfile, product.flavorProfile),
+      foodPairing: parseJsonValue(foodPairing, product.foodPairing)
+    });
+
+    product.name = normalizedProduct.name;
+    product.type = normalizedProduct.type;
+    product.category = normalizedProduct.category;
+    product.country = normalizedProduct.country;
+    product.subcategory = normalizedProduct.subcategory;
+    product.brand = normalizedProduct.brand;
+    product.size = normalizedProduct.size;
+    product.identity = mergeIdentity(normalizedProduct.identity, identity);
+    product.description = normalizedProduct.description;
     product.price = price || product.price;
-    product.options = options && typeof options === 'string' ? JSON.parse(options) : options || product.options;
-    product.tags = tags && typeof tags === 'string' ? JSON.parse(tags) : tags || product.tags;
-    product.tastingNotes = tastingNotes && typeof tastingNotes === 'string' ? JSON.parse(tastingNotes) : tastingNotes || product.tastingNotes;
-    product.flavorProfile = flavorProfile && typeof flavorProfile === 'string' ? JSON.parse(flavorProfile) : flavorProfile || product.flavorProfile;
-    product.foodPairing = foodPairing && typeof foodPairing === 'string' ? JSON.parse(foodPairing) : foodPairing || product.foodPairing;
+    product.options = parseJsonValue(options, product.options);
+    product.tags = normalizedProduct.tags;
+    product.tastingNotes = normalizedProduct.tastingNotes;
+    product.flavorProfile = normalizedProduct.flavorProfile;
+    product.foodPairing = normalizedProduct.foodPairing;
     product.stock = stock !== undefined ? Number(stock) : product.stock;
 
-    if (imageLink) product.image = imageLink;
-    if (galleryLinks) {
-      product.gallery = typeof galleryLinks === 'string' ? [galleryLinks] : galleryLinks;
-    }
-
+    let uploadedImages = [];
     if (req.files) {
       if (req.files.images && req.files.images.length > 0) {
-        product.image = req.files.images[0].path;
-        if (req.files.images.length > 1) {
-          product.gallery = req.files.images.slice(1).map(f => f.path);
-        } else {
-          product.gallery = [];
-        }
+        uploadedImages = req.files.images.map((file) => file.path);
       }
       if (req.files.factSheetPdf && req.files.factSheetPdf[0]) {
         product.factSheetPdf = req.files.factSheetPdf[0].path;
       }
     }
+
+    const currentImages = cleanImageList([product.image, ...(product.gallery || [])]);
+    const suppliedGallery = parseJsonValue(galleryLinks, galleryLinks ? [galleryLinks] : []);
+    const finalImages = getOrderedImages({
+      imageOrder,
+      uploadedImages,
+      existingImages: currentImages,
+      suppliedImages: [imageLink, ...(Array.isArray(suppliedGallery) ? suppliedGallery : [])]
+    });
+    if (!finalImages.length) {
+      return res.status(400).json({ message: 'At least one product image is required.' });
+    }
+    product.image = finalImages[0];
+    product.gallery = finalImages.slice(1);
 
     const updatedProduct = await product.save();
     res.json(updatedProduct);

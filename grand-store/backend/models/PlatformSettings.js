@@ -15,6 +15,10 @@ const platformSettingsSchema = new mongoose.Schema({
     accountNumber: { type: String, default: '0123456789' },
     branchCode: { type: String, default: '051001' }
   },
+  referralRewardAmount: { type: Number, default: 50 },
+  referralRewardType: { type: String, enum: ['fixed', 'percentage'], default: 'fixed' },
+  referralWelcomeDiscount: { type: Number, default: 50 },
+  referralWelcomeDiscountType: { type: String, enum: ['fixed', 'percentage'], default: 'fixed' }
 }, { timestamps: true });
 
 module.exports = mongoose.model("PlatformSettings", platformSettingsSchema);

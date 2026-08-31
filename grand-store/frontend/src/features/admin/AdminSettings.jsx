@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { Settings, Save, RefreshCw, Percent, Truck, ShieldCheck, ShoppingBag } from "lucide-react";
+import { Settings, Save, RefreshCw, Percent, Truck, ShieldCheck, ShoppingBag, Users } from "lucide-react";
 import api from '../../api';
 import Price from '../../components/ui/Price';
 
@@ -30,6 +30,10 @@ export default function AdminSettings() {
     setSettings(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
   };
 
+  const handleTypeChange = (field, value) => {
+    setSettings(prev => ({ ...prev, [field]: value }));
+  };
+
   const handleBankChange = (field, value) => {
     setSettings(prev => ({
       ...prev,
@@ -43,9 +47,7 @@ export default function AdminSettings() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await axios.put(`${import.meta.env.VITE_API_URL}/api/settings`, settings, {
-        headers: { Authorization: `Bearer ${user.token}` }
-      });
+      await api.put(`/settings`, settings);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (e) {
@@ -89,7 +91,7 @@ export default function AdminSettings() {
           max="100"
           value={settings[field]}
           onChange={e => handleChange(field, e.target.value)}
-          className="w-24 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono text-right focus:outline-none focus:border-[var(--color-gold)]/50 transition-colors"
+          className="w-24 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono text-right focus:outline-none focus:border-[var(--color-gold)]/50 transition-colors [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
         />
         <span className="text-[var(--color-ivory-muted)] text-sm w-4">{field.endsWith("Fee") ? "R" : "%"}</span>
       </div>
@@ -134,6 +136,79 @@ export default function AdminSettings() {
             <div className="space-y-6">
               <FeeRow label="Event Ticket Commission" field="eventCommissionPct" note="Deducted from event organizer payouts" />
               <FeeRow label="Payment Gateway Fee" field="gatewayFeePct" note="Internal cost tracking (not shown to customers)" />
+            </div>
+          </div>
+
+          <div className="bg-[#111] border border-white/10 rounded-xl p-6">
+            <h2 className="text-white font-serif text-xl mb-6 border-b border-white/10 pb-4">Refer & Earn System</h2>
+            <div className="space-y-6">
+              
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1">
+                  <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Referral Reward</label>
+                  <p className="text-[10px] text-white/30 italic">Amount credited to the referrer when a friend completes their first order</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    value={settings.referralRewardAmount || 0}
+                    onChange={e => handleChange('referralRewardAmount', e.target.value)}
+                    className="w-24 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono text-right focus:outline-none focus:border-[var(--color-gold)]/50 transition-colors [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                  />
+                  <div className="flex bg-black/50 border border-white/10 rounded-lg p-1">
+                    <button
+                      type="button"
+                      onClick={() => handleTypeChange('referralRewardType', 'fixed')}
+                      className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${settings.referralRewardType !== 'percentage' ? 'bg-[var(--color-gold)] text-black' : 'text-white/40 hover:text-white'}`}
+                    >
+                      ZAR
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleTypeChange('referralRewardType', 'percentage')}
+                      className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${settings.referralRewardType === 'percentage' ? 'bg-[var(--color-gold)] text-black' : 'text-white/40 hover:text-white'}`}
+                    >
+                      %
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1">
+                  <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Welcome Discount</label>
+                  <p className="text-[10px] text-white/30 italic">Amount discounted from the friend's first order</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    value={settings.referralWelcomeDiscount || 0}
+                    onChange={e => handleChange('referralWelcomeDiscount', e.target.value)}
+                    className="w-24 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono text-right focus:outline-none focus:border-[var(--color-gold)]/50 transition-colors [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                  />
+                  <div className="flex bg-black/50 border border-white/10 rounded-lg p-1">
+                    <button
+                      type="button"
+                      onClick={() => handleTypeChange('referralWelcomeDiscountType', 'fixed')}
+                      className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${settings.referralWelcomeDiscountType !== 'percentage' ? 'bg-[var(--color-gold)] text-black' : 'text-white/40 hover:text-white'}`}
+                    >
+                      ZAR
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleTypeChange('referralWelcomeDiscountType', 'percentage')}
+                      className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${settings.referralWelcomeDiscountType === 'percentage' ? 'bg-[var(--color-gold)] text-black' : 'text-white/40 hover:text-white'}`}
+                    >
+                      %
+                    </button>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
 
@@ -275,6 +350,56 @@ export default function AdminSettings() {
                   <div className="flex justify-between font-bold text-green-400 border-t border-white/10 pt-3">
                     <span>VENDOR PAYOUT:</span><span><Price amount={vendorGets.toFixed(2)} /></span>
                   </div>
+                </div>
+              );
+            })()}
+          </div>
+          
+          {/* Refer & Earn Calculator */}
+          <div className="bg-black/60 border border-[var(--color-gold)]/30 rounded-xl p-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-gold)]/5 rounded-full blur-3xl"></div>
+            <h3 className="text-[var(--color-gold)] font-serif text-xl mb-6 flex items-center gap-2">
+              <Users size={20} /> Refer & Earn Example
+            </h3>
+            {(() => {
+              const orderTotal = 1000;
+              let welcomeDiscount = 0;
+              if (settings.referralWelcomeDiscountType === 'percentage') {
+                welcomeDiscount = (orderTotal * (settings.referralWelcomeDiscount || 0)) / 100;
+              } else {
+                welcomeDiscount = settings.referralWelcomeDiscount || 0;
+              }
+              const friendPays = Math.max(0, orderTotal - welcomeDiscount);
+              
+              let referrerGets = 0;
+              if (settings.referralRewardType === 'percentage') {
+                referrerGets = (orderTotal * (settings.referralRewardAmount || 0)) / 100;
+              } else {
+                referrerGets = settings.referralRewardAmount || 0;
+              }
+              
+              return (
+                <div className="space-y-4 text-sm font-mono relative z-10">
+                  <div className="text-[10px] text-white/50 uppercase tracking-widest border-b border-white/10 pb-2 mb-2">Scenario 1: Friend's First Purchase</div>
+                  <div className="flex justify-between text-gray-400">
+                    <span>Friend's Order Total:</span><span className="text-white"><Price amount={orderTotal.toFixed(2)} /></span>
+                  </div>
+                  <div className="flex justify-between text-gray-400">
+                    <span>Welcome Discount Applied:</span><span className="text-yellow-500/80">- <Price amount={welcomeDiscount.toFixed(2)} /></span>
+                  </div>
+                  <div className="flex justify-between font-bold text-white border-t border-white/10 pt-3">
+                    <span>FRIEND PAYS:</span><span><Price amount={friendPays.toFixed(2)} /></span>
+                  </div>
+                  
+                  <div className="border-t border-white/10 my-4"></div>
+                  
+                  <div className="text-[10px] text-white/50 uppercase tracking-widest border-b border-white/10 pb-2 mb-2">Scenario 2: Referrer's Reward</div>
+                  <div className="flex justify-between text-gray-400">
+                    <span>Referrer's Wallet Balance Increases By:</span><span className="text-green-400 font-bold">+ <Price amount={referrerGets.toFixed(2)} /></span>
+                  </div>
+                  <p className="text-xs text-white/40 mt-2 font-sans italic">
+                    * The referrer can apply this <Price amount={referrerGets.toFixed(2)} /> balance as a discount at checkout on their next order.
+                  </p>
                 </div>
               );
             })()}

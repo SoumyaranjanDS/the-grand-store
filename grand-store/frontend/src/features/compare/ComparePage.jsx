@@ -1,13 +1,14 @@
 import { useProducts } from '../../context/ProductContext'
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
-import { ChevronRight, ChevronLeft, ShoppingBag, ArrowRight, Minus, Plus, Trash2, Heart, ZoomIn, CheckCircle2, Truck, RotateCcw, ShieldCheck, Mail, MessageCircle, Share2, X, Gift, SlidersHorizontal, Grid3X3, GitCompareArrows, MapPin, Calendar, Clock, CreditCard, Droplets } from 'lucide-react';
+import { Link, Navigate, useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { ChevronRight, ChevronLeft, ShoppingBag, ArrowRight, ArrowLeft, Minus, Plus, Trash2, Heart, ZoomIn, CheckCircle2, Truck, RotateCcw, ShieldCheck, Mail, MessageCircle, Share2, X, Gift, SlidersHorizontal, Grid3X3, GitCompareArrows, MapPin, Calendar, Clock, CreditCard, Droplets } from 'lucide-react';
 import { brandyBrands, brands, menuCategories, tequilaBrands } from '../../data';
 import { useWishlist } from '../../wishlistContext';
 import ProductCard from '../../components/ProductCard';
 
 export default function ComparePage({ compareItems, onCompare, onRemove, onClear, onAdd }) {
   const { products } = useProducts();
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.title = 'Compare Bottles — The Grand Store'
@@ -31,6 +32,9 @@ export default function ComparePage({ compareItems, onCompare, onRemove, onClear
       <section className="compare-hero">
         <div className="shell compare-hero-inner">
           <div>
+            <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-[var(--color-ivory-muted)] hover:text-white mb-6 transition-colors uppercase tracking-widest text-xs font-bold">
+              <ArrowLeft size={16} /> Back
+            </button>
             <p className="eyebrow">Bottle by bottle</p>
             <h1>Compare the collection.</h1>
           </div>

@@ -54,7 +54,10 @@ const orderSchema = new mongoose.Schema({
   commissionAmount: { type: Number, default: 0 },   // Grand Store commission on subTotal
   gatewayFeePct: { type: Number, default: 2.5 },
   gatewayFeeAmount: { type: Number, default: 0 },   // Payment gateway fee
-  totalPrice: { type: Number, required: true, default: 0 }, // = subTotal + shipping + VAT + duties
+
+  appliedWelcomeDiscount: { type: Number, default: 0 },
+  appliedRewards: { type: Number, default: 0 },
+  totalPrice: { type: Number, required: true, default: 0 }, // = subTotal + shipping + VAT + duties - discounts
 
   shipments: [{
     type: mongoose.Schema.Types.ObjectId,
@@ -85,4 +88,3 @@ const orderSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);
-

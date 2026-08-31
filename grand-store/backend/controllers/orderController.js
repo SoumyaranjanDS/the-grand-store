@@ -59,6 +59,30 @@ const addOrderItems = async (req, res) => {
     const commissionAmount = parseFloat(((subTotal * commissionPct) / 100).toFixed(2));
     const gatewayFeeAmount = parseFloat((calculatedTotal * gatewayFeePct / 100).toFixed(2));
 
+    // Calculate Referral/Rewards discounts
+    const User = require('../models/User');
+    const user = await User.findById(req.user._id);
+    const previousOrders = await Order.countDocuments({ user: req.user._id });
+
+    let appliedWelcomeDiscount = 0;
+    if (previousOrders === 0 && user && user.referredBy) {
+        if (settings.referralWelcomeDiscountType === 'percentage') {
+            appliedWelcomeDiscount = parseFloat(((subTotal * (settings.referralWelcomeDiscount || 5)) / 100).toFixed(2));
+        } else {
+            appliedWelcomeDiscount = settings.referralWelcomeDiscount || 50;
+        }
+    }
+
+    let appliedRewards = 0;
+    if (req.body.applyRewards && user && user.rewardBalance > 0) {
+        // Can only apply up to the order total
+        appliedRewards = Math.min(user.rewardBalance, calculatedTotal - appliedWelcomeDiscount);
+        user.rewardBalance -= appliedRewards;
+        await user.save();
+    }
+
+    const finalTotal = parseFloat((calculatedTotal - appliedWelcomeDiscount - appliedRewards).toFixed(2));
+
     let allOrderItems = [];
     let vendorPayables = [];
 
@@ -80,7 +104,9 @@ const addOrderItems = async (req, res) => {
       commissionAmount,
       gatewayFeePct,
       gatewayFeeAmount,
-      totalPrice: calculatedTotal,
+      appliedWelcomeDiscount,
+      appliedRewards,
+      totalPrice: finalTotal,
       transactionId,
       orderId,
       paymentId,
@@ -239,6 +265,41 @@ const processOrderPayment = async (orderId) => {
   order.paidAt = Date.now();
   order.paymentStatus = 'Paid';
   await order.save();
+  
+  // Reward the referrer if this was the customer's first order
+  try {
+    const User = require('../models/User');
+    const user = await User.findById(order.user);
+    
+    // Check if previous paid orders exist (excluding this one)
+    const previousPaidOrders = await Order.countDocuments({ user: order.user, isPaid: true, _id: { $ne: order._id } });
+    
+    if (previousPaidOrders === 0 && user && user.referredBy) {
+      const PlatformSettings = require('../models/PlatformSettings');
+      const settings = await PlatformSettings.findOne();
+      
+      let reward = 0;
+      if (settings) {
+        if (settings.referralRewardType === 'percentage') {
+          reward = parseFloat(((order.subTotal * (settings.referralRewardAmount || 5)) / 100).toFixed(2));
+        } else {
+          reward = settings.referralRewardAmount || 50;
+        }
+      } else {
+        reward = 50;
+      }
+  
+      const referringUser = await User.findById(user.referredBy);
+      if (referringUser) {
+        referringUser.rewardBalance += reward;
+        referringUser.totalReferrals += 1;
+        await referringUser.save();
+        console.log(`Credited R${reward} to referrer ${referringUser.email}`);
+      }
+    }
+  } catch (err) {
+    console.error('Error rewarding referrer:', err);
+  }
   
   // === EVENT SOURCING: Append PaymentVerified Event ===
   const CheckoutEngine = require('../services/CheckoutEngine');

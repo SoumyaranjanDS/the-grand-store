@@ -5,15 +5,25 @@ import { useAuth } from '../../context/AuthContext';
 import { Building2, Package, UploadCloud, CheckCircle2, AlertCircle, PlusCircle, User } from 'lucide-react';
 import { storeCategories } from '../../data';
 import DynamicIcon from '../../components/DynamicIcon';
+import CatalogHierarchyFields from '../../components/CatalogHierarchyFields';
+import ProductImageManager, { existingImageEntries } from '../../components/ProductImageManager';
 
 export default function EditProduct({ onNotify }) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isInternalProductManager = ['admin', 'super_admin', 'product_manager'].includes(user?.role);
   const { id } = useParams();
   
   const [formData, setFormData] = useState({
     name: '',
     type: '',
+    country: '',
+    subcategory: '',
+    brand: '',
+    size: '',
+    abv: '',
+    production: '',
+    origin: '',
     description: '',
     price: '',
     stock: '',
@@ -27,8 +37,7 @@ export default function EditProduct({ onNotify }) {
     exportReady: false
   });
   
-  const [imageFiles, setImageFiles] = useState([]);
-  const [imagePreviews, setImagePreviews] = useState([]);
+  const [imageEntries, setImageEntries] = useState([]);
   const [pdfFile, setPdfFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -52,7 +61,7 @@ export default function EditProduct({ onNotify }) {
   }, []);
 
   useEffect(() => {
-    if (!user || (user.role !== 'vendor_active' && user.role !== 'admin')) {
+    if (!user || (user.role !== 'vendor_active' && !isInternalProductManager)) {
       return;
     }
     const fetchProduct = async () => {
@@ -62,7 +71,14 @@ export default function EditProduct({ onNotify }) {
         if (product) {
           setFormData({
             name: product.name || '',
-            type: product.type || '',
+            type: product.category || product.type || '',
+            country: product.country || '',
+            subcategory: product.subcategory || '',
+            brand: product.brand || '',
+            size: product.size || product.identity?.bottleSize || '',
+            abv: product.identity?.abv || '',
+            production: product.identity?.production || '',
+            origin: product.identity?.origin || product.country || '',
             description: product.description || '',
             price: product.price || '',
             options: product.options ? product.options.join(', ') : '',
@@ -75,18 +91,7 @@ export default function EditProduct({ onNotify }) {
             minOrderQuantity: product.minOrderQuantity || '',
             exportReady: product.exportReady || false
           });
-          if (product.image) {
-            const getImageUrl = (src) => {
-              if (!src) return '';
-              if (src.startsWith('http://') || src.startsWith('https://')) return src;
-              return `${import.meta.env.VITE_API_URL}${src}`;
-            };
-            const initialPreviews = [getImageUrl(product.image)];
-            if (product.gallery && product.gallery.length > 0) {
-              product.gallery.forEach(img => initialPreviews.push(getImageUrl(img)));
-            }
-            setImagePreviews(initialPreviews);
-          }
+          setImageEntries(existingImageEntries(product.image, product.gallery));
         }
       } catch (err) {
         console.error(err);
@@ -96,9 +101,9 @@ export default function EditProduct({ onNotify }) {
       }
     };
     fetchProduct();
-  }, [user, id]);
+  }, [user, id, isInternalProductManager]);
 
-  if (!user || (user.role !== 'vendor_active' && user.role !== 'admin')) {
+  if (!user || (user.role !== 'vendor_active' && !isInternalProductManager)) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
         <div className="p-8 border border-red-500/20 bg-red-950/10 text-[var(--color-ivory)] max-w-md w-full flex items-center gap-4">
@@ -136,25 +141,6 @@ export default function EditProduct({ onNotify }) {
     });
   };
 
-  const handleImageChange = (e) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const files = Array.from(e.target.files).slice(0, 5); // Max 5
-      setImageFiles(files);
-      
-      const previews = [];
-      files.forEach(file => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          previews.push(reader.result);
-          if (previews.length === files.length) {
-            setImagePreviews([...previews]);
-          }
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-  };
-
   const handlePdfChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setPdfFile(e.target.files[0]);
@@ -169,10 +155,26 @@ export default function EditProduct({ onNotify }) {
     try {
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
       const token = userInfo?.token || user?.token;
+      if (imageEntries.length === 0) {
+        throw new Error('At least one product image is required.');
+      }
 
       const payload = new FormData();
       payload.append('name', formData.name);
       payload.append('type', formData.type || 'Whisky');
+      payload.append('category', formData.type || 'Whisky');
+      payload.append('country', formData.country);
+      payload.append('subcategory', formData.subcategory);
+      payload.append('brand', formData.brand);
+      payload.append('size', formData.size);
+      payload.append('identity', JSON.stringify({
+        type: formData.type,
+        style: formData.subcategory,
+        production: formData.production,
+        origin: formData.origin || formData.country,
+        bottleSize: formData.size,
+        abv: formData.abv
+      }));
       payload.append('description', formData.description);
       payload.append('price', formData.price);
       payload.append('stock', formData.stock);
@@ -196,11 +198,15 @@ export default function EditProduct({ onNotify }) {
       if (formData.minOrderQuantity) payload.append('minOrderQuantity', formData.minOrderQuantity);
       payload.append('exportReady', formData.exportReady);
 
-      if (imageFiles && imageFiles.length > 0) {
-        imageFiles.forEach(file => {
-          payload.append('images', file);
-        });
-      }
+      let uploadIndex = 0;
+      const imageOrder = imageEntries.map((entry) => {
+        if (entry.kind === 'existing') return { kind: 'existing', url: entry.url };
+        const orderEntry = { kind: 'upload', index: uploadIndex };
+        uploadIndex += 1;
+        payload.append('images', entry.file);
+        return orderEntry;
+      });
+      payload.append('imageOrder', JSON.stringify(imageOrder));
       if (pdfFile) {
         payload.append('factSheetPdf', pdfFile);
       }
@@ -291,6 +297,12 @@ export default function EditProduct({ onNotify }) {
                     </select>
                   </div>
                 </div>
+
+                <CatalogHierarchyFields
+                  formData={formData}
+                  onChange={handleChange}
+                  idPrefix="edit-product"
+                />
 
                 <div className="w-full group mt-8">
                   <label className="block text-sm uppercase tracking-widest text-[var(--color-ivory-muted)] font-medium mb-3">Detailed Description *</label>
@@ -433,31 +445,14 @@ export default function EditProduct({ onNotify }) {
                   Media & Documents
                 </h2>
                 
-                <div>
-                  <label className="block text-[10px] uppercase tracking-widest text-[#e1bd70] mb-2 font-bold">Product Images (Up to 5) (Optional to Update)</label>
-                  <p className="text-sm text-[var(--color-ivory-muted)] mb-6 font-light">Upload new high-quality images if you want to replace the current ones. The first will be the main image.</p>
-                  <div className="flex flex-col md:flex-row items-start gap-6">
-                    <div className="flex flex-wrap gap-4">
-                      {imagePreviews.map((preview, idx) => (
-                        <div key={idx} className="w-24 h-24 rounded-2xl overflow-hidden border border-[var(--color-gold)]/30 shrink-0 bg-black/40">
-                          <img src={preview} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
-                        </div>
-                      ))}
-                    </div>
-                    <input 
-                      type="file" 
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      multiple
-                      className="w-full text-sm text-[var(--color-ivory-muted)] file:mr-6 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-[10px] file:uppercase file:tracking-widest file:font-bold file:bg-[var(--color-gold)]/10 file:text-[#e1bd70] hover:file:bg-[var(--color-gold)]/20 transition-all cursor-pointer mt-4"
-                    />
-                  </div>
-                </div>
+                <ProductImageManager entries={imageEntries} onChange={setImageEntries} required />
 
                 {formData.type.toLowerCase() === 'wine' && (
                   <div className="border border-[var(--color-gold)]/20 p-8 relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-1 bg-[var(--color-gold)]/40"></div>
-                    <label className="block text-[10px] uppercase tracking-widest text-[#e1bd70] mb-2 font-bold">Fact Sheet PDF (Required for Wine) *</label>
+                    <label className="block text-[10px] uppercase tracking-widest text-[#e1bd70] mb-2 font-bold">
+                      Fact Sheet PDF {isInternalProductManager ? '(Optional for internal catalog)' : '(Required for Wine) *'}
+                    </label>
                     <p className="text-sm text-[var(--color-ivory-muted)] mb-6 font-light">Please upload a new official vineyard fact sheet or authentication document.</p>
                     <input 
                       type="file" 
