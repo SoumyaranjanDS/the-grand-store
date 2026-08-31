@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api';
 import { motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { Calendar, MapPin, Clock, Ticket, LogOut, User, Package, Heart, Building2, Gavel } from 'lucide-react';
@@ -22,9 +22,7 @@ export default function MyTickets() {
     const fetchTickets = async () => {
       try {
         const token = user.token;
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/events/bookings/my-tickets`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await api.get(`/events/bookings/my-tickets`);
         setTickets(res.data);
       } catch (error) {
         console.error('Failed to load tickets', error);
@@ -87,7 +85,7 @@ export default function MyTickets() {
                 {/* Event Image */}
                 <div className="lg:w-1/3 xl:w-1/4 h-48 lg:h-auto relative shrink-0">
                   {ticket.event?.image ? (
-                    <img src={`${import.meta.env.VITE_API_URL}${ticket.event.image}`} alt={ticket.event.title} className="w-full h-full object-cover" />
+                    <img src={`${ticket.event.image}`} alt={ticket.event.title} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full bg-[#1a1814]"></div>
                   )}

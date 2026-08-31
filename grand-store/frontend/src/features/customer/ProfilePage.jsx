@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 
@@ -38,9 +38,7 @@ export default function ProfilePage() {
     setIsSavingProfile(true);
     setProfileMessage(null);
     try {
-      const { data } = await axios.put(`${import.meta.env.VITE_API_URL}/api/auth/profile`, profileForm, {
-        headers: { Authorization: `Bearer ${user.token}` }
-      });
+      const { data } = await api.put(`/auth/profile`, profileForm);
       updateUser(data);
       setProfileMessage({ type: 'success', text: 'Profile updated successfully' });
       setTimeout(() => setProfileMessage(null), 3000);
@@ -59,11 +57,9 @@ export default function ProfilePage() {
     setIsSavingPassword(true);
     setPasswordMessage(null);
     try {
-      const { data } = await axios.put(`${import.meta.env.VITE_API_URL}/api/auth/profile`, {
+      const { data } = await api.put(`/auth/profile`, {
         currentPassword: passwordForm.currentPassword,
         password: passwordForm.newPassword
-      }, {
-        headers: { Authorization: `Bearer ${user.token}` }
       });
       updateUser(data);
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });

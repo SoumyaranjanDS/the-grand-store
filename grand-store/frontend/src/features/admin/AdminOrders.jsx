@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import api from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import {
   ShoppingBag,
@@ -31,19 +32,8 @@ export default function AdminOrders() {
   useEffect(() => {
     const fetchSales = async () => {
       try {
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/orders/vendor/sales`,
-          {
-            headers: {
-              Authorization: `Bearer ${user.token}`,
-            },
-          },
-        );
-        const data = await res.json();
-        if (res.ok) {
-          setShipments(data);
-        }
-
+        const res = await api.get(`/orders/vendor/sales`);
+        setShipments(res.data);
       } catch (error) {
         console.error("Failed to fetch retail orders", error);
       } finally {
@@ -58,24 +48,15 @@ export default function AdminOrders() {
   const updateStatus = async (shipmentId, status) => {
     try {
       setUpdatingId(shipmentId);
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/orders/vendor/sales/${shipmentId}/status`,
-        {
-          method: 'PATCH',
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ status }),
-        },
-      );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to update shipment');
+      const res = await api.patch(`/orders/vendor/sales/${shipmentId}/status`, { status });
+      const data = res.data;
       setShipments((current) => current.map((shipment) => (
         shipment._id === shipmentId ? { ...shipment, status: data.status } : shipment
       )));
     } catch (error) {
       console.error(error);
+      const msg = error.response?.data?.message || 'Failed to update shipment';
+      alert(msg);
     } finally {
       setUpdatingId(null);
     }

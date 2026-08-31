@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api';
 import { ChevronLeft, Gavel, PackageCheck, Heart, AlertCircle } from 'lucide-react';
 import Price from '../../components/ui/Price';
 
@@ -16,7 +16,7 @@ export default function UserAuctionDashboard() {
     const fetchDashboardData = async () => {
       try {
         const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auction/user/dashboard`, {
+        const res = await api.get(`/auction/user/dashboard`, {
           headers: { Authorization: `Bearer ${userInfo?.token}` }
         });
         setBids(res.data.activeLots);

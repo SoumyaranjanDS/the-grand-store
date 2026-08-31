@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from '../../api';
 import { useAuth } from "../../context/AuthContext";
 import { formatCartPrice } from "../../data";
 import {
@@ -34,11 +34,8 @@ export default function CustomerOrdersPage() {
     const fetchOrders = async () => {
       if (user) {
         try {
-          const { data } = await axios.get(
-            `${import.meta.env.VITE_API_URL}/api/orders/myorders`,
-            {
-              headers: { Authorization: `Bearer ${user.token}` },
-            },
+          const { data } = await api.get(
+            `/orders/myorders`,
           );
           setOrders(data);
         } catch (error) {
