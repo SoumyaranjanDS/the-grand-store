@@ -500,7 +500,7 @@ export default function AddProduct({ onNotify }) {
                       type="file" 
                       accept="application/pdf"
                       onChange={handlePdfChange}
-                      required
+                      required={!isInternalProductManager}
                       className="w-full text-sm text-[var(--color-ivory-muted)] file:mr-6 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-[10px] file:uppercase file:tracking-widest file:font-bold file:bg-white/10 file:text-[var(--color-ivory)] hover:file:bg-white/20 transition-all cursor-pointer"
                     />
                   </div>

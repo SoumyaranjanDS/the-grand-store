@@ -1,7 +1,17 @@
 import axios from 'axios';
 
+const getBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return `${import.meta.env.VITE_API_URL}/api`;
+  }
+  if (import.meta.env.PROD) {
+    return '/api'; // In production, default to the same domain if not specified
+  }
+  return 'http://localhost:5000/api'; // Local development fallback
+};
+
 const api = axios.create({
-  baseURL: `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api`,
+  baseURL: getBaseUrl(),
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',

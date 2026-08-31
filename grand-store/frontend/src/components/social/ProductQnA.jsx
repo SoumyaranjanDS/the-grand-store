@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../api';
 import { useAuth } from '../../context/AuthContext';
 
-export const ProductQnA = ({ questions = [], productId }) => {
+export const ProductQnA = ({ questions, productId }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [localQuestions, setLocalQuestions] = useState(questions);
+  const [localQuestions, setLocalQuestions] = useState(Array.isArray(questions) ? questions : []);
   const [expanded, setExpanded] = useState({});
   const [newQuestion, setNewQuestion] = useState('');
   const [replyTexts, setReplyTexts] = useState({});
@@ -18,7 +18,9 @@ export const ProductQnA = ({ questions = [], productId }) => {
   const [replyingTo, setReplyingTo] = useState('');
 
   useEffect(() => {
-    setLocalQuestions(Array.isArray(questions) ? questions : []);
+    if (questions && Array.isArray(questions)) {
+      setLocalQuestions(questions);
+    }
   }, [questions, productId]);
 
   useEffect(() => {

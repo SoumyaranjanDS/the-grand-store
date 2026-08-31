@@ -152,7 +152,15 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
 
   if (!product) return <Navigate to="/" replace />;
 
-  const gallery = [product.image, ...(product.gallery || [])].filter(Boolean).map(resolveImageUrl);
+  const gallery = [...new Set(
+    [product.image, ...(product.gallery || [])].filter(Boolean).map(resolveImageUrl)
+  )].slice(0, 5);
+  const selectedImageIndex = Math.max(0, gallery.indexOf(selectedImage));
+  const selectAdjacentImage = (direction) => {
+    if (gallery.length < 2) return;
+    const nextIndex = (selectedImageIndex + direction + gallery.length) % gallery.length;
+    setSelectedImage(gallery[nextIndex]);
+  };
   const relatedProducts = products
     .filter((item) => item.id !== product.id)
     .slice(0, 4);
@@ -279,6 +287,30 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
               alt={product.fullName || product.name}
               className="relative z-10 max-w-full max-h-full object-contain"
             />
+
+            {gallery.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => selectAdjacentImage(-1)}
+                  className="absolute left-2 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/70 text-white transition-colors hover:border-[#c9a35b] hover:text-[#c9a35b] sm:left-4"
+                  aria-label="Previous product image"
+                >
+                  <ChevronLeft size={22} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => selectAdjacentImage(1)}
+                  className="absolute right-2 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/70 text-white transition-colors hover:border-[#c9a35b] hover:text-[#c9a35b] sm:right-4"
+                  aria-label="Next product image"
+                >
+                  <ChevronRight size={22} />
+                </button>
+                <span className="absolute bottom-3 right-3 z-20 rounded-full bg-black/75 px-3 py-1 text-[10px] font-bold tracking-widest text-white/70">
+                  {selectedImageIndex + 1}/{gallery.length}
+                </span>
+              </>
+            )}
           </div>
 
           {/* Thumbnails underneath */}
