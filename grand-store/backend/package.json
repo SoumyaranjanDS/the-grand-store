@@ -9,6 +9,7 @@
     "test": "node --test test/payfast-itn.test.js",
     "catalog:import": "node scripts/importFrontendProductWorkbooks.js",
     "catalog:wine": "node scripts/seedWine.js",
+    "catalog:wine-images": "node scripts/seedWineImages.js",
     "catalog:images": "node scripts/syncNgfProductImages.js",
     "catalog:backgrounds": "node scripts/processProductBackgrounds.js"
   },

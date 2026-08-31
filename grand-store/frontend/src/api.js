@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const getBaseUrl = () => {
-  if (import.meta.env.VITE_API_URL) {
+  if (import.meta.env.VITE_API_URL && !(import.meta.env.PROD && import.meta.env.VITE_API_URL.includes('localhost'))) {
     return `${import.meta.env.VITE_API_URL}/api`;
   }
   if (import.meta.env.PROD) {
