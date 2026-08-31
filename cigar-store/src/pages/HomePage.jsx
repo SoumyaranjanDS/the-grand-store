@@ -11,6 +11,7 @@ import HorizontalPosterSection from '../sections/HorizontalPosterSection';
 import NewsletterSection from '../sections/NewsletterSection';
 import SiteFooter from '../sections/SiteFooter';
 import { mosiProducts, featuredMosiProducts } from '../data/homeContent';
+import LuxuryBannerSection from '../sections/LuxuryBannerSection';
 
 function HomePage() {
   return (
@@ -29,6 +30,7 @@ function HomePage() {
         <MosiSection />
         <MosiPosterSection />
         <MosiGallerySection />
+        <LuxuryBannerSection />
         <ProductShowcase
           id="featured-products"
           eyebrow="From the humidor"

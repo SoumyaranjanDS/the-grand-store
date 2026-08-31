@@ -64,6 +64,9 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
   const selectedSubcategories = searchParams
     .getAll("subcategory")
     .filter(isVisibleFilterValue);
+  const selectedStyles = searchParams
+    .getAll("style")
+    .filter(isVisibleFilterValue);
   const selectedBrands = searchParams
     .getAll("brand")
     .filter(isVisibleFilterValue);
@@ -143,10 +146,20 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
   const minP = minPrice ? Number(minPrice) : 0;
   const maxP = maxPriceInput ? Number(maxPriceInput) : maxPrice;
 
+  const WINE_STYLES = {
+    Red: ['Cabernet Sauvignon', 'Merlot', 'Pinot Noir', 'Shiraz / Syrah', 'Malbec', 'Tempranillo', 'Zinfandel', 'Rhone Blend', 'Grenache'],
+    White: ['Chardonnay', 'Chenin Blanc', 'Sauvignon Blanc', 'Riesling', 'White Blend'],
+    Sparkling: ['Cava', 'Prosecco', 'General Sparkling Wine', 'Non-Alcoholic Sparkling White Wine Alternative', 'Non-Alcoholic Sparkling Red Wine', 'Champagne'],
+    Rose: ['Rosé', 'Non-Alcoholic Rosé Wine'],
+    Fortified: ['Port', 'Sherry', 'Madeira', 'Vermouth', 'Late Harvest Wine', 'Ice Wine', 'Sauternes', 'Moscato']
+  };
+
   let filteredProducts = shopProducts.filter((product) => {
+    const matchesStyle = selectedStyles.length === 0 || selectedStyles.some(style => WINE_STYLES[style]?.includes(product.subcategory));
     return (
       (!selectedCategories.length ||
         selectedCategories.includes(getProductCategory(product))) &&
+      matchesStyle &&
       (!selectedSubcategories.length || selectedSubcategories.includes(product.subcategory)) &&
       (!selectedBrands.length || selectedBrands.includes(product.brand)) &&
       (!selectedCountries.length || selectedCountries.includes(product.country)) &&

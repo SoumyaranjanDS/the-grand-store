@@ -26,7 +26,7 @@ export default function AdvertisedProductDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-32 pb-20 bg-black flex items-center justify-center">
+      <div className="min-h-screen pt-32 pb-20 bg-[#0a0907] flex items-center justify-center">
         <div className="text-[var(--color-ivory)]">Loading product details...</div>
       </div>
     );
@@ -34,9 +34,9 @@ export default function AdvertisedProductDetail() {
 
   if (error || !product) {
     return (
-      <div className="min-h-screen pt-32 pb-20 bg-black flex items-center justify-center flex-col">
+      <div className="min-h-screen pt-32 pb-20 bg-[#0a0907] flex items-center justify-center flex-col">
         <div className="text-red-500 mb-4">{error || 'Product not found'}</div>
-        <Link to="/" className="text-[#c9a35b] hover:text-white uppercase tracking-widest text-xs">Return Home</Link>
+        <Link to="/" className="text-[#e1bd70] hover:text-white uppercase tracking-widest text-xs">Return Home</Link>
       </div>
     );
   }
@@ -50,10 +50,10 @@ export default function AdvertisedProductDetail() {
   };
 
   return (
-    <div className="min-h-screen pt-32 pb-20 bg-black">
+    <div className="min-h-screen pt-32 pb-20 bg-[#0a0907]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <Link to="/" className="inline-flex items-center gap-2 text-[#c9a35b] hover:text-white mb-8 transition-colors text-xs uppercase tracking-widest">
+        <Link to="/" className="inline-flex items-center gap-2 text-[#e1bd70] hover:text-white mb-8 transition-colors text-xs uppercase tracking-widest">
           <ArrowLeft size={16} /> Back to Discover
         </Link>
 
@@ -61,7 +61,7 @@ export default function AdvertisedProductDetail() {
           
           {/* Left: Image Gallery */}
           <div className="space-y-4">
-            <div className="aspect-square bg-[#0a0a0a] border border-white/5 rounded-2xl overflow-hidden relative group">
+            <div className="aspect-square bg-[#11100d] border border-white/5 rounded-2xl overflow-hidden relative group">
               {product.images && product.images.length > 0 ? (
                 <>
                   <img 
@@ -101,7 +101,7 @@ export default function AdvertisedProductDetail() {
                     key={index}
                     onClick={() => setCurrentImageIndex(index)}
                     className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${
-                      currentImageIndex === index ? 'border-[#c9a35b]' : 'border-transparent hover:border-white/20'
+                      currentImageIndex === index ? 'border-[#e1bd70]' : 'border-transparent hover:border-white/20'
                     }`}
                   >
                     <img src={img} alt={`${product.title} ${index + 1}`} className="w-full h-full object-cover" />
@@ -115,20 +115,20 @@ export default function AdvertisedProductDetail() {
           <div className="flex flex-col h-full">
             <div className="mb-8">
               {product.category && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#c9a35b]/10 text-[#c9a35b] border border-[#c9a35b]/20 rounded-full text-[10px] uppercase tracking-widest font-bold mb-4">
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#e1bd70]/10 text-[#e1bd70] border border-[#e1bd70]/20 rounded-full text-[10px] uppercase tracking-widest font-bold mb-4">
                   <Tag size={12} /> {product.category}
                 </span>
               )}
               <h1 className="text-4xl md:text-5xl font-serif text-[var(--color-ivory)] mb-2 leading-tight">
                 {product.title}
               </h1>
-              <p className="text-sm uppercase tracking-widest text-[#c9a35b] font-bold">
+              <p className="text-sm uppercase tracking-widest text-[#e1bd70] font-bold">
                 By {product.brand}
               </p>
             </div>
 
             {product.tagline && (
-              <div className="text-xl text-[var(--color-ivory-muted)] italic font-serif mb-8 border-l-2 border-[#c9a35b] pl-4">
+              <div className="text-xl text-[var(--color-ivory-muted)] italic font-serif mb-8 border-l-2 border-[#e1bd70] pl-4">
                 "{product.tagline}"
               </div>
             )}
@@ -156,7 +156,7 @@ export default function AdvertisedProductDetail() {
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {product.features.map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-2 text-[var(--color-ivory)] text-sm">
-                      <span className="text-[#c9a35b] mt-1">•</span>
+                      <span className="text-[#e1bd70] mt-1">•</span>
                       <span>{feature}</span>
                     </li>
                   ))}
@@ -170,7 +170,7 @@ export default function AdvertisedProductDetail() {
                   href={product.linkUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#c9a35b] text-black hover:bg-white font-bold uppercase tracking-widest text-sm rounded-xl transition-colors"
+                  className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#e1bd70] text-black hover:bg-white font-bold uppercase tracking-widest text-sm rounded-xl transition-colors"
                 >
                   Visit Official Website <ExternalLink size={18} />
                 </a>

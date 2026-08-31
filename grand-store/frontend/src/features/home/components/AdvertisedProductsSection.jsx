@@ -21,7 +21,7 @@ const ProductCard = ({ product }) => {
   };
 
   return (
-    <div className="group relative flex flex-col h-full bg-[#11100d] border border-white/5 hover:border-[#c9a35b]/30 transition-all duration-700 overflow-hidden">
+    <div className="group relative flex flex-col h-full bg-[#11100d] border border-white/5 hover:border-[#e1bd70]/30 transition-all duration-700 overflow-hidden">
       
       {/* Image Carousel */}
       <div className="relative h-[280px] overflow-hidden bg-[#0a0907] group/carousel flex items-center justify-center">
@@ -45,13 +45,13 @@ const ProductCard = ({ product }) => {
           <>
             <button 
               onClick={prevImage}
-              className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-black/40 backdrop-blur-sm text-white rounded-full opacity-0 group-hover/carousel:opacity-100 hover:bg-[#c9a35b] hover:text-black transition-all duration-300 z-20"
+              className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-black/40 backdrop-blur-sm text-white rounded-full opacity-0 group-hover/carousel:opacity-100 hover:bg-[#e1bd70] hover:text-black transition-all duration-300 z-20"
             >
               <ChevronLeft size={16} />
             </button>
             <button 
               onClick={nextImage}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-black/40 backdrop-blur-sm text-white rounded-full opacity-0 group-hover/carousel:opacity-100 hover:bg-[#c9a35b] hover:text-black transition-all duration-300 z-20"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-black/40 backdrop-blur-sm text-white rounded-full opacity-0 group-hover/carousel:opacity-100 hover:bg-[#e1bd70] hover:text-black transition-all duration-300 z-20"
             >
               <ChevronRight size={16} />
             </button>
@@ -61,7 +61,7 @@ const ProductCard = ({ product }) => {
               {images.map((_, i) => (
                 <div 
                   key={i} 
-                  className={`h-[2px] transition-all duration-300 ${i === currentIndex ? 'bg-[#c9a35b] w-6' : 'bg-white/40 w-2'}`}
+                  className={`h-[2px] transition-all duration-300 ${i === currentIndex ? 'bg-[#e1bd70] w-6' : 'bg-white/40 w-2'}`}
                 />
               ))}
             </div>
@@ -71,7 +71,7 @@ const ProductCard = ({ product }) => {
         {/* Badges */}
         <div className="absolute top-4 left-4 flex flex-col gap-2 z-10 pointer-events-none">
           {product.category && (
-            <div className="bg-black/60 backdrop-blur-md border border-white/10 px-3 py-1 text-[9px] text-[#c9a35b] uppercase tracking-[0.2em] font-bold">
+            <div className="bg-black/60 backdrop-blur-md border border-white/10 px-3 py-1 text-[9px] text-[#e1bd70] uppercase tracking-[0.2em] font-bold">
               {product.category}
             </div>
           )}
@@ -87,18 +87,18 @@ const ProductCard = ({ product }) => {
       <div className="p-6 flex-1 flex flex-col relative bg-[#11100d]">
         {/* Price Tag positioned beautifully overlapping the image line */}
         {product.price && (
-          <div className="absolute -top-5 right-6 bg-[#c9a35b] text-black px-3 py-2 text-xs font-bold tracking-wider rounded-sm shadow-2xl">
+          <div className="absolute -top-5 right-6 bg-[#e1bd70] text-black px-3 py-2 text-xs font-bold tracking-wider rounded-sm shadow-2xl">
             {product.price}
           </div>
         )}
 
         {product.tagline && (
-          <p className="text-[11px] text-[#c9a35b] uppercase tracking-widest font-bold mb-3">
+          <p className="text-[11px] text-[#e1bd70] uppercase tracking-widest font-bold mb-3">
             {product.tagline}
           </p>
         )}
         
-        <h3 className="text-2xl font-serif text-[var(--color-ivory)] mb-3 leading-tight group-hover:text-[#c9a35b] transition-colors duration-500">
+        <h3 className="text-2xl font-serif text-[var(--color-ivory)] mb-3 leading-tight group-hover:text-[#e1bd70] transition-colors duration-500">
           <Link to={`/discover/${product._id}`} className="hover:underline decoration-1 underline-offset-4">
             {product.title}
           </Link>
@@ -112,7 +112,7 @@ const ProductCard = ({ product }) => {
         <div className="flex items-center justify-between mt-auto pt-5 border-t border-white/5">
           <Link 
             to={`/discover/${product._id}`}
-            className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] font-bold text-white hover:text-[#c9a35b] transition-colors group/link"
+            className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] font-bold text-white hover:text-[#e1bd70] transition-colors group/link"
           >
             View Details 
             <ArrowRight size={14} className="group-hover/link:translate-x-1 transition-transform" />
@@ -159,7 +159,7 @@ export default function AdvertisedProductsSection() {
   return (
     <section className="section home-advertised-products home-product-editorial relative" id="advertised">
       {/* Background Glow */}
-      <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[#c9a35b]/5 pointer-events-none rounded-full blur-[120px] opacity-60 z-0"></div>
+      <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[#e1bd70]/5 pointer-events-none rounded-full blur-[120px] opacity-60 z-0"></div>
 
       <div className="shell relative z-10">
         <div className="section-heading flex flex-col items-center text-center md:flex-row md:text-left md:justify-between md:items-end gap-3 md:gap-0">
@@ -179,12 +179,12 @@ export default function AdvertisedProductsSection() {
 
         {products.length === 0 ? (
           <div className="bg-[#11100d] border border-white/5 p-16 text-center mt-8 relative overflow-hidden">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(201,163,91,0.05),transparent_70%)] pointer-events-none"></div>
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(225,189,112,0.05),transparent_70%)] pointer-events-none"></div>
             <h3 className="text-3xl font-serif text-[var(--color-ivory)] mb-4 relative z-10">Feature Your Legacy</h3>
             <p className="text-[var(--color-ivory-muted)] mb-8 max-w-md mx-auto relative z-10">
               Be the first to showcase your luxury brand to our exclusive audience of connoisseurs and collectors.
             </p>
-            <Link className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] font-bold text-black bg-[#c9a35b] hover:bg-white px-8 py-4 transition-colors relative z-10" to="/advertise">
+            <Link className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] font-bold text-black bg-[#e1bd70] hover:bg-white px-8 py-4 transition-colors relative z-10" to="/advertise">
               Start Campaign <ArrowRight size={14} />
             </Link>
           </div>

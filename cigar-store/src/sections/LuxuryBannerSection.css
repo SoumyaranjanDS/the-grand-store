@@ -1,0 +1,98 @@
+.luxury-banner-section {
+  width: 100%;
+  background-color: #0b110a; /* Dark background matching the image aesthetic if needed */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 2rem 0;
+}
+
+.luxury-banner-container {
+  position: relative;
+  width: 100%;
+  max-width: 1400px; /* Limit max width for ultra-wide screens */
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.luxury-banner-bg {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.luxury-banner-container:hover .luxury-banner-bg {
+  transform: scale(1.02);
+}
+
+.luxury-banner-content {
+  position: absolute;
+  right: 5%;
+  top: 50%;
+  transform: translateY(-50%);
+  text-align: right;
+  color: #cbb88a; /* Gold-like text color matching the user's reference */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; /* Fallback for a clean look */
+  text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
+  pointer-events: none; /* Let clicks pass through to the container */
+}
+
+.luxury-banner-title {
+  font-size: 2.5rem;
+  font-weight: 300;
+  line-height: 1.2;
+  margin: 0 0 1.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.luxury-banner-subtitle {
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 3px;
+  margin: 0 0 2rem 0;
+}
+
+.luxury-banner-button {
+  background-color: #8c7335;
+  color: #fff;
+  border: none;
+  padding: 12px 32px;
+  font-size: 1rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+  border-radius: 30px;
+  text-transform: uppercase;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  transition: background-color 0.3s ease;
+  pointer-events: auto; /* Clickable button inside the container */
+}
+
+.luxury-banner-container:hover .luxury-banner-button {
+  background-color: #9c8446;
+}
+
+/* Media Queries for responsiveness */
+@media (max-width: 768px) {
+  .luxury-banner-content {
+    right: 50%;
+    transform: translate(50%, -50%);
+    text-align: center;
+    align-items: center;
+    width: 90%;
+    background: rgba(0,0,0,0.4);
+    padding: 2rem;
+    border-radius: 10px;
+  }
+  
+  .luxury-banner-title {
+    font-size: 1.8rem;
+  }
+}

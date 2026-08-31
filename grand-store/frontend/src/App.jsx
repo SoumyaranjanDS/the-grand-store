@@ -17,6 +17,7 @@ import Arrivals from './features/home/components/Arrivals'
 import WhiskyShowcase from './features/home/components/WhiskyShowcase'
 import TastingCampaign from './features/home/components/TastingCampaign'
 import TequilaShowcase from './features/home/components/TequilaShowcase'
+import WineCategoryShowcase from './features/home/components/WineCategoryShowcase'
 import BrandyShowcase from './features/home/components/BrandyShowcase'
 import CategoryShowcase from './features/home/components/CategoryShowcase'
 import PrivateCollection from './features/home/components/PrivateCollection'
@@ -25,6 +26,8 @@ import AdvertisedProductsSection from './features/home/components/AdvertisedProd
 import PartnerDestinations from './features/home/components/PartnerDestinations'
 import WhyChooseUs from './features/home/components/WhyChooseUs'
 import Testimonials from './features/home/components/Testimonials'
+import LuxuryBannerSection from './features/home/components/LuxuryBannerSection'
+import AuctionCampaign from './features/home/components/AuctionCampaign'
 import AdminProducts from './features/admin/AdminProducts'
 import AdminOrders from './features/admin/AdminOrders'
 import LatestBlogs from './features/home/components/LatestBlogs'
@@ -447,6 +450,7 @@ function App() {
                 onCompare={addToCompare}
                 compareItems={compareItems}
               />
+              <WineCategoryShowcase />
               <BrandyShowcase
                 onAdd={addToCart}
                 onWish={handleWishlist}
@@ -463,6 +467,7 @@ function App() {
                 onCompare={addToCompare}
                 compareItems={compareItems}
               />
+              <LuxuryBannerSection />
               <CategoryShowcase
                 categoryId="Champagne"
                 title="Top Champagne"
@@ -483,6 +488,7 @@ function App() {
                 onCompare={addToCompare}
                 compareItems={compareItems}
               />
+              <AuctionCampaign />
               <CategoryShowcase
                 categoryId="Gin"
                 title="Top Gin"

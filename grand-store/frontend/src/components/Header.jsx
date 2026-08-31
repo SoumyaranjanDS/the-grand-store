@@ -48,7 +48,7 @@ export default function Header({
   const navigate = useNavigate();
   const location = useLocation();
   const { products } = useProducts();
-  const { country_code, countries, changeCountry } = useGeoLocation();
+  const { country_code, countries, changeCountry, isLoading: geoLoading } = useGeoLocation();
   const { currency, availableCurrencies, changeCurrency, loading: currencyLoading } = useCurrency();
 
   const countryOptions = useMemo(() => countries.map((country) => ({
@@ -294,19 +294,20 @@ export default function Header({
           <div className="announcement-actions announcement-actions--desktop font-bold tracking-widest uppercase text-[10px]">
             <LocaleSelector
               ariaLabel="Shopping country"
-              value={country_code || "ZA"}
-              options={countryOptions}
+              value={geoLoading ? "FETCHING" : (country_code || "ZA")}
+              options={geoLoading ? [{ value: "FETCHING", label: "Fetching...", flagCode: "ZA" }] : countryOptions}
               onChange={changeCountry}
               searchPlaceholder="Search countries..."
+              disabled={geoLoading}
             />
             <span className="top-rule bg-black/20 mx-2" />
             <LocaleSelector
               ariaLabel="Display currency"
-              value={currency || "ZAR"}
-              options={currencyOptions}
+              value={currencyLoading || geoLoading ? "FETCHING" : (currency || "ZAR")}
+              options={currencyLoading || geoLoading ? [{ value: "FETCHING", label: "Fetching...", icon: '¤' }] : currencyOptions}
               onChange={changeCurrency}
               searchPlaceholder="Search currencies..."
-              disabled={currencyLoading}
+              disabled={currencyLoading || geoLoading}
               compact
             />
           </div>
@@ -1170,10 +1171,11 @@ export default function Header({
                         <span className="drawer-locale-label">Country</span>
                         <LocaleSelector
                           ariaLabel="Shopping country"
-                          value={country_code || "ZA"}
-                          options={countryOptions}
+                          value={geoLoading ? "FETCHING" : (country_code || "ZA")}
+                          options={geoLoading ? [{ value: "FETCHING", label: "Fetching...", flagCode: "ZA" }] : countryOptions}
                           onChange={changeCountry}
                           searchPlaceholder="Search countries..."
+                          disabled={geoLoading}
                           embedded
                         />
                       </div>
@@ -1181,11 +1183,11 @@ export default function Header({
                         <span className="drawer-locale-label">Currency</span>
                         <LocaleSelector
                           ariaLabel="Display currency"
-                          value={currency || "ZAR"}
-                          options={currencyOptions}
+                          value={currencyLoading || geoLoading ? "FETCHING" : (currency || "ZAR")}
+                          options={currencyLoading || geoLoading ? [{ value: "FETCHING", label: "Fetching...", icon: '¤' }] : currencyOptions}
                           onChange={changeCurrency}
                           searchPlaceholder="Search currencies..."
-                          disabled={currencyLoading}
+                          disabled={currencyLoading || geoLoading}
                           embedded
                         />
                       </div>

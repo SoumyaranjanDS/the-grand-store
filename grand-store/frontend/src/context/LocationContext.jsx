@@ -51,18 +51,18 @@ export function LocationProvider({ children }) {
       try {
         let data;
         try {
-          const response = await axios.get('https://ipapi.co/json/');
-          if (response.data.error) throw new Error(response.data.reason || 'ipapi.co error');
-          data = response.data;
-        } catch (err) {
-          console.warn('ipapi.co failed, falling back to ipwho.is', err);
-          const fallbackRes = await axios.get('https://ipwho.is/');
-          if (!fallbackRes.data.success) throw new Error('ipwho.is error');
+          const response = await axios.get('https://freeipapi.com/api/json');
+          if (!response.data || !response.data.countryCode) throw new Error('freeipapi error');
           data = {
-            country_code: fallbackRes.data.country_code,
-            country_name: fallbackRes.data.country,
-            currency: fallbackRes.data.currency?.code
+            country_code: response.data.countryCode,
+            country_name: response.data.countryName,
+            currency: response.data.currencies?.[0] || 'ZAR'
           };
+        } catch (err) {
+          console.warn('freeipapi failed, falling back to ipapi.co', err);
+          const fallbackRes = await axios.get('https://ipapi.co/json/');
+          if (fallbackRes.data.error) throw new Error('ipapi.co error');
+          data = fallbackRes.data;
         }
 
         setLocation({
