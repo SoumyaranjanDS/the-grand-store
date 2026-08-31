@@ -49,8 +49,22 @@ export function LocationProvider({ children }) {
       }
 
       try {
-        const response = await axios.get('https://ipapi.co/json/');
-        const data = response.data;
+        let data;
+        try {
+          const response = await axios.get('https://ipapi.co/json/');
+          if (response.data.error) throw new Error(response.data.reason || 'ipapi.co error');
+          data = response.data;
+        } catch (err) {
+          console.warn('ipapi.co failed, falling back to ipwho.is', err);
+          const fallbackRes = await axios.get('https://ipwho.is/');
+          if (!fallbackRes.data.success) throw new Error('ipwho.is error');
+          data = {
+            country_code: fallbackRes.data.country_code,
+            country_name: fallbackRes.data.country,
+            currency: fallbackRes.data.currency?.code
+          };
+        }
+
         setLocation({
           country_code: data.country_code,
           country_name: data.country_name,
@@ -60,7 +74,7 @@ export function LocationProvider({ children }) {
           error: null
         });
       } catch (err) {
-        console.error('IP Geolocation error:', err);
+        console.error('IP Geolocation completely failed:', err);
         setLocation({
           country_code: 'ZA', // Default to SA if API fails
           country_name: 'South Africa',
