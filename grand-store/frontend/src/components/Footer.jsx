@@ -16,17 +16,27 @@ export default function Footer() {
       let country = 'Unknown';
       let ipAddress = 'Unknown';
       try {
-        const geoResponse = await fetch('https://ipapi.co/json/');
-        const geoData = await geoResponse.json();
-        if (geoData.country_name) {
-          country = geoData.country_name;
-          ipAddress = geoData.ip;
+        // Cloudflare Trace is extremely fast and rarely blocked by AdBlockers
+        const cfResponse = await fetch('https://1.1.1.1/cdn-cgi/trace');
+        const cfText = await cfResponse.text();
+        
+        const cfData = {};
+        cfText.trim().split('\n').forEach(line => {
+          const [key, value] = line.split('=');
+          cfData[key] = value;
+        });
+
+        if (cfData.ip && cfData.loc) {
+          ipAddress = cfData.ip;
+          const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+          country = regionNames.of(cfData.loc) || cfData.loc;
         } else {
-          const backupResponse = await fetch('https://ipwho.is/');
-          const backupData = await backupResponse.json();
-          if (backupData.success) {
-            country = backupData.country;
-            ipAddress = backupData.ip;
+          // Fallback if Cloudflare fails
+          const geoResponse = await fetch('https://ipapi.co/json/');
+          const geoData = await geoResponse.json();
+          if (geoData.country_name) {
+            country = geoData.country_name;
+            ipAddress = geoData.ip;
           }
         }
       } catch (e) {
