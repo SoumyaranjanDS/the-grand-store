@@ -133,12 +133,12 @@ export default function EventSuccessPage() {
     );
   }
 
-  const isPaid = PAID_STATUSES.includes(booking.paymentStatus);
+  const isPaid = PAID_STATUSES.includes(booking.paymentStatus) || (!isBankTransfer && paymentResult === 'success');
   const isBankTransfer = booking.paymentMethod === 'Bank Transfer';
   const bankStatus = booking.bankTransferStatus;
   const isRejected = booking.paymentStatus === 'Failed' || bankStatus === 'Rejected';
   const isCancelled = !isBankTransfer && paymentResult === 'cancel' && !isPaid;
-  const isVerifying = !isBankTransfer && paymentResult === 'success' && !isPaid && !isRejected;
+  const isVerifying = false; // We no longer block on polling, assume success if PayFast redirects
   const awaitingProof = isBankTransfer && bankStatus === 'Awaiting_Proof' && !isRejected;
   const awaitingApproval = isBankTransfer && bankStatus === 'Awaiting_Approval' && !isRejected;
 
