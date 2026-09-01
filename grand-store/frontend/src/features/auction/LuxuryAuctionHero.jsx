@@ -4,6 +4,7 @@ import api from '../../api';
 import { ArrowRight, Clock, ShieldCheck, ChevronDown, Check } from 'lucide-react';
 import AuctionCountdown from './AuctionCountdown';
 import { getAuctionPhase, getAuctionTargetTime } from './auctionPhase';
+import Price from '../../components/ui/Price';
 
 export default function LuxuryAuctionHero({ lots, now, onNotify, onRefresh }) {
   if (!lots || lots.length === 0) return null;
@@ -152,8 +153,7 @@ function LuxuryAuctionSlide({ lot, now, index, total, onNotify, onRefresh }) {
                     <span className={`w-1.5 h-1.5 rounded-full ${isUpcoming ? 'bg-blue-500' : 'bg-red-500 animate-pulse'}`} /> {isUpcoming ? 'Starting Bid' : 'Current Bid'}
                   </p>
                   <div className="text-4xl md:text-5xl font-serif font-bold text-[var(--color-ivory)]">
-                    <span className="text-2xl text-[var(--color-ivory-muted)] mr-2">ZAR</span>
-                    {lot.currentBid ? lot.currentBid.toLocaleString('en-ZA') : (lot.startingBid ? lot.startingBid.toLocaleString('en-ZA') : '0')}
+                    <Price amount={lot.currentBid || lot.startingBid || 0} />
                   </div>
                </div>
                <div className="text-left sm:text-right">

@@ -53,13 +53,13 @@ export default function AuctionLotCard({ lot, endTime, now, saved, onSave, onBid
             <div>
               <div className="text-[9px] uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1 font-semibold">Starting Bid</div>
               <div className="text-sm font-serif opacity-70 line-through decoration-white/20 flex items-center whitespace-nowrap">
-                <span>ZA</span><Price amount={lot.startingBid || 0} />
+                <Price amount={lot.startingBid || 0} />
               </div>
             </div>
             <div className="text-right">
               <div className="text-[9px] uppercase tracking-widest text-[#c9a35b] mb-1 font-semibold">Current Bid</div>
               <div className="text-xl font-serif font-bold text-[#c9a35b] flex items-center justify-end whitespace-nowrap">
-                <span>ZA</span><Price amount={lot.currentBid || lot.startingBid || 0} />
+                <Price amount={lot.currentBid || lot.startingBid || 0} />
               </div>
             </div>
           </div>

@@ -406,11 +406,13 @@ const processEventPayment = async (bookingId, gatewayDetails = {}) => {
         { gsReference: `GS-${transactionYear}-EVT-VAT-${seq}`, type: "vat", module: "events", amount: booking.vatAmount, netAmount: booking.vatAmount, customer: booking.user, vendor: booking.vendor, status: "cleared", description: `Event VAT - ${event.title}` },
         { gsReference: `GS-${transactionYear}-EVT-PAYABLE-${seq}`, type: "payout", module: "events", amount: booking.organizerPayable, netAmount: booking.organizerPayable, customer: booking.user, vendor: booking.vendor, status: "pending", description: `Event Vendor Payable - ${event.title}` },
       ], { session });
-      await Wallet.findOneAndUpdate(
-        { vendorId: booking.vendor },
-        { $setOnInsert: { vendorId: booking.vendor }, $inc: { pendingBalance: booking.organizerPayable, totalEarned: booking.organizerPayable } },
-        { upsert: true, session },
-      );
+      if (booking.vendor) {
+        await Wallet.findOneAndUpdate(
+          { vendorId: booking.vendor },
+          { $setOnInsert: { vendorId: booking.vendor }, $inc: { pendingBalance: booking.organizerPayable, totalEarned: booking.organizerPayable } },
+          { upsert: true, session },
+        );
+      }
       result = { processed: true, booking, event };
     });
   } finally {
