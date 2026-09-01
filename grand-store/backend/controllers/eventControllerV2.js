@@ -357,66 +357,64 @@ const bookEvent = async (req, res) => {
 };
 
 const processEventPayment = async (bookingId, gatewayDetails = {}) => {
-  const session = await mongoose.startSession();
   let result = { processed: false };
   try {
-    await session.withTransaction(async () => {
-      const booking = await Booking.findById(bookingId).session(session);
-      if (!booking) throw new Error("Event booking not found");
-      if (
-        PAID_PAYMENT_STATUSES.includes(booking.paymentStatus) &&
-        (booking.inventoryStatus === "sold" || ["Valid", "Used"].includes(booking.ticketStatus))
-      ) {
-        result = { processed: false, booking };
-        return;
-      }
-      if (booking.paymentStatus === "Refunded") throw new Error("Refunded bookings cannot be paid again");
+    const booking = await Booking.findById(bookingId);
+    if (!booking) throw new Error("Event booking not found");
+    if (
+      PAID_PAYMENT_STATUSES.includes(booking.paymentStatus) &&
+      (booking.inventoryStatus === "sold" || ["Valid", "Used"].includes(booking.ticketStatus))
+    ) {
+      result = { processed: false, booking };
+      return;
+    }
+    if (booking.paymentStatus === "Refunded") throw new Error("Refunded bookings cannot be paid again");
 
-      const event = await Event.findById(booking.event).session(session);
-      if (!event) throw new Error("Event not found for booking");
-      const tier = booking.ticketTierId
-        ? event.ticketTiers.id(booking.ticketTierId)
-        : event.ticketTiers.find((item) => item.name === booking.ticketType);
-      if (!tier) throw new Error("Ticket tier no longer exists");
+    const event = await Event.findById(booking.event);
+    if (!event) throw new Error("Event not found for booking");
+    const tier = booking.ticketTierId
+      ? event.ticketTiers.id(booking.ticketTierId)
+      : event.ticketTiers.find((item) => item.name === booking.ticketType);
+    if (!tier) throw new Error("Ticket tier no longer exists");
 
-      if (booking.inventoryStatus === "reserved") {
-        if ((tier.reserved || 0) < booking.quantity) throw new Error("Reserved ticket inventory is inconsistent");
-        tier.reserved -= booking.quantity;
-      } else {
-        const available = tier.quantity - (tier.sold || 0) - (tier.reserved || 0);
-        if (available < booking.quantity) throw new Error("Ticket inventory is no longer available");
-      }
-      tier.sold = (tier.sold || 0) + booking.quantity;
-      await event.save({ session });
+    if (booking.inventoryStatus === "reserved") {
+      if ((tier.reserved || 0) < booking.quantity) throw new Error("Reserved ticket inventory is inconsistent");
+      tier.reserved -= booking.quantity;
+    } else {
+      const available = tier.quantity - (tier.sold || 0) - (tier.reserved || 0);
+      if (available < booking.quantity) throw new Error("Ticket inventory is no longer available");
+    }
+    tier.sold = (tier.sold || 0) + booking.quantity;
+    await event.save();
 
-      booking.paymentStatus = "Paid";
-      booking.ticketStatus = "Valid";
-      booking.inventoryStatus = "sold";
-      if (booking.paymentMethod === "Bank Transfer") booking.bankTransferStatus = "Approved";
-      booking.paymentProcessedAt = new Date();
-      booking.gatewayTransactionId = gatewayDetails.gatewayTransactionId || "";
-      await booking.save({ session });
+    booking.paymentStatus = "Paid";
+    booking.ticketStatus = "Valid";
+    booking.inventoryStatus = "sold";
+    if (booking.paymentMethod === "Bank Transfer") booking.bankTransferStatus = "Approved";
+    booking.paymentProcessedAt = new Date();
+    booking.gatewayTransactionId = gatewayDetails.gatewayTransactionId || "";
+    await booking.save();
 
-      const seqNum = await getNextSequence("eventTransaction");
-      const seq = seqNum.toString().padStart(6, "0");
-      const transactionYear = new Date().getFullYear().toString().slice(-2);
-      await Transaction.create([
-        { gsReference: `GS-${transactionYear}-EVT-TXN-${seq}`, type: "payment", module: "events", amount: booking.totalPrice, netAmount: Number((booking.totalPrice * 0.975).toFixed(2)), customer: booking.user, vendor: booking.vendor, gatewayTransactionId: booking.gatewayTransactionId, status: "cleared", description: `Event Ticket Purchase - ${event.title}` },
-        { gsReference: `GS-${transactionYear}-EVT-COM-${seq}`, type: "commission", module: "events", amount: booking.commissionAmount, netAmount: booking.commissionAmount, customer: booking.user, vendor: booking.vendor, status: "cleared", description: `Event Commission - ${event.title}` },
-        { gsReference: `GS-${transactionYear}-EVT-VAT-${seq}`, type: "vat", module: "events", amount: booking.vatAmount, netAmount: booking.vatAmount, customer: booking.user, vendor: booking.vendor, status: "cleared", description: `Event VAT - ${event.title}` },
-        { gsReference: `GS-${transactionYear}-EVT-PAYABLE-${seq}`, type: "payout", module: "events", amount: booking.organizerPayable, netAmount: booking.organizerPayable, customer: booking.user, vendor: booking.vendor, status: "pending", description: `Event Vendor Payable - ${event.title}` },
-      ], { session });
-      if (booking.vendor) {
-        await Wallet.findOneAndUpdate(
-          { vendorId: booking.vendor },
-          { $setOnInsert: { vendorId: booking.vendor }, $inc: { pendingBalance: booking.organizerPayable, totalEarned: booking.organizerPayable } },
-          { upsert: true, session },
-        );
-      }
-      result = { processed: true, booking, event };
-    });
-  } finally {
-    await session.endSession();
+    const seqNum = await getNextSequence("eventTransaction");
+    const seq = seqNum.toString().padStart(6, "0");
+    const transactionYear = new Date().getFullYear().toString().slice(-2);
+    await Transaction.create([
+      { gsReference: `GS-${transactionYear}-EVT-TXN-${seq}`, type: "payment", module: "events", amount: booking.totalPrice, netAmount: Number((booking.totalPrice * 0.975).toFixed(2)), customer: booking.user, vendor: booking.vendor, gatewayTransactionId: booking.gatewayTransactionId, status: "cleared", description: `Event Ticket Purchase - ${event.title}` },
+      { gsReference: `GS-${transactionYear}-EVT-COM-${seq}`, type: "commission", module: "events", amount: booking.commissionAmount, netAmount: booking.commissionAmount, customer: booking.user, vendor: booking.vendor, status: "cleared", description: `Event Commission - ${event.title}` },
+      { gsReference: `GS-${transactionYear}-EVT-VAT-${seq}`, type: "vat", module: "events", amount: booking.vatAmount, netAmount: booking.vatAmount, customer: booking.user, vendor: booking.vendor, status: "cleared", description: `Event VAT - ${event.title}` },
+      { gsReference: `GS-${transactionYear}-EVT-PAYABLE-${seq}`, type: "payout", module: "events", amount: booking.organizerPayable, netAmount: booking.organizerPayable, customer: booking.user, vendor: booking.vendor, status: "pending", description: `Event Vendor Payable - ${event.title}` },
+    ]);
+    if (booking.vendor) {
+      await Wallet.findOneAndUpdate(
+        { vendorId: booking.vendor },
+        { $setOnInsert: { vendorId: booking.vendor }, $inc: { pendingBalance: booking.organizerPayable, totalEarned: booking.organizerPayable } },
+        { upsert: true }
+      );
+    }
+    result = { processed: true, booking, event };
+  } catch (error) {
+    console.error("Error processing event payment:", error);
+    throw error;
   }
 
   if (result.processed) {
