@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api';
 import { ArrowRight, Clock, ShieldCheck, ChevronDown, Check } from 'lucide-react';
 import AuctionCountdown from './AuctionCountdown';
 import { getAuctionPhase, getAuctionTargetTime } from './auctionPhase';
@@ -71,11 +71,9 @@ function LuxuryAuctionSlide({ lot, now, index, total, onNotify, onRefresh }) {
 
     setSubmitting(true);
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/auction/${lot._id}/bid`, {
+      const res = await api.post(`/auction/${lot._id}/bid`, {
         amount: amt,
         isMaxBid
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       
       onNotify(res.data.message || 'Bid placed successfully!');
