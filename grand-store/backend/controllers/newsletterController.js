@@ -39,12 +39,6 @@ const subscribeNewsletter = async (req, res) => {
 
     let country = frontendCountry && frontendCountry !== 'Unknown' ? frontendCountry : 'Unknown';
     if (country === 'Unknown') {
-      // If we are testing locally (localhost), the IP will be ::1 or 127.0.0.1
-      // Local IPs cannot be geolocated, so we spoof a real South African IP for testing purposes.
-      if (ip === '::1' || ip === '127.0.0.1') {
-        ip = '197.80.200.1'; // Mock public IP for local testing
-      }
-      
       const geo = geoip.lookup(ip);
       country = geo ? getCountryName(geo.country) : 'Unknown';
     }

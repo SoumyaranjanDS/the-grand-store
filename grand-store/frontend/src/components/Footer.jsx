@@ -16,11 +16,18 @@ export default function Footer() {
       let country = 'Unknown';
       let ipAddress = 'Unknown';
       try {
-        const geoResponse = await fetch('https://ipwho.is/');
+        const geoResponse = await fetch('https://ipapi.co/json/');
         const geoData = await geoResponse.json();
-        if (geoData.success) {
-          country = geoData.country;
+        if (geoData.country_name) {
+          country = geoData.country_name;
           ipAddress = geoData.ip;
+        } else {
+          const backupResponse = await fetch('https://ipwho.is/');
+          const backupData = await backupResponse.json();
+          if (backupData.success) {
+            country = backupData.country;
+            ipAddress = backupData.ip;
+          }
         }
       } catch (e) {
         console.warn('Could not fetch geolocation on frontend', e);
