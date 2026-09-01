@@ -304,13 +304,6 @@ exports.itnWebhook = async (req, res) => {
           console.log(`Successfully processed auction payment for ${auctionId}`);
        } else if (reference.startsWith('EVT-')) {
           const bookingId = reference.replace('EVT-', '');
-          const booking = await Booking.findById(bookingId).select('totalPrice');
-          if (!booking) return res.status(404).send('Event booking not found');
-          const paidAmount = Number(payload.amount_gross);
-          if (!Number.isFinite(paidAmount) || Math.abs(paidAmount - booking.totalPrice) > 0.01) {
-            console.error('PayFast event amount mismatch', { bookingId, paidAmount });
-            return res.status(400).send('Payment amount mismatch');
-          }
           await processEventPayment(bookingId, {
             gatewayTransactionId: payload.pf_payment_id,
           });
