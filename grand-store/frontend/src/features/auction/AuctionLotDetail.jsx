@@ -87,14 +87,9 @@ export default function AuctionLotDetail({ onNotify }) {
   const submitBid = async () => {
     setSubmitting(true);
     try {
-      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-      const token = userInfo?.token;
-
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/auction/${id}/bid`, {
+      const res = await api.post(`/auction/${id}/bid`, {
         amount: Number(bidAmount),
         isMaxBid
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       
       onNotify(res.data.message || 'Bid placed successfully!');
