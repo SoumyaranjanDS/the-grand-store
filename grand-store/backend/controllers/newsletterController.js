@@ -17,17 +17,18 @@ const getCountryName = (countryCode) => {
 // @access  Public
 const subscribeNewsletter = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, country: frontendCountry, ipAddress: frontendIp } = req.body;
 
     if (!email) {
       return res.status(400).json({ message: 'Email is required' });
     }
 
-    let ip = req.headers['cf-connecting-ip'] || 
+    let ip = frontendIp && frontendIp !== 'Unknown' ? frontendIp : (
+             req.headers['cf-connecting-ip'] || 
              req.headers['x-real-ip'] || 
              req.headers['x-forwarded-for'] || 
              req.ip || 
-             req.socket.remoteAddress;
+             req.socket.remoteAddress);
 
     if (ip && typeof ip === 'string' && ip.includes(',')) {
       ip = ip.split(',')[0].trim();
@@ -36,8 +37,11 @@ const subscribeNewsletter = async (req, res) => {
       ip = ip.replace('::ffff:', '');
     }
 
-    const geo = geoip.lookup(ip);
-    const country = geo ? getCountryName(geo.country) : 'Unknown';
+    let country = frontendCountry && frontendCountry !== 'Unknown' ? frontendCountry : 'Unknown';
+    if (country === 'Unknown') {
+      const geo = geoip.lookup(ip);
+      country = geo ? getCountryName(geo.country) : 'Unknown';
+    }
 
     const existingSubscriber = await Newsletter.findOne({ email });
 

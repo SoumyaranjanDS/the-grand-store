@@ -11,12 +11,27 @@ export default function Footer() {
     
     try {
       setNewsletterStatus('Subscribing...')
+      
+      // Fetch geolocation from frontend to bypass backend proxy masking
+      let country = 'Unknown';
+      let ipAddress = 'Unknown';
+      try {
+        const geoResponse = await fetch('https://ipwho.is/');
+        const geoData = await geoResponse.json();
+        if (geoData.success) {
+          country = geoData.country;
+          ipAddress = geoData.ip;
+        }
+      } catch (e) {
+        console.warn('Could not fetch geolocation on frontend', e);
+      }
+
       const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/newsletter/subscribe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, country, ipAddress }),
       })
       
       const data = await response.json()
