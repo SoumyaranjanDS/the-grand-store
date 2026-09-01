@@ -5,7 +5,7 @@ const AuctionLot = require("../models/AuctionLot");
 const Booking = require("../models/Booking");
 const bcrypt = require("bcryptjs");
 
-const STAFF_ROLES = ["accountant", "product_manager"];
+const STAFF_ROLES = ["accountant", "product_manager", "admin"];
 
 // @desc    Get dashboard stats
 // @route   GET /api/admin/dashboard

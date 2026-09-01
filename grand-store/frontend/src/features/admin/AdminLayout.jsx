@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+import { useNavigate, useLocation, Navigate, Outlet } from 'react-router-dom';
+import { LayoutDashboard, Users, Building2, Gavel, Wallet, Settings, Menu, X, LogOut, ArrowLeft, Star, Package, ShoppingBag, Tv, Mail, Activity, Briefcase, Shield, Gem, Award, MessageSquare, Bot, CalendarCheck, Tag, Layers } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { LayoutDashboard, Users, Building2, Gavel, Wallet, Settings, Menu, X, LogOut, ArrowLeft, Star, Package, ShoppingBag, Tv, Mail, Activity, Briefcase, Shield, Gem, Award, MessageSquare, Bot, CalendarCheck, Tag } from 'lucide-react';
-
 
 export default function AdminLayout() {
   const { user, logout } = useAuth();
@@ -116,6 +115,9 @@ export default function AdminLayout() {
             {isProductManager && (
               <>
                 <div className="flex items-center gap-1.5 text-[10px] text-[var(--color-ivory-muted)] uppercase tracking-widest mb-2 mt-4 pl-2"><Briefcase size={12} /> Operations</div>
+                <button onClick={() => handleNavigate('/admin/categories')} className={navItemClass('/admin/categories')}>
+                  <Layers size={16} /> Config Categories
+                </button>
                 <button onClick={() => handleNavigate('/admin/products')} className={navItemClass('/admin/products')}>
                   <Package size={16} /> Retail Products
                 </button>

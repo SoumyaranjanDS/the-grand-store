@@ -168,6 +168,7 @@ export default function AdminStaff() {
                 <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-[var(--color-gold)] transition-colors appearance-none">
                   <option value="accountant">Accountant</option>
                   <option value="product_manager">Product Manager</option>
+                  <option value="admin">System Administrator</option>
                 </select>
               </div>
               <div>

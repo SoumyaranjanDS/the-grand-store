@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../api';
 import { Gavel, CheckCircle, ArrowLeft, User, Phone, Mail, Building2, Package, FileText } from 'lucide-react';
-import { storeCategories } from '../../data';
+import { useCategories } from '../../context/CategoryContext';
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -19,6 +19,8 @@ const inputCls = "w-full border border-stone-200 bg-white px-4 py-3 text-stone-8
 const selectCls = `${inputCls} cursor-pointer`;
 
 export default function HostAuctionPage() {
+  const { categories } = useCategories();
+  const storeCategories = categories.map(c => c.name);
   const [step, setStep] = useState(1); // 1=applicant, 2=item, 3=done
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');

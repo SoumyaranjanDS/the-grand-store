@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Building2, Package, CheckCircle2, AlertCircle, PlusCircle, User, Gavel } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { storeCategories } from '../../data';
+import { useCategories } from '../../context/CategoryContext';
 
 const toDatetimeLocal = (date) => {
   const value = new Date(date);
@@ -14,6 +14,8 @@ const toDatetimeLocal = (date) => {
 export default function AuctionSubmission({ onNotify }) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { categories } = useCategories();
+  const storeCategories = categories.map(c => c.name);
   
   const [formData, setFormData] = useState({
     title: '',

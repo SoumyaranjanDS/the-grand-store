@@ -8,6 +8,7 @@ import { HelmetProvider } from 'react-helmet-async'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { LocationProvider } from './context/LocationContext.jsx'
 import { CurrencyProvider } from './context/CurrencyContext.jsx'
+import { CategoryProvider } from './context/CategoryContext.jsx'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import './styles.css'
 
@@ -19,11 +20,13 @@ createRoot(document.getElementById('root')).render(
           <LocationProvider>
             <AuthProvider>
               <CurrencyProvider>
-                <ProductProvider>
-                  <WishlistProvider>
-                    <App />
-                  </WishlistProvider>
-                </ProductProvider>
+                <CategoryProvider>
+                  <ProductProvider>
+                    <WishlistProvider>
+                      <App />
+                    </WishlistProvider>
+                  </ProductProvider>
+                </CategoryProvider>
               </CurrencyProvider>
             </AuthProvider>
           </LocationProvider>

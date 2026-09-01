@@ -144,7 +144,8 @@ const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && user.password && (await bcrypt.compare(password, user.password))) {
-      if (!user.isEmailVerified) {
+      const isStaffUser = ['admin', 'super_admin', 'product_manager', 'accountant', 'auction_host'].includes(user.role);
+      if (!user.isEmailVerified && !isStaffUser) {
         return res.status(401).json({ message: 'Please verify your email address before logging in. Check your inbox.' });
       }
       sendTokenResponse(user, 200, res);

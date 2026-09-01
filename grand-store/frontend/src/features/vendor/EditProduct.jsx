@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { Building2, Package, UploadCloud, CheckCircle2, AlertCircle, PlusCircle, User } from 'lucide-react';
-import { storeCategories } from '../../data';
+import { useCategories } from '../../context/CategoryContext';
 import DynamicIcon from '../../components/DynamicIcon';
 import CatalogHierarchyFields from '../../components/CatalogHierarchyFields';
 import ProductImageManager, { existingImageEntries } from '../../components/ProductImageManager';
@@ -13,6 +13,8 @@ export default function EditProduct({ onNotify }) {
   const navigate = useNavigate();
   const isInternalProductManager = ['admin', 'super_admin', 'product_manager'].includes(user?.role);
   const { id } = useParams();
+  const { categories } = useCategories();
+  const storeCategories = categories.map(c => c.name);
   
   const [formData, setFormData] = useState({
     name: '',

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { Building2, Package, UploadCloud, CheckCircle2, AlertCircle, PlusCircle, User } from 'lucide-react';
-import { storeCategories } from '../../data';
+import { useCategories } from '../../context/CategoryContext';
 import api from '../../api';
 import DynamicIcon from '../../components/DynamicIcon';
 import CatalogHierarchyFields from '../../components/CatalogHierarchyFields';
@@ -12,6 +12,8 @@ import ProductImageManager from '../../components/ProductImageManager';
 export default function AddProduct({ onNotify }) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { categories } = useCategories();
+  const storeCategories = categories.map(c => c.name);
   const isInternalProductManager = ['admin', 'super_admin', 'product_manager'].includes(user?.role);
   
   const [formData, setFormData] = useState({

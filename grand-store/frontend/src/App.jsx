@@ -104,6 +104,7 @@ import AdminTestimonials from './features/admin/AdminTestimonials'
 import AdminFinancials from './features/admin/AdminFinancials'
 import AdminBankTransfers from './features/admin/AdminBankTransfers'
 import AdminAccessories from './features/admin/AdminAccessories'
+import AdminCategories from './features/admin/AdminCategories'
 import AdminTradeEnquiries from './features/admin/AdminTradeEnquiries'
 import AdminAttributes from './features/admin/AdminAttributes'
 import AdminAdvertisementRequests from './features/admin/AdminAdvertisementRequests'
@@ -737,6 +738,7 @@ function App() {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="staff" element={<AdminStaff />} />
+          <Route path="categories" element={<AdminCategories />} />
           <Route path="vendors" element={<AdminVendors />} />
           <Route path="coupons" element={<AdminCoupons />} />
           <Route path="expert-reviews" element={<AdminExpertReviews />} />
