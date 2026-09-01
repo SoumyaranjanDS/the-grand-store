@@ -574,25 +574,22 @@ const releaseExpiredReservations = async (now = new Date()) => {
   }).select("_id");
   let released = 0;
   for (const record of expired) {
-    const session = await mongoose.startSession();
     try {
-      await session.withTransaction(async () => {
-        const booking = await Booking.findOne({ _id: record._id, paymentStatus: "Pending", inventoryStatus: "reserved" }).session(session);
-        if (!booking) return;
-        const event = await Event.findById(booking.event).session(session);
-        const tier = event && (booking.ticketTierId ? event.ticketTiers.id(booking.ticketTierId) : event.ticketTiers.find((item) => item.name === booking.ticketType));
-        if (tier) {
-          tier.reserved = Math.max(0, (tier.reserved || 0) - booking.quantity);
-          await event.save({ session });
-        }
-        booking.paymentStatus = "Failed";
-        booking.ticketStatus = "Cancelled";
-        booking.inventoryStatus = "released";
-        await booking.save({ session });
-        released += 1;
-      });
-    } finally {
-      await session.endSession();
+      const booking = await Booking.findOne({ _id: record._id, paymentStatus: "Pending", inventoryStatus: "reserved" });
+      if (!booking) continue;
+      const event = await Event.findById(booking.event);
+      const tier = event && (booking.ticketTierId ? event.ticketTiers.id(booking.ticketTierId) : event.ticketTiers.find((item) => item.name === booking.ticketType));
+      if (tier) {
+        tier.reserved = Math.max(0, (tier.reserved || 0) - booking.quantity);
+        await event.save();
+      }
+      booking.paymentStatus = "Failed";
+      booking.ticketStatus = "Cancelled";
+      booking.inventoryStatus = "released";
+      await booking.save();
+      released += 1;
+    } catch (err) {
+      console.error(`Failed to release reservation ${record._id}:`, err);
     }
   }
   return released;

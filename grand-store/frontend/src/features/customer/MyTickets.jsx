@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../api';
 import { motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
-import { Calendar, MapPin, Clock, Ticket, LogOut, User, Package, Heart, Building2, Gavel } from 'lucide-react';
+import { Calendar, MapPin, Clock, Ticket, LogOut, User, Package, Heart, Building2, Gavel, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Price from '../../components/ui/Price';
 import { resolveEventImage } from '../events/eventPhase';
@@ -97,11 +97,11 @@ export default function MyTickets() {
                     <span className={`text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full ${
                       !['Paid', 'Completed'].includes(ticket.paymentStatus) ? 'bg-yellow-500/80 text-black' :
                       ticket.ticketStatus === 'Valid' ? 'bg-green-500/80 text-white shadow-[0_0_10px_rgba(34,197,94,0.3)]' :
-                      ticket.ticketStatus === 'Used' ? 'bg-black/50 text-white/70 backdrop-blur-md' :
+                      ticket.ticketStatus === 'Used' ? 'bg-[#c9a35b]/90 text-black shadow-[0_0_10px_rgba(201,163,91,0.5)] backdrop-blur-md' :
                       'bg-red-500/80 text-white shadow-[0_0_10px_rgba(239,68,68,0.3)]'
                     }`}>
                       {['Paid', 'Completed'].includes(ticket.paymentStatus)
-                        ? ticket.ticketStatus
+                        ? (ticket.ticketStatus === 'Used' ? 'Verified' : ticket.ticketStatus)
                         : ticket.paymentMethod === 'Bank Transfer'
                           ? String(ticket.bankTransferStatus || ticket.paymentStatus).replaceAll('_', ' ')
                           : ticket.paymentStatus}
@@ -154,12 +154,19 @@ export default function MyTickets() {
                    <div className="hidden lg:block w-8 h-8 rounded-full bg-[#050505] absolute -left-4 -bottom-4 border-t border-r border-white/[0.05]"></div>
                    
                    {['Paid', 'Completed'].includes(ticket.paymentStatus) ? (
-                     <>
-                       <div className="bg-white p-3 rounded-xl mb-4 shadow-[0_0_30px_rgba(212,175,55,0.15)] relative group-hover:shadow-[0_0_40px_rgba(212,175,55,0.3)] transition-shadow">
-                         <QRCodeSVG value={ticket.ticketId} size={110} />
+                     ticket.ticketStatus === 'Used' ? (
+                       <div className="bg-[#111] border border-[#c9a35b]/30 p-4 rounded-xl mb-4 flex flex-col items-center justify-center h-[134px]">
+                          <CheckCircle className="text-[#c9a35b] mb-2" size={32} />
+                          <span className="text-[#c9a35b] font-bold tracking-widest uppercase text-xs">Verified</span>
                        </div>
-                       <p className="text-[11px] font-mono text-white/50 tracking-[0.2em]">{ticket.ticketId}</p>
-                     </>
+                     ) : (
+                       <>
+                         <div className="bg-white p-3 rounded-xl mb-4 shadow-[0_0_30px_rgba(212,175,55,0.15)] relative group-hover:shadow-[0_0_40px_rgba(212,175,55,0.3)] transition-shadow">
+                           <QRCodeSVG value={ticket.ticketId} size={110} />
+                         </div>
+                         <p className="text-[11px] font-mono text-white/50 tracking-[0.2em]">{ticket.ticketId}</p>
+                       </>
+                     )
                    ) : (
                      <>
                        <div className="mb-4 rounded-xl border border-yellow-500/20 bg-yellow-500/10 p-4 text-center text-xs text-yellow-300">
