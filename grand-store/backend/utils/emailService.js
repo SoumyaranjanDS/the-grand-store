@@ -24,7 +24,7 @@ const transporter = nodemailer.createTransport({
  * @param {string} options.html - HTML content of the email
  * @param {string} [options.text] - Plain text fallback
  */
-const sendEmail = async ({ to, subject, html, text, attachments }) => {
+const sendEmail = async ({ to, bcc, subject, html, text, attachments }) => {
   try {
     // Basic HTML to text conversion if text is not provided
     const plainText = text || html.replace(/<[^>]+>/g, '\n').replace(/\n\s*\n/g, '\n').trim();
@@ -32,6 +32,7 @@ const sendEmail = async ({ to, subject, html, text, attachments }) => {
     const mailOptions = {
       from: `"${process.env.SMTP_FROM_NAME || "The Grand Store"}" <${process.env.SMTP_USER}>`,
       to,
+      bcc,
       subject,
       text: plainText,
       html,

@@ -117,21 +117,21 @@ const sendBulkNewsletter = async (req, res) => {
       return res.status(400).json({ message: 'No active subscribers found for this filter' });
     }
 
-    let successCount = 0;
-    for (const sub of subscribers) {
-      try {
-        await sendEmail({
-          to: sub.email,
-          subject,
-          html: bulkNewsletterTemplate(subject, htmlContent)
-        });
-        successCount++;
-      } catch (err) {
-        console.error(`Failed to send newsletter to ${sub.email}:`, err);
-      }
+    const emails = subscribers.map(sub => sub.email);
+
+    try {
+      await sendEmail({
+        to: process.env.SMTP_USER, // Send one copy to the admin
+        bcc: emails.join(','),     // Hide all 200+ emails in the BCC field
+        subject,
+        html: bulkNewsletterTemplate(subject, htmlContent)
+      });
+    } catch (err) {
+      console.error(`Failed to send bulk newsletter batch:`, err);
+      return res.status(500).json({ message: 'Failed to send newsletter. SMTP Limit Exceeded.' });
     }
 
-    res.json({ message: `Newsletter sent successfully to ${successCount} subscribers` });
+    res.json({ message: `Newsletter sent successfully to ${emails.length} subscribers` });
   } catch (error) {
     console.error('Error sending bulk newsletter:', error);
     res.status(500).json({ message: 'Server Error' });

@@ -188,15 +188,18 @@ export default function AdminNewsletter() {
       {/* Compose Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
-            <div className="p-6 border-b border-white/10 flex justify-between items-center">
+          <form onSubmit={handleSend} className="bg-[#0a0a0a] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            
+            {/* Header - Fixed */}
+            <div className="p-6 border-b border-white/10 flex justify-between items-center shrink-0">
               <h2 className="text-xl text-white font-light">Compose Newsletter</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-white/50 hover:text-white">
+              <button type="button" onClick={() => setIsModalOpen(false)} className="text-white/50 hover:text-white transition-colors">
                 <X size={24} />
               </button>
             </div>
             
-            <form onSubmit={handleSend} className="p-6 overflow-y-auto flex-1 flex flex-col gap-6">
+            {/* Scrollable Content */}
+            <div className="p-6 overflow-y-auto flex-1 min-h-0 flex flex-col gap-6">
               {message && (
                 <div className={`p-4 rounded-lg border text-sm ${
                   message.type === 'success' 
@@ -207,7 +210,7 @@ export default function AdminNewsletter() {
                 </div>
               )}
 
-              <div className="bg-gold/10 border border-gold/30 rounded-lg p-4 text-gold text-sm flex items-center gap-3">
+              <div className="bg-gold/10 border border-gold/30 rounded-lg p-4 text-gold text-sm flex items-center gap-3 shrink-0">
                 <Users size={18} />
                 <span>
                   You are sending this email to <strong>{activeCount} active subscribers</strong> 
@@ -215,7 +218,7 @@ export default function AdminNewsletter() {
                 </span>
               </div>
 
-              <div>
+              <div className="shrink-0">
                 <label className="block text-white/50 text-xs uppercase tracking-widest mb-2">Subject Line</label>
                 <input 
                   type="text" 
@@ -227,39 +230,41 @@ export default function AdminNewsletter() {
                 />
               </div>
 
-              <div className="flex-1 flex flex-col">
+              <div className="flex-1 flex flex-col min-h-[250px]">
                 <label className="block text-white/50 text-xs uppercase tracking-widest mb-2">Email Body (HTML Supported)</label>
                 <textarea 
                   value={htmlContent}
                   onChange={(e) => setHtmlContent(e.target.value)}
-                  className="w-full flex-1 min-h-[250px] bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white font-mono text-sm focus:outline-none focus:border-gold transition-colors"
+                  className="w-full flex-1 min-h-[200px] bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white font-mono text-sm focus:outline-none focus:border-gold transition-colors"
                   placeholder="<h1>Hello World</h1><p>Your content here...</p>"
                   required
                 ></textarea>
-                <p className="text-white/30 text-xs mt-2">
+                <p className="text-white/30 text-xs mt-2 shrink-0">
                   This content will be automatically wrapped in The Grand Store's email template (header, logo, styling).
                 </p>
               </div>
+            </div>
 
-              <div className="flex justify-end pt-4 border-t border-white/10">
-                <button 
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-6 py-2 text-white/50 hover:text-white mr-4"
-                  disabled={sending}
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  disabled={sending || !subject || !htmlContent}
-                  className="bg-gold text-black px-8 py-2 rounded-lg font-medium hover:bg-white transition-colors disabled:opacity-50 flex items-center gap-2"
-                >
-                  {sending ? 'Sending...' : <><Send size={18} /> Send Campaign</>}
-                </button>
-              </div>
-            </form>
-          </div>
+            {/* Footer - Fixed */}
+            <div className="p-6 border-t border-white/10 flex justify-end items-center shrink-0 bg-[#0a0a0a]">
+              <button 
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="px-6 py-2 text-white/50 hover:text-white mr-4 transition-colors"
+                disabled={sending}
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit"
+                disabled={sending || !subject || !htmlContent}
+                className="bg-gold text-black px-8 py-2 rounded-lg font-medium hover:bg-white transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {sending ? 'Sending...' : <><Send size={18} /> Send Campaign</>}
+              </button>
+            </div>
+            
+          </form>
         </div>
       )}
     </div>
