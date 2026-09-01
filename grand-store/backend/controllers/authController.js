@@ -94,26 +94,37 @@ const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const newReferralCode = await generateUniqueReferralCode();
+    
+    // Generate verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
 
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
       referralCode: newReferralCode,
-      referredBy
+      referredBy,
+      isEmailVerified: false,
+      verificationToken
     });
 
     if (user) {
-      // Send welcome email (non-blocking)
+      // Send verification email
       const { sendEmail } = require('../utils/emailService');
-      const { welcomeEmailTemplate } = require('../utils/emailTemplates');
+      const { verificationEmailTemplate } = require('../utils/emailTemplates');
+      
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      const verificationLink = `${frontendUrl}/verify-email?token=${verificationToken}&email=${user.email}`;
+
       sendEmail({
         to: user.email,
-        subject: 'Welcome to The Grand Store',
-        html: welcomeEmailTemplate(user.name)
-      }).catch(err => console.error('Failed to send welcome email:', err));
+        subject: 'Verify your email - The Grand Store',
+        html: verificationEmailTemplate(user.name, verificationLink)
+      }).catch(err => console.error('Failed to send verification email:', err));
 
-      sendTokenResponse(user, 201, res);
+      res.status(201).json({ 
+        message: 'Registration successful! Please check your email to verify your account.' 
+      });
     } else {
       res.status(400).json({ message: 'Invalid user data' });
     }
@@ -133,6 +144,9 @@ const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && user.password && (await bcrypt.compare(password, user.password))) {
+      if (!user.isEmailVerified) {
+        return res.status(401).json({ message: 'Please verify your email address before logging in. Check your inbox.' });
+      }
       sendTokenResponse(user, 200, res);
     } else {
       res.status(401).json({ message: 'Invalid email or password' });
@@ -140,6 +154,51 @@ const loginUser = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @desc    Verify user email
+// @route   POST /api/auth/verify-email
+// @access  Public
+const verifyEmail = async (req, res) => {
+  try {
+    const { email, token } = req.body;
+
+    if (!email || !token) {
+      return res.status(400).json({ message: 'Invalid verification link' });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.isEmailVerified) {
+      return res.status(400).json({ message: 'Email is already verified' });
+    }
+
+    if (user.verificationToken !== token) {
+      return res.status(400).json({ message: 'Invalid or expired verification token' });
+    }
+
+    user.isEmailVerified = true;
+    user.verificationToken = undefined; // clear token
+    await user.save();
+
+    // Now send the welcome email!
+    const { sendEmail } = require('../utils/emailService');
+    const { welcomeEmailTemplate } = require('../utils/emailTemplates');
+    sendEmail({
+      to: user.email,
+      subject: 'Welcome to The Grand Store',
+      html: welcomeEmailTemplate(user.name)
+    }).catch(err => console.error('Failed to send welcome email:', err));
+
+    res.status(200).json({ message: 'Email verified successfully! You can now log in.' });
+  } catch (error) {
+    console.error('Error verifying email:', error);
+    res.status(500).json({ message: 'Server error during verification' });
   }
 };
 
@@ -381,6 +440,9 @@ module.exports = {
   logoutUser,
   getUserProfile,
   updateUserProfile,
+  addOrUpdateAddress,
+  updateUserRole,
+  verifyEmail,
   deleteUserProfile,
   googleAuth,
   getReferralSummary,

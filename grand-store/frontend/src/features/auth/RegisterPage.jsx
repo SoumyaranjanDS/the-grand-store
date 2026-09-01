@@ -16,18 +16,15 @@ export default function RegisterPage() {
   const { register, googleLogin } = useAuth();
   const navigate = useNavigate();
 
+  const [success, setSuccess] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
     try {
-      const userData = await register(name, email, password, referralCode);
-      
-      let defaultRoute = '/customer/profile';
-      if (userData.role === 'admin') defaultRoute = '/admin/auctions';
-      if (userData.role === 'vendor_active') defaultRoute = '/vendor/dashboard';
-      
-      navigate(defaultRoute);
+      await register(name, email, password, referralCode);
+      setSuccess(true);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -74,12 +71,29 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-[#0a0a0a] border-t border-white/10 p-6 md:p-8 rounded-none md:rounded-xl">
-          {error && (
-            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
-              {error}
+        {success ? (
+          <div className="bg-[#0a0a0a] border-t border-white/10 p-6 md:p-8 rounded-none md:rounded-xl text-center space-y-6">
+            <div className="w-16 h-16 bg-[var(--color-gold)]/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-[var(--color-gold)]/30">
+              <Mail className="w-8 h-8 text-[var(--color-gold)]" />
             </div>
-          )}
+            <h2 className="text-xl font-serif text-[var(--color-ivory)]">Check your email</h2>
+            <p className="text-[var(--color-ivory-muted)] text-sm">
+              We've sent a verification link to <strong className="text-white">{email}</strong>. 
+              Please verify your email address to complete your registration.
+            </p>
+            <div className="pt-4">
+              <Link to="/login" className="text-[var(--color-gold)] text-sm font-bold uppercase tracking-widest hover:text-white transition-colors">
+                Go to Login
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="bg-[#0a0a0a] border-t border-white/10 p-6 md:p-8 rounded-none md:rounded-xl">
+            {error && (
+              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+                {error}
+              </div>
+            )}
 
           <div className="space-y-6">
             <div>
@@ -224,6 +238,7 @@ export default function RegisterPage() {
             </p>
           </div>
         </form>
+        )}
       </div>
     </div>
   );

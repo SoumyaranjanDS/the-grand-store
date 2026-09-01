@@ -135,6 +135,17 @@ const welcomeEmailTemplate = (name) => {
   return generateEmailTemplate('Welcome to The Grand Store', content);
 };
 
+const verificationEmailTemplate = (name, verificationLink) => {
+  const content = `
+    <h1>Verify Your Email Address</h1>
+    <p>Dear ${name},</p>
+    <p>Thank you for registering at The Grand Store. To complete your registration and secure your account, please verify your email address by clicking the button below.</p>
+    <a href="${verificationLink}" class="btn">Verify Email</a>
+    <p style="margin-top: 30px; font-size: 14px; color: #888;">If the button doesn't work, you can copy and paste this link into your browser:<br>${verificationLink}</p>
+  `;
+  return generateEmailTemplate('Verify your email - The Grand Store', content);
+};
+
 const newsletterWelcomeTemplate = () => {
   const content = `
     <h1>Thank You for Subscribing!</h1>
@@ -358,6 +369,7 @@ const bulkNewsletterTemplate = (subject, htmlContent) => {
 
 module.exports = {
   welcomeEmailTemplate,
+  verificationEmailTemplate,
   newsletterWelcomeTemplate,
   orderConfirmationTemplate,
   bankTransferInstructionsTemplate,

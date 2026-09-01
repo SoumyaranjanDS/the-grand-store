@@ -55,6 +55,7 @@ import BrandyBlogPage from './features/blog/BrandyBlogPage'
 import WhiskeyBlogPage from './features/blog/WhiskeyBlogPage'
 import LoginPage from './features/auth/LoginPage'
 import RegisterPage from './features/auth/RegisterPage'
+import VerifyEmail from './features/auth/VerifyEmail'
 import ProfilePage from './features/customer/ProfilePage'
 import ReferralsTab from './features/customer/ReferralsTab'
 import CustomerOrdersPage from './features/customer/CustomerOrdersPage'
@@ -382,7 +383,7 @@ function App() {
     location.pathname.startsWith("/admin");
   const isAdminRoute = location.pathname.startsWith("/admin");
   const isAuthRoute =
-    location.pathname === "/login" || location.pathname === "/register";
+    location.pathname === "/login" || location.pathname === "/register" || location.pathname === "/verify-email";
   const isEstateRoute = location.pathname.startsWith("/estate");
 
   if (loading) {
@@ -657,6 +658,7 @@ function App() {
         {/* Auth Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
 
         {/* Tools & Finders */}
         <Route path="/tools/wine-pairing" element={<WinePairingTool onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />} />
