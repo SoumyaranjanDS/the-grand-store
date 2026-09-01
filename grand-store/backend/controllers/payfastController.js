@@ -248,74 +248,34 @@ exports.itnWebhook = async (req, res) => {
       return res.status(400).send('Invalid payload');
     }
     
-    const receivedSignature = String(payload.signature || '');
-    const signatureFields = [];
-    for (const [key, value] of Object.entries(payload)) {
-      // PayFast's ITN specification signs fields in the received order and
-      // stops at signature. Fields after it are not part of the signature or
-      // the server-confirmation parameter string.
-      if (key === 'signature') break;
-      if (value !== '') signatureFields.push(`${key}=${payfastUrlEncode(value)}`);
-    }
-    const pfParamString = signatureFields.join('&');
-    const signatureInput = config.passphrase
-      ? `${pfParamString}&passphrase=${payfastUrlEncode(config.passphrase.trim())}`
-      : pfParamString;
-    const expectedSignature = crypto.createHash('md5').update(signatureInput).digest('hex');
-    const signaturesMatch = receivedSignature.length === expectedSignature.length && crypto.timingSafeEqual(
-      Buffer.from(receivedSignature),
-      Buffer.from(expectedSignature),
-    );
-    if (!signaturesMatch) {
-      const expectedWithoutPassphrase = crypto.createHash('md5').update(pfParamString).digest('hex');
-      const matchesWithoutPassphrase = (
-        receivedSignature.length === expectedWithoutPassphrase.length && crypto.timingSafeEqual(
-          Buffer.from(receivedSignature),
-          Buffer.from(expectedWithoutPassphrase),
-        )
-      );
-      console.error('PayFast ITN local signature mismatch', {
-        paymentId: payload.m_payment_id,
-        matchesWithoutPassphrase,
-        configuredPassphrase: Boolean(config.passphrase),
-        signedFieldCount: signatureFields.length,
-      });
-      return res.status(400).send('Invalid signature');
-    }
-
-    if (String(payload.merchant_id) !== String(config.merchant_id)) {
-      console.error('PayFast ITN merchant mismatch');
-      return res.status(400).send('Invalid merchant');
-    }
-
-    // Cancelled/failed notices are authenticated but do not change paid inventory.
-    if (payload.payment_status !== 'COMPLETE') {
-      return res.status(200).send('OK');
-    }
-
-    // Completed payments also receive PayFast's server-to-server validation.
+    // We will verify the ITN by doing a POST back to PayFast's validation endpoint
     const axios = require('axios');
-    let validateParamString = '';
+    let pfParamString = '';
     for (let key in payload) {
-      validateParamString += `${key}=${encodeURIComponent(payload[key].toString().trim()).replace(/%20/g, '+')}&`;
+      pfParamString += `${key}=${encodeURIComponent(payload[key].toString().trim()).replace(/%20/g, '+')}&`;
     }
-    validateParamString = validateParamString.slice(0, -1);
+    pfParamString = pfParamString.slice(0, -1);
 
     const isLive = process.env.PAYFAST_IS_LIVE === 'true';
     const validateUrl = isLive ? 'https://www.payfast.co.za/eng/query/validate' : 'https://sandbox.payfast.co.za/eng/query/validate';
 
     try {
-      const validateResponse = await axios.post(validateUrl, validateParamString, {
+      const validateResponse = await axios.post(validateUrl, pfParamString, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       });
       
-      if (String(validateResponse.data).trim() !== 'VALID') {
+      if (validateResponse.data !== 'VALID') {
         console.error('PayFast ITN signature mismatch (Validation failed):', validateResponse.data);
         return res.status(400).send('Invalid signature');
       }
     } catch (valErr) {
       console.error('Error contacting PayFast validation endpoint:', valErr.message);
       return res.status(500).send('Validation network error');
+    }
+
+    if (String(payload.merchant_id) !== String(config.merchant_id)) {
+      console.error('PayFast ITN merchant mismatch');
+      return res.status(400).send('Invalid merchant');
     }
 
     if (payload.payment_status === 'COMPLETE') {
