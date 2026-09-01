@@ -202,6 +202,90 @@ const verifyEmail = async (req, res) => {
   }
 };
 
+// @desc    Forgot Password
+// @route   POST /api/auth/forgotpassword
+// @access  Public
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User with that email does not exist' });
+    }
+
+    // Generate token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    // Hash token and set to resetPasswordToken field
+    user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 Minutes
+
+    await user.save();
+
+    // Send email
+    const { sendEmail } = require('../utils/emailService');
+    const { passwordResetTemplate } = require('../utils/emailTemplates');
+    
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
+
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: 'Password Reset Request - The Grand Store',
+        html: passwordResetTemplate(user.name, resetUrl)
+      });
+
+      res.status(200).json({ message: 'Password reset link sent to your email.' });
+    } catch (error) {
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpire = undefined;
+      await user.save();
+      console.error('Email could not be sent:', error);
+      return res.status(500).json({ message: 'Email could not be sent' });
+    }
+  } catch (error) {
+    console.error('Error in forgotPassword:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @desc    Reset Password
+// @route   PUT /api/auth/resetpassword/:token
+// @access  Public
+const resetPassword = async (req, res) => {
+  try {
+    const { password } = req.body;
+
+    // Get hashed token
+    const resetPasswordToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+
+    const user = await User.findOne({
+      resetPasswordToken,
+      resetPasswordExpire: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired reset token' });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(password, salt);
+
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    
+    await user.save();
+
+    res.status(200).json({ message: 'Password reset successful. You can now log in.' });
+  } catch (error) {
+    console.error('Error in resetPassword:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 
 
 // @desc    Get user profile
@@ -441,6 +525,8 @@ module.exports = {
   getUserProfile,
   updateUserProfile,
   verifyEmail,
+  forgotPassword,
+  resetPassword,
   deleteUserProfile,
   googleAuth,
   getReferralSummary,

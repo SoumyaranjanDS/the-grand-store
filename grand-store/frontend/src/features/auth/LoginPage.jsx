@@ -116,9 +116,9 @@ export default function LoginPage() {
                 <label className="block text-[var(--color-ivory-muted)] text-[10px] font-bold uppercase tracking-widest">
                   Password
                 </label>
-                <a href="#" className="text-[10px] uppercase tracking-widest text-[#d8b76d] hover:text-white transition-colors font-bold">
+                <Link to="/forgot-password" className="text-[10px] uppercase tracking-widest text-[#d8b76d] hover:text-white transition-colors font-bold">
                   Forgot?
-                </a>
+                </Link>
               </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

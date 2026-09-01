@@ -146,6 +146,18 @@ const verificationEmailTemplate = (name, verificationLink) => {
   return generateEmailTemplate('Verify your email - The Grand Store', content);
 };
 
+const passwordResetTemplate = (name, resetUrl) => {
+  const content = `
+    <h1>Password Reset Request</h1>
+    <p>Dear ${name},</p>
+    <p>We received a request to reset your password for The Grand Store. If you didn't make this request, you can safely ignore this email.</p>
+    <p>To reset your password, please click the button below. This link is valid for 10 minutes.</p>
+    <a href="${resetUrl}" class="btn">Reset Password</a>
+    <p style="margin-top: 30px; font-size: 14px; color: #888;">If the button doesn't work, you can copy and paste this link into your browser:<br>${resetUrl}</p>
+  `;
+  return generateEmailTemplate('Password Reset Request - The Grand Store', content);
+};
+
 const newsletterWelcomeTemplate = () => {
   const content = `
     <h1>Thank You for Subscribing!</h1>
@@ -370,6 +382,7 @@ const bulkNewsletterTemplate = (subject, htmlContent) => {
 module.exports = {
   welcomeEmailTemplate,
   verificationEmailTemplate,
+  passwordResetTemplate,
   newsletterWelcomeTemplate,
   orderConfirmationTemplate,
   bankTransferInstructionsTemplate,

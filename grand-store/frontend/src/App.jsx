@@ -56,6 +56,8 @@ import WhiskeyBlogPage from './features/blog/WhiskeyBlogPage'
 import LoginPage from './features/auth/LoginPage'
 import RegisterPage from './features/auth/RegisterPage'
 import VerifyEmail from './features/auth/VerifyEmail'
+import ForgotPassword from './features/auth/ForgotPassword'
+import ResetPassword from './features/auth/ResetPassword'
 import ProfilePage from './features/customer/ProfilePage'
 import ReferralsTab from './features/customer/ReferralsTab'
 import CustomerOrdersPage from './features/customer/CustomerOrdersPage'
@@ -383,7 +385,7 @@ function App() {
     location.pathname.startsWith("/admin");
   const isAdminRoute = location.pathname.startsWith("/admin");
   const isAuthRoute =
-    location.pathname === "/login" || location.pathname === "/register" || location.pathname === "/verify-email";
+    location.pathname === "/login" || location.pathname === "/register" || location.pathname === "/verify-email" || location.pathname === "/forgot-password" || location.pathname.startsWith("/reset-password");
   const isEstateRoute = location.pathname.startsWith("/estate");
 
   if (loading) {
@@ -659,6 +661,8 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* Tools & Finders */}
         <Route path="/tools/wine-pairing" element={<WinePairingTool onAdd={addToCart} onWish={handleWishlist} onCompare={addToCompare} compareItems={compareItems} />} />

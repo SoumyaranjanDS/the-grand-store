@@ -23,6 +23,8 @@ const userSchema = new mongoose.Schema({
   verificationToken: {
     type: String,
   },
+  resetPasswordToken: String,
+  resetPasswordExpire: Date,
   googleId: {
     type: String,
     unique: true,
