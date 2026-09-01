@@ -828,12 +828,12 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
             <h2 className="text-2xl font-serif text-[#eee8dd]">
               Related Products
             </h2>
-            <a
+            <Link
               className="text-xs font-bold uppercase tracking-[0.12em] text-gold-gradient transition-colors hover:text-[#e1bd70]"
-              href="/#arrivals"
+              to="/shop"
             >
-              View More In This Category
-            </a>
+              View More
+            </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {relatedProducts.map((item) => (

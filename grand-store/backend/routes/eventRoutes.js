@@ -9,13 +9,14 @@ const {
   getUserBookings,
   getEventAttendees,
   verifyTicket,
-  joinWaitlist
-} = require('../controllers/eventController');
+  joinWaitlist,
+  getAdminEvents,
+  approveEvent,
+  rejectEvent
+} = require('../controllers/eventControllerV2');
 
-const { protect } = require('../middleware/authMiddleware');
+const { protect, superAdmin } = require('../middleware/authMiddleware');
 const multer = require('multer');
-const path = require('path');
-
 const { storage } = require('../config/cloudinary');
 const upload = multer({ storage });
 
@@ -34,6 +35,15 @@ router.route('/vendor/:id/attendees')
 
 router.route('/vendor/verify-ticket')
   .post(protect, verifyTicket);
+
+router.route('/admin')
+  .get(protect, superAdmin, getAdminEvents);
+
+router.route('/admin/:id/approve')
+  .put(protect, superAdmin, approveEvent);
+
+router.route('/admin/:id/reject')
+  .put(protect, superAdmin, rejectEvent);
 
 router.route('/:id/book')
   .post(protect, bookEvent);

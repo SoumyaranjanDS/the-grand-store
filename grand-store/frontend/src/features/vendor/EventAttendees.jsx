@@ -236,7 +236,7 @@ export default function EventAttendees({ onNotify }) {
                             attendee.ticketStatus === 'Used' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
                             'bg-red-500/20 text-red-400 border border-red-500/30'
                           }`}>
-                            {attendee.ticketStatus === 'Valid' ? 'Pending' : 'Checked In'}
+                            {attendee.ticketStatus === 'Valid' ? 'Ready' : attendee.ticketStatus === 'Used' ? 'Checked In' : attendee.ticketStatus}
                           </span>
                         </td>
                       </tr>

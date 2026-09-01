@@ -129,13 +129,19 @@ export default function VendorEvents() {
                 
                 {/* Status Badge Over Image */}
                 <div className="absolute top-4 left-4 z-20">
-                  <span className={`text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full ${
-                    event.approvalStatus === 'Approved' ? 'bg-green-500/80 text-white ' :
-                    event.approvalStatus === 'Pending' ? 'bg-yellow-500/80 text-white ' :
-                    'bg-red-500/80 text-white '
-                  }`}>
-                    {event.approvalStatus}
-                  </span>
+                  {new Date(event.date).setHours(23, 59, 59, 999) < new Date().getTime() ? (
+                    <span className="text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full bg-gray-500/80 text-white">
+                      Ended
+                    </span>
+                  ) : (
+                    <span className={`text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full ${
+                      event.approvalStatus === 'approved' ? 'bg-green-500/80 text-white ' :
+                      event.approvalStatus === 'pending_approval' ? 'bg-yellow-500/80 text-white ' :
+                      'bg-red-500/80 text-white '
+                    }`}>
+                      {event.approvalStatus ? event.approvalStatus.replace('_', ' ') : 'Pending'}
+                    </span>
+                  )}
                 </div>
                 
                 {/* Event Format Label */}

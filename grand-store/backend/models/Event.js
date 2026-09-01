@@ -6,6 +6,7 @@ const ticketTierSchema = new mongoose.Schema({
   benefits: [String],
   quantity: { type: Number, required: true },
   sold: { type: Number, default: 0 },
+  reserved: { type: Number, default: 0 },
 });
 
 const eventSchema = new mongoose.Schema(
@@ -89,8 +90,11 @@ const eventSchema = new mongoose.Schema(
     approvalStatus: {
       type: String,
       enum: ["pending_approval", "approved", "rejected"],
-      default: "approved", // Automatically approved for now based on user feedback
+      default: "pending_approval",
     },
+    approvalNote: { type: String, default: "" },
+    approvedAt: { type: Date },
+    approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     waitlist: [{
       user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
       dateAdded: { type: Date, default: Date.now },
@@ -99,5 +103,8 @@ const eventSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+eventSchema.index({ approvalStatus: 1, status: 1, date: 1 });
+eventSchema.index({ vendorId: 1, createdAt: -1 });
 
 module.exports = mongoose.model("Event", eventSchema);

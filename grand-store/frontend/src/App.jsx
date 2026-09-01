@@ -48,6 +48,7 @@ import AuctionPage from './features/auction/AuctionPage'
 import AuctionLotDetail from './features/auction/AuctionLotDetail'
 import AuctionCheckout from './features/auction/AuctionCheckout'
 import AdminAuctionPanel from './features/admin/AdminAuctionPanel'
+import AdminEventsPanel from './features/admin/AdminEventsPanel'
 import TastingPage from './features/tasting/TastingPage'
 import PremiumLiquorsBlogPage from './features/blog/PremiumLiquorsBlogPage'
 import BrandyBlogPage from './features/blog/BrandyBlogPage'
@@ -747,6 +748,7 @@ function App() {
             path="auctions"
             element={<AdminAuctionPanel onNotify={showToast} />}
           />
+          <Route path="events" element={<AdminEventsPanel onNotify={showToast} />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="testimonials" element={<AdminTestimonials />} />
           <Route path="trade-enquiries" element={<AdminTradeEnquiries />} />

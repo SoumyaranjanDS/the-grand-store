@@ -4,7 +4,7 @@ const AuctionLot = require('../models/AuctionLot');
 const Booking = require('../models/Booking');
 const { processOrderPayment } = require('./orderController');
 const { processAuctionPayment } = require('./auctionController');
-const { processEventPayment } = require('./eventController');
+const { processEventPayment } = require('./eventControllerV2');
 const { processVendorPayment } = require('./vendorController');
 
 const trimTrailingSlashes = (url) => url.replace(/\/+$/, '');
@@ -145,9 +145,12 @@ exports.generateEventPayment = async (req, res) => {
     const booking = await Booking.findById(bookingId).populate('user', 'name email').populate('event', 'title');
     
     if (!booking) return res.status(404).json({ message: 'Booking not found' });
-    if (booking.paymentStatus === 'Paid') return res.status(400).json({ message: 'Booking already paid' });
+    if (['Paid', 'Completed'].includes(booking.paymentStatus)) return res.status(400).json({ message: 'Booking already paid' });
     if (booking.user._id.toString() !== req.user._id.toString()) {
        return res.status(403).json({ message: 'Only the ticket holder can pay for this booking' });
+    }
+    if (booking.paymentStatus !== 'Pending' || (booking.reservationExpiresAt && booking.reservationExpiresAt <= new Date())) {
+      return res.status(410).json({ message: 'This ticket reservation has expired. Please book again.' });
     }
 
     const config = getPayfastConfig();
@@ -226,11 +229,9 @@ exports.itnWebhook = async (req, res) => {
     const payload = req.body;
     const config = getPayfastConfig();
 
-    console.error('PayFast ITN Received:', {
-      method: req.method,
-      headers: req.headers,
-      body: req.body,
-      query: req.query
+    console.log('PayFast ITN received', {
+      paymentId: payload?.m_payment_id,
+      status: payload?.payment_status,
     });
 
     if (!payload || typeof payload !== 'object' || !payload.m_payment_id || !payload.payment_status) {
@@ -238,7 +239,30 @@ exports.itnWebhook = async (req, res) => {
       return res.status(400).send('Invalid payload');
     }
     
-    // We will verify the ITN by doing a POST back to PayFast's validation endpoint
+    const receivedSignature = String(payload.signature || '');
+    const signaturePayload = { ...payload };
+    delete signaturePayload.signature;
+    const expectedSignature = generateSignature(signaturePayload, config.passphrase);
+    const signaturesMatch = receivedSignature.length === expectedSignature.length && crypto.timingSafeEqual(
+      Buffer.from(receivedSignature),
+      Buffer.from(expectedSignature),
+    );
+    if (!signaturesMatch) {
+      console.error('PayFast ITN local signature mismatch');
+      return res.status(400).send('Invalid signature');
+    }
+
+    if (String(payload.merchant_id) !== String(config.merchant_id)) {
+      console.error('PayFast ITN merchant mismatch');
+      return res.status(400).send('Invalid merchant');
+    }
+
+    // Cancelled/failed notices are authenticated but do not change paid inventory.
+    if (payload.payment_status !== 'COMPLETE') {
+      return res.status(200).send('OK');
+    }
+
+    // Completed payments also receive PayFast's server-to-server validation.
     const axios = require('axios');
     let pfParamString = '';
     for (let key in payload) {
@@ -263,11 +287,6 @@ exports.itnWebhook = async (req, res) => {
       return res.status(500).send('Validation network error');
     }
 
-    if (String(payload.merchant_id) !== String(config.merchant_id)) {
-      console.error('PayFast ITN merchant mismatch');
-      return res.status(400).send('Invalid merchant');
-    }
-
     if (payload.payment_status === 'COMPLETE') {
        const reference = payload.m_payment_id;
        if (reference.startsWith('SHP-')) {
@@ -280,7 +299,16 @@ exports.itnWebhook = async (req, res) => {
           console.log(`Successfully processed auction payment for ${auctionId}`);
        } else if (reference.startsWith('EVT-')) {
           const bookingId = reference.replace('EVT-', '');
-          await processEventPayment(bookingId);
+          const booking = await Booking.findById(bookingId).select('totalPrice');
+          if (!booking) return res.status(404).send('Event booking not found');
+          const paidAmount = Number(payload.amount_gross);
+          if (!Number.isFinite(paidAmount) || Math.abs(paidAmount - booking.totalPrice) > 0.01) {
+            console.error('PayFast event amount mismatch', { bookingId, paidAmount });
+            return res.status(400).send('Payment amount mismatch');
+          }
+          await processEventPayment(bookingId, {
+            gatewayTransactionId: payload.pf_payment_id,
+          });
           console.log(`Successfully processed event payment for ${bookingId}`);
        } else if (reference.startsWith('VND-')) {
           const vendorId = reference.replace('VND-', '');

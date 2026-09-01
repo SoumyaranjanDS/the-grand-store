@@ -5,6 +5,7 @@ import { Calendar, MapPin, Clock, Users, Tag, Check, ArrowLeft, ShoppingBag, Che
 import { useAuth } from '../../context/AuthContext';
 import PaymentForm from '../checkout/PaymentForm';
 import Price from '../../components/ui/Price';
+import { getEventPhase, getTierAvailability, isEventBookable, resolveEventImage } from './eventPhase';
 
 export default function EventDetails({ onNotify, onAdd }) {
   const { id } = useParams();
@@ -21,7 +22,7 @@ export default function EventDetails({ onNotify, onAdd }) {
         const res = await api.get(`/events/${id}`);
         setEvent(res.data);
         if (res.data.ticketTiers && res.data.ticketTiers.length > 0) {
-          setSelectedTicket(res.data.ticketTiers[0]);
+          setSelectedTicket(res.data.ticketTiers.find((tier) => getTierAvailability(tier) > 0) || res.data.ticketTiers[0]);
         }
       } catch (error) {
         console.error('Failed to load event details', error);
@@ -48,10 +49,7 @@ export default function EventDetails({ onNotify, onAdd }) {
     
     setWaitlistLoading(true);
     try {
-      const token = user.token;
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/events/${id}/waitlist`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.post(`/events/${id}/waitlist`);
       
       if (onNotify) onNotify(res.data.message || 'Successfully joined the waitlist!');
     } catch (error) {
@@ -69,23 +67,23 @@ export default function EventDetails({ onNotify, onAdd }) {
       return;
     }
     
+    if (!isEventBookable(event)) {
+      if (onNotify) onNotify('This event is no longer accepting bookings.', 'error');
+      return;
+    }
+
     setBookingLoading(true);
     try {
-      const token = user.token;
       // 1. Create Pending Booking
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/events/${id}/book`, {
+      const res = await api.post(`/events/${id}/book`, {
+        ticketTierId: selectedTicket._id,
         ticketType: selectedTicket.name,
-        quantity,
-        totalPrice: selectedTicket.price * quantity
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
+        quantity
       });
       
       // 2. Request PayFast Signature
-      const pfRes = await axios.post(`${import.meta.env.VITE_API_URL}/api/payfast/generate-event`, {
+      const pfRes = await api.post(`/payfast/generate-event`, {
         bookingId: res.data._id
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
 
       setPayfastUrl(pfRes.data.url);
@@ -105,12 +103,15 @@ export default function EventDetails({ onNotify, onAdd }) {
     return <div className="min-h-screen bg-[#0a0907] pt-0 text-center text-white">Event not found.</div>;
   }
 
+  const phase = getEventPhase(event);
+  const bookable = isEventBookable(event);
+
   return (
     <div className="min-h-screen bg-[#0a0907] pb-20 text-[#eee8dd]">
       {/* Hero Section */}
       <div className="relative h-[60vh] w-full">
         {event.image ? (
-          <img src={`${import.meta.env.VITE_API_URL}${event.image}`} alt={event.title} className="w-full h-full object-cover" />
+          <img src={resolveEventImage(event.image)} alt={event.title} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full bg-[#11100d]"></div>
         )}
@@ -123,7 +124,7 @@ export default function EventDetails({ onNotify, onAdd }) {
           </button>
           
           <div className="inline-block px-3 py-1 bg-[#c9a35b]/20 border border-[#c9a35b]/40 text-gold-gradient rounded text-xs font-bold uppercase tracking-wider mb-4">
-            {event.type}
+            {event.type} · {phase}
           </div>
           <h1 className="text-4xl md:text-6xl font-serif text-white mb-6 leading-tight max-w-4xl">{event.title}</h1>
           
@@ -224,13 +225,13 @@ export default function EventDetails({ onNotify, onAdd }) {
             
             <div className="space-y-4 mb-8">
               {event.ticketTiers.map(tier => {
-                const available = tier.quantity - tier.sold;
+                const available = getTierAvailability(tier);
                 const isSelected = selectedTicket?._id === tier._id;
                 
                 return (
                   <div 
                     key={tier._id}
-                    onClick={() => available > 0 && setSelectedTicket(tier)}
+                    onClick={() => bookable && available > 0 && setSelectedTicket(tier)}
                     className={`p-4 rounded-xl border cursor-pointer transition-all ${
                       available === 0 
                       ? 'border-white/5 opacity-50 cursor-not-allowed bg-black/50' 
@@ -277,7 +278,7 @@ export default function EventDetails({ onNotify, onAdd }) {
                   >-</button>
                   <span className="text-xl font-serif text-white w-8 text-center">{quantity}</span>
                   <button 
-                    onClick={() => setQuantity(Math.min(selectedTicket.quantity - selectedTicket.sold, quantity + 1))}
+                    onClick={() => setQuantity(Math.min(getTierAvailability(selectedTicket), quantity + 1))}
                     className="w-10 h-10 rounded-lg border border-white/20 flex items-center justify-center text-white hover:border-[#c9a35b]"
                   >+</button>
                 </div>
@@ -292,7 +293,15 @@ export default function EventDetails({ onNotify, onAdd }) {
             )}
 
             {(() => {
-              const totalAvailable = event.ticketTiers.reduce((acc, tier) => acc + (tier.quantity - tier.sold), 0);
+              const totalAvailable = event.ticketTiers.reduce((acc, tier) => acc + getTierAvailability(tier), 0);
+
+              if (!bookable) {
+                return (
+                  <div className="w-full border border-white/10 bg-white/[0.03] px-4 py-4 text-center text-sm text-[#918a7f] rounded-xl">
+                    {phase === 'completed' ? 'This event has concluded. Ticket sales are closed.' : 'This event is not accepting bookings.'}
+                  </div>
+                );
+              }
               
               if (totalAvailable === 0) {
                 return (
@@ -309,7 +318,7 @@ export default function EventDetails({ onNotify, onAdd }) {
               return (
                 <button 
                   onClick={handleBooking}
-                  disabled={!selectedTicket || (selectedTicket.quantity - selectedTicket.sold) === 0 || bookingLoading}
+                  disabled={!selectedTicket || getTierAvailability(selectedTicket) === 0 || bookingLoading}
                   className="w-full bg-gold-gradient hover:bg-[#e1bd70] text-black font-bold uppercase tracking-wider py-4 rounded-xl transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(201,163,91,0.2)]"
                 >
                   {bookingLoading ? 'Booking...' : !selectedTicket ? 'Select a Ticket' : 'Book Now'}

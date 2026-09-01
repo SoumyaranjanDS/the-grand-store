@@ -6,6 +6,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Calendar, MapPin, Clock, Ticket, LogOut, User, Package, Heart, Building2, Gavel } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Price from '../../components/ui/Price';
+import { resolveEventImage } from '../events/eventPhase';
 
 export default function MyTickets() {
   const { user, logout } = useAuth();
@@ -85,7 +86,7 @@ export default function MyTickets() {
                 {/* Event Image */}
                 <div className="lg:w-1/3 xl:w-1/4 h-48 lg:h-auto relative shrink-0">
                   {ticket.event?.image ? (
-                    <img src={`${ticket.event.image}`} alt={ticket.event.title} className="w-full h-full object-cover" />
+                    <img src={resolveEventImage(ticket.event.image)} alt={ticket.event.title} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full bg-[#1a1814]"></div>
                   )}
@@ -94,11 +95,12 @@ export default function MyTickets() {
                   {/* Status Badge Over Image */}
                   <div className="absolute top-4 left-4 z-20">
                     <span className={`text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full ${
+                      !['Paid', 'Completed'].includes(ticket.paymentStatus) ? 'bg-yellow-500/80 text-black' :
                       ticket.ticketStatus === 'Valid' ? 'bg-green-500/80 text-white shadow-[0_0_10px_rgba(34,197,94,0.3)]' :
                       ticket.ticketStatus === 'Used' ? 'bg-black/50 text-white/70 backdrop-blur-md' :
                       'bg-red-500/80 text-white shadow-[0_0_10px_rgba(239,68,68,0.3)]'
                     }`}>
-                      {ticket.ticketStatus}
+                      {['Paid', 'Completed'].includes(ticket.paymentStatus) ? ticket.ticketStatus : ticket.paymentStatus}
                     </span>
                   </div>
                 </div>
@@ -147,13 +149,21 @@ export default function MyTickets() {
                    <div className="hidden lg:block w-8 h-8 rounded-full bg-[#050505] absolute -left-4 -top-4 border-b border-r border-white/[0.05]"></div>
                    <div className="hidden lg:block w-8 h-8 rounded-full bg-[#050505] absolute -left-4 -bottom-4 border-t border-r border-white/[0.05]"></div>
                    
-                   <div className="bg-white p-3 rounded-xl mb-4 shadow-[0_0_30px_rgba(212,175,55,0.15)] relative group-hover:shadow-[0_0_40px_rgba(212,175,55,0.3)] transition-shadow">
-                     <QRCodeSVG value={ticket.ticketId} size={110} />
-                   </div>
-                   <p className="text-[11px] font-mono text-white/50 tracking-[0.2em]">{ticket.ticketId}</p>
+                   {['Paid', 'Completed'].includes(ticket.paymentStatus) ? (
+                     <>
+                       <div className="bg-white p-3 rounded-xl mb-4 shadow-[0_0_30px_rgba(212,175,55,0.15)] relative group-hover:shadow-[0_0_40px_rgba(212,175,55,0.3)] transition-shadow">
+                         <QRCodeSVG value={ticket.ticketId} size={110} />
+                       </div>
+                       <p className="text-[11px] font-mono text-white/50 tracking-[0.2em]">{ticket.ticketId}</p>
+                     </>
+                   ) : (
+                     <div className="mb-4 rounded-xl border border-yellow-500/20 bg-yellow-500/10 p-4 text-center text-xs text-yellow-300">
+                       QR ticket available after payment confirmation.
+                     </div>
+                   )}
                    
                    <div className="mt-6 pt-4 border-t border-white/10 w-full text-center flex items-center justify-between lg:block">
-                     <p className="text-[9px] text-[var(--color-ivory-muted)] uppercase tracking-widest lg:mb-1">Total Paid</p>
+                     <p className="text-[9px] text-[var(--color-ivory-muted)] uppercase tracking-widest lg:mb-1">{['Paid', 'Completed'].includes(ticket.paymentStatus) ? 'Total Paid' : 'Order Total'}</p>
                      <p className="text-2xl font-serif text-gold-gradient"><Price amount={ticket.totalPrice} /></p>
                    </div>
                    

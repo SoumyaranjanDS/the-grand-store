@@ -6,6 +6,8 @@ const bookingSchema = new mongoose.Schema({
   vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 
   ticketType: { type: String, required: true },
+  ticketTierId: { type: mongoose.Schema.Types.ObjectId, required: true },
+  unitPrice: { type: Number, required: true, min: 0 },
   quantity: { type: Number, required: true, min: 1 },
 
   // === ACCOUNTING BREAKDOWN ===
@@ -22,17 +24,27 @@ const bookingSchema = new mongoose.Schema({
 
   paymentStatus: {
     type: String,
-    enum: ['Pending', 'Paid', 'Refunded', 'Failed'],
-    default: 'Paid'
+    enum: ['Pending', 'Paid', 'Completed', 'Refunded', 'Failed'],
+    default: 'Pending'
   },
   ticketStatus: {
     type: String,
-    enum: ['Valid', 'Used', 'Cancelled'],
-    default: 'Valid'
+    enum: ['Pending', 'Valid', 'Used', 'Cancelled'],
+    default: 'Pending'
   },
+  inventoryStatus: {
+    type: String,
+    enum: ['reserved', 'sold', 'released'],
+    default: 'reserved'
+  },
+  reservationExpiresAt: { type: Date, index: true },
+  paymentProcessedAt: { type: Date },
+  gatewayTransactionId: { type: String },
   ticketId: { type: String, required: true, unique: true },
   bookingDate: { type: Date, default: Date.now }
 });
+
+bookingSchema.index({ event: 1, paymentStatus: 1 });
 
 module.exports = mongoose.model('Booking', bookingSchema);
 

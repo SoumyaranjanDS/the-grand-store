@@ -108,6 +108,7 @@ app.use("/uploads", express.static("uploads"));
 const startAuctionCronJobs = require("./jobs/auctionJobs");
 const startVendorTrustJobs = require("./jobs/vendorTrustJob");
 const startReminderJobs = require("./jobs/reminderJobs");
+const startEventJobs = require("./jobs/eventJobs");
 
 // Database Connection
 mongoose
@@ -120,6 +121,7 @@ mongoose
     startAuctionCronJobs();
     startVendorTrustJobs();
     startReminderJobs();
+    startEventJobs();
   })
   .catch((err) => console.error("MongoDB connection error:", err));
 

@@ -100,6 +100,7 @@ export default function CartPage({ cartItems, onUpdateQuantity, onRemove, onClea
                           <dl>
                             <div><dt>Format</dt><dd>{item.option}</dd></div>
                             <div><dt>SKU ID</dt><dd>{item.sku}</dd></div>
+                            <div><dt>Unit Price</dt><dd><Price amount={getProductPrice(item.price)} /></dd></div>
                           </dl>
                         </div>
                         <div className="cart-item-purchase">

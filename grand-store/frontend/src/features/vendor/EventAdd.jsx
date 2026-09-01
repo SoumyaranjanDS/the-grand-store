@@ -4,6 +4,11 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { Calendar, Users, MapPin, Tag, Plus, Trash2, Image as ImageIcon, CheckCircle2 } from 'lucide-react';
 
+const toDateInput = (date = new Date()) => {
+  const pad = (value) => String(value).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+};
+
 export default function EventAdd({ onNotify }) {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -66,8 +71,19 @@ export default function EventAdd({ onNotify }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
     setError('');
+
+    if (formData.endTime <= formData.startTime) {
+      setError('Event end time must be later than its start time.');
+      return;
+    }
+    const tierCapacity = ticketTiers.reduce((sum, tier) => sum + Number(tier.quantity || 0), 0);
+    if (tierCapacity > Number(formData.capacity)) {
+      setError('Combined ticket quantities cannot exceed the total event capacity.');
+      return;
+    }
+
+    setSubmitting(true);
 
     try {
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
@@ -91,15 +107,15 @@ export default function EventAdd({ onNotify }) {
       }));
       payload.append('ticketTiers', JSON.stringify(processedTiers));
 
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/events`, payload, {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/events`, payload, {
         headers: { 
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }
       });
 
-      if (onNotify) onNotify('Event created successfully!');
-      navigate(user.role === 'event_host' ? '/event-manager/dashboard' : '/vendor/dashboard');
+      if (onNotify) onNotify(response.data?.message || 'Event submitted for admin approval!');
+      navigate(user.role === 'event_host' ? '/event-manager/events' : '/vendor/events');
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || err.message || 'Failed to create event');
@@ -172,7 +188,7 @@ export default function EventAdd({ onNotify }) {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label className="block text-sm uppercase tracking-wider font-semibold text-[#918a7f] mb-2">Date *</label>
-                <input type="date" name="date" value={formData.date} onChange={handleChange} required className="w-full bg-[#0a0907] border border-white/10 rounded-lg p-3 focus:border-[#c9a35b] outline-none" />
+                <input type="date" name="date" min={toDateInput()} value={formData.date} onChange={handleChange} required className="w-full bg-[#0a0907] border border-white/10 rounded-lg p-3 focus:border-[#c9a35b] outline-none" />
               </div>
               <div>
                 <label className="block text-sm uppercase tracking-wider font-semibold text-[#918a7f] mb-2">Start Time *</label>
@@ -180,7 +196,7 @@ export default function EventAdd({ onNotify }) {
               </div>
               <div>
                 <label className="block text-sm uppercase tracking-wider font-semibold text-[#918a7f] mb-2">End Time *</label>
-                <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} required className="w-full bg-[#0a0907] border border-white/10 rounded-lg p-3 focus:border-[#c9a35b] outline-none" />
+                <input type="time" name="endTime" min={formData.startTime || undefined} value={formData.endTime} onChange={handleChange} required className="w-full bg-[#0a0907] border border-white/10 rounded-lg p-3 focus:border-[#c9a35b] outline-none" />
               </div>
             </div>
 
@@ -259,7 +275,7 @@ export default function EventAdd({ onNotify }) {
               disabled={submitting}
               className="w-full bg-[#c9a35b] hover:bg-[#e1bd70] text-black font-bold uppercase tracking-wider py-4 rounded-xl transition-colors disabled:opacity-50 flex justify-center items-center gap-2 "
             >
-              {submitting ? 'Creating Event...' : <><CheckCircle2 size={20} /> Publish Event</>}
+              {submitting ? 'Submitting Event...' : <><CheckCircle2 size={20} /> Submit for Approval</>}
             </button>
           </div>
         </form>

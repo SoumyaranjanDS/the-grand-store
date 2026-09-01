@@ -71,7 +71,9 @@ export const ReviewSection = ({
     formData.append('image', file);
 
     try {
-      const response = await api.post('/social-proof/upload', formData);
+      const response = await api.post('/social-proof/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
 
       if (response.data?.success && response.data?.url) {
         setMediaList((current) => [...current, { type: 'photo', url: response.data.url }]);
@@ -192,12 +194,7 @@ export const ReviewSection = ({
             >
               <ImageIcon size={14} /> With Photos
             </button>
-            <button 
-              className={`flex items-center gap-2 rounded-full border px-3 py-2 text-xs sm:px-4 sm:text-sm ${filter === 'verified' ? 'border-gold-500 bg-gold-500/10 text-gold-400' : 'border-white/20 hover:border-white/50'}`}
-              onClick={() => setFilter('verified')}
-            >
-              <CheckCircle size={14} /> Verified Purchases
-            </button>
+
             <label className="ml-0 flex w-full items-center gap-2 text-sm text-[var(--color-ivory-muted)] sm:ml-auto sm:w-auto">
               Sort:
               <select

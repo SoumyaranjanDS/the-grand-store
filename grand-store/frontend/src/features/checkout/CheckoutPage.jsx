@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { ChevronRight, ArrowRight, ShieldCheck, Lock, CreditCard, Loader2, Truck, AlertTriangle, CheckCircle2, ShoppingCart, MapPin, FileText, Download, Plus, Minus, Trash2 } from 'lucide-react';
+import { ChevronRight, ChevronDown, ChevronUp, ArrowRight, ShieldCheck, Lock, CreditCard, Loader2, Truck, AlertTriangle, CheckCircle2, ShoppingCart, MapPin, FileText, Download, Plus, Minus, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getProductPrice } from '../../data';
 import LocationInput from '../../components/LocationInput';
@@ -26,6 +26,7 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
   const [dutiesAccepted, setDutiesAccepted] = useState(false);
   const [deliveryPreference, setDeliveryPreference] = useState('home');
   const [applyRewards, setApplyRewards] = useState(false);
+  const [mobileSummaryOpen, setMobileSummaryOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     email: user ? user.email : '',
@@ -52,6 +53,13 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
   const [payfastUrl, setPayfastUrl] = useState(null);
 
   const cartSubtotal = vendorCartItems.reduce((sum, item) => sum + (getProductPrice(item.price) * item.quantity), 0);
+  const cartItemCount = vendorCartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const placeOrderTotal = quote ? quote.aggregatedTotals.totalToPay : cartSubtotal;
+  const displayedTotal = Math.max(0, placeOrderTotal - (applyRewards ? (user?.rewardBalance || 0) : 0));
+
+  const scrollToCheckoutSection = (sectionId) => {
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const handleUpdateQuantity = (productId, option, newQuantity) => {
     if (updateCartQuantity) updateCartQuantity(productId, option, newQuantity);
@@ -480,8 +488,8 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
   }
 
   return (
-    <main className="pt-32 pb-16 min-h-screen bg-[#050505]">
-      <div className="max-w-6xl mx-auto px-6 mb-12">
+    <main className="pt-24 pb-36 min-h-screen bg-[#050505] md:pt-32 md:pb-16">
+      <div className="max-w-6xl mx-auto px-4 mb-8 sm:px-6 md:mb-12">
         <div className="mb-6">
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-400 hover:text-[var(--color-gold)] transition-colors text-sm font-medium uppercase tracking-wider">
             <ArrowRight size={16} className="rotate-180" /> Back
@@ -489,35 +497,65 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
         </div>
         
         {/* Header */}
-        <div className="mb-12">
-          <div className="flex items-center gap-2 text-xs text-[var(--color-ivory-muted)] uppercase tracking-widest mb-4">
+        <div className="mb-7 md:mb-12">
+          <div className="hidden items-center gap-2 text-xs text-[var(--color-ivory-muted)] uppercase tracking-widest mb-4 md:flex">
             <Link to="/customer/cart" className="hover:text-gold-gradient transition-colors">Cart</Link>
             <ChevronRight size={12} />
             <span className={checkoutStep === 1 ? "text-gold-gradient font-medium" : ""}>Delivery</span>
             <ChevronRight size={12} />
             <span className={checkoutStep === 2 ? "text-gold-gradient font-medium" : ""}>Payment</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-serif">Checkout</h1>
+          <div className="flex items-end justify-between gap-4">
+            <h1 className="text-3xl font-serif md:text-5xl">Checkout</h1>
+            <div className="text-right md:hidden">
+              <p className="text-[10px] uppercase tracking-widest text-white/40">Total</p>
+              <p className="font-serif text-xl text-[var(--color-gold)]"><Price amount={displayedTotal} /></p>
+            </div>
+          </div>
         </div>
 
-        <div className="max-w-4xl mx-auto flex flex-col gap-12 items-center w-full">
+        {checkoutStep !== 3 && (
+          <nav aria-label="Checkout sections" className="sticky top-[68px] z-30 -mx-4 mb-5 overflow-x-auto border-y border-white/10 bg-[#080808]/95 px-4 py-2 backdrop-blur-xl md:hidden">
+            <div className="flex min-w-max items-center gap-2">
+              {[
+                ['checkout-order-summary', 'Order', true],
+                ['checkout-delivery-method', 'Delivery', Boolean(deliveryPreference)],
+                ['checkout-delivery-details', 'Details', Boolean(formData.firstName && formData.lastName && formData.city && formData.postalCode && formData.country)],
+                ['checkout-payment', 'Payment', Boolean(quote)],
+              ].map(([id, label, complete], index) => (
+                <button key={id} type="button" onClick={() => scrollToCheckoutSection(id)} className="flex min-h-10 items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 text-xs font-medium text-white/70 active:border-[var(--color-gold)] active:text-white">
+                  <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${complete ? 'bg-[var(--color-gold)] text-black' : 'bg-white/10 text-white/50'}`}>{complete ? <CheckCircle2 size={12} /> : index + 1}</span>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </nav>
+        )}
+
+        <div className="max-w-4xl mx-auto flex flex-col gap-6 items-center w-full md:gap-12">
           
           
           {/* Itemised order summary */}
           {checkoutStep !== 3 && (
-            <div className="w-full bg-[#111]/80 backdrop-blur-md border border-[var(--color-gold)]/20 rounded-2xl p-5 md:p-7 shadow-2xl relative overflow-hidden">
+            <div id="checkout-order-summary" className="scroll-mt-32 w-full bg-[#111]/80 backdrop-blur-md border border-[var(--color-gold)]/20 rounded-2xl p-4 md:p-7 shadow-2xl relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[var(--color-gold)] to-transparent opacity-50"></div>
               <div className="relative">
-                <div className="flex items-center justify-between gap-4 mb-5">
+                <div className="flex items-center justify-between gap-4 mb-4 md:mb-5">
                   <div>
                     <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-gold)] mb-1">Your order</p>
                     <h2 className="text-xl font-serif text-white">Price breakdown</h2>
                   </div>
                   <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-xs text-[var(--color-ivory-muted)]">
-                    {vendorCartItems.reduce((sum, item) => sum + item.quantity, 0)} item{vendorCartItems.reduce((sum, item) => sum + item.quantity, 0) === 1 ? '' : 's'}
+                    {cartItemCount} item{cartItemCount === 1 ? '' : 's'}
                   </span>
                 </div>
 
+                <button type="button" onClick={() => setMobileSummaryOpen((open) => !open)} aria-expanded={mobileSummaryOpen} className="mb-4 flex min-h-11 w-full items-center justify-between rounded-xl border border-white/10 bg-black/30 px-4 text-sm text-white md:hidden">
+                  <span>{mobileSummaryOpen ? 'Hide products and charges' : 'Show products and charges'}</span>
+                  {mobileSummaryOpen ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
+                </button>
+
+                <div className={`${mobileSummaryOpen ? 'block' : 'hidden'} md:block`}>
                 <div className="space-y-4 border-b border-white/10 pb-5">
                   {vendorCartItems.map((item) => (
                     <div key={`${item.id || item._id}-${item.option || ''}`} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/[0.02] border border-white/5 p-3 rounded-xl">
@@ -562,6 +600,9 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
                     </div>
                   )}
 
+                </div>
+                </div>
+
                   <div className="flex items-end justify-between gap-4 border-t border-white/10 pt-4">
                     <div>
                       <p className="text-white font-medium">Pay now</p>
@@ -571,10 +612,9 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
                       )}
                     </div>
                     <span className="text-3xl font-serif text-gold-gradient">
-                      <Price amount={Math.max(0, (quote?.aggregatedTotals.totalToPay ?? cartSubtotal) - (applyRewards ? (user?.rewardBalance || 0) : 0))} />
+                      <Price amount={displayedTotal} />
                     </span>
                   </div>
-                </div>
               </div>
             </div>
           )}
@@ -584,16 +624,16 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
             
             {checkoutStep !== 3 ? (
             
-              <form onSubmit={handlePlaceOrder}>
+              <form id="checkout-form" onSubmit={handlePlaceOrder}>
                 {/* Shipping Method Section moved to top */}
-                <section className="mb-8">
-                  <h2 className="text-xl font-serif mb-6 flex items-center gap-3">
+                <section id="checkout-delivery-method" className="scroll-mt-32 mb-5 rounded-2xl border border-white/10 bg-white/[0.02] p-4 md:mb-8 md:border-0 md:bg-transparent md:p-0">
+                  <h2 className="text-xl font-serif mb-4 flex items-center gap-3 md:mb-6">
                     <span className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-sm font-sans">1</span>
                     Delivery Method
                   </h2>
                   
                   <p className="text-sm text-[var(--color-ivory-muted)] mb-5">Choose how you want to receive the order before entering delivery details.</p>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
                     {[
                       {
                         value: 'home',
@@ -622,13 +662,15 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
                           type="button"
                           aria-pressed={selected}
                           onClick={() => selectDeliveryPreference(method.value)}
-                          className={`relative rounded-2xl border p-5 text-left transition-all ${selected ? 'border-[var(--color-gold)] bg-[var(--color-gold)]/10 shadow-[0_0_20px_rgba(212,175,55,0.08)]' : 'border-white/10 bg-[#0a0a0a] hover:border-white/30'}`}
+                          className={`relative flex min-h-[88px] items-start gap-3 rounded-2xl border p-4 text-left transition-all md:block md:min-h-0 md:p-5 ${selected ? 'border-[var(--color-gold)] bg-[var(--color-gold)]/10 shadow-[0_0_20px_rgba(212,175,55,0.08)]' : 'border-white/10 bg-[#0a0a0a] hover:border-white/30'}`}
                         >
-                          <span className={`mb-4 flex h-10 w-10 items-center justify-center rounded-full ${selected ? 'bg-[var(--color-gold)] text-black' : 'bg-white/5 text-white/60'}`}>
+                          <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full md:mb-4 ${selected ? 'bg-[var(--color-gold)] text-black' : 'bg-white/5 text-white/60'}`}>
                             <MethodIcon size={19} />
                           </span>
-                          <span className="block text-sm font-medium text-white mb-1">{method.title}</span>
-                          <span className="block text-xs leading-relaxed text-[var(--color-ivory-muted)]">{method.description}</span>
+                          <span className="block min-w-0 pr-6 md:pr-0">
+                            <span className="block text-sm font-medium text-white mb-1">{method.title}</span>
+                            <span className="block text-xs leading-relaxed text-[var(--color-ivory-muted)]">{method.description}</span>
+                          </span>
                           {selected && <CheckCircle2 size={17} className="absolute right-4 top-4 text-[var(--color-gold)]" />}
                         </button>
                       );
@@ -685,7 +727,7 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
                             
                             {/* PostNet Stores Logic */}
                             {shp.selectedCourier?.serviceLevel === opt.serviceLevel && opt.courierName === 'PostNet' && (
-                              <div className="mt-2 pl-8 pr-3 pb-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                              <div className="mt-2 px-0 pb-2 animate-in fade-in slide-in-from-top-2 duration-300 sm:pl-8 sm:pr-3">
                                 {opt.stores && opt.stores.length > 0 ? (
                                   <div className="mt-3">
                                     <div className="flex items-center justify-between mb-2">
@@ -778,12 +820,12 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
                   )}
                 </section>
 
-                <section className="border-t border-white/10 pt-8 mb-8">
-                  <h2 className="text-xl font-serif mb-6 flex items-center gap-3">
+                <section id="checkout-delivery-details" className="scroll-mt-32 mb-5 rounded-2xl border border-white/10 bg-white/[0.02] p-4 md:mb-8 md:rounded-none md:border-x-0 md:border-b-0 md:bg-transparent md:px-0 md:pt-8">
+                  <h2 className="text-xl font-serif mb-4 flex items-center gap-3 md:mb-6">
                     <span className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-sm font-sans">2</span>
                     Delivery Details
                   </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
                     <div>
                       <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-2">First Name</label>
                       <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} required className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--color-gold)]/50 focus:outline-none transition-colors" />
@@ -983,7 +1025,7 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
                     </div>
                     {/* Live Map */}
                     <div className="md:col-span-2">
-                      <div className={`w-full transition-all duration-700 ease-in-out overflow-hidden rounded-xl border border-[var(--color-gold)]/20 ${mapLocation ? 'h-64 opacity-100 mt-4' : 'h-0 opacity-0 border-none'}`} ref={mapRef}></div>
+                      <div className={`w-full transition-all duration-700 ease-in-out overflow-hidden rounded-xl border border-[var(--color-gold)]/20 ${mapLocation ? 'h-52 opacity-100 mt-4 md:h-64' : 'h-0 opacity-0 border-none'}`} ref={mapRef}></div>
                     </div>
                     
                     {/* Send as Gift */}
@@ -1023,13 +1065,13 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
                 </section>
                 
                 {/* Payment Section */}
-                <section className="border-t border-white/10 pt-8">
-                  <h2 className="text-xl font-serif flex items-center gap-3 mb-6">
+                <section id="checkout-payment" className="scroll-mt-32 rounded-2xl border border-white/10 bg-white/[0.02] p-4 md:rounded-none md:border-x-0 md:border-b-0 md:bg-transparent md:px-0 md:pt-8">
+                  <h2 className="text-xl font-serif flex items-center gap-3 mb-4 md:mb-6">
                     <span className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-sm font-sans">3</span>
                     Payment Method
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <label className={`cursor-pointer bg-[#0a0a0a] border rounded-2xl p-6 relative overflow-hidden transition-all ${paymentMethod === 'payfast' ? 'border-[var(--color-gold)] shadow-[0_0_15px_rgba(212,175,55,0.1)]' : 'border-white/10 hover:border-white/30'}`}>
+                    <label className={`cursor-pointer bg-[#0a0a0a] border rounded-2xl p-4 md:p-6 relative overflow-hidden transition-all ${paymentMethod === 'payfast' ? 'border-[var(--color-gold)] shadow-[0_0_15px_rgba(212,175,55,0.1)]' : 'border-white/10 hover:border-white/30'}`}>
                       <input type="radio" name="paymentMethod" value="payfast" checked={paymentMethod === 'payfast'} onChange={(e) => setPaymentMethod(e.target.value)} className="hidden" />
                       <div className="absolute top-0 right-0 p-4 opacity-10"><CreditCard size={80} /></div>
                       <div className="relative z-10">
@@ -1045,7 +1087,7 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
                       </div>
                     </label>
 
-                    <label className={`cursor-pointer bg-[#0a0a0a] border rounded-2xl p-6 relative overflow-hidden transition-all ${paymentMethod === 'bank_transfer' ? 'border-[var(--color-gold)] shadow-[0_0_15px_rgba(212,175,55,0.1)]' : 'border-white/10 hover:border-white/30'}`}>
+                    <label className={`cursor-pointer bg-[#0a0a0a] border rounded-2xl p-4 md:p-6 relative overflow-hidden transition-all ${paymentMethod === 'bank_transfer' ? 'border-[var(--color-gold)] shadow-[0_0_15px_rgba(212,175,55,0.1)]' : 'border-white/10 hover:border-white/30'}`}>
                       <input type="radio" name="paymentMethod" value="bank_transfer" checked={paymentMethod === 'bank_transfer'} onChange={(e) => setPaymentMethod(e.target.value)} className="hidden" />
                       <div className="absolute top-0 right-0 p-4 opacity-10"><ShieldCheck size={80} /></div>
                       <div className="relative z-10">
@@ -1059,7 +1101,7 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
                 <button 
                   type="submit" 
                   disabled={loading || !quote}
-                  className="w-full mt-8 bg-[#c9a35b] text-black font-bold uppercase tracking-widest text-xs py-4 rounded-xl hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="hidden w-full mt-8 bg-[#c9a35b] text-black font-bold uppercase tracking-widest text-xs py-4 rounded-xl hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all md:flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : <>Place Order • <Price amount={quote ? quote.aggregatedTotals.totalToPay : cartSubtotal} /> <ArrowRight size={16} /></>}
                 </button>
@@ -1074,7 +1116,7 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
                   Order Placed Successfully
                 </h2>
                 
-                <div className="bg-gradient-to-br from-[#111] to-[#0a0a0a] border border-[var(--color-gold)]/20 shadow-[0_0_30px_rgba(212,175,55,0.05)] rounded-2xl p-8 mb-8 text-center relative overflow-hidden">
+                <div className="bg-gradient-to-br from-[#111] to-[#0a0a0a] border border-[var(--color-gold)]/20 shadow-[0_0_30px_rgba(212,175,55,0.05)] rounded-2xl p-4 sm:p-6 md:p-8 mb-8 text-center relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--color-gold)]/5 rounded-full blur-3xl"></div>
                   <div className="relative z-10">
                     <h3 className="text-lg font-serif text-[var(--color-gold)] mb-2">Awaiting Bank Transfer</h3>
@@ -1136,6 +1178,26 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
 
           </div>
       </div>
+
+      {checkoutStep !== 3 && (
+        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-[#080808]/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-16px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl md:hidden">
+          <div className="mx-auto flex max-w-lg items-center gap-3">
+            <div className="min-w-0 shrink-0">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-white/40">Pay now</p>
+              <p className="truncate font-serif text-lg text-[var(--color-gold)]"><Price amount={displayedTotal} /></p>
+            </div>
+            {quote ? (
+              <button form="checkout-form" type="submit" disabled={loading} className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-[#c9a35b] px-4 text-xs font-bold uppercase tracking-widest text-black disabled:opacity-50">
+                {loading ? <><Loader2 size={16} className="animate-spin" /> Processing</> : <>Place Order <ArrowRight size={16} /></>}
+              </button>
+            ) : (
+              <button type="button" onClick={() => scrollToCheckoutSection('checkout-delivery-details')} className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-[#c9a35b] px-4 text-xs font-bold uppercase tracking-wider text-black">
+                Add delivery rate <ArrowRight size={16} />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </main>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { LayoutDashboard, Users, Building2, Gavel, Wallet, Settings, Menu, X, LogOut, ArrowLeft, Star, Package, ShoppingBag, Tv, Mail, Activity, Briefcase, Shield, Gem, Award, MessageSquare, Bot } from 'lucide-react';
+import { LayoutDashboard, Users, Building2, Gavel, Wallet, Settings, Menu, X, LogOut, ArrowLeft, Star, Package, ShoppingBag, Tv, Mail, Activity, Briefcase, Shield, Gem, Award, MessageSquare, Bot, CalendarCheck } from 'lucide-react';
 
 
 export default function AdminLayout() {
@@ -129,6 +129,9 @@ export default function AdminLayout() {
               <>
                 <button onClick={() => handleNavigate('/admin/auctions')} className={navItemClass('/admin/auctions')}>
                   <Gavel size={16} /> Auctions Management
+                </button>
+                <button onClick={() => handleNavigate('/admin/events')} className={navItemClass('/admin/events')}>
+                  <CalendarCheck size={16} /> Events Management
                 </button>
                 <button onClick={() => handleNavigate('/admin/expert-reviews')} className={navItemClass('/admin/expert-reviews')}>
                   <Award size={16} /> Expert Reviews

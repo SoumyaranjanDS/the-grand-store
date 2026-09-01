@@ -15,7 +15,7 @@ export default function EventSuccessPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    document.title = 'Event Ticket Status ?" The Grand Store';
+    document.title = 'Event Ticket Status — The Grand Store';
     
     // Quick polling to wait for webhook if needed
     const fetchBooking = async () => {
@@ -155,7 +155,7 @@ export default function EventSuccessPage() {
               ) : (
                 <>
                   <p className="text-[#888] text-sm mb-6">
-                    No funds were deducted. You can try booking again or explore other upcoming events.
+                    Payment has not been confirmed. Check your payment account before trying again, or contact support with your booking reference.
                   </p>
                   <Link to={`/events/${booking.event?._id}`} className="button button-gold w-full text-center mb-3">Try Booking Again</Link>
                   <Link to="/events" className="button button-dark w-full text-center">Back to Events</Link>
