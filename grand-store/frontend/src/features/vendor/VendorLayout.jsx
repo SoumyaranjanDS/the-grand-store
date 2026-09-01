@@ -181,7 +181,7 @@ export default function VendorLayout() {
         <main className="flex-1 w-full md:ml-64 p-4 md:p-8 lg:p-12 flex flex-col z-10 min-h-[calc(100vh-5rem)] relative">
           <Outlet />
 
-          {user.role === 'vendor_approved_unpaid' && (
+          {user.role === 'vendor_approved_unpaid' && location.pathname !== '/vendor/payment' && (
             <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center backdrop-blur-sm p-4">
                <div className="bg-[#0a0a0a] p-8 rounded-xl border border-gold/30 text-center max-w-md shadow-2xl">
                   <div className="w-16 h-16 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-6">

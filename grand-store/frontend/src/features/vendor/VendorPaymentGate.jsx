@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import api from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import { CreditCard, CheckCircle, Store, ShieldCheck } from "lucide-react";
@@ -15,6 +15,14 @@ export default function VendorPaymentGate() {
   const [couponCode, setCouponCode] = useState("");
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [couponError, setCouponError] = useState("");
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user.role === 'vendor_active') {
+    return <Navigate to="/vendor/dashboard" replace />;
+  }
 
   React.useEffect(() => {
     // Check if we just returned from PayFast

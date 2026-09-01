@@ -29,6 +29,7 @@ export default function LoginPage() {
       else if (role === 'event_host') defaultRoute = '/event-manager/dashboard';
       else if (role === 'auction_host') defaultRoute = '/auction-manager/dashboard';
       else if (role === 'vendor_pending' || role === 'vendor_active') defaultRoute = '/vendor/dashboard';
+      else if (role === 'vendor_approved_unpaid') defaultRoute = '/vendor/payment';
       
       const targetRoute = searchParams.get('redirect') || defaultRoute;
       navigate(targetRoute);

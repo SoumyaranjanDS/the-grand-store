@@ -23,7 +23,19 @@ const subscribeNewsletter = async (req, res) => {
       return res.status(400).json({ message: 'Email is required' });
     }
 
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    let ip = req.headers['cf-connecting-ip'] || 
+             req.headers['x-real-ip'] || 
+             req.headers['x-forwarded-for'] || 
+             req.ip || 
+             req.socket.remoteAddress;
+
+    if (ip && typeof ip === 'string' && ip.includes(',')) {
+      ip = ip.split(',')[0].trim();
+    }
+    if (ip && ip.startsWith('::ffff:')) {
+      ip = ip.replace('::ffff:', '');
+    }
+
     const geo = geoip.lookup(ip);
     const country = geo ? getCountryName(geo.country) : 'Unknown';
 

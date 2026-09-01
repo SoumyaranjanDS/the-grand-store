@@ -16,6 +16,7 @@ const attributeRoutes = require("./routes/attributeRoutes");
 const glossaryRoutes = require("./routes/glossaryRoutes");
 
 const app = express();
+app.set('trust proxy', 1);
 
 // Middleware
 // Parse allowed origins from .env or fallback to localhost
