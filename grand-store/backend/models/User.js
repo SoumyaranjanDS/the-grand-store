@@ -37,7 +37,6 @@ const userSchema = new mongoose.Schema({
   },
   staffKey: {
     type: String,
-    enum: ['accountant', 'product_manager'],
     unique: true,
     sparse: true,
   },
