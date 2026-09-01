@@ -1,170 +1,379 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { CheckCircle2, Ticket, MapPin, Calendar, Clock, AlertTriangle, User } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Clock3,
+  ExternalLink,
+  Landmark,
+  Loader2,
+  RefreshCw,
+  Ticket,
+  Upload,
+} from 'lucide-react';
 import api from '../../api';
 import Price from '../../components/ui/Price';
+import PaymentForm from '../checkout/PaymentForm';
+
+const PAID_STATUSES = ['Paid', 'Completed'];
+
+const formatStatus = (value) => String(value || 'Pending').replaceAll('_', ' ');
 
 export default function EventSuccessPage() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  
-  const paymentStatus = searchParams.get('payment');
-  
+  const paymentResult = searchParams.get('payment');
+
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+  const [uploadingProof, setUploadingProof] = useState(false);
+  const [proofUrl, setProofUrl] = useState('');
+  const [feedback, setFeedback] = useState('');
+  const [bankDetails, setBankDetails] = useState(null);
+  const [paymentData, setPaymentData] = useState(null);
+  const [payfastUrl, setPayfastUrl] = useState(null);
+
+  const fetchBooking = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setRefreshing(true);
+    try {
+      const response = await api.get('/events/bookings/my-tickets');
+      const found = response.data.find((item) => item._id === id);
+      setBooking(found || null);
+      return found;
+    } catch (error) {
+      console.error('Failed to fetch event booking:', error);
+      setFeedback(error.response?.data?.message || 'We could not refresh this ticket right now.');
+      return null;
+    } finally {
+      setLoading(false);
+      if (!silent) setRefreshing(false);
+    }
+  }, [id]);
 
   useEffect(() => {
     document.title = 'Event Ticket Status — The Grand Store';
-    
-    // Quick polling to wait for webhook if needed
-    const fetchBooking = async () => {
-      try {
-        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-        const headers = userInfo?.token ? { Authorization: `Bearer ${userInfo.token}` } : {};
-        
-        let attempts = 0;
-        const maxAttempts = paymentStatus === 'success' ? 5 : 1;
-        
-        while (attempts < maxAttempts) {
-          // We can use the existing 'my-tickets' route to find this booking
-          const res = await api.get(`/events/bookings/my-tickets`, { headers });
-          const found = res.data.find(b => b._id === id);
-          
-          if (found && (found.paymentStatus === 'Paid' || paymentStatus !== 'success')) {
-            setBooking(found);
-            setLoading(false);
-            return;
+    let active = true;
+    let attempts = 0;
+
+    fetchBooking({ silent: true });
+
+    // The browser return can arrive before PayFast's server notification. Keep
+    // checking in the background, but never label that delay as a failed payment.
+    const poller = paymentResult === 'success'
+      ? window.setInterval(async () => {
+          if (!active || attempts >= 20) return;
+          attempts += 1;
+          const latest = await fetchBooking({ silent: true });
+          if (latest && (PAID_STATUSES.includes(latest.paymentStatus) || latest.paymentStatus === 'Failed')) {
+            window.clearInterval(poller);
           }
-          
-          attempts++;
-          if (attempts < maxAttempts) {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-          }
-        }
-        
-        // If after 5 attempts it's still pending but we hit success
-        const res = await api.get(`/events/bookings/my-tickets`, { headers });
-        const finalFound = res.data.find(b => b._id === id);
-        setBooking(finalFound);
-        setLoading(false);
-        
-      } catch (err) {
-        console.error(err);
-        setLoading(false);
-      }
+        }, 3000)
+      : null;
+
+    return () => {
+      active = false;
+      if (poller) window.clearInterval(poller);
     };
-    
-    fetchBooking();
-  }, [id, paymentStatus]);
+  }, [fetchBooking, paymentResult]);
+
+  useEffect(() => {
+    if (booking?.paymentMethod !== 'Bank Transfer') return;
+    api.get('/settings/public')
+      .then((response) => setBankDetails(response.data.bankDetails || {}))
+      .catch((error) => console.error('Failed to load bank details:', error));
+  }, [booking?.paymentMethod]);
+
+  const retryPayFast = async () => {
+    setRetrying(true);
+    setFeedback('');
+    try {
+      const response = await api.post('/payfast/generate-event', { bookingId: id });
+      setPayfastUrl(response.data.url);
+      setPaymentData(response.data.data);
+    } catch (error) {
+      setFeedback(error.response?.data?.message || 'Unable to restart payment. Please try booking again.');
+      setRetrying(false);
+    }
+  };
+
+  const uploadProof = async (event) => {
+    event.preventDefault();
+    setUploadingProof(true);
+    setFeedback('');
+    try {
+      const response = await api.post(`/events/bookings/${id}/bank-transfer/upload`, { proofUrl });
+      setBooking((current) => ({ ...current, ...response.data.booking }));
+      setFeedback(response.data.message);
+      setProofUrl('');
+    } catch (error) {
+      setFeedback(error.response?.data?.message || 'Failed to upload proof of payment.');
+    } finally {
+      setUploadingProof(false);
+    }
+  };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0907] flex flex-col items-center justify-center pt-20">
-        <div className="w-12 h-12 border-4 border-[#c9a35b]/30 border-t-[#c9a35b] rounded-full animate-spin mb-4"></div>
-        <p className="text-gold-gradient tracking-widest uppercase text-xs font-bold">Verifying Ticket...</p>
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#0a0907] pt-20">
+        <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-[#c9a35b]/30 border-t-[#c9a35b]" />
+        <p className="text-xs font-bold uppercase tracking-widest text-[#c9a35b]">Checking Ticket Status...</p>
       </div>
     );
   }
 
   if (!booking) {
     return (
-      <div className="min-h-[70vh] bg-[#0a0907] flex flex-col items-center justify-center">
-        <AlertTriangle size={48} className="text-[#888] mb-4" />
-        <h2 className="text-2xl font-serif text-white mb-2">Ticket Not Found</h2>
-        <p className="text-[#888] mb-6">We could not locate your ticket booking.</p>
+      <div className="flex min-h-[70vh] flex-col items-center justify-center bg-[#0a0907] px-5 text-center">
+        <AlertTriangle size={48} className="mb-4 text-[#888]" />
+        <h2 className="mb-2 font-serif text-2xl text-white">Ticket Not Found</h2>
+        <p className="mb-6 text-[#888]">We could not locate your ticket booking.</p>
         <button onClick={() => navigate('/events')} className="button button-gold">Back to Events</button>
       </div>
     );
   }
 
-  const isSuccess = booking.paymentStatus === 'Paid';
+  const isPaid = PAID_STATUSES.includes(booking.paymentStatus);
+  const isBankTransfer = booking.paymentMethod === 'Bank Transfer';
+  const bankStatus = booking.bankTransferStatus;
+  const isRejected = booking.paymentStatus === 'Failed' || bankStatus === 'Rejected';
+  const isCancelled = !isBankTransfer && paymentResult === 'cancel' && !isPaid;
+  const isVerifying = !isBankTransfer && paymentResult === 'success' && !isPaid && !isRejected;
+  const awaitingProof = isBankTransfer && bankStatus === 'Awaiting_Proof' && !isRejected;
+  const awaitingApproval = isBankTransfer && bankStatus === 'Awaiting_Approval' && !isRejected;
+
+  const pageState = isPaid
+    ? {
+        title: 'Ticket Confirmed',
+        message: `You are going to ${booking.event?.title || 'the event'}! Your ticket has been issued.`,
+        tone: 'success',
+      }
+    : isRejected || isCancelled
+      ? {
+          title: isRejected ? 'Payment Not Approved' : 'Payment Cancelled',
+          message: isRejected
+            ? (booking.paymentRejectionReason || 'The payment could not be approved and this ticket reservation was released.')
+            : 'No payment was taken. You can safely retry payment using the same ticket reservation.',
+          tone: 'error',
+        }
+      : awaitingProof
+        ? {
+            title: 'Complete Your Bank Transfer',
+            message: 'Your tickets are reserved. Transfer the exact amount and submit your proof below.',
+            tone: 'pending',
+          }
+        : awaitingApproval
+          ? {
+              title: 'Payment Proof Received',
+              message: 'Your proof is waiting for finance approval. Your ticket will be issued after verification.',
+              tone: 'pending',
+            }
+          : isVerifying
+            ? {
+                title: 'Confirming Your Payment',
+                message: 'PayFast returned successfully. We are waiting for its secure server confirmation before issuing your ticket.',
+                tone: 'pending',
+              }
+            : {
+                title: 'Payment Pending',
+                message: 'Your ticket is reserved, but payment has not yet been confirmed.',
+                tone: 'pending',
+              };
+
+  const toneClasses = pageState.tone === 'success'
+    ? 'bg-[#c9a35b]/10'
+    : pageState.tone === 'error'
+      ? 'bg-red-900/20'
+      : 'bg-amber-900/15';
 
   return (
-    <div className="min-h-screen bg-[#0a0907] pb-24">
-      {/* Dynamic Header */}
-      <div className={`py-12 ${isSuccess ? 'bg-[#c9a35b]/10' : 'bg-red-900/20'}`}>
+    <div className="min-h-screen bg-[#0a0907] pb-24 text-[#eee8dd]">
+      <div className={`px-4 py-10 md:py-12 ${toneClasses}`}>
         <div className="shell flex flex-col items-center text-center">
-          {isSuccess ? (
-            <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mb-6">
-              <CheckCircle2 size={40} className="text-green-500" />
-            </div>
-          ) : (
-            <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mb-6">
-              <AlertTriangle size={40} className="text-red-500" />
-            </div>
-          )}
-          
-          <h1 className="text-4xl md:text-5xl font-serif text-white mb-4">
-            {isSuccess ? "Ticket Confirmed" : "Payment Incomplete"}
-          </h1>
-          <p className="text-lg text-[#ccc] max-w-2xl mx-auto">
-            {isSuccess 
-              ? `You are going to ${booking.event?.title || 'the event'}! Your ticket has been issued.`
-              : "We could not complete your ticket purchase. Your payment may have failed or been cancelled."}
-          </p>
+          <div className={`mb-5 flex h-20 w-20 items-center justify-center rounded-full ${
+            pageState.tone === 'success'
+              ? 'bg-green-500/20 text-green-500'
+              : pageState.tone === 'error'
+                ? 'bg-red-500/20 text-red-500'
+                : 'bg-[#c9a35b]/15 text-[#c9a35b]'
+          }`}>
+            {pageState.tone === 'success'
+              ? <CheckCircle2 size={40} />
+              : pageState.tone === 'error'
+                ? <AlertTriangle size={40} />
+                : isBankTransfer
+                  ? <Landmark size={38} />
+                  : <Clock3 size={40} />}
+          </div>
+
+          <h1 className="mb-4 font-serif text-3xl text-white md:text-5xl">{pageState.title}</h1>
+          <p className="mx-auto max-w-2xl text-base text-[#ccc] md:text-lg">{pageState.message}</p>
         </div>
       </div>
 
-      <div className="shell max-w-4xl mt-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Order Details */}
-          <div className="bg-[#11100d] border border-white/10 rounded-xl p-8">
-            <h3 className="text-xl font-serif text-white mb-6 border-b border-white/10 pb-4 flex items-center gap-2">
+      <div className="shell mt-8 max-w-5xl px-4 md:mt-12">
+        {feedback && (
+          <div className="mb-6 rounded-xl border border-[#c9a35b]/20 bg-[#c9a35b]/10 px-4 py-3 text-center text-sm text-[#e1bd70]">
+            {feedback}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
+          <div className="rounded-2xl border border-white/10 bg-[#11100d] p-5 md:p-8">
+            <h3 className="mb-6 flex items-center gap-2 border-b border-white/10 pb-4 font-serif text-xl text-white">
               <Ticket className="text-[#c9a35b]" /> Ticket Details
             </h3>
-            
+
             <div className="space-y-4 text-sm text-[#ccc]">
-              <div className="flex justify-between">
+              <div className="flex flex-col justify-between gap-1 sm:flex-row sm:items-center">
                 <span className="text-[#888]">Booking Reference</span>
-                <span className="text-white font-mono">{booking.gsReference}</span>
+                <span className="break-all font-mono text-white">{booking.gsReference}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex flex-col justify-between gap-1 sm:flex-row sm:items-center">
                 <span className="text-[#888]">Event</span>
-                <span className="text-white font-bold">{booking.event?.title}</span>
+                <span className="text-right font-bold text-white">{booking.event?.title}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between gap-3">
                 <span className="text-[#888]">Ticket Type</span>
-                <span className="text-white">{booking.ticketType} x {booking.quantity}</span>
+                <span className="text-right text-white">{booking.ticketType} × {booking.quantity}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-[#888]">Total Paid</span>
-                <span className="text-[#c9a35b] font-bold"><Price amount={booking.totalPrice?.toFixed(2)} /></span>
+              <div className="flex justify-between gap-3">
+                <span className="text-[#888]">{isPaid ? 'Total Paid' : 'Amount Due'}</span>
+                <span className="font-bold text-[#c9a35b]"><Price amount={booking.totalPrice} /></span>
               </div>
-              <div className="flex justify-between border-t border-white/10 pt-4 mt-2">
-                <span className="text-[#888]">Status</span>
-                <span className={`font-bold ${isSuccess ? 'text-green-500' : 'text-yellow-500'}`}>
-                  {booking.paymentStatus}
+              <div className="flex justify-between gap-3 border-t border-white/10 pt-4">
+                <span className="text-[#888]">Payment</span>
+                <span className={`text-right font-bold ${isPaid ? 'text-green-500' : isRejected ? 'text-red-400' : 'text-yellow-500'}`}>
+                  {isBankTransfer ? formatStatus(bankStatus) : formatStatus(booking.paymentStatus)}
                 </span>
               </div>
             </div>
           </div>
-          
-          {/* Next Steps / Actions */}
-          <div className="flex flex-col gap-4">
-            <div className="bg-[#11100d] border border-white/10 rounded-xl p-8 text-center flex-1 flex flex-col justify-center">
-              <h3 className="text-lg font-bold text-white uppercase tracking-widest mb-4">What happens next?</h3>
-              {isSuccess ? (
-                <>
-                  <p className="text-[#888] text-sm mb-6">
-                    You can view your ticket and QR code anytime in your customer dashboard under "My Tickets". Present the QR code at the door.
+
+          <div className="flex flex-col justify-center rounded-2xl border border-white/10 bg-[#11100d] p-5 text-center md:p-8">
+            <h3 className="mb-4 text-lg font-bold uppercase tracking-widest text-white">What happens next?</h3>
+
+            {isPaid ? (
+              <>
+                <p className="mb-6 text-sm text-[#888]">Your QR ticket is available in My Tickets. Present it at the event entrance.</p>
+                <Link to="/customer/tickets" className="button button-gold mb-3 w-full text-center">View My Tickets</Link>
+                <Link to="/events" className="button button-dark w-full text-center">Discover More Events</Link>
+              </>
+            ) : isRejected ? (
+              <>
+                <p className="mb-6 text-sm text-[#888]">This reservation has been released. Create a new booking to select another payment method.</p>
+                <Link to={`/events/${booking.event?._id}`} className="button button-gold mb-3 w-full text-center">Book Again</Link>
+                <Link to="/events" className="button button-dark w-full text-center">Back to Events</Link>
+              </>
+            ) : isBankTransfer ? (
+              <>
+                <p className="mb-6 text-sm text-[#888]">
+                  {awaitingApproval
+                    ? 'Finance will review your proof. You can return to this page or My Tickets to see the result.'
+                    : 'Use your booking reference for the transfer, then submit a public image or PDF link as proof.'}
+                </p>
+                <Link to="/customer/tickets" className="button button-dark w-full text-center">View My Tickets</Link>
+              </>
+            ) : (
+              <>
+                <p className="mb-6 text-sm text-[#888]">
+                  {isVerifying
+                    ? 'Secure notification can take a moment. This page checks automatically, and you can refresh it manually.'
+                    : 'Restart PayFast using this reservation. You will not create a duplicate ticket booking.'}
+                </p>
+                {isVerifying && window.location.hostname === 'localhost' && (
+                  <p className="mb-5 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 text-xs leading-relaxed text-amber-200/80">
+                    Local testing requires a public HTTPS <code>BACKEND_URL</code> so PayFast can reach the notification endpoint. Until then, use bank transfer or a secure development tunnel.
                   </p>
-                  <Link to="/customer/tickets" className="button button-gold w-full text-center mb-3">View My Tickets</Link>
-                  <Link to="/events" className="button button-dark w-full text-center">Discover More Events</Link>
-                </>
-              ) : (
-                <>
-                  <p className="text-[#888] text-sm mb-6">
-                    Payment has not been confirmed. Check your payment account before trying again, or contact support with your booking reference.
-                  </p>
-                  <Link to={`/events/${booking.event?._id}`} className="button button-gold w-full text-center mb-3">Try Booking Again</Link>
-                  <Link to="/events" className="button button-dark w-full text-center">Back to Events</Link>
-                </>
-              )}
-            </div>
+                )}
+                {isVerifying && (
+                  <button onClick={() => fetchBooking()} disabled={refreshing} className="button button-dark mb-3 flex w-full items-center justify-center gap-2">
+                    <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+                    {refreshing ? 'Checking...' : 'Check Payment Status'}
+                  </button>
+                )}
+                <button onClick={retryPayFast} disabled={retrying} className="button button-gold mb-3 flex w-full items-center justify-center gap-2 disabled:opacity-50">
+                  {retrying ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+                  {retrying ? 'Opening PayFast...' : 'Retry Payment'}
+                </button>
+                <Link to="/events" className="button button-dark w-full text-center">Back to Events</Link>
+              </>
+            )}
           </div>
         </div>
+
+        {isBankTransfer && !isPaid && !isRejected && (
+          <section className="mt-6 rounded-2xl border border-[#c9a35b]/20 bg-gradient-to-br from-[#111] to-[#0a0a0a] p-5 md:mt-8 md:p-8">
+            <div className="mx-auto max-w-3xl">
+              <div className="mb-6 flex items-start gap-4">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#c9a35b]/10 text-[#c9a35b]"><Landmark size={21} /></span>
+                <div>
+                  <h2 className="font-serif text-xl text-white">Bank Transfer Details</h2>
+                  <p className="mt-1 text-sm text-[#918a7f]">Transfer exactly <strong className="text-white"><Price amount={booking.totalPrice} /></strong> using the reference below.</p>
+                </div>
+              </div>
+
+              <div className="mb-6 grid grid-cols-1 gap-3 rounded-xl border border-white/5 bg-black/40 p-4 sm:grid-cols-2 md:p-6">
+                <BankDetail label="Bank Name" value={bankDetails?.bankName || 'Standard Bank'} />
+                <BankDetail label="Account Name" value={bankDetails?.accountName || 'The Grand Store PTY LTD'} />
+                <BankDetail label="Account Number" value={bankDetails?.accountNumber || '0123456789'} mono />
+                <BankDetail label="Branch Code" value={bankDetails?.branchCode || '051001'} mono />
+                <div className="border-t border-white/5 pt-3 sm:col-span-2">
+                  <p className="mb-1 text-[10px] uppercase tracking-widest text-[#c9a35b]">Payment Reference</p>
+                  <p className="break-all font-mono text-base font-bold text-white">{booking.gsReference}</p>
+                </div>
+              </div>
+
+              {awaitingProof ? (
+                <form onSubmit={uploadProof} className="space-y-3">
+                  <label htmlFor="event-proof-url" className="block text-xs font-bold uppercase tracking-widest text-[#918a7f]">Proof of Payment URL (Image/PDF)</label>
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <input
+                      id="event-proof-url"
+                      type="url"
+                      value={proofUrl}
+                      onChange={(event) => setProofUrl(event.target.value)}
+                      required
+                      placeholder="https://..."
+                      className="min-h-12 flex-1 rounded-xl border border-white/10 bg-black px-4 text-sm text-white outline-none transition-colors focus:border-[#c9a35b]/60"
+                    />
+                    <button type="submit" disabled={uploadingProof} className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#c9a35b] px-6 text-xs font-bold uppercase tracking-widest text-black disabled:opacity-50">
+                      {uploadingProof ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                      {uploadingProof ? 'Submitting...' : 'Submit Proof'}
+                    </button>
+                  </div>
+                  <p className="text-xs text-[#6f6a62]">You can leave and return from My Tickets while your reservation is active.</p>
+                </form>
+              ) : awaitingApproval ? (
+                <div className="flex flex-col gap-3 rounded-xl border border-green-500/20 bg-green-500/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="font-semibold text-green-400">Proof submitted successfully</p>
+                    <p className="mt-1 text-xs text-[#918a7f]">Awaiting verification by the finance team.</p>
+                  </div>
+                  {booking.proofUrl && (
+                    <a href={booking.proofUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#c9a35b]">
+                      View Proof <ExternalLink size={14} />
+                    </a>
+                  )}
+                </div>
+              ) : null}
+            </div>
+          </section>
+        )}
       </div>
+
+      <PaymentForm paymentData={paymentData} payfastUrl={payfastUrl} />
+    </div>
+  );
+}
+
+function BankDetail({ label, value, mono = false }) {
+  return (
+    <div>
+      <p className="mb-1 text-[10px] uppercase tracking-widest text-[#6f6a62]">{label}</p>
+      <p className={`text-sm text-white ${mono ? 'font-mono' : ''}`}>{value}</p>
     </div>
   );
 }

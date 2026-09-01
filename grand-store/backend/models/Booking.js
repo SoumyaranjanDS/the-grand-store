@@ -22,6 +22,19 @@ const bookingSchema = new mongoose.Schema({
   // GS Reference
   gsReference: { type: String },                     // e.g. GS-26-EVT-BKG-000001
 
+  paymentMethod: {
+    type: String,
+    enum: ['PayFast', 'Bank Transfer'],
+    default: 'PayFast'
+  },
+  proofUrl: { type: String },
+  bankTransferStatus: {
+    type: String,
+    enum: ['Awaiting_Proof', 'Awaiting_Approval', 'Approved', 'Rejected']
+  },
+  paymentRejectionReason: { type: String },
+  proofSubmittedAt: { type: Date },
+
   paymentStatus: {
     type: String,
     enum: ['Pending', 'Paid', 'Completed', 'Refunded', 'Failed'],

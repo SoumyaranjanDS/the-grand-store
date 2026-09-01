@@ -217,6 +217,30 @@ const bankTransferInstructionsTemplate = (order, bankDetails) => {
   return generateEmailTemplate(`Payment Required - Order #${order._id}`, content);
 };
 
+const eventBankTransferInstructionsTemplate = (booking, event, bankDetails) => {
+  const reference = booking.gsReference || booking._id;
+  const content = `
+    <h1>Event Ticket Bank Transfer</h1>
+    <p>Thank you for reserving tickets for <strong>${event.title}</strong>. Transfer the exact amount below and upload your proof of payment for verification.</p>
+
+    <div class="details-box">
+      <h3 style="margin-top: 0;">Payment Details</h3>
+      <p><strong style="color: ${BRAND_COLOR_GOLD}">Amount Due:</strong> R${Number(booking.totalPrice).toFixed(2)}</p>
+      <p><strong style="color: ${BRAND_COLOR_GOLD}">Payment Reference:</strong> ${reference}</p>
+      <div class="divider"></div>
+      <h3 style="margin-top: 0;">Bank Information</h3>
+      <p><strong>Bank Name:</strong> ${bankDetails.bankName || 'Standard Bank'}</p>
+      <p><strong>Account Name:</strong> ${bankDetails.accountName || 'The Grand Store PTY LTD'}</p>
+      <p><strong>Account Number:</strong> ${bankDetails.accountNumber || '0123456789'}</p>
+      <p><strong>Branch Code:</strong> ${bankDetails.branchCode || '051001'}</p>
+    </div>
+
+    <p>Your ticket is issued only after the transfer is approved. Use the booking reference exactly so the finance team can match your payment.</p>
+    <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/customer/event-order/${booking._id}?payment=bank-transfer" class="btn">Upload Proof of Payment</a>
+  `;
+  return generateEmailTemplate(`Payment Required - ${reference}`, content);
+};
+
 const vendorApprovalTemplate = (name, fee = 0) => {
   const content = `
     <h1>Vendor Application Approved</h1>
@@ -333,6 +357,7 @@ module.exports = {
   newsletterWelcomeTemplate,
   orderConfirmationTemplate,
   bankTransferInstructionsTemplate,
+  eventBankTransferInstructionsTemplate,
   vendorApprovalTemplate,
   hostApplicationApprovalTemplate,
   hostApplicationRejectionTemplate,

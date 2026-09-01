@@ -12,10 +12,13 @@ const {
   joinWaitlist,
   getAdminEvents,
   approveEvent,
-  rejectEvent
+  rejectEvent,
+  uploadEventBankTransferProof,
+  approveEventBankTransfer,
+  rejectEventBankTransfer
 } = require('../controllers/eventControllerV2');
 
-const { protect, superAdmin } = require('../middleware/authMiddleware');
+const { protect, superAdmin, financeStaff } = require('../middleware/authMiddleware');
 const multer = require('multer');
 const { storage } = require('../config/cloudinary');
 const upload = multer({ storage });
@@ -26,6 +29,15 @@ router.route('/')
 
 router.route('/bookings/my-tickets')
   .get(protect, getUserBookings);
+
+router.route('/bookings/:bookingId/bank-transfer/upload')
+  .post(protect, uploadEventBankTransferProof);
+
+router.route('/bookings/:bookingId/bank-transfer/approve')
+  .post(protect, financeStaff, approveEventBankTransfer);
+
+router.route('/bookings/:bookingId/bank-transfer/reject')
+  .post(protect, financeStaff, rejectEventBankTransfer);
 
 router.route('/vendor')
   .get(protect, getVendorEvents);

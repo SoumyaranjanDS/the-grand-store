@@ -4,7 +4,7 @@ import api from '../../api';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { useGeoLocation } from '../../context/LocationContext';
-import { CheckCircle2, ChevronRight, ChevronLeft, UploadCloud, Building2, User, FileText, BadgeCheck, FileSpreadsheet, Landmark, Package, Truck, FileSignature, Globe, Image as ImageIcon } from 'lucide-react';
+import { CheckCircle2, ChevronRight, ChevronLeft, UploadCloud, Building2, User, FileText, BadgeCheck, FileSpreadsheet, Landmark, Package, Truck, FileSignature, Globe, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
 import LocationInput from '../../components/LocationInput';
 
@@ -15,19 +15,53 @@ const InputField = ({ label, value, onChange, placeholder, type = 'text' }) => (
   </div>
 );
 
-const FileUploadField = ({ label, url, onUpload }) => (
-  <div className="mb-6">
-    <label className="block text-[#bdb5a6] text-[10px] font-bold uppercase tracking-widest mb-2">{label}</label>
-    <div className="flex items-center gap-4">
-      <label className="flex items-center justify-center gap-2 px-4 py-4 bg-transparent border-b border-white/10 border-dashed rounded-none cursor-pointer hover:border-[#c9a35b] transition-colors flex-1">
-        <UploadCloud size={18} className="text-[#918a7f]" />
-        <span className="text-[#eee8dd] text-sm">Upload Document</span>
-        <input type="file" className="hidden" onChange={onUpload} accept=".pdf,.png,.jpg,.jpeg" />
-      </label>
-      {url && <div className="text-green-500 flex items-center gap-1 text-sm"><CheckCircle2 size={16} /> Uploaded</div>}
+const FileUploadField = ({ label, url, onUpload }) => {
+  const isImage = url && url.match(/\.(jpeg|jpg|gif|png|webp)$/i) != null;
+  return (
+    <div className="mb-6">
+      <label className="block text-[#bdb5a6] text-[10px] font-bold uppercase tracking-widest mb-2">{label}</label>
+      {!url ? (
+        <div className="flex items-center gap-4">
+          <label className="flex items-center justify-center gap-2 px-4 py-4 bg-transparent border-b border-white/10 border-dashed rounded-none cursor-pointer hover:border-[#c9a35b] transition-colors flex-1">
+            <UploadCloud size={18} className="text-[#918a7f]" />
+            <span className="text-[#eee8dd] text-sm">Upload Document</span>
+            <input type="file" className="hidden" onChange={onUpload} accept=".pdf,.png,.jpg,.jpeg" />
+          </label>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3 p-4 border border-[#c9a35b]/30 bg-[#c9a35b]/5 rounded-md">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {isImage ? (
+                <img src={url} alt="Thumbnail" className="w-10 h-10 object-cover rounded-sm border border-white/10" />
+              ) : (
+                <div className="w-10 h-10 bg-white/5 flex items-center justify-center rounded-sm border border-white/10">
+                  <FileText size={20} className="text-[#c9a35b]" />
+                </div>
+              )}
+              <div>
+                <p className="text-sm text-[#eee8dd]">Document Uploaded</p>
+                <a href={url} target="_blank" rel="noreferrer" className="text-[10px] text-[#c9a35b] hover:underline">Open in new tab</a>
+              </div>
+            </div>
+            <button type="button" onClick={() => onUpload(null)} className="p-2 text-white/40 hover:text-red-400 transition-colors">
+              <Trash2 size={16} />
+            </button>
+          </div>
+          
+          {/* Inline Document Preview */}
+          <div className="w-full h-48 rounded-md overflow-hidden border border-white/10 bg-black/50">
+            {isImage ? (
+              <img src={url} alt="Preview" className="w-full h-full object-contain" />
+            ) : (
+              <iframe src={`${url}#toolbar=0&navpanes=0&view=FitH`} className="w-full h-full border-none" title="PDF Preview" />
+            )}
+          </div>
+        </div>
+      )}
     </div>
-  </div>
-);
+  );
+};
 export default function OnboardingWizard() {
   const { user, googleLogin } = useAuth();
   const { country_code } = useGeoLocation();
@@ -148,6 +182,10 @@ export default function OnboardingWizard() {
   }, [user]);
 
   const handleFileUpload = async (e, setUrlFn) => {
+    if (!e) {
+      setUrlFn(null);
+      return;
+    }
     const file = e.target.files[0];
     if (!file) return;
     
@@ -156,7 +194,9 @@ export default function OnboardingWizard() {
     
     setSaving(true);
     try {
-      const res = await api.post(`/vendor/upload-public`, formData);
+      const res = await api.post(`/vendor/upload-public`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       const data = res.data;
       setUrlFn(data.url);
     } catch (err) {

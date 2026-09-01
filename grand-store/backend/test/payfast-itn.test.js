@@ -77,3 +77,39 @@ test('PayFast ITN route rejects an invalid signature', async () => {
     assert.equal(await response.text(), 'Invalid signature');
   });
 });
+
+test('PayFast server confirmation excludes the received signature field', async () => {
+  const axios = require('axios');
+  const originalPost = axios.post;
+  let validationBody = '';
+
+  axios.post = async (url, body) => {
+    validationBody = body;
+    return { data: 'VALID' };
+  };
+
+  try {
+    await withServer(async (baseUrl) => {
+      const payload = {
+        m_payment_id: 'IGNORED-123',
+        payment_status: 'COMPLETE',
+        merchant_id: process.env.PAYFAST_TEST_MERCHANT_ID,
+        amount_gross: '10.00',
+      };
+      payload.signature = generateSignature(payload, process.env.PAYFAST_TEST_PASSPHRASE);
+
+      const response = await fetch(`${baseUrl}/api/payfast/itn`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(payload),
+      });
+
+      assert.equal(response.status, 200);
+      assert.equal(await response.text(), 'OK');
+      assert.equal(new URLSearchParams(validationBody).has('signature'), false);
+      assert.equal(new URLSearchParams(validationBody).get('payment_status'), 'COMPLETE');
+    });
+  } finally {
+    axios.post = originalPost;
+  }
+});

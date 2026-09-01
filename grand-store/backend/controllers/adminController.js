@@ -296,19 +296,43 @@ const updateVendorStatus = async (req, res) => {
 // @access  Private/Admin
 const getPendingBankTransfers = async (req, res) => {
   try {
-    const CheckoutEngine = require("../services/CheckoutEngine");
-    const OrderEvent = require("../models/OrderEvent");
+    const [orders, eventBookings] = await Promise.all([
+      Order.find({
+        paymentMethod: "Bank Transfer",
+        paymentStatus: { $ne: "Pending" },
+      })
+        .populate("user", "name email")
+        .sort({ updatedAt: -1 })
+        .lean(),
+      Booking.find({
+        paymentMethod: "Bank Transfer",
+        bankTransferStatus: { $in: ["Awaiting_Approval", "Approved", "Rejected"] },
+      })
+        .populate("user", "name email")
+        .populate("event", "title")
+        .sort({ bookingDate: -1 })
+        .lean(),
+    ]);
 
-    // Fetch all bank transfer orders that have at least some progress (i.e. have been uploaded at least once)
-    const orders = await Order.find({
-      paymentMethod: "Bank Transfer",
-      paymentStatus: { $ne: "Pending" },
-    })
-      .populate("user", "name email")
-      .sort({ updatedAt: -1 });
+    const shopRecords = orders.map((order) => ({
+      ...order,
+      recordType: "shop",
+      recordLabel: "Shop order",
+      reviewStatus: order.paymentStatus,
+    }));
+    const eventRecords = eventBookings.map((booking) => ({
+      ...booking,
+      recordType: "event",
+      recordLabel: "Event ticket",
+      orderId: booking.gsReference || booking.ticketId,
+      createdAt: booking.bookingDate,
+      reviewStatus: booking.bankTransferStatus,
+    }));
 
-    // proofUrl is now natively stored on the Order read model!
-    res.json(orders);
+    res.json([...shopRecords, ...eventRecords].sort((a, b) => (
+      new Date(b.updatedAt || b.proofSubmittedAt || b.createdAt) -
+      new Date(a.updatedAt || a.proofSubmittedAt || a.createdAt)
+    )));
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
   }

@@ -100,7 +100,11 @@ export default function MyTickets() {
                       ticket.ticketStatus === 'Used' ? 'bg-black/50 text-white/70 backdrop-blur-md' :
                       'bg-red-500/80 text-white shadow-[0_0_10px_rgba(239,68,68,0.3)]'
                     }`}>
-                      {['Paid', 'Completed'].includes(ticket.paymentStatus) ? ticket.ticketStatus : ticket.paymentStatus}
+                      {['Paid', 'Completed'].includes(ticket.paymentStatus)
+                        ? ticket.ticketStatus
+                        : ticket.paymentMethod === 'Bank Transfer'
+                          ? String(ticket.bankTransferStatus || ticket.paymentStatus).replaceAll('_', ' ')
+                          : ticket.paymentStatus}
                     </span>
                   </div>
                 </div>
@@ -157,9 +161,20 @@ export default function MyTickets() {
                        <p className="text-[11px] font-mono text-white/50 tracking-[0.2em]">{ticket.ticketId}</p>
                      </>
                    ) : (
-                     <div className="mb-4 rounded-xl border border-yellow-500/20 bg-yellow-500/10 p-4 text-center text-xs text-yellow-300">
-                       QR ticket available after payment confirmation.
-                     </div>
+                     <>
+                       <div className="mb-4 rounded-xl border border-yellow-500/20 bg-yellow-500/10 p-4 text-center text-xs text-yellow-300">
+                         QR ticket available after payment confirmation.
+                       </div>
+                       {ticket.paymentStatus === 'Pending' && (
+                         <button
+                           type="button"
+                           onClick={() => navigate(`/customer/event-order/${ticket._id}?payment=${ticket.paymentMethod === 'Bank Transfer' ? 'bank-transfer' : 'pending'}`)}
+                           className="mb-2 w-full rounded-lg border border-[#c9a35b]/30 bg-[#c9a35b]/10 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#c9a35b] transition-colors hover:bg-[#c9a35b]/20"
+                         >
+                           {ticket.paymentMethod === 'Bank Transfer' ? 'Manage Bank Payment' : 'Complete Payment'}
+                         </button>
+                       )}
+                     </>
                    )}
                    
                    <div className="mt-6 pt-4 border-t border-white/10 w-full text-center flex items-center justify-between lg:block">

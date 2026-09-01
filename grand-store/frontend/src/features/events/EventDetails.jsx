@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../../api';
-import { Calendar, MapPin, Clock, Users, Tag, Check, ArrowLeft, ShoppingBag, ChevronRight } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, Tag, Check, ArrowLeft, ShoppingBag, ChevronRight, CreditCard, Landmark } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import PaymentForm from '../checkout/PaymentForm';
 import Price from '../../components/ui/Price';
@@ -39,6 +39,7 @@ export default function EventDetails({ onNotify, onAdd }) {
   
   const [paymentData, setPaymentData] = useState(null);
   const [payfastUrl, setPayfastUrl] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState('payfast');
 
   const handleWaitlist = async () => {
     if (!user) {
@@ -78,9 +79,15 @@ export default function EventDetails({ onNotify, onAdd }) {
       const res = await api.post(`/events/${id}/book`, {
         ticketTierId: selectedTicket._id,
         ticketType: selectedTicket.name,
-        quantity
+        quantity,
+        paymentMethod: paymentMethod === 'bank_transfer' ? 'Bank Transfer' : 'PayFast'
       });
-      
+
+      if (paymentMethod === 'bank_transfer') {
+        navigate(`/customer/event-order/${res.data._id}?payment=bank-transfer`);
+        return;
+      }
+
       // 2. Request PayFast Signature
       const pfRes = await api.post(`/payfast/generate-event`, {
         bookingId: res.data._id
@@ -292,6 +299,45 @@ export default function EventDetails({ onNotify, onAdd }) {
               </div>
             )}
 
+            {bookable && selectedTicket && getTierAvailability(selectedTicket) > 0 && (
+              <div className="mb-6 border-t border-white/10 pt-5">
+                <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#918a7f]">Payment Method</p>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                  <label className={`flex min-h-20 cursor-pointer items-center gap-3 rounded-xl border p-4 transition-all ${paymentMethod === 'payfast' ? 'border-[#c9a35b] bg-[#c9a35b]/5' : 'border-white/10 bg-black/20 hover:border-white/30'}`}>
+                    <input
+                      type="radio"
+                      name="eventPaymentMethod"
+                      value="payfast"
+                      checked={paymentMethod === 'payfast'}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="sr-only"
+                    />
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/5 text-[#c9a35b]"><CreditCard size={19} /></span>
+                    <span>
+                      <span className="block text-sm font-semibold text-white">PayFast</span>
+                      <span className="mt-0.5 block text-[10px] text-[#918a7f]">Instant card or EFT</span>
+                    </span>
+                  </label>
+
+                  <label className={`flex min-h-20 cursor-pointer items-center gap-3 rounded-xl border p-4 transition-all ${paymentMethod === 'bank_transfer' ? 'border-[#c9a35b] bg-[#c9a35b]/5' : 'border-white/10 bg-black/20 hover:border-white/30'}`}>
+                    <input
+                      type="radio"
+                      name="eventPaymentMethod"
+                      value="bank_transfer"
+                      checked={paymentMethod === 'bank_transfer'}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="sr-only"
+                    />
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/5 text-[#c9a35b]"><Landmark size={19} /></span>
+                    <span>
+                      <span className="block text-sm font-semibold text-white">Bank Transfer</span>
+                      <span className="mt-0.5 block text-[10px] text-[#918a7f]">Upload proof for review</span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+            )}
+
             {(() => {
               const totalAvailable = event.ticketTiers.reduce((acc, tier) => acc + getTierAvailability(tier), 0);
 
@@ -321,13 +367,13 @@ export default function EventDetails({ onNotify, onAdd }) {
                   disabled={!selectedTicket || getTierAvailability(selectedTicket) === 0 || bookingLoading}
                   className="w-full bg-gold-gradient hover:bg-[#e1bd70] text-black font-bold uppercase tracking-wider py-4 rounded-xl transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(201,163,91,0.2)]"
                 >
-                  {bookingLoading ? 'Booking...' : !selectedTicket ? 'Select a Ticket' : 'Book Now'}
+                  {bookingLoading ? 'Booking...' : !selectedTicket ? 'Select a Ticket' : paymentMethod === 'bank_transfer' ? 'Reserve & Pay by Bank' : 'Book & Pay Securely'}
                 </button>
               );
             })()}
 
             <p className="text-center text-[10px] text-[#918a7f] mt-4 tracking-widest uppercase">
-              Secure Checkout via Grand Store
+              {paymentMethod === 'bank_transfer' ? 'Ticket issued after payment approval' : 'Secure checkout via PayFast'}
             </p>
             <PaymentForm paymentData={paymentData} payfastUrl={payfastUrl} />
           </div>

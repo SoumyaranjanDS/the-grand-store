@@ -11,6 +11,7 @@ const { getEventDateKey, getEventPhase, parseEventWindow } = require("../utils/e
 const PAID_PAYMENT_STATUSES = ["Paid", "Completed"];
 const MAX_TICKETS_PER_BOOKING = 10;
 const RESERVATION_MINUTES = Math.max(10, Number(process.env.EVENT_RESERVATION_MINUTES) || 30);
+const BANK_TRANSFER_RESERVATION_HOURS = Math.max(1, Number(process.env.EVENT_BANK_TRANSFER_RESERVATION_HOURS) || 24);
 
 const parseJsonField = (value, fallback = []) => {
   if (value === undefined || value === null || value === "") return fallback;
@@ -254,6 +255,11 @@ const bookEvent = async (req, res) => {
     return res.status(400).json({ message: `Choose between 1 and ${MAX_TICKETS_PER_BOOKING} tickets.` });
   }
 
+  const paymentMethod = req.body.paymentMethod || "PayFast";
+  if (!["PayFast", "Bank Transfer"].includes(paymentMethod)) {
+    return res.status(400).json({ message: "Select a valid payment method." });
+  }
+
   const settings = (await PlatformSettings.findOne()) || new PlatformSettings();
   const commissionPct = settings.eventCommissionPct ?? 10;
   const vatPct = settings.vatPct ?? 15;
@@ -261,11 +267,15 @@ const bookEvent = async (req, res) => {
   const year = new Date().getFullYear().toString().slice(-2);
   const gsReference = `GS-${year}-EVT-BKG-${seqNum.toString().padStart(6, "0")}`;
   const ticketId = `TKT-${crypto.randomUUID().replace(/-/g, "").slice(0, 16).toUpperCase()}`;
-  const reservationExpiresAt = new Date(Date.now() + RESERVATION_MINUTES * 60 * 1000);
+  const reservationDurationMs = paymentMethod === "Bank Transfer"
+    ? BANK_TRANSFER_RESERVATION_HOURS * 60 * 60 * 1000
+    : RESERVATION_MINUTES * 60 * 1000;
+  const reservationExpiresAt = new Date(Date.now() + reservationDurationMs);
   const session = await mongoose.startSession();
 
   try {
     let savedBooking;
+    let bookedEvent;
     await session.withTransaction(async () => {
       const event = await Event.findById(req.params.id).session(session);
       if (!event) throw Object.assign(new Error("Event not found"), { statusCode: 404 });
@@ -307,12 +317,34 @@ const bookEvent = async (req, res) => {
         totalPrice: subTotal,
         gsReference,
         ticketId,
+        paymentMethod,
+        bankTransferStatus: paymentMethod === "Bank Transfer" ? "Awaiting_Proof" : undefined,
         paymentStatus: "Pending",
         ticketStatus: "Pending",
         inventoryStatus: "reserved",
         reservationExpiresAt,
       }], { session });
+      bookedEvent = event;
     });
+
+    if (paymentMethod === "Bank Transfer") {
+      try {
+        const { sendEmail } = require("../utils/emailService");
+        const { eventBankTransferInstructionsTemplate } = require("../utils/emailTemplates");
+        const User = require("../models/User");
+        const customer = await User.findById(req.user._id).select("email");
+        if (customer?.email) {
+          await sendEmail({
+            to: customer.email,
+            subject: `Payment Required - ${savedBooking.gsReference}`,
+            html: eventBankTransferInstructionsTemplate(savedBooking, bookedEvent, settings.bankDetails || {}),
+          });
+        }
+      } catch (emailError) {
+        console.error("Failed to send event bank transfer instructions:", emailError);
+      }
+    }
+
     return res.status(201).json(savedBooking);
   } catch (error) {
     console.error("Error booking event:", error);
@@ -360,6 +392,7 @@ const processEventPayment = async (bookingId, gatewayDetails = {}) => {
       booking.paymentStatus = "Paid";
       booking.ticketStatus = "Valid";
       booking.inventoryStatus = "sold";
+      if (booking.paymentMethod === "Bank Transfer") booking.bankTransferStatus = "Approved";
       booking.paymentProcessedAt = new Date();
       booking.gatewayTransactionId = gatewayDetails.gatewayTransactionId || "";
       await booking.save({ session });
@@ -402,6 +435,135 @@ const processEventPayment = async (bookingId, gatewayDetails = {}) => {
     }
   }
   return result;
+};
+
+const uploadEventBankTransferProof = async (req, res) => {
+  try {
+    const proofUrl = String(req.body.proofUrl || "").trim();
+    if (!proofUrl) return res.status(400).json({ message: "Proof of payment URL is required." });
+
+    try {
+      const parsedUrl = new URL(proofUrl);
+      if (!["http:", "https:"].includes(parsedUrl.protocol)) throw new Error("Unsupported protocol");
+    } catch {
+      return res.status(400).json({ message: "Enter a valid HTTP or HTTPS proof URL." });
+    }
+
+    const booking = await Booking.findById(req.params.bookingId);
+    if (!booking) return res.status(404).json({ message: "Event booking not found." });
+    if (booking.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "You cannot modify this booking." });
+    }
+    if (booking.paymentMethod !== "Bank Transfer") {
+      return res.status(400).json({ message: "This booking does not use bank transfer." });
+    }
+    if (booking.paymentStatus !== "Pending" || booking.inventoryStatus !== "reserved") {
+      return res.status(400).json({ message: "This ticket reservation can no longer accept payment proof." });
+    }
+    if (booking.reservationExpiresAt && booking.reservationExpiresAt <= new Date()) {
+      return res.status(410).json({ message: "This ticket reservation has expired. Please book again." });
+    }
+
+    booking.proofUrl = proofUrl;
+    booking.proofSubmittedAt = new Date();
+    booking.bankTransferStatus = "Awaiting_Approval";
+    booking.paymentRejectionReason = undefined;
+    booking.reservationExpiresAt = undefined;
+    await booking.save();
+
+    return res.json({
+      message: "Proof uploaded successfully. Your ticket is awaiting payment verification.",
+      booking,
+    });
+  } catch (error) {
+    console.error("Error uploading event payment proof:", error);
+    return res.status(500).json({ message: "Server error uploading payment proof." });
+  }
+};
+
+const approveEventBankTransfer = async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.bookingId);
+    if (!booking) return res.status(404).json({ message: "Event booking not found." });
+    if (PAID_PAYMENT_STATUSES.includes(booking.paymentStatus)) {
+      return res.status(400).json({ message: "This event booking is already paid." });
+    }
+    if (
+      booking.paymentMethod !== "Bank Transfer" ||
+      booking.bankTransferStatus !== "Awaiting_Approval" ||
+      !booking.proofUrl
+    ) {
+      return res.status(400).json({ message: "This event payment is not ready for approval." });
+    }
+
+    const result = await processEventPayment(booking._id, {
+      gatewayTransactionId: `BANK-${booking.gsReference || booking._id}`,
+    });
+    return res.json({ message: "Event payment approved and ticket issued.", booking: result.booking });
+  } catch (error) {
+    console.error("Error approving event bank transfer:", error);
+    return res.status(500).json({ message: error.message || "Server error approving event payment." });
+  }
+};
+
+const rejectEventBankTransfer = async (req, res) => {
+  const reason = String(req.body.reason || "").trim();
+  if (!reason) return res.status(400).json({ message: "A rejection reason is required." });
+
+  const session = await mongoose.startSession();
+  let rejectedBooking;
+  try {
+    await session.withTransaction(async () => {
+      const booking = await Booking.findById(req.params.bookingId).session(session);
+      if (!booking) throw Object.assign(new Error("Event booking not found."), { statusCode: 404 });
+      if (
+        booking.paymentMethod !== "Bank Transfer" ||
+        booking.bankTransferStatus !== "Awaiting_Approval" ||
+        booking.paymentStatus !== "Pending"
+      ) {
+        throw Object.assign(new Error("This event payment is not awaiting review."), { statusCode: 400 });
+      }
+
+      const event = await Event.findById(booking.event).session(session);
+      const tier = event && (booking.ticketTierId
+        ? event.ticketTiers.id(booking.ticketTierId)
+        : event.ticketTiers.find((item) => item.name === booking.ticketType));
+      if (tier && booking.inventoryStatus === "reserved") {
+        tier.reserved = Math.max(0, (tier.reserved || 0) - booking.quantity);
+        await event.save({ session });
+      }
+
+      booking.paymentStatus = "Failed";
+      booking.ticketStatus = "Cancelled";
+      booking.inventoryStatus = "released";
+      booking.bankTransferStatus = "Rejected";
+      booking.paymentRejectionReason = reason;
+      rejectedBooking = await booking.save({ session });
+    });
+
+    try {
+      const { sendEmail } = require("../utils/emailService");
+      const { genericNotificationTemplate } = require("../utils/emailTemplates");
+      const User = require("../models/User");
+      const customer = await User.findById(rejectedBooking.user).select("email");
+      if (customer?.email) {
+        await sendEmail({
+          to: customer.email,
+          subject: `Event Payment Rejected - ${rejectedBooking.gsReference}`,
+          html: genericNotificationTemplate("Event Payment Rejected", `Your bank transfer proof was rejected.<br><br><strong>Reason:</strong> ${reason}<br><br>The ticket reservation has been released. Please book again or contact support if you need help.`),
+        });
+      }
+    } catch (emailError) {
+      console.error("Failed to send event payment rejection email:", emailError);
+    }
+
+    return res.json({ message: "Event payment rejected and ticket inventory released.", booking: rejectedBooking });
+  } catch (error) {
+    console.error("Error rejecting event bank transfer:", error);
+    return res.status(error.statusCode || 500).json({ message: error.message || "Server error rejecting event payment." });
+  } finally {
+    await session.endSession();
+  }
 };
 
 const releaseExpiredReservations = async (now = new Date()) => {
@@ -512,6 +674,7 @@ const joinWaitlist = async (req, res) => {
 };
 
 module.exports = {
+  approveEventBankTransfer,
   approveEvent,
   bookEvent,
   createEvent,
@@ -524,7 +687,9 @@ module.exports = {
   joinWaitlist,
   normalizeEventInput,
   processEventPayment,
+  rejectEventBankTransfer,
   rejectEvent,
   releaseExpiredReservations,
+  uploadEventBankTransferProof,
   verifyTicket,
 };

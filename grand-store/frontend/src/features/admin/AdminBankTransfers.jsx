@@ -23,6 +23,7 @@ export default function AdminBankTransfers() {
     isOpen: false,
     type: null,
     orderId: null,
+    recordType: null,
   });
   const [rejectReason, setRejectReason] = useState("");
 
@@ -48,22 +49,22 @@ export default function AdminBankTransfers() {
     fetchOrders();
   }, []);
 
-  const handleApprove = (orderId) => {
-    setModalConfig({ isOpen: true, type: "approve", orderId });
+  const handleApprove = (record) => {
+    setModalConfig({ isOpen: true, type: "approve", orderId: record._id, recordType: record.recordType || 'shop' });
   };
 
-  const handleReject = (orderId) => {
+  const handleReject = (record) => {
     setRejectReason("");
-    setModalConfig({ isOpen: true, type: "reject", orderId });
+    setModalConfig({ isOpen: true, type: "reject", orderId: record._id, recordType: record.recordType || 'shop' });
   };
 
   const closeModal = () => {
-    setModalConfig({ isOpen: false, type: null, orderId: null });
+    setModalConfig({ isOpen: false, type: null, orderId: null, recordType: null });
     setRejectReason("");
   };
 
   const confirmApprove = async () => {
-    const { orderId } = modalConfig;
+    const { orderId, recordType } = modalConfig;
     if (!orderId) return;
 
     try {
@@ -72,8 +73,11 @@ export default function AdminBankTransfers() {
       const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
       const token = userInfo.token;
       const API_URL = import.meta.env.VITE_API_URL || "";
+      const approvalPath = recordType === 'event'
+        ? `/api/events/bookings/${orderId}/bank-transfer/approve`
+        : `/api/orders/${orderId}/bank-transfer/approve`;
       await api.post(
-        `${API_URL}/api/orders/${orderId}/bank-transfer/approve`,
+        `${API_URL}${approvalPath}`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -81,7 +85,14 @@ export default function AdminBankTransfers() {
       );
 
       // We don't just remove it, we update the status so it moves to history tab!
-      setOrders(orders.map(o => o._id === orderId ? { ...o, paymentStatus: 'Completed' } : o));
+      setOrders(orders.map(o => o._id === orderId
+        ? {
+            ...o,
+            paymentStatus: recordType === 'event' ? 'Paid' : 'Completed',
+            reviewStatus: recordType === 'event' ? 'Approved' : 'Completed',
+            bankTransferStatus: recordType === 'event' ? 'Approved' : o.bankTransferStatus,
+          }
+        : o));
     } catch (err) {
       alert(err.response?.data?.message || "Failed to approve payment");
     } finally {
@@ -90,7 +101,7 @@ export default function AdminBankTransfers() {
   };
 
   const confirmReject = async () => {
-    const { orderId } = modalConfig;
+    const { orderId, recordType } = modalConfig;
     if (!orderId || !rejectReason.trim()) return;
 
     try {
@@ -99,8 +110,11 @@ export default function AdminBankTransfers() {
       const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
       const token = userInfo.token;
       const API_URL = import.meta.env.VITE_API_URL || "";
+      const rejectionPath = recordType === 'event'
+        ? `/api/events/bookings/${orderId}/bank-transfer/reject`
+        : `/api/orders/${orderId}/bank-transfer/reject`;
       await api.post(
-        `${API_URL}/api/orders/${orderId}/bank-transfer/reject`,
+        `${API_URL}${rejectionPath}`,
         { reason: rejectReason },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -108,7 +122,14 @@ export default function AdminBankTransfers() {
       );
 
       // We don't just remove it, we update the status so it moves to history tab!
-      setOrders(orders.map(o => o._id === orderId ? { ...o, paymentStatus: 'Failed' } : o));
+      setOrders(orders.map(o => o._id === orderId
+        ? {
+            ...o,
+            paymentStatus: 'Failed',
+            reviewStatus: recordType === 'event' ? 'Rejected' : 'Failed',
+            bankTransferStatus: recordType === 'event' ? 'Rejected' : o.bankTransferStatus,
+          }
+        : o));
     } catch (err) {
       alert(err.response?.data?.message || "Failed to reject payment");
     } finally {
@@ -117,12 +138,15 @@ export default function AdminBankTransfers() {
   };
 
   const filteredOrders = orders.filter((o) => {
-    const matchesSearch = o.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          (o.user?.name || "").toLowerCase().includes(searchTerm.toLowerCase());
+    const reference = o.orderId || o.gsReference || o._id;
+    const matchesSearch = reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (o.user?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (o.event?.title || "").toLowerCase().includes(searchTerm.toLowerCase());
+    const reviewStatus = o.reviewStatus || o.paymentStatus;
     
     const matchesTab = activeTab === 'requests' 
-      ? o.paymentStatus === 'Awaiting_Approval' 
-      : o.paymentStatus !== 'Awaiting_Approval';
+      ? reviewStatus === 'Awaiting_Approval'
+      : reviewStatus !== 'Awaiting_Approval';
       
     return matchesSearch && matchesTab;
   });
@@ -143,9 +167,8 @@ export default function AdminBankTransfers() {
             Bank Transfer Verification
           </h1>
           <p className="text-gray-400 text-sm mt-1">
-            Review and approve manual payments. Approved payments will
-            automatically generate vendor payables and trigger shipment
-            processing.
+            Review manual payments for shop orders and event tickets. Approval
+            completes the correct order or issues the customer&apos;s QR ticket.
           </p>
         </div>
 
@@ -210,11 +233,16 @@ export default function AdminBankTransfers() {
                 <div className="md:col-span-3 space-y-4">
                   <div>
                     <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">
-                      Order ID
+                      Reference
                     </p>
                     <p className="text-sm text-[#c9a35b] font-mono">
                       {order.orderId}
                     </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Payment For</p>
+                    <p className="text-sm text-white">{order.recordLabel || 'Shop order'}</p>
+                    {order.event?.title && <p className="mt-1 text-xs text-gray-400">{order.event.title}</p>}
                   </div>
                   <div>
                     <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">
@@ -252,7 +280,7 @@ export default function AdminBankTransfers() {
                       Status
                     </p>
                     <span className="inline-block px-2 py-1 bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-[10px] uppercase tracking-wider rounded">
-                      {order.paymentStatus.replace("_", " ")}
+                      {(order.reviewStatus || order.paymentStatus).replaceAll("_", " ")}
                     </span>
                   </div>
                 </div>
@@ -286,7 +314,7 @@ export default function AdminBankTransfers() {
                   {activeTab === 'requests' ? (
                     <>
                       <button
-                        onClick={() => handleApprove(order._id)}
+                        onClick={() => handleApprove(order)}
                         disabled={processingId === order._id || !order.proofUrl}
                         className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/20 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -296,7 +324,7 @@ export default function AdminBankTransfers() {
                           : "Approve Payment"}
                       </button>
                       <button
-                        onClick={() => handleReject(order._id)}
+                        onClick={() => handleReject(order)}
                         disabled={processingId === order._id}
                         className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -307,12 +335,12 @@ export default function AdminBankTransfers() {
                   ) : (
                     <div className="flex flex-col items-center justify-center h-full text-center">
                       <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium ${
-                        order.paymentStatus === 'Completed' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
-                        order.paymentStatus === 'Failed' || order.paymentStatus === 'Rejected' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
+                        ['Completed', 'Approved'].includes(order.reviewStatus || order.paymentStatus) ? 'bg-green-500/10 border-green-500/20 text-green-400' :
+                        ['Failed', 'Rejected'].includes(order.reviewStatus || order.paymentStatus) ? 'bg-red-500/10 border-red-500/20 text-red-400' :
                         'bg-blue-500/10 border-blue-500/20 text-blue-400'
                       }`}>
-                        {order.paymentStatus === 'Completed' ? <CheckCircle size={16} /> : <XCircle size={16} />}
-                        {order.paymentStatus}
+                        {['Completed', 'Approved'].includes(order.reviewStatus || order.paymentStatus) ? <CheckCircle size={16} /> : <XCircle size={16} />}
+                        {(order.reviewStatus || order.paymentStatus).replaceAll('_', ' ')}
                       </span>
                     </div>
                   )}
@@ -334,7 +362,7 @@ export default function AdminBankTransfers() {
               </h2>
               <p className="text-sm text-gray-400 mt-1">
                 {modalConfig.type === "approve"
-                  ? "Are you sure you want to approve this payment? This will trigger vendor payouts and shipments."
+                  ? "Approve this payment? Shop orders will enter fulfilment and event bookings will immediately receive a valid QR ticket."
                   : "Please provide a reason for rejecting this bank transfer."}
               </p>
             </div>

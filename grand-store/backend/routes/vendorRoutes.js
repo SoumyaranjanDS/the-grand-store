@@ -13,7 +13,15 @@ const upload = multer({ storage: storage });
 
 // Unauthenticated routes for public vendor onboarding
 router.post('/register-full', vendorController.registerFullVendor);
-router.post('/upload-public', upload.single('document'), vendorController.uploadDocument);
+router.post('/upload-public', (req, res, next) => {
+  upload.single('document')(req, res, function (err) {
+    if (err) {
+      console.error('Multer error:', err);
+      return res.status(500).json({ message: 'Multer error', error: err.message || err });
+    }
+    next();
+  });
+}, vendorController.uploadDocument);
 
 // All vendor routes below should be protected
 router.use(protect);

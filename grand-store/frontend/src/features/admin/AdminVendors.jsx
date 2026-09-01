@@ -189,35 +189,83 @@ export default function AdminVendors() {
                         </div>
                       )}
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                         <div>
-                          <h4 className="text-gold text-xs uppercase tracking-widest mb-4">Business Info</h4>
+                          <h4 className="text-[var(--color-gold)] text-xs uppercase tracking-widest mb-4">Business Info</h4>
                           <DetailRow label="Legal Name" value={v.businessInfo?.legalName} />
                           <DetailRow label="Trading Name" value={v.businessInfo?.tradingName} />
                           <DetailRow label="Reg Number" value={v.businessInfo?.registrationNumber} />
                           <DetailRow label="Type" value={v.businessInfo?.businessType} />
                           <DetailRow label="Address" value={v.businessInfo?.address} />
+                          <div className="mt-4">
+                            <DetailRow label="Contact Number" value={v.kycInfo?.contactNumber} />
+                            <DetailRow label="Director Name" value={v.kycInfo?.directorName} />
+                            <DetailRow label="ID Number" value={v.kycInfo?.idNumber} />
+                          </div>
                         </div>
                         
                         <div>
-                          <h4 className="text-gold text-xs uppercase tracking-widest mb-4">Documents</h4>
+                          <h4 className="text-[var(--color-gold)] text-xs uppercase tracking-widest mb-4">Licence & Tax</h4>
+                          <DetailRow label="Tax Number" value={v.taxInfo?.taxNumber} />
+                          <DetailRow label="VAT Number" value={v.taxInfo?.vatNumber} />
+                          <DetailRow label="Export Code" value={v.customsInfo?.exportCode} />
+                          <div className="mt-4">
+                            <DetailRow label="Licence Number" value={v.licenceInfo?.licenceNumber} />
+                            <DetailRow label="Licence Type" value={v.licenceInfo?.licenceType} />
+                          </div>
+                        </div>
+
+                        <div>
+                          <h4 className="text-[var(--color-gold)] text-xs uppercase tracking-widest mb-4">Banking & Delivery</h4>
+                          <DetailRow label="Bank Name" value={v.bankingInfo?.bankName} />
+                          <DetailRow label="Account Name" value={v.bankingInfo?.accountName} />
+                          <DetailRow label="Account Number" value={v.bankingInfo?.accountNumber} />
+                          <DetailRow label="Branch Code" value={v.bankingInfo?.branchCode} />
+                          <DetailRow label="Payout Pref." value={v.bankingInfo?.payoutPreference} />
+                          <div className="mt-4">
+                            <DetailRow label="Fulfillment" value={v.deliveryInfo?.fulfillmentMethod} />
+                            <DetailRow label="Dispatch Loc." value={v.deliveryInfo?.dispatchLocation} />
+                            <DetailRow label="Products" value={v.productCategories?.join(', ')} />
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <h4 className="text-[var(--color-gold)] text-xs uppercase tracking-widest mb-4">Documents</h4>
                           <DetailRow label="ID Document" value={v.kycInfo?.idDocumentUrl} isLink={true} />
                           <DetailRow label="Tax Clearance" value={v.taxInfo?.taxClearanceUrl} isLink={true} />
                           <DetailRow label="Licence Doc" value={v.licenceInfo?.licenceDocumentUrl} isLink={true} />
+                          <DetailRow label="WLA Document" value={v.licenceInfo?.wlaDocumentUrl} isLink={true} />
                           <DetailRow label="Customs Export" value={v.customsInfo?.exportDocumentUrl} isLink={true} />
                           <DetailRow label="Bank Confirmation" value={v.bankingInfo?.bankConfirmationUrl} isLink={true} />
-                        </div>
-                        
-                        <div>
-                          <h4 className="text-gold text-xs uppercase tracking-widest mb-4">KYC & Tax</h4>
-                          <DetailRow label="Director Name" value={v.kycInfo?.directorName} />
-                          <DetailRow label="ID Number" value={v.kycInfo?.idNumber} />
-                          <DetailRow label="Tax Number" value={v.taxInfo?.taxNumber} />
-                          <DetailRow label="VAT Number" value={v.taxInfo?.vatNumber} />
-                          <DetailRow label="Bank Name" value={v.bankingInfo?.bankName} />
-                          <DetailRow label="Payment Status" value={v.paymentStatus} />
+                          <div className="mt-4">
+                            <DetailRow label="Terms Accepted" value={v.agreements?.termsAccepted ? 'Yes' : 'No'} />
+                            <DetailRow label="Info Accurate" value={v.agreements?.informationAccurate ? 'Yes' : 'No'} />
+                          </div>
                         </div>
                       </div>
+                      
+                      {/* Optional Brand Story / International fields if they exist */}
+                      {(v.storyInfo?.brandStory || v.credentialsInfo?.exportLicenceNumber) && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 pt-8 border-t border-white/5">
+                          {v.storyInfo?.brandStory && (
+                            <div>
+                              <h4 className="text-[var(--color-gold)] text-xs uppercase tracking-widest mb-4">Brand Story</h4>
+                              <DetailRow label="Bio" value={v.storyInfo?.winemakerBio} />
+                              <DetailRow label="Story" value={v.storyInfo?.brandStory} />
+                              <DetailRow label="Photos" value={v.storyInfo?.wineryPhotosUrl} isLink={true} />
+                            </div>
+                          )}
+                          {v.credentialsInfo?.exportLicenceNumber && (
+                            <div>
+                              <h4 className="text-[var(--color-gold)] text-xs uppercase tracking-widest mb-4">International Trade</h4>
+                              <DetailRow label="Export Licence" value={v.credentialsInfo?.exportLicenceNumber} />
+                              <DetailRow label="Target Regions" value={v.marketInfo?.targetRegions?.join(', ')} />
+                              <DetailRow label="Home Country Lic." value={v.credentialsInfo?.homeCountryLicence} isLink={true} />
+                              <DetailRow label="Certificates" value={v.credentialsInfo?.certificates} isLink={true} />
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </td>
                   </tr>
                 )}

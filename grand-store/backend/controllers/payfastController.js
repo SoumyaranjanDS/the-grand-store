@@ -146,6 +146,9 @@ exports.generateEventPayment = async (req, res) => {
     
     if (!booking) return res.status(404).json({ message: 'Booking not found' });
     if (['Paid', 'Completed'].includes(booking.paymentStatus)) return res.status(400).json({ message: 'Booking already paid' });
+    if (booking.paymentMethod === 'Bank Transfer') {
+      return res.status(400).json({ message: 'This booking uses bank transfer. Upload proof from the ticket payment page.' });
+    }
     if (booking.user._id.toString() !== req.user._id.toString()) {
        return res.status(403).json({ message: 'Only the ticket holder can pay for this booking' });
     }
@@ -264,11 +267,13 @@ exports.itnWebhook = async (req, res) => {
 
     // Completed payments also receive PayFast's server-to-server validation.
     const axios = require('axios');
-    let pfParamString = '';
-    for (let key in payload) {
-      pfParamString += `${key}=${encodeURIComponent(payload[key].toString().trim()).replace(/%20/g, '+')}&`;
-    }
-    pfParamString = pfParamString.slice(0, -1);
+    // PayFast expects the same parameter string used for signature validation.
+    // The received signature itself must not be posted back as part of that
+    // string, otherwise a legitimate COMPLETE notification is rejected.
+    const pfParamString = Object.entries(signaturePayload)
+      .filter(([, value]) => value !== '')
+      .map(([key, value]) => `${key}=${encodeURIComponent(value.toString().trim()).replace(/%20/g, '+')}`)
+      .join('&');
 
     const isLive = process.env.PAYFAST_IS_LIVE === 'true';
     const validateUrl = isLive ? 'https://www.payfast.co.za/eng/query/validate' : 'https://sandbox.payfast.co.za/eng/query/validate';
