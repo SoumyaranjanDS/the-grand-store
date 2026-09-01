@@ -14,10 +14,14 @@ const generateSignature = (data, passphrase) => {
   const fields = Object.entries(data)
     .filter(([, value]) => value !== '')
     .map(([key, value]) => (
-      `${key}=${encodeURIComponent(value.toString().trim()).replace(/%20/g, '+')}`
+      `${key}=${encodeURIComponent(value.toString().trim())
+        .replace(/[!'()*~]/g, (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`)
+        .replace(/%20/g, '+')}`
     ));
 
-  fields.push(`passphrase=${encodeURIComponent(passphrase.trim()).replace(/%20/g, '+')}`);
+  fields.push(`passphrase=${encodeURIComponent(passphrase.trim())
+    .replace(/[!'()*~]/g, (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`)
+    .replace(/%20/g, '+')}`);
   return crypto.createHash('md5').update(fields.join('&')).digest('hex');
 };
 
@@ -75,6 +79,30 @@ test('PayFast ITN route rejects an invalid signature', async () => {
 
     assert.equal(response.status, 400);
     assert.equal(await response.text(), 'Invalid signature');
+  });
+});
+
+test('PayFast ITN verification follows PHP encoding and stops at signature', async () => {
+  await withServer(async (baseUrl) => {
+    const signedFields = {
+      m_payment_id: 'IGNORED-123',
+      payment_status: 'CANCELLED',
+      item_name: "Collector's ~ Evening",
+      merchant_id: process.env.PAYFAST_TEST_MERCHANT_ID,
+    };
+    const signature = generateSignature(signedFields, process.env.PAYFAST_TEST_PASSPHRASE);
+    const body = new URLSearchParams(signedFields);
+    body.append('signature', signature);
+    body.append('field_after_signature', 'must-not-be-signed');
+
+    const response = await fetch(`${baseUrl}/api/payfast/itn`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body,
+    });
+
+    assert.equal(response.status, 200);
+    assert.equal(await response.text(), 'OK');
   });
 });
 

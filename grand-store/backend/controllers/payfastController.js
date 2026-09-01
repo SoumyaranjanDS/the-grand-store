@@ -9,6 +9,12 @@ const { processVendorPayment } = require('./vendorController');
 
 const trimTrailingSlashes = (url) => url.replace(/\/+$/, '');
 
+// PayFast's custom integration uses PHP urlencode (RFC 1738), which differs
+// from encodeURIComponent for characters such as apostrophes and tildes.
+const payfastUrlEncode = (value) => encodeURIComponent(String(value))
+  .replace(/[!'()*~]/g, (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`)
+  .replace(/%20/g, '+');
+
 const getFrontendUrl = (req) => trimTrailingSlashes(
   process.env.FRONTEND_URL || req.headers.origin || 'http://localhost:5173'
 );
@@ -31,14 +37,14 @@ const generateSignature = (data, passphrase = null) => {
   let pfOutput = '';
   for (const key in data) {
     if (data.hasOwnProperty(key) && data[key] !== '') {
-      pfOutput += `${key}=${encodeURIComponent(data[key].toString().trim()).replace(/%20/g, '+')}&`;
+      pfOutput += `${key}=${payfastUrlEncode(data[key].toString().trim())}&`;
     }
   }
 
   // 2. Remove last ampersand
   let getString = pfOutput.slice(0, -1);
   if (passphrase) {
-    getString += `&passphrase=${encodeURIComponent(passphrase.trim()).replace(/%20/g, '+')}`;
+    getString += `&passphrase=${payfastUrlEncode(passphrase.trim())}`;
   }
 
   // 3. Hash using MD5
@@ -243,9 +249,19 @@ exports.itnWebhook = async (req, res) => {
     }
     
     const receivedSignature = String(payload.signature || '');
-    const signaturePayload = { ...payload };
-    delete signaturePayload.signature;
-    const expectedSignature = generateSignature(signaturePayload, config.passphrase);
+    const signatureFields = [];
+    for (const [key, value] of Object.entries(payload)) {
+      // PayFast's ITN specification signs fields in the received order and
+      // stops at signature. Fields after it are not part of the signature or
+      // the server-confirmation parameter string.
+      if (key === 'signature') break;
+      if (value !== '') signatureFields.push(`${key}=${payfastUrlEncode(value)}`);
+    }
+    const pfParamString = signatureFields.join('&');
+    const signatureInput = config.passphrase
+      ? `${pfParamString}&passphrase=${payfastUrlEncode(config.passphrase.trim())}`
+      : pfParamString;
+    const expectedSignature = crypto.createHash('md5').update(signatureInput).digest('hex');
     const signaturesMatch = receivedSignature.length === expectedSignature.length && crypto.timingSafeEqual(
       Buffer.from(receivedSignature),
       Buffer.from(expectedSignature),
@@ -270,11 +286,6 @@ exports.itnWebhook = async (req, res) => {
     // PayFast expects the same parameter string used for signature validation.
     // The received signature itself must not be posted back as part of that
     // string, otherwise a legitimate COMPLETE notification is rejected.
-    const pfParamString = Object.entries(signaturePayload)
-      .filter(([, value]) => value !== '')
-      .map(([key, value]) => `${key}=${encodeURIComponent(value.toString().trim()).replace(/%20/g, '+')}`)
-      .join('&');
-
     const isLive = process.env.PAYFAST_IS_LIVE === 'true';
     const validateUrl = isLive ? 'https://www.payfast.co.za/eng/query/validate' : 'https://sandbox.payfast.co.za/eng/query/validate';
 
@@ -283,7 +294,7 @@ exports.itnWebhook = async (req, res) => {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       });
       
-      if (validateResponse.data !== 'VALID') {
+      if (String(validateResponse.data).trim() !== 'VALID') {
         console.error('PayFast ITN signature mismatch (Validation failed):', validateResponse.data);
         return res.status(400).send('Invalid signature');
       }
