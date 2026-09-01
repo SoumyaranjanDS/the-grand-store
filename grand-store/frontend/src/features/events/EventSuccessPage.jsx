@@ -133,8 +133,8 @@ export default function EventSuccessPage() {
     );
   }
 
-  const isPaid = PAID_STATUSES.includes(booking.paymentStatus) || (!isBankTransfer && paymentResult === 'success');
   const isBankTransfer = booking.paymentMethod === 'Bank Transfer';
+  const isPaid = PAID_STATUSES.includes(booking.paymentStatus) || (!isBankTransfer && paymentResult === 'success');
   const bankStatus = booking.bankTransferStatus;
   const isRejected = booking.paymentStatus === 'Failed' || bankStatus === 'Rejected';
   const isCancelled = !isBankTransfer && paymentResult === 'cancel' && !isPaid;
