@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { Package, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import Price from '../../components/ui/Price';
@@ -15,11 +15,7 @@ export default function VendorInventory() {
   useEffect(() => {
     const fetchLots = async () => {
       try {
-        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-        const token = userInfo?.token || user?.token;
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auction/vendor/lots`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await api.get('/auction/vendor/lots');
         setLots(res.data);
       } catch (err) {
         console.error(err);
@@ -142,3 +138,4 @@ export default function VendorInventory() {
     </div>
   );
 }
+

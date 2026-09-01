@@ -42,6 +42,7 @@ const sendTokenResponse = (user, statusCode, res) => {
     name: user.name,
     email: user.email,
     role: user.role,
+    token: token,
     referralCode: user.referralCode,
     rewardBalance: user.rewardBalance || 0,
     totalReferrals: user.totalReferrals || 0,

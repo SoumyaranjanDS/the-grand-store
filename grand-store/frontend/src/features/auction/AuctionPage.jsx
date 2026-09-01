@@ -6,6 +6,7 @@ import AuctionLotCard from './AuctionLotCard';
 import AuctionCountdown from './AuctionCountdown';
 import LuxuryAuctionHero from './LuxuryAuctionHero';
 import Price from '../../components/ui/Price';
+import { getAuctionPhase, isPastAuctionPhase } from './auctionPhase';
 
 export default function AuctionPage({ onNotify }) {
   const [lots, setLots] = useState([]);
@@ -43,17 +44,19 @@ export default function AuctionPage({ onNotify }) {
     }
   }, []);
 
-  const visibleLots = lots.filter((lot) => {
+  const displayLots = lots.map((lot) => ({ ...lot, displayStatus: getAuctionPhase(lot, now) }));
+
+  const visibleLots = displayLots.filter((lot) => {
     const matchesSearch = `${lot.title} ${lot.lotNumber}`.toLowerCase().includes(appliedFilters.search.trim().toLowerCase());
     const matchesCategory = appliedFilters.category === 'all' || lot.category === appliedFilters.category;
     const matchesPrice = appliedFilters.price === 'all'
       || (appliedFilters.price === 'under-10000' ? lot.currentBid < 10000 : lot.currentBid >= 10000);
     const remainingDays = (new Date(lot.endDate).getTime() - now) / 86400000;
     const matchesEnding = appliedFilters.ending === 'all' || remainingDays < 5;
-    return matchesSearch && matchesCategory && matchesPrice && matchesEnding && (lot.status === 'live' || lot.status === 'upcoming');
+    return matchesSearch && matchesCategory && matchesPrice && matchesEnding && (lot.displayStatus === 'live' || lot.displayStatus === 'upcoming');
   });
 
-  const pastLots = lots.filter(lot => lot.status === 'closed' || lot.status === 'sold');
+  const pastLots = displayLots.filter((lot) => isPastAuctionPhase(lot.displayStatus));
 
   const steps = [
     ['Become a member', 'Create a complimentary account and join a private community of collectors.'],
@@ -70,15 +73,17 @@ export default function AuctionPage({ onNotify }) {
   const heroLots = visibleLots.slice(0, 3);
 
   return (
-    <main className="auction-page relative">
-      <Link 
-        to="/" 
-        className="absolute top-6 left-6 z-50 flex items-center gap-2 px-5 py-2.5 bg-[#c9a35b] hover:bg-[#e1bd70] text-black !text-black rounded-full shadow-[0_4px_20px_rgba(201,163,91,0.4)] transition-all duration-300 font-bold uppercase tracking-widest text-xs"
-        title="Back to Home"
-      >
-        <ChevronLeft size={16} />
-        Back to Home
-      </Link>
+    <main className="auction-page min-h-screen bg-[#050505] text-[#eee8dd] relative">
+      <div className="w-full max-w-7xl mx-auto px-6 absolute top-6 left-0 right-0 z-50 pointer-events-none">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#c9a35b] hover:bg-[#e1bd70] text-black !text-black rounded-full shadow-[0_4px_20px_rgba(201,163,91,0.4)] transition-all duration-300 font-bold uppercase tracking-widest text-xs pointer-events-auto w-max"
+          title="Back to Home"
+        >
+          <ChevronLeft size={16} />
+          Back to Home
+        </Link>
+      </div>
       <LuxuryAuctionHero lots={heroLots} now={now} onNotify={onNotify} onRefresh={fetchLots} />
 
       <section className="auction-catalogue py-24 bg-[#050505] border-t border-white/[0.05]" id="current-auctions" aria-labelledby="current-auctions-title">
@@ -106,8 +111,8 @@ export default function AuctionPage({ onNotify }) {
             </select>
             <select className="bg-black/40 border border-white/[0.05] rounded-xl px-4 py-3 text-sm text-[var(--color-ivory)] focus:outline-none focus:border-[var(--color-gold)]/50 [color-scheme:dark]" value={filters.price} onChange={(event) => setFilters({ ...filters, price: event.target.value })} aria-label="Price range">
                <option value="all">All price ranges</option>
-               <option value="under-10000">Under <Price amount={10000} /></option>
-               <option value="over-10000"><Price amount={10000} /> and above</option>
+               <option value="under-10000">Under R 10,000</option>
+               <option value="over-10000">R 10,000 and above</option>
             </select>
             <button className="bg-gold-gradient text-black font-bold uppercase tracking-widest text-[10px] px-8 py-3 rounded-xl hover:shadow-[0_0_15px_rgba(212,175,55,0.4)] transition-shadow" type="submit">Apply</button>
           </form>

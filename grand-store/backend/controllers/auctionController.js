@@ -6,6 +6,25 @@ const Transaction = require('../models/Transaction');
 const Wallet = require('../models/Wallet');
 const { getNextSequence } = require('../utils/sequenceGenerator');
 
+const parseAuctionSchedule = (startDate, endDate) => {
+  const parsedStart = new Date(startDate);
+  const parsedEnd = new Date(endDate);
+
+  if (!startDate || !endDate || Number.isNaN(parsedStart.getTime()) || Number.isNaN(parsedEnd.getTime())) {
+    return { error: 'A valid auction start and end date are required.' };
+  }
+  if (parsedEnd <= parsedStart) {
+    return { error: 'Auction end date must be later than its start date.' };
+  }
+  if (parsedEnd <= new Date()) {
+    return { error: 'Auction end date must be in the future.' };
+  }
+
+  return { startDate: parsedStart, endDate: parsedEnd };
+};
+
+exports.parseAuctionSchedule = parseAuctionSchedule;
+
 // PUBLIC: Get all active auctions
 exports.getAuctionLots = async (req, res) => {
   try {
@@ -202,6 +221,9 @@ exports.submitLot = async (req, res) => {
       }
     }
 
+    const schedule = parseAuctionSchedule(startDate, endDate);
+    if (schedule.error) return res.status(400).json({ message: schedule.error });
+
     let images = [];
     if (req.files && req.files.length > 0) {
       images = req.files.map(file => file.path);
@@ -211,7 +233,8 @@ exports.submitLot = async (req, res) => {
 
     const lot = new AuctionLot({
       title, description, category, startingBid, reservePrice, condition, provenance, images,
-      startDate, endDate,
+      startDate: schedule.startDate,
+      endDate: schedule.endDate,
       vendor: req.user._id,
       status: 'pending_approval'
     });
@@ -238,8 +261,11 @@ exports.resubmitLot = async (req, res) => {
       return res.status(400).json({ message: 'Only unsold or closed lots can be resubmitted' });
     }
 
-    lot.startDate = startDate;
-    lot.endDate = endDate;
+    const schedule = parseAuctionSchedule(startDate, endDate);
+    if (schedule.error) return res.status(400).json({ message: schedule.error });
+
+    lot.startDate = schedule.startDate;
+    lot.endDate = schedule.endDate;
     lot.status = 'pending_approval'; // goes back to admin for review
 
     await lot.save();
@@ -256,18 +282,23 @@ exports.approveLot = async (req, res) => {
        return res.status(403).json({ message: 'Admin only' });
     }
 
-    const { lotNumber, bidIncrement, startingBid, reservePrice } = req.body;
+    const { lotNumber, bidIncrement, startingBid, reservePrice, startDate, endDate } = req.body;
     const lot = await AuctionLot.findById(req.params.id);
 
     if (!lot) return res.status(404).json({ message: 'Lot not found' });
+
+    const schedule = parseAuctionSchedule(startDate || lot.startDate, endDate || lot.endDate);
+    if (schedule.error) return res.status(400).json({ message: schedule.error });
 
     lot.lotNumber = lotNumber;
     lot.bidIncrement = bidIncrement || lot.bidIncrement;
     lot.startingBid = startingBid || lot.startingBid;
     lot.reservePrice = reservePrice || lot.reservePrice;
+    lot.startDate = schedule.startDate;
+    lot.endDate = schedule.endDate;
     
     // Determine if it should be live or upcoming based on startDate
-    lot.status = new Date() >= new Date(lot.startDate) ? 'live' : 'upcoming';
+    lot.status = new Date() >= schedule.startDate ? 'live' : 'upcoming';
 
     await lot.save();
     res.json({ message: 'Lot approved', lot });

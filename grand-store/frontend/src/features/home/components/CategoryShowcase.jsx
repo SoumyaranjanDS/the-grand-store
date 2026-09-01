@@ -99,11 +99,11 @@ export default function CategoryShowcase({
       </section>
 
       {brands.length > 0 && (
-        <section className="relative py-0 md:py-10 border-t border-white/10 bg-[#0b0a08] overflow-hidden" aria-labelledby={`${categoryId}-brands-title`}>
+        <section className="home-brand-marquee relative py-0 md:py-10 border-t border-white/10 bg-[#0b0a08] overflow-hidden" aria-labelledby={`${categoryId}-brands-title`}>
           <div className="relative max-w-[1440px] mx-auto text-center sm:px-8 lg:px-7">
-            <div className="relative border-y sm:border border-white/10 sm:rounded-2xl py-1 md:py-8 bg-white/[0.01]">
-              <div className="mb-2 md:mb-8 mt-1 md:mt-0 relative px-6 sm:px-0">
-                <h2 id={`${categoryId}-brands-title`} className="m-0 font-serif text-[clamp(20px,2.5vw,36px)] font-medium tracking-[-0.02em] leading-[1.05] text-[#eee8dd] relative z-10">
+            <div className="home-brand-marquee-panel relative border-y sm:border border-white/10 sm:rounded-2xl py-1 md:py-8 bg-white/[0.01]">
+              <div className="home-brand-marquee-heading mb-2 md:mb-8 mt-1 md:mt-0 relative px-6 sm:px-0">
+                <h2 id={`${categoryId}-brands-title`} className="home-brand-marquee-title m-0 font-serif text-[clamp(20px,2.5vw,36px)] font-medium tracking-[-0.02em] leading-[1.05] text-[#eee8dd] relative z-10">
                   Top {title} Brands
                 </h2>
                 <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-[100px] md:w-[160px] h-[1px] md:h-[2px] rounded-full bg-[linear-gradient(90deg,transparent,rgba(197,153,59,0.8),transparent)] blur-[0.5px]" />
@@ -117,12 +117,12 @@ export default function CategoryShowcase({
                 <div className="flex w-max animate-[marquee_20s_linear_infinite] sm:animate-[marquee_24s_linear_infinite] group-hover:[animation-play-state:paused] will-change-transform items-center">
                   {marqueeBrands.map((brand, index) => (
                     <div
-                      className="relative flex items-center justify-center max-sm:flex-[0_0_80px] sm:flex-[0_0_240px] md:flex-[0_0_280px] max-sm:min-h-[40px] sm:min-h-[135px] md:min-h-[150px] max-sm:mx-1 sm:mx-5 md:mx-6 transition-all duration-300 hover:scale-105 group/brand select-none"
+                      className="home-brand-marquee-tile relative flex items-center justify-center max-sm:flex-[0_0_80px] sm:flex-[0_0_240px] md:flex-[0_0_280px] max-sm:min-h-[40px] sm:min-h-[135px] md:min-h-[150px] max-sm:mx-1 sm:mx-5 md:mx-6 transition-all duration-300 hover:scale-105 group/brand select-none"
                       key={`${brand.name}-${index}`}
                       aria-label={`View ${brand.name}`}
                     >
                       <img
-                        className="w-auto h-auto max-sm:max-w-[70px] sm:max-w-[220px] md:max-w-[260px] max-sm:max-h-[30px] sm:max-h-[115px] md:max-h-[130px] object-contain filter contrast-[1.05] brightness-[0.98] group-hover/brand:brightness-110 transition-all duration-300"
+                        className="home-brand-marquee-logo w-auto h-auto max-sm:max-w-[70px] sm:max-w-[220px] md:max-w-[260px] max-sm:max-h-[30px] sm:max-h-[115px] md:max-h-[130px] object-contain filter contrast-[1.05] brightness-[0.98] group-hover/brand:brightness-110 transition-all duration-300"
                         src={brand.image}
                         alt={brand.name}
                       />

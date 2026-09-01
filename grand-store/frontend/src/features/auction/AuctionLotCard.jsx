@@ -6,12 +6,14 @@ import { useWishlist } from '../../wishlistContext';
 import ProductCard from '../../components/ProductCard';
 import AuctionCountdown from './AuctionCountdown';
 import Price from '../../components/ui/Price';
+import { getAuctionPhase, getAuctionTargetTime } from './auctionPhase';
 
 export default function AuctionLotCard({ lot, endTime, now, saved, onSave, onBid }) {
   const { products } = useProducts();
   const vendorName = lot.vendor ? (lot.vendor.storeName || lot.vendor.name) : 'The Grand Store';
-  const isUpcoming = lot.status === 'upcoming';
-  const targetTime = isUpcoming ? new Date(lot.startDate).getTime() : endTime;
+  const phase = lot.displayStatus || getAuctionPhase(lot, now);
+  const isUpcoming = phase === 'upcoming';
+  const targetTime = getAuctionTargetTime(lot, now);
 
   return (
     <article className="bg-[#111] border border-white/[0.05] rounded-xl overflow-hidden flex flex-col hover:border-[var(--color-gold)]/50 transition-colors duration-300 shadow-xl group">

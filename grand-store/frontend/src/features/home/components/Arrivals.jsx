@@ -55,8 +55,8 @@ export default function Arrivals({ onAdd, onWish, onCompare, compareItems }) {
       ref={sectionRef}
     >
       <div className="shell">
-        <div className="section-heading flex flex-col items-center text-center md:flex-row md:text-left md:justify-between md:items-end gap-3 md:gap-0">
-          <div className="flex flex-col items-center md:items-start">
+        <div className="section-heading flex flex-col items-start text-left md:flex-row md:text-left md:justify-between md:items-end gap-3 md:gap-0">
+          <div className="flex flex-col items-start md:items-start w-full">
             <p className="eyebrow hidden md:block">Fresh from the cellar</p>
             <h2>New arrivals</h2>
             <p className="section-intro hidden md:block">

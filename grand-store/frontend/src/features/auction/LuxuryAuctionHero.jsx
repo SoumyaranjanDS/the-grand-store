@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { ArrowRight, Clock, ShieldCheck, ChevronDown, Check } from 'lucide-react';
 import AuctionCountdown from './AuctionCountdown';
+import { getAuctionPhase, getAuctionTargetTime } from './auctionPhase';
 
 export default function LuxuryAuctionHero({ lots, now, onNotify, onRefresh }) {
   if (!lots || lots.length === 0) return null;
@@ -46,7 +47,9 @@ function LuxuryAuctionSlide({ lot, now, index, total, onNotify, onRefresh }) {
   const [isMaxBid, setIsMaxBid] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   
-  const endTime = new Date(lot.endDate).getTime();
+  const phase = lot.displayStatus || getAuctionPhase(lot, now);
+  const isUpcoming = phase === 'upcoming';
+  const targetTime = getAuctionTargetTime(lot, now);
   const nextMinimum = lot.currentBid === 0 ? lot.startingBid : lot.currentBid + lot.bidIncrement;
   const vendorName = lot.vendor ? (lot.vendor.storeName || lot.vendor.name) : 'The Grand Store';
 
@@ -107,8 +110,8 @@ function LuxuryAuctionSlide({ lot, now, index, total, onNotify, onRefresh }) {
             />
             
             <div className="absolute top-8 left-8 z-30 flex flex-col gap-2">
-              <span className="bg-red-600/90 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.5)]">
-                Live Auction
+              <span className={`${isUpcoming ? 'bg-blue-600/90 border-blue-500 shadow-[0_0_15px_rgba(37,99,235,0.45)]' : 'bg-red-600/90 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.5)]'} backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border`}>
+                {isUpcoming ? 'Upcoming Auction' : 'Live Auction'}
               </span>
               <span className="bg-black/60 backdrop-blur-md text-[var(--color-ivory)] text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border border-white/10">
                 Lot {lot.lotNumber}
@@ -148,7 +151,7 @@ function LuxuryAuctionSlide({ lot, now, index, total, onNotify, onRefresh }) {
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-8 pb-8 border-b border-white/[0.05]">
                <div>
                   <p className="text-[10px] uppercase tracking-widest text-gold-gradient mb-2 font-bold flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" /> Current Bid
+                    <span className={`w-1.5 h-1.5 rounded-full ${isUpcoming ? 'bg-blue-500' : 'bg-red-500 animate-pulse'}`} /> {isUpcoming ? 'Starting Bid' : 'Current Bid'}
                   </p>
                   <div className="text-4xl md:text-5xl font-serif font-bold text-[var(--color-ivory)]">
                     <span className="text-2xl text-[var(--color-ivory-muted)] mr-2">ZAR</span>
@@ -157,14 +160,22 @@ function LuxuryAuctionSlide({ lot, now, index, total, onNotify, onRefresh }) {
                </div>
                <div className="text-left sm:text-right">
                   <p className="text-[10px] uppercase tracking-widest text-[var(--color-ivory-muted)] mb-2 font-bold flex items-center sm:justify-end gap-2">
-                    <Clock size={12} className="text-red-400" /> Ends In
+                    <Clock size={12} className={isUpcoming ? 'text-blue-400' : 'text-red-400'} /> {isUpcoming ? 'Starts In' : 'Ends In'}
                   </p>
-                  <div className="text-xl font-mono text-red-400 tracking-wider">
-                    <AuctionCountdown endTime={endTime} now={now} />
+                  <div className={`text-xl font-mono ${isUpcoming ? 'text-blue-400' : 'text-red-400'} tracking-wider`}>
+                    <AuctionCountdown endTime={targetTime} now={now} compact={true} />
                   </div>
                </div>
             </div>
 
+            {isUpcoming ? (
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <p className="text-sm text-[var(--color-ivory-muted)]">Bidding opens automatically when the countdown reaches zero.</p>
+                <Link to={`/auction/${lot._id}`} className="bg-gold-gradient text-black font-bold uppercase tracking-widest text-xs px-7 py-4 rounded-2xl whitespace-nowrap">
+                  View Details
+                </Link>
+              </div>
+            ) : (
             <form onSubmit={submitBid} className="flex flex-col gap-4">
                <div className="flex flex-col sm:flex-row gap-4">
                  <div className="relative flex-1">
@@ -202,6 +213,7 @@ function LuxuryAuctionSlide({ lot, now, index, total, onNotify, onRefresh }) {
                  </Link>
                </div>
             </form>
+            )}
           </div>
           
         </div>

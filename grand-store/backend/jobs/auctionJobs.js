@@ -6,19 +6,12 @@ const { closeAuctionInternal } = require('../controllers/auctionController');
 const startAuctionCronJobs = () => {
   cron.schedule('* * * * *', async () => {
     try {
-      // 1. Find all upcoming auctions where startDate has passed and make them live
-      const startedLots = await AuctionLot.updateMany(
-        { status: 'upcoming', startDate: { $lte: new Date() } },
-        { $set: { status: 'live' } }
-      );
-      if (startedLots.modifiedCount > 0) {
-        console.log(`Started ${startedLots.modifiedCount} upcoming auctions.`);
-      }
+      const now = new Date();
 
-      // 2. Find all live auctions where endDate has passed
+      // 1. Close any active/upcoming auctions whose end time has passed.
       const expiredLots = await AuctionLot.find({
-        status: 'live',
-        endDate: { $lt: new Date() }
+        status: { $in: ['live', 'upcoming'] },
+        endDate: { $lte: now }
       });
 
       if (expiredLots.length > 0) {
@@ -31,6 +24,15 @@ const startAuctionCronJobs = () => {
             console.error(`Error closing auction for lot ${lot._id}:`, err.message);
           }
         }
+      }
+
+      // 2. Start only upcoming auctions that still have a valid future end time.
+      const startedLots = await AuctionLot.updateMany(
+        { status: 'upcoming', startDate: { $lte: now }, endDate: { $gt: now } },
+        { $set: { status: 'live' } }
+      );
+      if (startedLots.modifiedCount > 0) {
+        console.log(`Started ${startedLots.modifiedCount} upcoming auctions.`);
       }
     } catch (error) {
       console.error('Error running auction cron job:', error.message);

@@ -145,7 +145,7 @@ export default function AdminLayout() {
                 <button onClick={() => handleNavigate('/admin/trade-enquiries')} className={navItemClass('/admin/trade-enquiries')}>
                   <Building2 size={16} /> Trade Enquiries
                 </button>
-                <button onClick={() => handleNavigate('/auction')} className={navItemClass('/auction')}>
+                <button onClick={() => handleNavigate('/admin/auctions')} className={navItemClass('/admin/auctions')}>
                   <Gavel size={16} /> Live Auctions
                 </button>
               </>
@@ -202,3 +202,4 @@ export default function AdminLayout() {
     </div>
   );
 }
+

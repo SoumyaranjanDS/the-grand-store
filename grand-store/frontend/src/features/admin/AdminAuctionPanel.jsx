@@ -4,6 +4,12 @@ import { useAuth } from '../../context/AuthContext';
 import { Gavel, CheckCircle2 } from 'lucide-react';
 import Price from '../../components/ui/Price';
 
+const toDatetimeLocal = (date) => {
+  const d = new Date(date);
+  const pad = (number) => number.toString().padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
 export default function AdminAuctionPanel({ onNotify }) {
   const { user } = useAuth();
   const [lots, setLots] = useState([]);
@@ -35,15 +41,16 @@ export default function AdminAuctionPanel({ onNotify }) {
       const forms = {};
       const currentYear = new Date().getFullYear();
 
-      const toDatetimeLocal = (date) => {
-        const d = new Date(date);
-        const pad = (n) => n.toString().padStart(2, '0');
-        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-      };
-
       pendingLots.forEach(l => {
-        const sd = l.startDate ? new Date(l.startDate) : new Date();
-        const ed = l.endDate ? new Date(l.endDate) : new Date(Date.now() + 7 * 86400000);
+        const now = new Date();
+        const requestedStart = l.startDate ? new Date(l.startDate) : null;
+        const requestedEnd = l.endDate ? new Date(l.endDate) : null;
+        const sd = requestedStart && !Number.isNaN(requestedStart.getTime()) && requestedStart > now
+          ? requestedStart
+          : new Date(now.getTime() + 2 * 60000);
+        const ed = requestedEnd && !Number.isNaN(requestedEnd.getTime()) && requestedEnd > sd
+          ? requestedEnd
+          : new Date(sd.getTime() + 7 * 86400000);
         
         forms[l._id] = {
             lotNumber: `LOT-${currentYear}-${l._id.substring(l._id.length - 5).toUpperCase()}`,
@@ -64,12 +71,30 @@ export default function AdminAuctionPanel({ onNotify }) {
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
       const token = userInfo?.token || user?.token;
       const form = approvalForms[id];
-      await api.put(`/auction/${id}/approve`, form);
+      const startDate = new Date(form.startDate);
+      const endDate = new Date(form.endDate);
+      if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+        onNotify('Enter a valid auction start and end time.');
+        return;
+      }
+      if (endDate <= startDate) {
+        onNotify('Auction end time must be later than the start time.');
+        return;
+      }
+      if (endDate <= new Date()) {
+        onNotify('Auction end time must be in the future.');
+        return;
+      }
+      await api.put(`/auction/${id}/approve`, {
+        ...form,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+      });
       onNotify('Lot approved successfully!');
       fetchLots(); // Refresh list
     } catch (err) {
       console.error(err);
-      onNotify('Failed to approve lot.');
+      onNotify(err.response?.data?.message || 'Failed to approve lot.');
     }
   };
 
@@ -168,11 +193,11 @@ export default function AdminAuctionPanel({ onNotify }) {
                      </div>
                      <div>
                        <label className="block text-[10px] text-[var(--color-ivory-muted)] mb-2 uppercase tracking-widest font-semibold">Start Date/Time</label>
-                       <input type="datetime-local" readOnly value={approvalForms[lot._id]?.startDate || ''} onChange={e => updateForm(lot._id, 'startDate', e.target.value)} className="w-full bg-black/50 border border-white/[0.02] rounded-xl p-3 text-sm text-[var(--color-ivory)]/70 focus:outline-none cursor-not-allowed [color-scheme:dark]" />
+                       <input type="datetime-local" min={toDatetimeLocal(new Date())} value={approvalForms[lot._id]?.startDate || ''} onChange={e => updateForm(lot._id, 'startDate', e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-sm text-[var(--color-ivory)] focus:outline-none focus:border-[var(--color-gold)]/60 [color-scheme:dark]" />
                      </div>
                      <div>
                        <label className="block text-[10px] text-[var(--color-ivory-muted)] mb-2 uppercase tracking-widest font-semibold">End Date/Time</label>
-                       <input type="datetime-local" readOnly value={approvalForms[lot._id]?.endDate || ''} onChange={e => updateForm(lot._id, 'endDate', e.target.value)} className="w-full bg-black/50 border border-white/[0.02] rounded-xl p-3 text-sm text-[var(--color-ivory)]/70 focus:outline-none cursor-not-allowed [color-scheme:dark]" />
+                       <input type="datetime-local" min={approvalForms[lot._id]?.startDate || toDatetimeLocal(new Date())} value={approvalForms[lot._id]?.endDate || ''} onChange={e => updateForm(lot._id, 'endDate', e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-sm text-[var(--color-ivory)] focus:outline-none focus:border-[var(--color-gold)]/60 [color-scheme:dark]" />
                      </div>
                      <button onClick={() => handleApprove(lot._id)} className="w-full mt-8 rounded-xl bg-gold-gradient text-black font-bold uppercase tracking-widest text-xs py-4 hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all">
                        Approve & Publish Lot

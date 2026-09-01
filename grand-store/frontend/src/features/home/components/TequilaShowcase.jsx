@@ -89,11 +89,11 @@ export default function TequilaShowcase({ onAdd, onWish, onCompare, compareItems
         </div>
       </section>
 
-      <section className="relative py-8 md:py-10 border-t border-white/10 bg-[#0b0a08] overflow-hidden" aria-labelledby="tequila-brands-title">
+      <section className="home-brand-marquee relative py-8 md:py-10 border-t border-white/10 bg-[#0b0a08] overflow-hidden" aria-labelledby="tequila-brands-title">
         <div className="relative max-w-[1440px] mx-auto text-center sm:px-8 lg:px-7">
-          <div className="relative border-y sm:border border-white/10 sm:rounded-2xl py-8 bg-white/[0.01]">
-            <div className="mb-8 relative px-6 sm:px-0">
-              <h2 id="tequila-brands-title" className="m-0 font-serif text-[clamp(24px,2.5vw,36px)] font-medium tracking-[-0.02em] leading-[1.05] text-[#eee8dd] relative z-10">
+          <div className="home-brand-marquee-panel relative border-y sm:border border-white/10 sm:rounded-2xl py-8 bg-white/[0.01]">
+            <div className="home-brand-marquee-heading mb-8 relative px-6 sm:px-0">
+              <h2 id="tequila-brands-title" className="home-brand-marquee-title m-0 font-serif text-[clamp(24px,2.5vw,36px)] font-medium tracking-[-0.02em] leading-[1.05] text-[#eee8dd] relative z-10">
                 Top Tequila Brands
               </h2>
               <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-[160px] h-[2px] rounded-full bg-[linear-gradient(90deg,transparent,rgba(197,153,59,0.8),transparent)] blur-[0.5px]" />
@@ -107,12 +107,12 @@ export default function TequilaShowcase({ onAdd, onWish, onCompare, compareItems
               <div className="flex w-max animate-[marquee_20s_linear_infinite] sm:animate-[marquee_24s_linear_infinite] group-hover:[animation-play-state:paused] will-change-transform items-center">
                 {marqueeBrands.map((brand, index) => (
                   <div
-                    className="relative flex items-center justify-center max-sm:flex-[0_0_260px] sm:flex-[0_0_280px] md:flex-[0_0_320px] max-sm:min-h-[180px] sm:min-h-[165px] md:min-h-[190px] max-sm:mx-0 sm:mx-4 md:mx-6 transition-all duration-300 hover:scale-110 hover:-translate-y-1 group/brand select-none"
+                    className="home-brand-marquee-tile relative flex items-center justify-center max-sm:flex-[0_0_260px] sm:flex-[0_0_280px] md:flex-[0_0_320px] max-sm:min-h-[180px] sm:min-h-[165px] md:min-h-[190px] max-sm:mx-0 sm:mx-4 md:mx-6 transition-all duration-300 hover:scale-110 hover:-translate-y-1 group/brand select-none"
                     key={`${brand.name}-${index}`}
                     aria-label={`View ${brand.name}`}
                   >
                     <img
-                      className="w-auto h-auto max-sm:max-w-[250px] sm:max-w-[260px] md:max-w-[300px] max-sm:max-h-[160px] sm:max-h-[145px] md:max-h-[170px] max-sm:scale-125 object-contain filter contrast-[1.08] brightness-[0.95] group-hover/brand:brightness-110 group-hover/brand:drop-shadow-[0_10px_30px_rgba(225,189,112,0.45)] transition-all duration-300"
+                      className="home-brand-marquee-logo w-auto h-auto max-sm:max-w-[250px] sm:max-w-[260px] md:max-w-[300px] max-sm:max-h-[160px] sm:max-h-[145px] md:max-h-[170px] max-sm:scale-125 object-contain filter contrast-[1.08] brightness-[0.95] group-hover/brand:brightness-110 group-hover/brand:drop-shadow-[0_10px_30px_rgba(225,189,112,0.45)] transition-all duration-300"
                       src={brand.image}
                       alt={brand.name}
                       loading="lazy"

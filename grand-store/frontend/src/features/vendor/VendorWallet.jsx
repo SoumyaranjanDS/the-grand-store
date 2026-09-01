@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api';
 import { Wallet, ArrowUpRight, ArrowDownRight, Clock, CheckCircle2, History } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -17,12 +17,9 @@ export default function VendorWallet() {
 
   useEffect(() => {
     const fetchWallet = async () => {
-      try {
-        const API_URL = import.meta.env.VITE_API_URL || '';
-        const res = await axios.get(`${API_URL}/api/vendor/wallet`, {
-          headers: { Authorization: `Bearer ${user?.token}` }
-        });
-        setWalletData(res.data.wallet);
+        try {
+          const res = await api.get('/vendor/wallet');
+          setWalletData(res.data.wallet);
         setOrders(res.data.orders || []);
       } catch (err) {
         setError('Failed to load wallet data');
@@ -149,3 +146,5 @@ export default function VendorWallet() {
     </div>
   );
 }
+
+

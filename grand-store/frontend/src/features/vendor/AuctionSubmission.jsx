@@ -5,6 +5,12 @@ import { Building2, Package, CheckCircle2, AlertCircle, PlusCircle, User, Gavel 
 import { useAuth } from '../../context/AuthContext';
 import { storeCategories } from '../../data';
 
+const toDatetimeLocal = (date) => {
+  const value = new Date(date);
+  const pad = (number) => number.toString().padStart(2, '0');
+  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}`;
+};
+
 export default function AuctionSubmission({ onNotify }) {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -75,13 +81,25 @@ export default function AuctionSubmission({ onNotify }) {
         throw new Error('At least one image is required.');
       }
 
+      const startDate = new Date(formData.startDate);
+      const endDate = new Date(formData.endDate);
+      if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+        throw new Error('Enter a valid auction start and end time.');
+      }
+      if (endDate <= startDate) {
+        throw new Error('Auction end time must be later than the start time.');
+      }
+      if (endDate <= new Date()) {
+        throw new Error('Auction end time must be in the future.');
+      }
+
       const payload = new FormData();
       payload.append('title', formData.title);
       payload.append('description', formData.description);
       payload.append('startingBid', Number(formData.startingBid));
       payload.append('reservePrice', Number(formData.reservePrice));
-      payload.append('startDate', formData.startDate ? new Date(formData.startDate).toISOString() : new Date().toISOString());
-      payload.append('endDate', formData.endDate ? new Date(formData.endDate).toISOString() : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString());
+      payload.append('startDate', startDate.toISOString());
+      payload.append('endDate', endDate.toISOString());
       payload.append('category', formData.category || 'Whisky');
       payload.append('condition', formData.condition);
       payload.append('provenance', formData.provenance);
@@ -352,7 +370,12 @@ export default function AuctionSubmission({ onNotify }) {
                     name="startDate" 
                     id="startDate"
                     value={formData.startDate} 
-                    onChange={e => setFormData({...formData, startDate: e.target.value})} 
+                    min={toDatetimeLocal(new Date())}
+                    onChange={e => setFormData({
+                      ...formData,
+                      startDate: e.target.value,
+                      endDate: formData.endDate && new Date(formData.endDate) <= new Date(e.target.value) ? '' : formData.endDate,
+                    })}
                     className="block w-full px-4 py-3 text-base text-[var(--color-ivory)] bg-black/20 border border-[var(--color-gold)]/50 rounded-lg focus:outline-none focus:border-[var(--color-gold)] focus:bg-black/40 transition-colors [color-scheme:dark]" 
                     required 
                   />
@@ -370,6 +393,7 @@ export default function AuctionSubmission({ onNotify }) {
                     name="endDate" 
                     id="endDate"
                     value={formData.endDate} 
+                    min={formData.startDate || toDatetimeLocal(new Date())}
                     onChange={e => setFormData({...formData, endDate: e.target.value})} 
                     className="block w-full px-4 py-3 text-base text-[var(--color-ivory)] bg-black/20 border border-[var(--color-gold)]/50 rounded-lg focus:outline-none focus:border-[var(--color-gold)] focus:bg-black/40 transition-colors [color-scheme:dark]" 
                     required 

@@ -16,9 +16,10 @@ export default function WineCategoryShowcase() {
   const scroll = useCallback((direction) => {
     if (scrollRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-      // Calculate exact scroll amount based on the first card's width + gap
+      // Calculate exact scroll amount based on the first card's width + actual CSS gap
       const card = scrollRef.current.children[0];
-      const scrollAmount = card ? card.offsetWidth + 20 : 370;
+      const gap = parseInt(window.getComputedStyle(scrollRef.current).gap) || 0;
+      const scrollAmount = card ? card.offsetWidth + gap : 370;
 
       if (direction === 'right') {
         // If we are at or near the very end, scroll back to start
@@ -53,7 +54,7 @@ export default function WineCategoryShowcase() {
       onMouseLeave={() => setIsPaused(false)}
     >
       <div className="categories-copy text-left md:text-center" style={{ marginBottom: '3rem' }}>
-        <h2 style={{ fontSize: '2.5rem', fontFamily: 'var(--font-serif)', color: '#eee8dd', margin: '0 0 1rem 0' }}>
+        <h2 style={{ fontSize: '2.5rem', fontFamily: 'var(--font-serif)', color: '#eee8dd', margin: '0 0 1rem 0', textDecoration: 'underline', textDecorationColor: 'var(--gold)', textUnderlineOffset: '8px' }}>
           Explore Top <em style={{ color: 'var(--gold)', fontStyle: 'italic' }}>Wine Categories</em>
         </h2>
         <p style={{ color: '#888', margin: 0, fontSize: '1.1rem' }}>

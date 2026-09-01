@@ -1736,8 +1736,8 @@ video {
 }
 
 .quick-actions .icon-button {
-  width: 36px;
-  height: 36px;
+  width: 42px;
+  height: 42px;
   color: #eee8dd;
   background: rgba(10, 9, 7, 0.78);
 }
@@ -1772,7 +1772,6 @@ video {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .product-origin {
   margin: 4px 0 15px;
   color: #777169;
@@ -11766,13 +11765,8 @@ video {
   }
 
   .home-page .home-product-editorial .quick-actions .icon-button {
-    width: 31px;
-    height: 31px;
-  }
-
-  .home-page .home-product-editorial .quick-actions svg {
-    width: 14px;
-    height: 14px;
+    width: 40px;
+    height: 40px;
   }
 
   .home-page .home-product-editorial .product-info {
@@ -11868,8 +11862,8 @@ video {
   }
 
   .home-page .category-showcase-card {
-    flex: 0 0 min(72vw, 270px);
-    scroll-snap-align: start;
+    flex: 0 0 100%;
+    scroll-snap-align: center;
   }
 
   .home-page .category-showcase-overlay {
@@ -11912,4 +11906,7 @@ video {
     transform: none !important;
   }
 }
+
+
+
 

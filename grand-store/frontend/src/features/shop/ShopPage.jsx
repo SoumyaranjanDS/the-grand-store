@@ -388,7 +388,7 @@ export default function ShopPage({ onAdd, onWish, onCompare, compareItems }) {
               </div>
               <div className="flex items-center gap-4">
                 <button
-                  className="lg:hidden flex items-center gap-2 border border-white/20 px-4 py-2 text-xs font-medium uppercase tracking-widest hover:bg-white/5 transition-colors"
+                  className="lg:hidden flex items-center gap-2 border border-white/20 px-4 py-2 text-xs font-medium uppercase tracking-widest hover:bg-white/5 transition-colors whitespace-nowrap"
                   type="button"
                   onClick={() => setMobileFiltersOpen(true)}
                 >

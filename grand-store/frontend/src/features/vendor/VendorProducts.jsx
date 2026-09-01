@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { Building2, PlusCircle, Package, Clock, CheckCircle2, XCircle, User } from 'lucide-react';
 import Price from '../../components/ui/Price';
@@ -20,11 +20,7 @@ export default function VendorProducts() {
 
     const fetchProducts = async () => {
       try {
-        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-        const token = userInfo?.token || user?.token;
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/products/vendor/me`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await api.get('/products/vendor/me');
         setProducts(res.data);
       } catch (err) {
         console.error(err);
@@ -173,3 +169,4 @@ export default function VendorProducts() {
     </div>
   );
 }
+
