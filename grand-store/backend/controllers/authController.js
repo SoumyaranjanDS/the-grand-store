@@ -440,8 +440,6 @@ module.exports = {
   logoutUser,
   getUserProfile,
   updateUserProfile,
-  addOrUpdateAddress,
-  updateUserRole,
   verifyEmail,
   deleteUserProfile,
   googleAuth,
