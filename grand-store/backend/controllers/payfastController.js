@@ -295,14 +295,17 @@ exports.itnWebhook = async (req, res) => {
 
     // Completed payments also receive PayFast's server-to-server validation.
     const axios = require('axios');
-    // PayFast expects the same parameter string used for signature validation.
-    // The received signature itself must not be posted back as part of that
-    // string, otherwise a legitimate COMPLETE notification is rejected.
+    let validateParamString = '';
+    for (let key in payload) {
+      validateParamString += `${key}=${encodeURIComponent(payload[key].toString().trim()).replace(/%20/g, '+')}&`;
+    }
+    validateParamString = validateParamString.slice(0, -1);
+
     const isLive = process.env.PAYFAST_IS_LIVE === 'true';
     const validateUrl = isLive ? 'https://www.payfast.co.za/eng/query/validate' : 'https://sandbox.payfast.co.za/eng/query/validate';
 
     try {
-      const validateResponse = await axios.post(validateUrl, pfParamString, {
+      const validateResponse = await axios.post(validateUrl, validateParamString, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       });
       
