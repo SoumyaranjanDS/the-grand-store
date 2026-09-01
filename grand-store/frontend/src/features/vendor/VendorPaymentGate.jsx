@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import { CreditCard, CheckCircle, Store, ShieldCheck } from "lucide-react";
 import Price from "../../components/ui/Price";
@@ -10,8 +10,11 @@ export default function VendorPaymentGate() {
   const navigate = useNavigate();
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
-
+  const [verifying, setVerifying] = useState(false);
   const [registrationFee, setRegistrationFee] = useState(0);
+  const [couponCode, setCouponCode] = useState("");
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState("");
 
   React.useEffect(() => {
     // Check if we just returned from PayFast
@@ -25,11 +28,7 @@ export default function VendorPaymentGate() {
     // Fetch fee
     const fetchFee = async () => {
       try {
-        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-        const token = userInfo?.token || user?.token;
-        const { data } = await axios.get(`${import.meta.env.VITE_API_URL || ''}/api/vendor/onboarding`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const { data } = await api.get('/vendor/onboarding');
         if (data && data.registrationFee) {
           setRegistrationFee(data.registrationFee);
         }
@@ -40,18 +39,50 @@ export default function VendorPaymentGate() {
     fetchFee();
   }, [user]);
 
-  const handleSuccessRedirect = () => {
+  const handleSuccessRedirect = async () => {
+    setVerifying(true);
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-    if (userInfo) {
-      userInfo.role = "vendor_active";
-      localStorage.setItem("userInfo", JSON.stringify(userInfo));
-    }
-    if (login && userInfo) {
-      login(userInfo);
-    }
-    setSuccess(true);
-    setTimeout(() => {
-      navigate("/vendor/dashboard");
+    
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    const checkRole = async () => {
+      try {
+        const { data } = await api.get('/auth/profile');
+        
+        if (data && data.role === 'vendor_active') {
+          if (userInfo) {
+            userInfo.role = "vendor_active";
+            localStorage.setItem("userInfo", JSON.stringify(userInfo));
+          }
+          if (login && userInfo) {
+            login(userInfo);
+          }
+          setVerifying(false);
+          setSuccess(true);
+          setTimeout(() => {
+            navigate("/vendor/dashboard");
+          }, 2000);
+          return true;
+        }
+      } catch (err) {
+        console.error("Failed to fetch profile during verification", err);
+      }
+      return false;
+    };
+
+    // Poll until ITN webhook processes
+    const pollInterval = setInterval(async () => {
+      attempts++;
+      const isUpdated = await checkRole();
+      if (isUpdated || attempts >= maxAttempts) {
+        clearInterval(pollInterval);
+        if (!isUpdated) {
+          setVerifying(false);
+          alert("Payment is still processing. Please check your dashboard in a few minutes.");
+          navigate("/");
+        }
+      }
     }, 2000);
   };
 
@@ -60,13 +91,8 @@ export default function VendorPaymentGate() {
     setProcessing(true);
 
     try {
-      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-      const token = userInfo?.token || user?.token;
-
       // Call backend to generate PayFast URL and signature
-      const { data } = await axios.post(`${import.meta.env.VITE_API_URL || ''}/api/payfast/generate-vendor`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await api.post('/payfast/generate-vendor');
 
       // Construct and submit a form dynamically to redirect to PayFast
       const form = document.createElement('form');
@@ -91,6 +117,54 @@ export default function VendorPaymentGate() {
     }
   };
 
+  const handleApplyCoupon = async (e) => {
+    e.preventDefault();
+    if (!couponCode.trim()) return;
+    
+    setApplyingCoupon(true);
+    setCouponError("");
+    
+    try {
+      const { data } = await api.post('/vendor/apply-coupon', { code: couponCode });
+      
+      // Update local storage and context
+      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+      if (userInfo) {
+        userInfo.role = "vendor_active";
+        localStorage.setItem("userInfo", JSON.stringify(userInfo));
+      }
+      
+      alert(`Coupon applied! ${data.message}`);
+      setSuccess(true);
+      setTimeout(() => {
+        login(userInfo || { ...user, role: 'vendor_active' });
+        navigate("/vendor/dashboard");
+      }, 2000);
+      
+    } catch (error) {
+      console.error("Failed to apply coupon", error);
+      setCouponError(error.response?.data?.message || "Invalid or expired coupon code.");
+    } finally {
+      setApplyingCoupon(false);
+    }
+  };
+
+
+  if (verifying) {
+    return (
+      <div className="vendor-theme min-h-screen bg-[#050505] flex items-center justify-center p-4">
+        <div className="bg-[#0a0a0a] border border-gold/30 p-12 rounded-2xl max-w-md w-full text-center">
+          <div className="animate-spin w-16 h-16 border-4 border-[#c9a35b] border-t-transparent rounded-full mx-auto mb-6"></div>
+          <h2 className="text-2xl text-white font-light mb-4">
+            Verifying Payment...
+          </h2>
+          <p className="text-white/60 mb-8">
+            Please wait while we confirm your payment with PayFast. This can take a few moments.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (success) {
     return (
@@ -164,7 +238,7 @@ export default function VendorPaymentGate() {
             <button
               type="submit"
               disabled={processing}
-              className="w-full bg-gold hover:bg-white text-black py-4 rounded font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full bg-gold hover:bg-white text-black py-4 rounded font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mb-8"
             >
               {processing ? (
                 "Initializing Secure Gateway..."
@@ -175,6 +249,29 @@ export default function VendorPaymentGate() {
               )}
             </button>
           </form>
+
+          <div className="pt-6 border-t border-white/10">
+            <h4 className="text-white mb-4">Have a Registration Coupon?</h4>
+            <form onSubmit={handleApplyCoupon} className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Enter coupon code"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value)}
+                className="flex-1 bg-[#111] border border-white/10 rounded px-4 py-2 text-white uppercase placeholder:normal-case"
+              />
+              <button
+                type="submit"
+                disabled={applyingCoupon || !couponCode}
+                className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded transition-colors disabled:opacity-50"
+              >
+                {applyingCoupon ? "Applying..." : "Apply"}
+              </button>
+            </form>
+            {couponError && (
+              <p className="text-red-400 text-sm mt-2">{couponError}</p>
+            )}
+          </div>
         </div>
       </div>
     </div>

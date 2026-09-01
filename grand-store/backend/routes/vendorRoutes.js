@@ -30,7 +30,7 @@ router.get('/onboarding', vendorController.getOnboardingProgress);
 router.post('/onboarding', vendorController.saveOnboardingProgress);
 router.post('/onboarding/upload', upload.single('document'), vendorController.uploadDocument);
 router.post('/onboarding/submit', vendorController.submitApplication);
-router.post('/simulate-payment', vendorController.simulatePayment);
+router.post('/apply-coupon', vendorController.applyCoupon);
 
 // Store Profile Routes
 router.get('/store-profile', vendorController.getStoreProfile);

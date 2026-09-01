@@ -109,6 +109,7 @@ const startAuctionCronJobs = require("./jobs/auctionJobs");
 const startVendorTrustJobs = require("./jobs/vendorTrustJob");
 const startReminderJobs = require("./jobs/reminderJobs");
 const startEventJobs = require("./jobs/eventJobs");
+const startVendorJobs = require("./jobs/vendorJobs");
 
 // Database Connection
 mongoose
@@ -122,6 +123,7 @@ mongoose
     startVendorTrustJobs();
     startReminderJobs();
     startEventJobs();
+    startVendorJobs();
   })
   .catch((err) => console.error("MongoDB connection error:", err));
 
@@ -143,11 +145,13 @@ const configRoutes = require("./routes/configRoutes");
 const newsletterRoutes = require("./routes/newsletterRoutes");
 const chatbotRoutes = require("./routes/chatbotRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
+const couponRoutes = require("./routes/couponRoutes");
 
 app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/vendor", vendorRoutes);
+app.use("/api/coupons", couponRoutes);
 app.use("/api/auction", auctionRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/orders", orderRoutes);

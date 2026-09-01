@@ -8,6 +8,18 @@ export default function VendorLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [vendorData, setVendorData] = useState(null);
+
+  React.useEffect(() => {
+    if (user?.role === 'vendor_approved_unpaid') {
+      import('../../api').then(({ default: api }) => {
+        api.get('/vendor/profile', {
+          headers: { Authorization: `Bearer ${user.token}` }
+        }).then(res => setVendorData(res.data))
+          .catch(err => console.error("Failed to fetch vendor data", err));
+      });
+    }
+  }, [user]);
 
   if (!user) {
     return <Navigate to="/login" replace />;
@@ -39,12 +51,8 @@ export default function VendorLayout() {
     );
   }
 
-  if (user.role === 'vendor_approved_unpaid') {
-    return <Navigate to="/vendor/payment" replace />;
-  }
-
-  // Allow admin OR active vendors
-  if (user.role !== 'vendor_active' && user.role !== 'admin') {
+  // Allow admin OR active vendors OR unpaid vendors
+  if (user.role !== 'vendor_active' && user.role !== 'admin' && user.role !== 'vendor_approved_unpaid') {
     return <Navigate to="/login" replace />;
   }
 
@@ -170,8 +178,35 @@ export default function VendorLayout() {
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 w-full md:ml-64 p-4 md:p-8 lg:p-12 flex flex-col z-10 min-h-[calc(100vh-5rem)]">
+        <main className="flex-1 w-full md:ml-64 p-4 md:p-8 lg:p-12 flex flex-col z-10 min-h-[calc(100vh-5rem)] relative">
           <Outlet />
+
+          {user.role === 'vendor_approved_unpaid' && (
+            <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center backdrop-blur-sm p-4">
+               <div className="bg-[#0a0a0a] p-8 rounded-xl border border-gold/30 text-center max-w-md shadow-2xl">
+                  <div className="w-16 h-16 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Store size={32} className="text-gold" />
+                  </div>
+                  <h2 className="text-2xl text-white mb-4 font-light">Activation Required</h2>
+                  
+                  {vendorData?.paymentReminderSent && (
+                    <div className="bg-red-500/20 border border-red-500 text-red-100 p-4 rounded mb-6 text-sm font-bold animate-pulse">
+                      ⚠️ URGENT: Admin has requested immediate payment of your registration fee to activate your store.
+                    </div>
+                  )}
+
+                  <p className="text-white/60 mb-8 leading-relaxed">
+                    Your vendor account is currently inactive. Please pay the registration fee to unlock your dashboard and make your products visible.
+                  </p>
+                  <button 
+                    onClick={() => navigate('/vendor/payment')} 
+                    className="bg-gold text-black px-8 py-3 rounded-lg font-medium hover:bg-white transition-colors"
+                  >
+                    Pay Registration Fee
+                  </button>
+               </div>
+            </div>
+          )}
         </main>
       </div>
     </div>

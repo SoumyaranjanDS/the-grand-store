@@ -60,8 +60,6 @@ export default function EventSuccessPage() {
 
     fetchBooking({ silent: true });
 
-    // The browser return can arrive before PayFast's server notification. Keep
-    // checking in the background, but never label that delay as a failed payment.
     const poller = paymentResult === 'success'
       ? window.setInterval(async () => {
           if (!active || attempts >= 20) return;
@@ -147,7 +145,7 @@ export default function EventSuccessPage() {
   const pageState = isPaid
     ? {
         title: 'Ticket Confirmed',
-        message: `You are going to ${booking.event?.title || 'the event'}! Your ticket has been issued.`,
+        message: `You are going to ${booking.event?.title || 'the event'}! Your ticket is confirmed.`,
         tone: 'success',
       }
     : isRejected || isCancelled
@@ -173,7 +171,7 @@ export default function EventSuccessPage() {
           : isVerifying
             ? {
                 title: 'Confirming Your Payment',
-                message: 'PayFast returned successfully. We are waiting for its secure server confirmation before issuing your ticket.',
+                message: 'PayFast returned successfully. We are waiting for its verified server notification before issuing your ticket.',
                 tone: 'pending',
               }
             : {
@@ -267,39 +265,38 @@ export default function EventSuccessPage() {
                 <Link to={`/events/${booking.event?._id}`} className="button button-gold mb-3 w-full text-center">Book Again</Link>
                 <Link to="/events" className="button button-dark w-full text-center">Back to Events</Link>
               </>
-            ) : isBankTransfer ? (
-              <>
-                <p className="mb-6 text-sm text-[#888]">
-                  {awaitingApproval
-                    ? 'Finance will review your proof. You can return to this page or My Tickets to see the result.'
-                    : 'Use your booking reference for the transfer, then submit a public image or PDF link as proof.'}
-                </p>
-                <Link to="/customer/tickets" className="button button-dark w-full text-center">View My Tickets</Link>
-              </>
             ) : (
-              <>
-                <p className="mb-6 text-sm text-[#888]">
-                  {isVerifying
-                    ? 'Secure notification can take a moment. This page checks automatically, and you can refresh it manually.'
-                    : 'Restart PayFast using this reservation. You will not create a duplicate ticket booking.'}
-                </p>
-                {isVerifying && window.location.hostname === 'localhost' && (
-                  <p className="mb-5 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 text-xs leading-relaxed text-amber-200/80">
-                    Local testing requires a public HTTPS <code>BACKEND_URL</code> so PayFast can reach the notification endpoint. Until then, use bank transfer or a secure development tunnel.
-                  </p>
+              <div className="flex flex-col gap-3">
+                {isBankTransfer ? (
+                  <>
+                    <p className="mb-6 text-sm text-[#888]">
+                      {awaitingApproval
+                        ? 'Finance will review your proof. You can return to this page or My Tickets to see the result.'
+                        : 'Use your booking reference for the transfer, then submit a public image or PDF link as proof.'}
+                    </p>
+                    <Link to="/customer/tickets" className="button button-dark w-full text-center">View My Tickets</Link>
+                  </>
+                ) : (
+                  <>
+                    <p className="mb-6 text-sm text-[#888]">
+                      {isVerifying
+                        ? 'Secure notification can take a moment. This page checks automatically, and you can refresh it manually.'
+                        : 'Restart PayFast using this reservation. You will not create a duplicate ticket booking.'}
+                    </p>
+                    {isVerifying && (
+                      <button onClick={() => fetchBooking()} disabled={refreshing} className="button button-dark mb-3 flex w-full items-center justify-center gap-2">
+                        <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+                        {refreshing ? 'Checking...' : 'Check Payment Status'}
+                      </button>
+                    )}
+                    <button onClick={retryPayFast} disabled={retrying} className="button button-gold mb-3 flex w-full items-center justify-center gap-2 disabled:opacity-50">
+                      {retrying ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+                      {retrying ? 'Opening PayFast...' : 'Retry Payment'}
+                    </button>
+                    <Link to="/events" className="button button-dark w-full text-center">Back to Events</Link>
+                  </>
                 )}
-                {isVerifying && (
-                  <button onClick={() => fetchBooking()} disabled={refreshing} className="button button-dark mb-3 flex w-full items-center justify-center gap-2">
-                    <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
-                    {refreshing ? 'Checking...' : 'Check Payment Status'}
-                  </button>
-                )}
-                <button onClick={retryPayFast} disabled={retrying} className="button button-gold mb-3 flex w-full items-center justify-center gap-2 disabled:opacity-50">
-                  {retrying ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
-                  {retrying ? 'Opening PayFast...' : 'Retry Payment'}
-                </button>
-                <Link to="/events" className="button button-dark w-full text-center">Back to Events</Link>
-              </>
+              </div>
             )}
           </div>
         </div>

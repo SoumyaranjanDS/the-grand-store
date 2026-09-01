@@ -65,26 +65,28 @@ const getProducts = async (req, res) => {
     const vendorIds = [...new Set(products.filter(p => p.vendorId).map(p => p.vendorId.toString()))];
     const vendors = await Vendor.find({ userId: { $in: vendorIds } }).lean();
     
-    const productsWithStore = products.map(product => {
+    const productsWithStore = products.reduce((acc, product) => {
       if (!product.vendorId) {
         // Internal product (like Accessories) managed by Admin
-        return {
+        acc.push({
           ...product,
           storeId: 'admin',
           storeName: 'The Grand Store'
-        };
+        });
+        return acc;
       }
       
       const vendor = vendors.find(v => v.userId.toString() === product.vendorId.toString());
-      if (vendor) {
-        return {
+      if (vendor && vendor.status === 'approved' && vendor.paymentStatus === 'paid') {
+        acc.push({
           ...product,
           storeId: vendor.userId,
           storeName: vendor.businessInfo?.tradingName || vendor.businessInfo?.legalName || 'Unknown Store'
-        };
+        });
       }
-      return product;
-    });
+      // If vendor is not approved or not paid, skip this product
+      return acc;
+    }, []);
 
     res.json(productsWithStore);
   } catch (error) {

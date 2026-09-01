@@ -352,6 +352,10 @@ const auctionReminderTemplate = (name, auctionTitle, startDate, lotNumber) => {
   return generateEmailTemplate(`Reminder: Auction for ${auctionTitle} is starting soon`, content);
 };
 
+const bulkNewsletterTemplate = (subject, htmlContent) => {
+  return generateEmailTemplate(subject, htmlContent);
+};
+
 module.exports = {
   welcomeEmailTemplate,
   newsletterWelcomeTemplate,
@@ -363,5 +367,6 @@ module.exports = {
   hostApplicationRejectionTemplate,
   eventReminderTemplate,
   auctionReminderTemplate,
+  bulkNewsletterTemplate,
   genericNotificationTemplate
 };

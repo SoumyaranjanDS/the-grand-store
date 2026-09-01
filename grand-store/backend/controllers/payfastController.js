@@ -267,7 +267,19 @@ exports.itnWebhook = async (req, res) => {
       Buffer.from(expectedSignature),
     );
     if (!signaturesMatch) {
-      console.error('PayFast ITN local signature mismatch');
+      const expectedWithoutPassphrase = crypto.createHash('md5').update(pfParamString).digest('hex');
+      const matchesWithoutPassphrase = (
+        receivedSignature.length === expectedWithoutPassphrase.length && crypto.timingSafeEqual(
+          Buffer.from(receivedSignature),
+          Buffer.from(expectedWithoutPassphrase),
+        )
+      );
+      console.error('PayFast ITN local signature mismatch', {
+        paymentId: payload.m_payment_id,
+        matchesWithoutPassphrase,
+        configuredPassphrase: Boolean(config.passphrase),
+        signedFieldCount: signatureFields.length,
+      });
       return res.status(400).send('Invalid signature');
     }
 

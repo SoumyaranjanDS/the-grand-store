@@ -12,6 +12,7 @@ router.get('/dashboard', adminController.getDashboardStats);
 router.get('/users', superAdmin, adminController.getAllUsers);
 router.get('/vendors', superAdmin, adminController.getAllVendors);
 router.put('/vendors/:id/status', superAdmin, adminController.updateVendorStatus);
+router.post('/vendors/:id/remind-payment', superAdmin, adminController.remindVendorPayment);
 router.get('/staff', superAdmin, adminController.getStaffAccounts);
 router.post('/staff', superAdmin, adminController.createStaffAccount);
 router.put('/staff/:id', superAdmin, adminController.updateStaffCredentials);

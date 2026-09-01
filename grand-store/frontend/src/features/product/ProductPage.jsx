@@ -403,7 +403,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
               </div>
 
               <div className="mt-4 min-w-0 text-[clamp(2rem,10vw,3rem)] font-semibold leading-none text-[#e1bd70]">
-                <Price amount={product.price} presentation="product" />
+                <Price amount={product.price * quantity} presentation="product" />
               </div>
 
               <p className="mt-4 border-t border-white/[0.08] pt-3 text-xs leading-relaxed text-[#837b70]">

@@ -56,6 +56,20 @@ export default function AdminVendors() {
     }
   };
 
+  const handleRemindPayment = async (vendorId) => {
+    try {
+      await api.post(`/admin/vendors/${vendorId}/remind-payment`, 
+        {},
+        { headers: { Authorization: `Bearer ${user.token}` } }
+      );
+      alert("Payment reminder sent successfully!");
+      fetchVendors();
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Failed to send payment reminder");
+    }
+  };
+
   const getStatusBadge = (status) => {
     switch (status) {
       case 'approved': return <span className="px-2 py-1 bg-green-500/10 text-green-400 border border-green-500/20 rounded text-[10px] uppercase font-bold tracking-widest flex items-center gap-1 w-max"><CheckCircle size={12}/> Approved</span>;
@@ -150,9 +164,16 @@ export default function AdminVendors() {
                         </>
                       )}
                       {v.status === 'approved' && (
-                        <button onClick={() => handleStatusUpdate(v._id, 'suspended')} className="px-3 py-1.5 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded border border-red-500/30 text-[10px] font-bold uppercase tracking-widest transition-colors">
-                          Suspend
-                        </button>
+                        <>
+                          {v.paymentStatus !== 'paid' && (
+                            <button onClick={() => handleRemindPayment(v._id)} disabled={v.paymentReminderSent} className={`px-3 py-1.5 rounded border text-[10px] font-bold uppercase tracking-widest transition-colors ${v.paymentReminderSent ? 'bg-gray-500/20 text-gray-400 border-gray-500/30 cursor-not-allowed' : 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border-blue-500/30'}`}>
+                              {v.paymentReminderSent ? 'Reminder Sent' : 'Remind to Pay'}
+                            </button>
+                          )}
+                          <button onClick={() => handleStatusUpdate(v._id, 'suspended')} className="px-3 py-1.5 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded border border-red-500/30 text-[10px] font-bold uppercase tracking-widest transition-colors">
+                            Suspend
+                          </button>
+                        </>
                       )}
                       {v.status === 'rejected' && (
                         <button onClick={() => handleStatusUpdate(v._id, 'pending_approval')} className="px-3 py-1.5 bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 rounded border border-yellow-500/30 text-[10px] font-bold uppercase tracking-widest transition-colors">

@@ -97,6 +97,11 @@ export default function EventDetails({ onNotify, onAdd }) {
       setPaymentData(pfRes.data.data);
     } catch (error) {
       console.error('Booking failed:', error);
+      if (error.response?.status === 401) {
+        if (onNotify) onNotify('Your session has expired. Please sign in again.', 'error');
+        navigate('/login?redirect=/events/' + id);
+        return;
+      }
       if (onNotify) onNotify(error.response?.data?.message || 'Booking failed. Please try again.', 'error');
       setBookingLoading(false);
     }

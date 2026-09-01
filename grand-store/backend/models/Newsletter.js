@@ -18,6 +18,13 @@ const newsletterSchema = new mongoose.Schema(
       enum: ["subscribed", "unsubscribed"],
       default: "subscribed",
     },
+    country: {
+      type: String,
+      default: "Unknown",
+    },
+    ipAddress: {
+      type: String,
+    }
   },
   {
     timestamps: true,

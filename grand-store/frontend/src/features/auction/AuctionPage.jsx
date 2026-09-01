@@ -74,7 +74,7 @@ export default function AuctionPage({ onNotify }) {
 
   return (
     <main className="auction-page min-h-screen bg-[#050505] text-[#eee8dd] relative">
-      <div className="w-full max-w-7xl mx-auto px-6 absolute top-6 left-0 right-0 z-50 pointer-events-none">
+      <div className="w-full max-w-7xl mx-auto px-6 absolute top-6 left-0 right-0 z-50 pointer-events-none flex justify-end">
         <Link
           to="/"
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#c9a35b] hover:bg-[#e1bd70] text-black !text-black rounded-full shadow-[0_4px_20px_rgba(201,163,91,0.4)] transition-all duration-300 font-bold uppercase tracking-widest text-xs pointer-events-auto w-max"

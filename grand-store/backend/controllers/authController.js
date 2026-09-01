@@ -231,8 +231,10 @@ const deleteUserProfile = async (req, res) => {
 // @access  Public
 const googleAuth = async (req, res) => {
   try {
-    const { token, role = 'customer' } = req.body;
+    const requestedRole = req.body.role || 'customer';
+    const role = ['customer', 'vendor_pending'].includes(requestedRole) ? requestedRole : 'customer';
     const submittedReferralCode = req.body.referralCode ?? req.body.referredBy;
+    const token = req.body.token;
     
     if (!token) {
       return res.status(400).json({ message: 'Google token is required' });

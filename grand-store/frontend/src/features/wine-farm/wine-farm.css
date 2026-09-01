@@ -2681,6 +2681,9 @@ main {
   .site-header {
     height: 86px;
     grid-template-columns: 1fr auto auto;
+    background: rgba(251, 248, 241, 0.5);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
   }
 
   .brand img {

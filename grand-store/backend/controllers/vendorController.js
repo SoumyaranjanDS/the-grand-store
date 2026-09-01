@@ -232,28 +232,52 @@ exports.submitApplication = async (req, res) => {
   }
 };
 
-exports.simulatePayment = async (req, res) => {
+exports.applyCoupon = async (req, res) => {
   try {
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ message: 'Coupon code is required' });
+
     const user = await User.findById(req.user._id);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
     if (user.role !== 'vendor_approved_unpaid') {
-      return res.status(400).json({ message: 'User is not in the correct state to make a payment' });
+      return res.status(400).json({ message: 'User is not in the correct state to apply a coupon' });
     }
 
+    const VendorCoupon = require('../models/VendorCoupon');
+    const coupon = await VendorCoupon.findOne({ code: code.toUpperCase(), isActive: true });
+    
+    if (!coupon) {
+      return res.status(400).json({ message: 'Invalid or inactive coupon code' });
+    }
+
+    if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
+      return res.status(400).json({ message: 'Coupon usage limit reached' });
+    }
+
+    // Update Vendor
+    const vendor = await Vendor.findOne({ userId: user._id });
+    if (!vendor) return res.status(404).json({ message: 'Vendor profile not found' });
+
+    const freeMonths = coupon.freeMonths || 1;
+    const expiryDate = new Date();
+    expiryDate.setMonth(expiryDate.getMonth() + freeMonths);
+
+    vendor.couponUsed = coupon.code;
+    vendor.freeTrialExpiry = expiryDate;
+    vendor.trialStatus = 'active';
+    vendor.paymentStatus = 'paid'; // Treat as paid while trial is active
+    await vendor.save();
+
+    // Update User Role
     user.role = 'vendor_active';
     await user.save();
 
-    const vendor = await Vendor.findOne({ userId: user._id });
-    if (vendor) {
-      vendor.status = 'approved';
-      vendor.paymentStatus = 'paid';
-      await vendor.save();
-    }
+    // Increment coupon usage
+    coupon.usedCount += 1;
+    await coupon.save();
 
-    res.json({ message: 'Payment successful simulated' });
+    res.json({ message: 'Coupon applied successfully. Trial is now active.', freeTrialExpiry: expiryDate });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

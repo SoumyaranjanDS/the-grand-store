@@ -28,12 +28,19 @@ exports.parseAuctionSchedule = parseAuctionSchedule;
 // PUBLIC: Get all active auctions
 exports.getAuctionLots = async (req, res) => {
   try {
-    const lots = await AuctionLot.find({
+    let lots = await AuctionLot.find({
       status: { $in: ['live', 'upcoming', 'closed', 'sold', 'unsold'] }
     })
-    .populate('vendor', 'name storeName')
+    .populate('vendor', 'name storeName role')
     .populate('winner', 'name')
     .sort({ endDate: 1 });
+
+    lots = lots.filter(lot => {
+      if (!lot.vendor) return false;
+      const role = lot.vendor.role;
+      return role === 'admin' || role === 'vendor_active' || role === 'auction_host';
+    });
+
     res.json(lots);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

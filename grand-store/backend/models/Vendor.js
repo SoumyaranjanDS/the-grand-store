@@ -31,6 +31,10 @@ const vendorSchema = new mongoose.Schema({
     enum: ['unpaid', 'paid'],
     default: 'unpaid'
   },
+  paymentReminderSent: {
+    type: Boolean,
+    default: false
+  },
   verificationScore: {
     businessVerified: { type: Boolean, default: false },
     identityVerified: { type: Boolean, default: false },
@@ -174,6 +178,21 @@ const vendorSchema = new mongoose.Schema({
     termsAccepted: { type: Boolean, default: false },
     informationAccurate: { type: Boolean, default: false },
     acceptedAt: Date,
+  },
+  
+  // Trial & Coupon System
+  couponUsed: {
+    type: String,
+    default: null
+  },
+  freeTrialExpiry: {
+    type: Date,
+    default: null
+  },
+  trialStatus: {
+    type: String,
+    enum: ['none', 'active', 'expired'],
+    default: 'none'
   }
 }, { timestamps: true });
 

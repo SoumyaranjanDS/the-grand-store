@@ -338,11 +338,56 @@ const getPendingBankTransfers = async (req, res) => {
   }
 };
 
+// @desc    Send payment reminder to unpaid vendor
+// @route   POST /api/admin/vendors/:id/remind-payment
+// @access  Private/Super Admin
+const remindVendorPayment = async (req, res) => {
+  try {
+    const vendor = await Vendor.findById(req.params.id).populate('userId', 'email name');
+    
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+
+    if (vendor.paymentStatus === 'paid') {
+      return res.status(400).json({ message: "Vendor has already paid" });
+    }
+
+    vendor.paymentReminderSent = true;
+    await vendor.save();
+
+    // Send reminder email
+    const { sendEmail } = require('../utils/emailService');
+    const fee = vendor.registrationFee || 2500;
+    
+    try {
+      await sendEmail({
+        to: vendor.userId.email,
+        subject: 'Action Required: Pay Registration Fee to Activate Store',
+        html: `
+          <h3>Action Required: Store Activation Pending</h3>
+          <p>Hi ${vendor.userId.name || 'Vendor'},</p>
+          <p>Your application to become a vendor on The Grand Store was approved!</p>
+          <p>To activate your store and start listing products, you need to pay the registration fee of R${fee}.</p>
+          <p>Please log in to your dashboard and complete the payment to activate your account.</p>
+        `
+      });
+    } catch (emailErr) {
+      console.error('Failed to send reminder email to vendor:', emailErr);
+    }
+
+    res.json({ message: "Payment reminder sent successfully", vendor });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
 module.exports = {
   getDashboardStats,
   getAllUsers,
   getAllVendors,
   updateVendorStatus,
+  remindVendorPayment,
   getPendingBankTransfers,
   getStaffAccounts,
   updateStaffCredentials,
