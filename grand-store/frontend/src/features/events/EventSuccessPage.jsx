@@ -244,7 +244,7 @@ export default function EventSuccessPage() {
               <div className="flex justify-between gap-3 border-t border-white/10 pt-4">
                 <span className="text-[#888]">Payment</span>
                 <span className={`text-right font-bold ${isPaid ? 'text-green-500' : isRejected ? 'text-red-400' : 'text-yellow-500'}`}>
-                  {isBankTransfer ? formatStatus(bankStatus) : formatStatus(booking.paymentStatus)}
+                  {isPaid ? 'Paid' : isBankTransfer ? formatStatus(bankStatus) : formatStatus(booking.paymentStatus)}
                 </span>
               </div>
             </div>
