@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { FacebookIcon, TwitterIcon, InstagramIcon, YoutubeIcon, PinterestIcon, TiktokIcon } from './SocialIcons'
 
 export default function Footer() {
   const [newsletterStatus, setNewsletterStatus] = useState('')
@@ -64,6 +65,15 @@ export default function Footer() {
     }
   }
 
+  const socialLinks = [
+    { label: 'Facebook', Icon: FacebookIcon, href: 'https://www.facebook.com/thegrandstoreofficial' },
+    { label: 'X', Icon: TwitterIcon, href: 'https://x.com/Thegrandstore1' },
+    { label: 'Instagram', Icon: InstagramIcon, href: 'https://www.instagram.com/thegrandstoreofficial/' },
+    { label: 'Pinterest', Icon: PinterestIcon, href: 'https://www.pinterest.com/thegrandstore1/' },
+    { label: 'YouTube', Icon: YoutubeIcon, href: 'https://www.youtube.com/@thegrandstoreofficial' },
+    { label: 'TikTok', Icon: TiktokIcon, href: 'https://www.tiktok.com/@thegrandstoreofficial' },
+  ]
+
   return (
     <footer 
       className="relative border-t border-[#e1bd70]/20 bg-[linear-gradient(180deg,#171817,#121312)] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_86%_12%,rgba(169,110,35,0.09),transparent_26rem)] before:pointer-events-none" 
@@ -79,6 +89,24 @@ export default function Footer() {
           <Link className="block w-fit m-[0_0_14px] lg:m-[0_0_17px] text-[#f2ede4] font-serif text-[16px] lg:text-[17px] leading-[1.15] transition-all duration-[150ms] hover:text-[#e1bd70] hover:translate-x-[3px]" to="/auction" target="_blank" rel="noopener noreferrer">Auction</Link>
           <Link className="block w-fit m-[0_0_14px] lg:m-[0_0_17px] text-[#f2ede4] font-serif text-[16px] lg:text-[17px] leading-[1.15] transition-all duration-[150ms] hover:text-[#e1bd70] hover:translate-x-[3px]" to="/contact-us" target="_blank" rel="noopener noreferrer">Contact us</Link>
           <a className="block w-fit m-[0_0_14px] lg:m-[0_0_17px] text-[#f2ede4] font-serif text-[16px] lg:text-[17px] leading-[1.15] transition-all duration-[150ms] hover:text-[#e1bd70] hover:translate-x-[3px]" href="https://sacoronavirus.co.za/" target="_blank" rel="noopener noreferrer">Covid protocol</a>
+          
+          <div className="flex items-center gap-[12px] mt-[10px] flex-wrap">
+            {socialLinks.map((social) => {
+              const IconComponent = social.Icon
+              return (
+                <a 
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="grid place-items-center w-[36px] h-[36px] rounded-full bg-[#1c1d1d] text-[#e1bd70] border border-[#e1bd70]/20 hover:bg-[#e1bd70] hover:text-[#11100d] transition-all duration-300"
+                  aria-label={`Visit The Grand Store on ${social.label}`}
+                >
+                  <IconComponent size={social.label === 'YouTube' ? 18 : 16} strokeWidth={1.5} />
+                </a>
+              )
+            })}
+          </div>
         </div>
         <div className="flex flex-col">
           <h3 className="m-[0_0_20px] lg:m-[0_0_28px] pb-[13px] lg:pb-[18px] border-b border-[#d99d39]/80 text-[#d99d39] font-serif text-[23px] lg:text-[25px] font-medium">Our Policies</h3>
