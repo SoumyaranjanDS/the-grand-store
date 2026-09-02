@@ -3,9 +3,13 @@ const fallbackOrigin = isLocalhost ? 'http://localhost:5000' : 'https://store-ap
 const apiOrigin = (import.meta.env.VITE_API_URL || fallbackOrigin).replace(/\/$/, '');
 
 export const submitCigarEnquiry = async (payload) => {
-  const response = await fetch(`${apiOrigin}/api/cigar-enquiries`, {
+  const response = await fetch(`${apiOrigin}/api/cigar-enquiries/public`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    credentials: 'omit',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify(payload),
   });
 

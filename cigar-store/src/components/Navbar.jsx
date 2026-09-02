@@ -132,12 +132,12 @@ function Navbar() {
                 <Search size={17} strokeWidth={1.4} />
               )}
             </button>
-            <a
+            <Link
               className="nav-enquire"
-              href="mailto:info@cigarconnoisseurclub.com"
+              to="/contact"
             >
               Enquire
-            </a>
+            </Link>
             <button
               className="menu-toggle"
               type="button"
@@ -180,12 +180,13 @@ function Navbar() {
             {label}
           </Link>
         ))}
-        <a
+        <Link
           className="mobile-nav__enquire"
-          href="mailto:info@cigarconnoisseurclub.com"
+          to="/contact"
+          onClick={() => setMenuOpen(false)}
         >
-          info@cigarconnoisseurclub.com
-        </a>
+          Contact the concierge
+        </Link>
       </nav>
     </header>
   );

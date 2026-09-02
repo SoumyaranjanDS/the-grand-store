@@ -53,6 +53,7 @@ function ProductEnquiryForm({ product }) {
         <p>Private assistance</p>
         <h2>Product <em>Enquiry</em></h2>
         <span>Tell us what you need and the club will assist with availability.</span>
+        <small>No account or sign-in is required.</small>
       </div>
 
       {confirmation ? (

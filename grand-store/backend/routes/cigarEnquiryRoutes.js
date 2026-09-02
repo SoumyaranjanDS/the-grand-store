@@ -12,6 +12,10 @@ const publicEnquiryLimiter = rateLimit({
   message: { message: 'Too many enquiries have been submitted. Please wait a few minutes and try again.' },
 });
 
+// Product enquiries are intentionally guest-accessible. Keep both paths public
+// for existing clients, while the explicit /public path prevents accidental
+// coupling to customer authentication in future frontend integrations.
+router.post('/public', publicEnquiryLimiter, controller.createEnquiry);
 router.post('/', publicEnquiryLimiter, controller.createEnquiry);
 router.get('/', protect, superAdmin, controller.listEnquiries);
 router.get('/:id', protect, superAdmin, controller.getEnquiry);
