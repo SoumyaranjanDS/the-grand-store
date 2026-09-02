@@ -375,6 +375,24 @@ const auctionReminderTemplate = (name, auctionTitle, startDate, lotNumber) => {
   return generateEmailTemplate(`Reminder: Auction for ${auctionTitle} is starting soon`, content);
 };
 
+const auctionWinTemplate = (name, auctionTitle, lotNumber, winningBid, checkoutUrl) => {
+  const content = `
+    <h1>Congratulations! You Won an Auction!</h1>
+    <p>Dear ${name},</p>
+    <p>We are thrilled to inform you that you have won the auction for <strong>${auctionTitle}</strong>!</p>
+    
+    <div class="details-box">
+      <h3 style="margin-top: 0;">Winning Details</h3>
+      <p><strong>Lot Number:</strong> ${lotNumber}</p>
+      <p><strong>Winning Bid:</strong> R${Number(winningBid).toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+    </div>
+    
+    <p>To complete your purchase and arrange shipping, please proceed to checkout below.</p>
+    <a href="${checkoutUrl}" class="btn">Proceed to Checkout</a>
+  `;
+  return generateEmailTemplate(`Congratulations! You won the auction for ${auctionTitle}`, content);
+};
+
 const bulkNewsletterTemplate = (subject, htmlContent) => {
   return generateEmailTemplate(subject, htmlContent);
 };
@@ -392,6 +410,7 @@ module.exports = {
   hostApplicationRejectionTemplate,
   eventReminderTemplate,
   auctionReminderTemplate,
+  auctionWinTemplate,
   bulkNewsletterTemplate,
   genericNotificationTemplate
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Search, AlertTriangle, Layers } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, AlertTriangle, Layers, X } from 'lucide-react';
 import api from '../../api';
 
 export default function AdminCategories() {
@@ -7,7 +7,8 @@ export default function AdminCategories() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({ id: null, name: '', description: '', isActive: true });
+  const [formData, setFormData] = useState({ id: null, name: '', description: '', isActive: true, brandLogos: [] });
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [message, setMessage] = useState('');
 
   const fetchCategories = async () => {
@@ -27,7 +28,7 @@ export default function AdminCategories() {
   }, []);
 
   const openAddModal = () => {
-    setFormData({ id: null, name: '', description: '', isActive: true });
+    setFormData({ id: null, name: '', description: '', isActive: true, brandLogos: [] });
     setMessage('');
     setIsModalOpen(true);
   };
@@ -37,7 +38,8 @@ export default function AdminCategories() {
       id: category._id,
       name: category.name,
       description: category.description || '',
-      isActive: category.isActive
+      isActive: category.isActive,
+      brandLogos: category.brandLogos || []
     });
     setMessage('');
     setIsModalOpen(true);
@@ -70,12 +72,45 @@ export default function AdminCategories() {
     }
   };
 
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const data = new FormData();
+    data.append('image', file);
+
+    setUploadingLogo(true);
+    try {
+      const res = await api.post('/categories/upload', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setFormData(prev => ({
+        ...prev,
+        brandLogos: [...prev.brandLogos, { url: res.data.url, public_id: res.data.public_id }]
+      }));
+    } catch (error) {
+      setMessage(error.response?.data?.message || 'Error uploading logo');
+    } finally {
+      setUploadingLogo(false);
+      // Reset input
+      e.target.value = null;
+    }
+  };
+
+  const removeLogo = (index) => {
+    setFormData(prev => {
+      const newLogos = [...prev.brandLogos];
+      newLogos.splice(index, 1);
+      return { ...prev, brandLogos: newLogos };
+    });
+  };
+
   const filtered = categories.filter(c => 
     c.name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto">
+    <div className="p-6 md:p-8 max-w-7xl mx-auto w-full">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-serif text-[var(--color-ivory)] flex items-center gap-2">
@@ -159,7 +194,8 @@ export default function AdminCategories() {
                 <input type="checkbox" id="isActive" checked={formData.isActive} onChange={e => setFormData({...formData, isActive: e.target.checked})} className="accent-[var(--color-gold)]" />
                 <label htmlFor="isActive" className="text-sm text-white">Active (Visible in Store)</label>
               </div>
-              
+
+
               <div className="flex justify-end gap-2 mt-4 border-t border-white/10 pt-4">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 border border-white/20 text-white rounded hover:bg-white/5 transition-colors text-xs uppercase tracking-widest">Cancel</button>
                 <button type="submit" className="px-4 py-2 bg-[var(--color-gold)] text-black font-bold rounded hover:bg-white transition-colors text-xs uppercase tracking-widest">Save</button>

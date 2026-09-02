@@ -3,12 +3,14 @@ import { Link } from 'react-router-dom'
 import gsap from 'gsap'
 import { ArrowRight } from 'lucide-react'
 import { useProducts } from '../../../context/ProductContext'
+import { useCategories } from '../../../context/CategoryContext'
 import ProductCard from '../../../components/ProductCard'
 import ProductQuickView from '../../../components/ProductQuickView'
 import { brandyBrands } from '../../../data'
 
 export default function BrandyShowcase({ onAdd, onWish, onCompare, compareItems }) {
   const { products } = useProducts()
+  const { categories } = useCategories()
   const sectionRef = useRef(null)
   const [quickViewProduct, setQuickViewProduct] = useState(null)
   const [productOrder, setProductOrder] = useState({})
@@ -49,8 +51,14 @@ export default function BrandyShowcase({ onAdd, onWish, onCompare, compareItems 
     return () => context.revert()
   }, [brandyProducts.length])
 
-  
-  const marqueeBrands = [...brandyBrands, ...brandyBrands]
+  const categoryData = categories?.find(c => c.name.toLowerCase() === 'brandy' || c.name.toLowerCase() === 'cognac');
+  const dynamicBrands = categoryData?.brandLogos?.length > 0 
+    ? categoryData.brandLogos.map(logo => ({ name: logo.alt || 'Brand Logo', image: logo.url })) 
+    : brandyBrands;
+
+  const marqueeBrands = [...dynamicBrands, ...dynamicBrands]
+
+  const showMarquee = dynamicBrands.length > 0;
 
   return (
     <>
@@ -89,7 +97,8 @@ export default function BrandyShowcase({ onAdd, onWish, onCompare, compareItems 
         </div>
       </section>
 
-      <section className="home-brand-marquee relative py-8 md:py-10 border-t border-white/10 bg-[#0b0a08] overflow-hidden" aria-labelledby="brandy-brands-title">
+      {showMarquee && (
+        <section className="home-brand-marquee relative py-8 md:py-10 border-t border-white/10 bg-[#0b0a08] overflow-hidden" aria-labelledby="brandy-brands-title">
         <div className="relative max-w-[1440px] mx-auto text-center sm:px-8 lg:px-7">
           <div className="home-brand-marquee-panel relative border-y sm:border border-white/10 sm:rounded-2xl py-8 bg-white/[0.01]">
             <div className="home-brand-marquee-heading mb-8 relative px-6 sm:px-0">
@@ -106,8 +115,9 @@ export default function BrandyShowcase({ onAdd, onWish, onCompare, compareItems 
             >
               <div className="flex w-max animate-[marquee_20s_linear_infinite] sm:animate-[marquee_24s_linear_infinite] group-hover:[animation-play-state:paused] will-change-transform items-center">
                 {marqueeBrands.map((brand, index) => (
-                  <div
-                    className="home-brand-marquee-tile relative flex items-center justify-center max-sm:flex-[0_0_260px] sm:flex-[0_0_280px] md:flex-[0_0_320px] max-sm:min-h-[180px] sm:min-h-[165px] md:min-h-[190px] max-sm:mx-0 sm:mx-4 md:mx-6 transition-all duration-300 hover:scale-110 hover:-translate-y-1 group/brand select-none"
+                  <Link
+                    to={`/shop?category=Brandy&brand=${encodeURIComponent(brand.name)}`}
+                    className="home-brand-marquee-tile relative flex items-center justify-center max-sm:flex-[0_0_260px] sm:flex-[0_0_280px] md:flex-[0_0_320px] max-sm:min-h-[180px] sm:min-h-[165px] md:min-h-[190px] max-sm:mx-0 sm:mx-4 md:mx-6 transition-all duration-300 hover:scale-110 hover:-translate-y-1 group/brand select-none cursor-pointer"
                     key={`${brand.name}-${index}`}
                     aria-label={`View ${brand.name}`}
                   >
@@ -117,13 +127,14 @@ export default function BrandyShowcase({ onAdd, onWish, onCompare, compareItems 
                       alt={brand.name}
                       loading="lazy"
                     />
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>
           </div>
         </div>
       </section>
+      )}
 
       {quickViewProduct && (
         <ProductQuickView

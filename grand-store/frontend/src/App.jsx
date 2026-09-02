@@ -31,6 +31,8 @@ import AuctionCampaign from './features/home/components/AuctionCampaign'
 import AdminProducts from './features/admin/AdminProducts'
 import AdminOrders from './features/admin/AdminOrders'
 import LatestBlogs from './features/home/components/LatestBlogs'
+import AppPromoSection from './features/home/components/AppPromoSection'
+import DownloadAppRedirect from './pages/DownloadAppRedirect'
 import Footer from './components/Footer'
 import CookieConsent from './components/CookieConsent'
 import SiteMotion from './components/SiteMotion'
@@ -105,6 +107,7 @@ import AdminFinancials from './features/admin/AdminFinancials'
 import AdminBankTransfers from './features/admin/AdminBankTransfers'
 import AdminAccessories from './features/admin/AdminAccessories'
 import AdminCategories from './features/admin/AdminCategories'
+import AdminMarquees from './features/admin/AdminMarquees'
 import AdminTradeEnquiries from './features/admin/AdminTradeEnquiries'
 import AdminAttributes from './features/admin/AdminAttributes'
 import AdminAdvertisementRequests from './features/admin/AdminAdvertisementRequests'
@@ -432,6 +435,8 @@ function App() {
           <Route path="partner-enquiry" element={<TradePartnerEnquiry />} />
         </Route>
 
+        <Route path="/app/download" element={<DownloadAppRedirect />} />
+
         <Route
           path="/"
           element={
@@ -552,6 +557,7 @@ function App() {
               <WhyChooseUs />
               <Testimonials />
               <LatestBlogs />
+              <AppPromoSection />
             </main>
           }
         />
@@ -739,6 +745,7 @@ function App() {
           <Route path="users" element={<AdminUsers />} />
           <Route path="staff" element={<AdminStaff />} />
           <Route path="categories" element={<AdminCategories />} />
+          <Route path="marquees" element={<AdminMarquees />} />
           <Route path="vendors" element={<AdminVendors />} />
           <Route path="coupons" element={<AdminCoupons />} />
           <Route path="expert-reviews" element={<AdminExpertReviews />} />

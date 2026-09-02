@@ -5,6 +5,8 @@ const Order = require('../models/Order');
 const Transaction = require('../models/Transaction');
 const Wallet = require('../models/Wallet');
 const { getNextSequence } = require('../utils/sequenceGenerator');
+const { sendEmail } = require('../utils/emailService');
+const { auctionWinTemplate } = require('../utils/emailTemplates');
 
 const parseAuctionSchedule = (startDate, endDate) => {
   const parsedStart = new Date(startDate);
@@ -85,7 +87,9 @@ exports.getLotDetails = async (req, res) => {
         _id: b._id,
         amount: b.amount,
         time: b.createdAt,
-        bidder: canSeeDetails ? `${b.user.name} (${b.user.email})` : `Bidder #${b.user._id.toString().substring(18)}`
+        bidder: canSeeDetails 
+          ? (b.user ? `${b.user.name} (${b.user.email})` : 'Deleted User') 
+          : (b.user ? `Bidder #${b.user._id.toString().substring(18)}` : 'Deleted User')
       };
     });
 
@@ -537,6 +541,26 @@ const closeAuctionInternal = async (lotId) => {
     description: `Auction Payment - Lot ${lot.lotNumber || ''}`
   });
   await transaction.save();
+
+  // Send email to winner
+  try {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const checkoutUrl = `${frontendUrl}/checkout?orderId=${order._id}`;
+    
+    sendEmail({
+      to: winningBidDoc.user.email,
+      subject: `Congratulations! You won the auction for ${lot.title}`,
+      html: auctionWinTemplate(
+        winningBidDoc.user.name,
+        lot.title,
+        lot.lotNumber || 'N/A',
+        winningBid,
+        checkoutUrl
+      )
+    }).catch(err => console.error('Failed to send auction win email:', err));
+  } catch (err) {
+    console.error('Error preparing auction win email:', err);
+  }
 
   return lot;
 };

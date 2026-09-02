@@ -11,6 +11,7 @@ router.use(protect);
 router.get('/dashboard', adminController.getDashboardStats);
 router.get('/users', superAdmin, adminController.getAllUsers);
 router.get('/vendors', superAdmin, adminController.getAllVendors);
+router.get('/vendors/:id', superAdmin, adminController.getVendorById);
 router.put('/vendors/:id/status', superAdmin, adminController.updateVendorStatus);
 router.post('/vendors/:id/remind-payment', superAdmin, adminController.remindVendorPayment);
 router.get('/staff', superAdmin, adminController.getStaffAccounts);

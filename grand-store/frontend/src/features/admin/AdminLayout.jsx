@@ -118,6 +118,9 @@ export default function AdminLayout() {
                 <button onClick={() => handleNavigate('/admin/categories')} className={navItemClass('/admin/categories')}>
                   <Layers size={16} /> Config Categories
                 </button>
+                <button onClick={() => handleNavigate('/admin/marquees')} className={navItemClass('/admin/marquees')}>
+                  <Tag size={16} /> Brand Marquees
+                </button>
                 <button onClick={() => handleNavigate('/admin/products')} className={navItemClass('/admin/products')}>
                   <Package size={16} /> Retail Products
                 </button>

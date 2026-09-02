@@ -34,6 +34,8 @@ const productionDomains = [
   "https://www.grandstore.yogapranafitness.com",
   "http://grandstore.yogapranafitness.com",
   "http://www.grandstore.yogapranafitness.com",
+  "https://cigar.yogapranafitness.com",
+  "https://www.cigar.yogapranafitness.com",
 ];
 
 productionDomains.forEach((domain) => {
@@ -170,6 +172,7 @@ app.use("/api/attributes", attributeRoutes);
 app.use("/api/glossary", glossaryRoutes);
 app.use("/api/config", configRoutes);
 app.use("/api/trade-enquiries", require("./routes/tradeEnquiryRoutes"));
+app.use("/api/cigar-enquiries", require("./routes/cigarEnquiryRoutes"));
 app.use("/api/newsletter", newsletterRoutes);
 app.use("/api/advertisements", require("./routes/advertisementRoutes"));
 app.use("/api/chatbot", chatbotRoutes);

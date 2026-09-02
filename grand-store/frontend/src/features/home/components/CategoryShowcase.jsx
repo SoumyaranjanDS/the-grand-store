@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import gsap from 'gsap'
 import { ArrowRight } from 'lucide-react'
 import { useProducts } from '../../../context/ProductContext'
+import { useCategories } from '../../../context/CategoryContext'
 import ProductCard from '../../../components/ProductCard'
 import ProductQuickView from '../../../components/ProductQuickView'
 
@@ -18,6 +19,7 @@ export default function CategoryShowcase({
   brands = [] 
 }) {
   const { products } = useProducts()
+  const { categories } = useCategories()
   const sectionRef = useRef(null)
   const [quickViewProduct, setQuickViewProduct] = useState(null)
   const [productOrder, setProductOrder] = useState({})
@@ -58,8 +60,14 @@ export default function CategoryShowcase({
   }, [categoryProducts.length])
 
   
+  const categoryData = categories?.find(c => c.name.toLowerCase() === categoryId.toLowerCase());
+  const dynamicBrands = categoryData?.brandLogos?.length > 0 
+    ? categoryData.brandLogos.map(logo => ({ name: logo.alt || 'Brand Logo', image: logo.url })) 
+    : brands;
     
-  const marqueeBrands = [...brands, ...brands]
+  const marqueeBrands = [...dynamicBrands, ...dynamicBrands]
+
+  const showMarquee = dynamicBrands.length > 0;
 
   if (categoryProducts.length === 0) return null;
 
@@ -98,7 +106,7 @@ export default function CategoryShowcase({
         </div>
       </section>
 
-      {brands.length > 0 && (
+      {showMarquee && (
         <section className="home-brand-marquee relative py-0 md:py-10 border-t border-white/10 bg-[#0b0a08] overflow-hidden" aria-labelledby={`${categoryId}-brands-title`}>
           <div className="relative max-w-[1440px] mx-auto text-center sm:px-8 lg:px-7">
             <div className="home-brand-marquee-panel relative border-y sm:border border-white/10 sm:rounded-2xl py-1 md:py-8 bg-white/[0.01]">
@@ -116,8 +124,9 @@ export default function CategoryShowcase({
               >
                 <div className="flex w-max animate-[marquee_20s_linear_infinite] sm:animate-[marquee_24s_linear_infinite] group-hover:[animation-play-state:paused] will-change-transform items-center">
                   {marqueeBrands.map((brand, index) => (
-                    <div
-                      className="home-brand-marquee-tile relative flex items-center justify-center max-sm:flex-[0_0_80px] sm:flex-[0_0_240px] md:flex-[0_0_280px] max-sm:min-h-[40px] sm:min-h-[135px] md:min-h-[150px] max-sm:mx-1 sm:mx-5 md:mx-6 transition-all duration-300 hover:scale-105 group/brand select-none"
+                    <Link
+                      to={`/shop?category=${encodeURIComponent(categoryId)}&brand=${encodeURIComponent(brand.name)}`}
+                      className="home-brand-marquee-tile relative flex items-center justify-center max-sm:flex-[0_0_80px] sm:flex-[0_0_240px] md:flex-[0_0_280px] max-sm:min-h-[40px] sm:min-h-[135px] md:min-h-[150px] max-sm:mx-1 sm:mx-5 md:mx-6 transition-all duration-300 hover:scale-105 group/brand select-none cursor-pointer"
                       key={`${brand.name}-${index}`}
                       aria-label={`View ${brand.name}`}
                     >
@@ -126,7 +135,7 @@ export default function CategoryShowcase({
                         src={brand.image}
                         alt={brand.name}
                       />
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>

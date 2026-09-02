@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../../api';
-import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { useGeoLocation } from '../../context/LocationContext';
-import { CheckCircle2, ChevronRight, ChevronLeft, UploadCloud, Building2, User, FileText, BadgeCheck, FileSpreadsheet, Landmark, Package, Truck, FileSignature, Globe, Image as ImageIcon, Trash2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ChevronRight, ChevronLeft, UploadCloud, Building2, User, FileText, BadgeCheck, FileSpreadsheet, Landmark, Package, Truck, FileSignature, Globe, Image as ImageIcon, Trash2, ExternalLink, Eye, EyeOff, RefreshCw, Loader2 } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
 import LocationInput from '../../components/LocationInput';
 
@@ -15,50 +14,137 @@ const InputField = ({ label, value, onChange, placeholder, type = 'text' }) => (
   </div>
 );
 
-const FileUploadField = ({ label, url, onUpload }) => {
-  const isImage = url && url.match(/\.(jpeg|jpg|gif|png|webp)$/i) != null;
+const DOCUMENT_ACCEPT = '.pdf,.png,.jpg,.jpeg,.webp,.gif,.heic,.heif,.doc,.docx';
+const MAX_DOCUMENT_SIZE = 10 * 1024 * 1024;
+
+const getFileKind = (url, mimeType = '') => {
+  const cleanUrl = String(url || '').split(/[?#]/)[0].toLowerCase();
+  if (mimeType.startsWith('image/') || /\.(jpe?g|png|gif|webp|heic|heif)$/.test(cleanUrl)) return 'image';
+  if (mimeType === 'application/pdf' || cleanUrl.endsWith('.pdf')) return 'pdf';
+  return 'document';
+};
+
+const getFileName = (url) => {
+  if (!url) return '';
+  try {
+    return decodeURIComponent(new URL(url).pathname.split('/').pop()) || 'Uploaded document';
+  } catch {
+    return String(url).split('/').pop() || 'Uploaded document';
+  }
+};
+
+const FileUploadField = ({ label, url, onChange, uploadFile, required = false }) => {
+  const inputRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const [localPreview, setLocalPreview] = useState('');
+  const [localMimeType, setLocalMimeType] = useState('');
+  const [previewOpen, setPreviewOpen] = useState(true);
+  const [previewFailed, setPreviewFailed] = useState(false);
+  const previewUrl = localPreview || url;
+  const fileKind = getFileKind(previewUrl, localMimeType);
+
+  useEffect(() => {
+    setPreviewFailed(false);
+  }, [previewUrl]);
+
+  const handleSelection = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    if (file.size > MAX_DOCUMENT_SIZE) {
+      setError('This file is larger than 10 MB. Choose a smaller file.');
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    setLocalPreview(objectUrl);
+    setLocalMimeType(file.type);
+    setPreviewOpen(true);
+    setError('');
+    setUploading(true);
+
+    try {
+      const uploadedUrl = await uploadFile(file);
+      onChange(uploadedUrl);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Upload failed. Please try again.');
+    } finally {
+      setUploading(false);
+      setLocalPreview('');
+      setLocalMimeType('');
+      URL.revokeObjectURL(objectUrl);
+    }
+  };
+
+  const removeFile = () => {
+    if (required && !window.confirm(`Remove the required ${label.toLowerCase()}? You will need to upload another file before submitting.`)) return;
+    onChange('');
+    setError('');
+    setPreviewOpen(false);
+    setPreviewFailed(false);
+  };
+
   return (
-    <div className="mb-6">
-      <label className="block text-[#bdb5a6] text-[10px] font-bold uppercase tracking-widest mb-2">{label}</label>
-      {!url ? (
-        <div className="flex items-center gap-4">
-          <label className="flex items-center justify-center gap-2 px-4 py-4 bg-transparent border-b border-white/10 border-dashed rounded-none cursor-pointer hover:border-[#c9a35b] transition-colors flex-1">
-            <UploadCloud size={18} className="text-[#918a7f]" />
-            <span className="text-[#eee8dd] text-sm">Upload Document</span>
-            <input type="file" className="hidden" onChange={onUpload} accept=".pdf,.png,.jpg,.jpeg" />
-          </label>
-        </div>
+    <div className="mb-6 rounded-lg border border-white/10 bg-black/20 p-4">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <label className="block text-[#bdb5a6] text-[10px] font-bold uppercase tracking-widest">
+          {label}{required && <span className="ml-1 text-[#c9a35b]">*</span>}
+        </label>
+        <span className="text-[10px] uppercase tracking-wider text-white/30">Images, PDF or Word · max 10 MB</span>
+      </div>
+      <input ref={inputRef} type="file" className="hidden" onChange={handleSelection} accept={DOCUMENT_ACCEPT} />
+
+      {!previewUrl ? (
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-white/15 px-4 py-6 text-sm text-[#eee8dd] transition-colors hover:border-[#c9a35b] hover:bg-[#c9a35b]/5"
+        >
+          <UploadCloud size={19} className="text-[#c9a35b]" /> Choose a file
+        </button>
       ) : (
-        <div className="flex flex-col gap-3 p-4 border border-[#c9a35b]/30 bg-[#c9a35b]/5 rounded-md">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {isImage ? (
-                <img src={url} alt="Thumbnail" className="w-10 h-10 object-cover rounded-sm border border-white/10" />
+        <div className="overflow-hidden rounded-md border border-[#c9a35b]/25 bg-[#c9a35b]/5">
+          <div className="flex flex-col justify-between gap-3 p-3 sm:flex-row sm:items-center">
+            <div className="flex min-w-0 items-center gap-3">
+              {fileKind === 'image' ? (
+                <img src={previewUrl} alt="Selected file" className="h-11 w-11 shrink-0 rounded object-cover border border-white/10" />
               ) : (
-                <div className="w-10 h-10 bg-white/5 flex items-center justify-center rounded-sm border border-white/10">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded bg-white/5 border border-white/10">
                   <FileText size={20} className="text-[#c9a35b]" />
                 </div>
               )}
-              <div>
-                <p className="text-sm text-[#eee8dd]">Document Uploaded</p>
-                <a href={url} target="_blank" rel="noreferrer" className="text-[10px] text-[#c9a35b] hover:underline">Open in new tab</a>
+              <div className="min-w-0">
+                <p className="truncate text-sm text-[#eee8dd]">{localPreview ? 'Uploading selected file…' : getFileName(url)}</p>
+                <p className="mt-0.5 text-[10px] uppercase tracking-wider text-white/35">{fileKind === 'image' ? 'Image' : fileKind === 'pdf' ? 'PDF document' : 'Document'} {uploading ? '· uploading' : '· ready'}</p>
               </div>
             </div>
-            <button type="button" onClick={() => onUpload(null)} className="p-2 text-white/40 hover:text-red-400 transition-colors">
-              <Trash2 size={16} />
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              {(fileKind === 'image' || fileKind === 'pdf') && (
+                <button type="button" onClick={() => setPreviewOpen((open) => !open)} className="inline-flex items-center gap-1.5 rounded border border-white/10 px-2.5 py-2 text-[10px] font-bold uppercase tracking-wider text-white/60 hover:bg-white/5">
+                  {previewOpen ? <EyeOff size={13} /> : <Eye size={13} />} {previewOpen ? 'Hide' : 'Preview'}
+                </button>
+              )}
+              {!localPreview && <a href={url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded border border-white/10 px-2.5 py-2 text-[10px] font-bold uppercase tracking-wider text-white/60 hover:bg-white/5"><ExternalLink size={13} /> Open</a>}
+              <button type="button" disabled={uploading} onClick={() => inputRef.current?.click()} className="inline-flex items-center gap-1.5 rounded border border-[#c9a35b]/35 px-2.5 py-2 text-[10px] font-bold uppercase tracking-wider text-[#dabb76] hover:bg-[#c9a35b]/10 disabled:opacity-50"><RefreshCw size={13} /> Replace</button>
+              <button type="button" disabled={uploading} onClick={removeFile} aria-label={`Remove ${label}`} className="rounded border border-red-500/20 p-2 text-red-300/70 hover:bg-red-500/10 hover:text-red-300 disabled:opacity-50"><Trash2 size={14} /></button>
+            </div>
           </div>
-          
-          {/* Inline Document Preview */}
-          <div className="w-full h-48 rounded-md overflow-hidden border border-white/10 bg-black/50">
-            {isImage ? (
-              <img src={url} alt="Preview" className="w-full h-full object-contain" />
-            ) : (
-              <iframe src={`${url}#toolbar=0&navpanes=0&view=FitH`} className="w-full h-full border-none" title="PDF Preview" />
-            )}
-          </div>
+
+          {uploading && <div className="flex items-center gap-2 border-t border-white/10 px-3 py-2 text-xs text-[#dabb76]"><Loader2 size={14} className="animate-spin" /> Uploading securely…</div>}
+
+          {previewOpen && !previewFailed && fileKind === 'image' && (
+            <div className="h-64 border-t border-white/10 bg-black/50 p-2"><img src={previewUrl} onError={() => setPreviewFailed(true)} alt={`${label} preview`} className="h-full w-full object-contain" /></div>
+          )}
+          {previewOpen && !previewFailed && fileKind === 'pdf' && (
+            <iframe src={`${previewUrl}#toolbar=1&navpanes=0&view=FitH`} onError={() => setPreviewFailed(true)} className="h-72 w-full border-0 border-t border-white/10 bg-white" title={`${label} preview`} />
+          )}
+          {previewOpen && previewFailed && <div className="border-t border-white/10 p-3 text-xs text-amber-200/80">This browser could not display the inline preview. Use “Open” to view the uploaded file.</div>}
+          {fileKind === 'document' && <div className="border-t border-white/10 p-3 text-xs text-white/40">Word documents cannot be reliably previewed in the browser. Use “Open” to view or download this file.</div>}
         </div>
       )}
+
+      {error && <div className="mt-3 flex items-start gap-2 rounded border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-200"><AlertCircle size={15} className="mt-0.5 shrink-0" />{error}</div>}
     </div>
   );
 };
@@ -127,37 +213,40 @@ export default function OnboardingWizard() {
     }
 
     const fetchVendorData = async () => {
+      let hasBackendData = false;
       try {
-        let hasBackendData = false;
-        
-        // Attempt to fetch from backend if user is vendor_pending, vendor_active, or vendor_rejected
-        if (user && (user.role === 'vendor_active' || user.role === 'vendor_pending' || user.role === 'vendor_rejected')) {
-          const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-          const token = userInfo?.token || user?.token;
-          
-          const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/vendor/onboarding`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          
-          if (data && data.businessInfo) {
-            hasBackendData = true;
-            if (data.businessInfo) setBusinessInfo(data.businessInfo);
-            if (data.kycInfo) setKycInfo(data.kycInfo);
-            if (data.taxInfo) setTaxInfo(data.taxInfo);
-            if (data.licenceInfo) setLicenceInfo(data.licenceInfo);
-            if (data.customsInfo) setCustomsInfo(data.customsInfo);
-            if (data.bankingInfo) setBankingInfo(data.bankingInfo);
-            if (data.productCategories) setProductCategories(data.productCategories);
-            if (data.deliveryInfo) setDeliveryInfo(data.deliveryInfo);
-            if (data.agreements) setAgreements(data.agreements);
+        const vendorRoles = ['vendor_active', 'vendor_pending', 'vendor_rejected', 'vendor_approved_unpaid'];
+        if (user && vendorRoles.includes(user.role)) {
+          try {
+            const { data } = await api.get('/vendor/onboarding');
+            if (data && data.businessInfo) {
+              hasBackendData = true;
+              if (data.businessInfo) setBusinessInfo(data.businessInfo);
+              if (data.kycInfo) setKycInfo(data.kycInfo);
+              if (data.taxInfo) setTaxInfo(data.taxInfo);
+              if (data.licenceInfo) setLicenceInfo(data.licenceInfo);
+              if (data.customsInfo) setCustomsInfo(data.customsInfo);
+              if (data.bankingInfo) setBankingInfo(data.bankingInfo);
+              if (data.productCategories) setProductCategories(data.productCategories);
+              if (data.deliveryInfo) setDeliveryInfo(data.deliveryInfo);
+              if (data.agreements) setAgreements(data.agreements);
+              if (data.credentialsInfo) setCredentialsInfo(data.credentialsInfo);
+              if (data.marketInfo) setMarketInfo(data.marketInfo);
+              if (data.logisticsInfo) setLogisticsInfo(data.logisticsInfo);
+              if (data.storyInfo) setStoryInfo(data.storyInfo);
+            }
+          } catch (backendError) {
+            console.error('Unable to load saved vendor application', backendError);
           }
         }
 
-        // If no backend data, try to fetch from localStorage
-        if (!hasBackendData) {
-          const savedData = localStorage.getItem('vendor-onboarding-draft');
-          if (savedData) {
-            const data = JSON.parse(savedData);
+        // A matching local draft contains the applicant's newest unsaved edits and
+        // should be applied over older backend data.
+        const savedData = localStorage.getItem('vendor-onboarding-draft');
+        if (savedData) {
+          const data = JSON.parse(savedData);
+          const belongsToCurrentUser = !user || !data.userId || data.userId === user._id || data.accountInfo?.email === user.email;
+          if (!hasBackendData || belongsToCurrentUser) {
             if (data.currentStep) setCurrentStep(data.currentStep);
             if (data.accountInfo && !user) setAccountInfo(data.accountInfo);
             if (data.businessInfo) setBusinessInfo(data.businessInfo);
@@ -169,6 +258,10 @@ export default function OnboardingWizard() {
             if (data.productCategories) setProductCategories(data.productCategories);
             if (data.deliveryInfo) setDeliveryInfo(data.deliveryInfo);
             if (data.agreements) setAgreements(data.agreements);
+            if (data.credentialsInfo) setCredentialsInfo(data.credentialsInfo);
+            if (data.marketInfo) setMarketInfo(data.marketInfo);
+            if (data.logisticsInfo) setLogisticsInfo(data.logisticsInfo);
+            if (data.storyInfo) setStoryInfo(data.storyInfo);
           }
         }
       } catch (err) {
@@ -181,29 +274,34 @@ export default function OnboardingWizard() {
     fetchVendorData();
   }, [user]);
 
-  const handleFileUpload = async (e, setUrlFn) => {
-    if (!e) {
-      setUrlFn(null);
-      return;
-    }
-    const file = e.target.files[0];
-    if (!file) return;
-    
+  useEffect(() => {
+    if (loading) return;
+    localStorage.setItem('vendor-onboarding-draft', JSON.stringify({
+      userId: user?._id,
+      currentStep,
+      accountInfo,
+      businessInfo,
+      kycInfo,
+      taxInfo,
+      licenceInfo,
+      customsInfo,
+      bankingInfo,
+      productCategories,
+      deliveryInfo,
+      agreements,
+      credentialsInfo,
+      marketInfo,
+      logisticsInfo,
+      storyInfo,
+    }));
+  }, [loading, user?._id, currentStep, accountInfo, businessInfo, kycInfo, taxInfo, licenceInfo, customsInfo, bankingInfo, productCategories, deliveryInfo, agreements, credentialsInfo, marketInfo, logisticsInfo, storyInfo]);
+
+  const uploadFile = async (file) => {
     const formData = new FormData();
     formData.append('document', file);
-    
-    setSaving(true);
-    try {
-      const res = await api.post(`/vendor/upload-public`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      const data = res.data;
-      setUrlFn(data.url);
-    } catch (err) {
-      console.error('Upload failed', err);
-    } finally {
-      setSaving(false);
-    }
+    const { data } = await api.post('/vendor/upload-public', formData);
+    if (!data?.url) throw new Error('The server did not return an uploaded file URL.');
+    return data.url;
   };
 
   const isStepComplete = (stepId) => {
@@ -280,7 +378,9 @@ export default function OnboardingWizard() {
     // Save to localStorage
     const dataToSave = {
       currentStep: currentStep + 1,
-      accountInfo, businessInfo, kycInfo, taxInfo, licenceInfo, customsInfo, bankingInfo, productCategories, deliveryInfo, agreements
+      userId: user?._id,
+      accountInfo, businessInfo, kycInfo, taxInfo, licenceInfo, customsInfo, bankingInfo, productCategories, deliveryInfo, agreements,
+      credentialsInfo, marketInfo, logisticsInfo, storyInfo
     };
     localStorage.setItem('vendor-onboarding-draft', JSON.stringify(dataToSave));
     setCurrentStep(prev => prev + 1);
@@ -466,7 +566,7 @@ export default function OnboardingWizard() {
                 <InputField label="Director Full Name" value={kycInfo.directorName} onChange={e => setKycInfo({...kycInfo, directorName: e.target.value})} />
                 <InputField label="ID Number" value={kycInfo.idNumber} onChange={e => setKycInfo({...kycInfo, idNumber: e.target.value})} />
                 <InputField label="Contact Number" value={kycInfo.contactNumber} onChange={e => setKycInfo({...kycInfo, contactNumber: e.target.value})} />
-                <FileUploadField label="Director ID Document" url={kycInfo.idDocumentUrl} onUpload={(e) => handleFileUpload(e, (url) => setKycInfo({...kycInfo, idDocumentUrl: url}))} />
+                <FileUploadField label="Director ID Document" url={kycInfo.idDocumentUrl} uploadFile={uploadFile} onChange={(url) => setKycInfo((current) => ({...current, idDocumentUrl: url}))} />
               </div>
             )}
 
@@ -476,7 +576,7 @@ export default function OnboardingWizard() {
                 <h2 className="text-2xl text-[#eee8dd] mb-6">Tax Details</h2>
                 <InputField label="Tax Number" value={taxInfo.taxNumber} onChange={e => setTaxInfo({...taxInfo, taxNumber: e.target.value})} />
                 <InputField label="VAT Number" value={taxInfo.vatNumber} onChange={e => setTaxInfo({...taxInfo, vatNumber: e.target.value})} />
-                <FileUploadField label="SARS Tax Clearance" url={taxInfo.taxClearanceUrl} onUpload={(e) => handleFileUpload(e, (url) => setTaxInfo({...taxInfo, taxClearanceUrl: url}))} />
+                <FileUploadField label="SARS Tax Clearance" url={taxInfo.taxClearanceUrl} uploadFile={uploadFile} onChange={(url) => setTaxInfo((current) => ({...current, taxClearanceUrl: url}))} />
               </div>
             )}
 
@@ -486,7 +586,7 @@ export default function OnboardingWizard() {
                 <h2 className="text-2xl text-[#eee8dd] mb-6">Liquor Licence</h2>
                 <InputField label="Licence Number" value={licenceInfo.licenceNumber} onChange={e => setLicenceInfo({...licenceInfo, licenceNumber: e.target.value})} />
                 <InputField label="Licence Type" value={licenceInfo.licenceType} onChange={e => setLicenceInfo({...licenceInfo, licenceType: e.target.value})} />
-                <FileUploadField label="Licence Document" url={licenceInfo.licenceDocumentUrl} onUpload={(e) => handleFileUpload(e, (url) => setLicenceInfo({...licenceInfo, licenceDocumentUrl: url}))} />
+                <FileUploadField label="Licence Document" url={licenceInfo.licenceDocumentUrl} uploadFile={uploadFile} onChange={(url) => setLicenceInfo((current) => ({...current, licenceDocumentUrl: url}))} />
               </div>
             )}
 
@@ -495,7 +595,7 @@ export default function OnboardingWizard() {
               <div className="animate-in fade-in slide-in-from-bottom-4">
                 <h2 className="text-2xl text-[#eee8dd] mb-6">Customs (Optional)</h2>
                 <InputField label="Export Code" value={customsInfo.exportCode} onChange={e => setCustomsInfo({...customsInfo, exportCode: e.target.value})} />
-                <FileUploadField label="Customs Document" url={customsInfo.exportDocumentUrl} onUpload={(e) => handleFileUpload(e, (url) => setCustomsInfo({...customsInfo, exportDocumentUrl: url}))} />
+                <FileUploadField label="Customs Document" url={customsInfo.exportDocumentUrl} uploadFile={uploadFile} onChange={(url) => setCustomsInfo((current) => ({...current, exportDocumentUrl: url}))} />
               </div>
             )}
 
@@ -507,7 +607,7 @@ export default function OnboardingWizard() {
                 <InputField label="Account Name" value={bankingInfo.accountName} onChange={e => setBankingInfo({...bankingInfo, accountName: e.target.value})} />
                 <InputField label="Account Number" value={bankingInfo.accountNumber} onChange={e => setBankingInfo({...bankingInfo, accountNumber: e.target.value})} />
                 <InputField label="Branch Code" value={bankingInfo.branchCode} onChange={e => setBankingInfo({...bankingInfo, branchCode: e.target.value})} />
-                <FileUploadField label="Bank Confirmation Letter" url={bankingInfo.bankConfirmationUrl} onUpload={(e) => handleFileUpload(e, (url) => setBankingInfo({...bankingInfo, bankConfirmationUrl: url}))} />
+                <FileUploadField label="Bank Confirmation Letter" url={bankingInfo.bankConfirmationUrl} uploadFile={uploadFile} onChange={(url) => setBankingInfo((current) => ({...current, bankConfirmationUrl: url}))} />
               </div>
             )}
 
@@ -534,9 +634,11 @@ export default function OnboardingWizard() {
                     <h3 className="text-lg text-[#e1bd70] mb-4">Wine Selling Requirements</h3>
                     <p className="text-[#918a7f] mb-4 text-sm">Because you selected Wine, you are required to upload a Wholesale Liquor Authority (WLA) document.</p>
                     <FileUploadField 
-                      label="WLA Document *" 
+                      label="WLA Document"
                       url={licenceInfo.wlaDocumentUrl} 
-                      onUpload={(e) => handleFileUpload(e, (url) => setLicenceInfo({...licenceInfo, wlaDocumentUrl: url}))} 
+                      required
+                      uploadFile={uploadFile}
+                      onChange={(url) => setLicenceInfo((current) => ({...current, wlaDocumentUrl: url}))}
                     />
                   </div>
                 )}
@@ -561,8 +663,8 @@ export default function OnboardingWizard() {
               <div className="animate-in fade-in slide-in-from-bottom-4">
                 <h2 className="text-2xl text-[#eee8dd] mb-6">Export Credentials</h2>
                 <InputField label="Export Licence Number" value={credentialsInfo.exportLicenceNumber} onChange={e => setCredentialsInfo({...credentialsInfo, exportLicenceNumber: e.target.value})} />
-                <FileUploadField label="Home Country Licence" url={credentialsInfo.homeCountryLicence} onUpload={(e) => handleFileUpload(e, (url) => setCredentialsInfo({...credentialsInfo, homeCountryLicence: url}))} />
-                <FileUploadField label="Quality/Origin Certificates (Optional)" url={credentialsInfo.certificates} onUpload={(e) => handleFileUpload(e, (url) => setCredentialsInfo({...credentialsInfo, certificates: url}))} />
+                <FileUploadField label="Home Country Licence" url={credentialsInfo.homeCountryLicence} required uploadFile={uploadFile} onChange={(url) => setCredentialsInfo((current) => ({...current, homeCountryLicence: url}))} />
+                <FileUploadField label="Quality/Origin Certificates (Optional)" url={credentialsInfo.certificates} uploadFile={uploadFile} onChange={(url) => setCredentialsInfo((current) => ({...current, certificates: url}))} />
               </div>
             )}
 
@@ -601,7 +703,7 @@ export default function OnboardingWizard() {
                 <h2 className="text-2xl text-[#eee8dd] mb-6">Brand Story</h2>
                 <InputField label="Winemaker/Master Distiller Bio" type="text" value={storyInfo.winemakerBio} onChange={e => setStoryInfo({...storyInfo, winemakerBio: e.target.value})} />
                 <InputField label="Brand Story / Heritage" type="text" value={storyInfo.brandStory} onChange={e => setStoryInfo({...storyInfo, brandStory: e.target.value})} placeholder="Tell your customers about your legacy..." />
-                <FileUploadField label="Winery/Estate Photos" url={storyInfo.wineryPhotosUrl} onUpload={(e) => handleFileUpload(e, (url) => setStoryInfo({...storyInfo, wineryPhotosUrl: url}))} />
+                <FileUploadField label="Winery/Estate Photos" url={storyInfo.wineryPhotosUrl} uploadFile={uploadFile} onChange={(url) => setStoryInfo((current) => ({...current, wineryPhotosUrl: url}))} />
               </div>
             )}
 

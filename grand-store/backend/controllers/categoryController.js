@@ -25,7 +25,8 @@ const getCategories = async (req, res) => {
         brands: new Set(),
         subcategories: new Set(),
         slug: cat.slug,
-        description: cat.description
+        description: cat.description,
+        brandLogos: cat.brandLogos || []
       });
     }
 
@@ -66,6 +67,7 @@ const getCategories = async (req, res) => {
         name,
         slug: category.slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
         description: category.description || '',
+        brandLogos: category.brandLogos || [],
         icon: 'view-grid-outline', // Fallback icon, could add to model later
         brands: [...category.brands].sort(),
         subcategories: [...category.subcategories].sort(),
@@ -102,7 +104,7 @@ const getAdminCategories = async (req, res) => {
 // @access  Private/Admin
 const createCategory = async (req, res) => {
   try {
-    const { name, description, isActive } = req.body;
+    const { name, description, isActive, brandLogos } = req.body;
     
     if (!name) {
       return res.status(400).json({ message: 'Category name is required' });
@@ -119,7 +121,8 @@ const createCategory = async (req, res) => {
       name,
       slug,
       description,
-      isActive: isActive !== undefined ? isActive : true
+      isActive: isActive !== undefined ? isActive : true,
+      brandLogos: brandLogos || []
     });
 
     res.status(201).json(category);
@@ -134,7 +137,7 @@ const createCategory = async (req, res) => {
 // @access  Private/Admin
 const updateCategory = async (req, res) => {
   try {
-    const { name, description, isActive } = req.body;
+    const { name, description, isActive, brandLogos } = req.body;
     const category = await Category.findById(req.params.id);
 
     if (!category) {
@@ -148,6 +151,7 @@ const updateCategory = async (req, res) => {
     
     if (description !== undefined) category.description = description;
     if (isActive !== undefined) category.isActive = isActive;
+    if (brandLogos !== undefined) category.brandLogos = brandLogos;
 
     await category.save();
     res.json(category);

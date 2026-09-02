@@ -91,7 +91,7 @@ exports.registerFullVendor = async (req, res) => {
       }
       
       vendor.status = 'pending_approval';
-      vendor.onboardingStep = 10;
+      vendor.onboardingStep = vendorType === 'international' ? 9 : 10;
       await vendor.save();
     } else {
       // Create new vendor application
@@ -103,7 +103,7 @@ exports.registerFullVendor = async (req, res) => {
         productCategories: productCategories || [],
         agreements: { ...agreements, acceptedAt: Date.now() },
         status: 'pending_approval',
-        onboardingStep: 10
+        onboardingStep: vendorType === 'international' ? 9 : 10
       };
       
       if (vendorType === 'international') {

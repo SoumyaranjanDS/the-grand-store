@@ -222,6 +222,28 @@ const getAllVendors = async (req, res) => {
   }
 };
 
+// @desc    Get one vendor application
+// @route   GET /api/admin/vendors/:id
+// @access  Private/Admin
+const getVendorById = async (req, res) => {
+  try {
+    const vendor = await Vendor.findById(req.params.id)
+      .populate("userId", "name email role isEmailVerified createdAt")
+      .lean();
+
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+
+    return res.json(vendor);
+  } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+    return res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
 // @desc    Update vendor status (Approve / Reject)
 // @route   PUT /api/admin/vendors/:id/status
 // @access  Private/Admin
@@ -234,7 +256,7 @@ const updateVendorStatus = async (req, res) => {
       return res.status(404).json({ message: "Vendor not found" });
     }
 
-    if (!["approved", "rejected", "suspended"].includes(status)) {
+    if (!["approved", "pending_approval", "rejected", "suspended"].includes(status)) {
       return res.status(400).json({ message: "Invalid status" });
     }
 
@@ -386,6 +408,7 @@ module.exports = {
   getDashboardStats,
   getAllUsers,
   getAllVendors,
+  getVendorById,
   updateVendorStatus,
   remindVendorPayment,
   getPendingBankTransfers,

@@ -7,6 +7,7 @@ import LocationInput from '../../components/LocationInput';
 import CityInput from '../../components/CityInput';
 import PostalCodeInput from '../../components/PostalCodeInput';
 import PaymentForm from './PaymentForm';
+import SecurePaymentBadges from '../../components/checkout/SecurePaymentBadges';
 import Price from '../../components/ui/Price';
 import api from '../../api';
 
@@ -532,11 +533,12 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
           </nav>
         )}
 
-        <div className="max-w-4xl mx-auto flex flex-col gap-6 items-center w-full md:gap-12">
+        <div className="flex flex-col lg:flex-row-reverse lg:items-start gap-8 w-full md:gap-12 xl:gap-16">
           
           
-          {/* Itemised order summary */}
+          {/* Right Column - Itemised order summary */}
           {checkoutStep !== 3 && (
+            <div className="w-full lg:w-[420px] xl:w-[460px] lg:sticky lg:top-32 shrink-0">
             <div id="checkout-order-summary" className="scroll-mt-32 w-full bg-[#111]/80 backdrop-blur-md border border-[var(--color-gold)]/20 rounded-2xl p-4 md:p-7 shadow-2xl relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[var(--color-gold)] to-transparent opacity-50"></div>
               <div className="relative">
@@ -617,10 +619,11 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
                   </div>
               </div>
             </div>
+            </div>
           )}
 
           {/* Left Column - Forms */}
-          <div className="w-full flex flex-col gap-8">
+          <div className="w-full lg:w-auto flex-1 flex flex-col gap-8 min-w-0">
             
             {checkoutStep !== 3 ? (
             
@@ -1106,6 +1109,7 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
                   {loading ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : <>Place Order • <Price amount={quote ? quote.aggregatedTotals.totalToPay : cartSubtotal} /> <ArrowRight size={16} /></>}
                 </button>
                 
+                <SecurePaymentBadges />
                 <PaymentForm paymentData={paymentData} payfastUrl={payfastUrl} />
               </form>
             ) : checkoutStep === 3 ? (

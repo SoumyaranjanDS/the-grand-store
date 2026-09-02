@@ -17,7 +17,7 @@ const storage = new CloudinaryStorage({
       const isRaw = file.mimetype === 'application/pdf' || file.mimetype.includes('msword') || file.mimetype.includes('document');
       return isRaw ? 'raw' : 'auto';
     },
-    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'pdf', 'doc', 'docx'],
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'heif', 'pdf', 'doc', 'docx'],
   }
 });
 

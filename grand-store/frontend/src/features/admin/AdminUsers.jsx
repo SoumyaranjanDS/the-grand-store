@@ -82,7 +82,11 @@ export default function AdminUsers() {
               {filtered.map((u, i) => (
                 <tr key={u._id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
                   <td className="py-4 pl-6 text-sm text-[var(--color-ivory)] font-serif">{u.name}</td>
-                  <td className="py-4 text-sm text-[var(--color-ivory-muted)]">{u.email}</td>
+                  <td className="py-4 text-sm text-[var(--color-ivory-muted)]">
+                    <a href={`mailto:${u.email}`} className="hover:text-[var(--color-gold)] transition-colors underline decoration-white/20 hover:decoration-[var(--color-gold)] underline-offset-4">
+                      {u.email}
+                    </a>
+                  </td>
                   <td className="py-4">{getRoleBadge(u.role)}</td>
                   <td className="py-4 text-xs text-[var(--color-ivory-muted)]">
                     {new Date(u.createdAt).toLocaleDateString("en-ZA")}

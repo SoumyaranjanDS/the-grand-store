@@ -41,6 +41,7 @@ export default function AgeGate() {
     localStorage.setItem('ageVerified', JSON.stringify({ verified: true, expiry }));
     sessionStorage.setItem('age_verified', 'true');
     setIsVisible(false);
+    window.dispatchEvent(new Event('grand-store-age-verified'));
   };
 
   const handleNo = () => {

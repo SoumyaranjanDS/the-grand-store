@@ -1,300 +1,191 @@
-import React, { useEffect, useState } from "react";
-import api from '../../api';
-import { useAuth } from "../../context/AuthContext";
-import { CheckCircle, XCircle, Clock, Search, FileText, ChevronDown, ChevronUp, Link as LinkIcon } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  ArrowRight,
+  Building2,
+  CheckCircle2,
+  Clock3,
+  Search,
+  Store,
+} from "lucide-react";
+import api from "../../api";
+
+const STATUS_STYLES = {
+  approved: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+  rejected: "border-red-500/30 bg-red-500/10 text-red-300",
+  suspended: "border-orange-500/30 bg-orange-500/10 text-orange-300",
+  pending_approval: "border-amber-500/30 bg-amber-500/10 text-amber-200",
+  draft: "border-white/15 bg-white/5 text-white/60",
+};
+
+const getOnboardingProgress = (vendor) => {
+  const total = vendor.vendorType === "international" ? 9 : 10;
+  const current = Math.min(total, Math.max(0, Number(vendor.onboardingStep) || 0));
+  return { current, total, percent: Math.round((current / total) * 100) };
+};
+
+function StatusBadge({ status }) {
+  const label = (status || "draft").replaceAll("_", " ");
+  return (
+    <span className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] ${STATUS_STYLES[status] || STATUS_STYLES.draft}`}>
+      {label}
+    </span>
+  );
+}
+
+function Metric({ icon: Icon, label, value }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-[#121212] p-4">
+      <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-white/40">
+        <Icon size={15} className="text-[#c9a35b]" />
+        {label}
+      </div>
+      <div className="mt-2 text-2xl font-semibold text-white">{value}</div>
+    </div>
+  );
+}
 
 export default function AdminVendors() {
-  const { user } = useAuth();
+  const navigate = useNavigate();
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [expanded, setExpanded] = useState(null);
-  const [approveId, setApproveId] = useState(null);
-  const [feeAmount, setFeeAmount] = useState(2500);
-
-  const goldText = "text-[#c9a35b]";
-  const fetchVendors = async () => {
-    try {
-      const res = await api.get(`/admin/vendors`, {
-        headers: { Authorization: `Bearer ${user.token}` }
-      });
-      setVendors(res.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
+    let active = true;
+    const fetchVendors = async () => {
+      try {
+        const { data } = await api.get("/admin/vendors");
+        if (active) setVendors(Array.isArray(data) ? data : []);
+      } catch (err) {
+        if (active) setError(err.response?.data?.message || "Unable to load vendor applications.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
     fetchVendors();
-  }, [user]);
+    return () => { active = false; };
+  }, []);
 
-  const handleStatusUpdate = async (vendorId, newStatus) => {
-    if (newStatus !== 'approved' && !window.confirm(`Are you sure you want to mark this vendor as ${newStatus}?`)) return;
-    
-    try {
-      const payload = { status: newStatus };
-      if (newStatus === 'approved') {
-        payload.registrationFee = Number(feeAmount);
-      }
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return vendors;
+    return vendors.filter((vendor) => [
+      vendor.businessInfo?.legalName,
+      vendor.businessInfo?.tradingName,
+      vendor.userId?.name,
+      vendor.userId?.email,
+      vendor.vendorType,
+      vendor.status,
+    ].some((value) => String(value || "").toLowerCase().includes(query)));
+  }, [search, vendors]);
 
-      await api.put(`/admin/vendors/${vendorId}/status`, 
-        payload,
-        { headers: { Authorization: `Bearer ${user.token}` } }
-      );
-      
-      if (newStatus === 'approved') {
-        setApproveId(null);
-        setFeeAmount(2500);
-      }
-      // Refresh list
-      fetchVendors();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to update status");
-    }
-  };
-
-  const handleRemindPayment = async (vendorId) => {
-    try {
-      await api.post(`/admin/vendors/${vendorId}/remind-payment`, 
-        {},
-        { headers: { Authorization: `Bearer ${user.token}` } }
-      );
-      alert("Payment reminder sent successfully!");
-      fetchVendors();
-    } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.message || "Failed to send payment reminder");
-    }
-  };
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'approved': return <span className="px-2 py-1 bg-green-500/10 text-green-400 border border-green-500/20 rounded text-[10px] uppercase font-bold tracking-widest flex items-center gap-1 w-max"><CheckCircle size={12}/> Approved</span>;
-      case 'pending_approval': return <span className="px-2 py-1 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 rounded text-[10px] uppercase font-bold tracking-widest flex items-center gap-1 w-max"><Clock size={12}/> Pending</span>;
-      case 'rejected': return <span className="px-2 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded text-[10px] uppercase font-bold tracking-widest flex items-center gap-1 w-max"><XCircle size={12}/> Rejected</span>;
-      case 'draft': return <span className="px-2 py-1 bg-white/5 text-white/50 border border-white/10 rounded text-[10px] uppercase font-bold tracking-widest flex items-center gap-1 w-max"><FileText size={12}/> Draft</span>;
-      default: return <span className="px-2 py-1 bg-white/5 text-white/50 border border-white/10 rounded text-[10px] uppercase font-bold tracking-widest w-max">{status}</span>;
-    }
-  };
-
-  const filtered = vendors.filter(v => 
-    v.businessInfo?.legalName?.toLowerCase().includes(search.toLowerCase()) ||
-    v.userId?.email?.toLowerCase().includes(search.toLowerCase()) ||
-    v.status.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const DetailRow = ({ label, value, isLink }) => {
-    if (!value) return null;
-    return (
-      <div className="flex gap-4 mb-2">
-        <span className="text-[10px] uppercase tracking-widest text-stone-400 w-32 flex-shrink-0 pt-0.5">{label}</span>
-        {isLink ? (
-          <a href={value} target="_blank" rel="noreferrer" className="text-gold flex items-center gap-1 hover:underline text-sm">
-            <LinkIcon size={12} /> View Document
-          </a>
-        ) : (
-          <span className="text-stone-300 text-sm">{value}</span>
-        )}
-      </div>
-    );
-  };
+  const pending = vendors.filter((vendor) => vendor.status === "pending_approval").length;
+  const approved = vendors.filter((vendor) => vendor.status === "approved").length;
 
   return (
-    <div className="flex flex-col gap-10 w-full max-w-7xl mx-auto pb-10">
-      <section>
-        <h1 className="text-[var(--color-ivory)] font-serif text-5xl mb-4 leading-tight">
-          Vendor <span className={goldText} >Management</span>
-        </h1>
-        <p className="text-[var(--color-ivory-muted)] text-lg font-light">
-          Review, approve, or reject vendor applications.
-        </p>
-      </section>
+    <div className="min-h-full bg-[#090909] px-4 py-6 text-white sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <header className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#c9a35b]">Vendor management</p>
+            <h1 className="mt-2 font-serif text-3xl font-semibold sm:text-4xl">Vendor applications</h1>
+            <p className="mt-2 max-w-2xl text-sm text-white/50">
+              Review each registration in a focused workspace with documents, banking details and approval controls together.
+            </p>
+          </div>
+          <div className="relative w-full lg:w-80">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/35" size={17} />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search vendors or email"
+              className="w-full rounded-lg border border-white/10 bg-[#121212] py-3 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#c9a35b]/70"
+            />
+          </div>
+        </header>
 
-      <div className="flex items-center gap-2 bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 w-full md:w-96">
-        <Search size={16} className="text-[var(--color-ivory-muted)]" />
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search by legal name, email, or status..."
-          className="bg-transparent text-sm text-white outline-none placeholder:text-white/30 w-full"
-        />
-      </div>
+        <section className="grid gap-3 sm:grid-cols-3">
+          <Metric icon={Store} label="Total applications" value={vendors.length} />
+          <Metric icon={Clock3} label="Awaiting review" value={pending} />
+          <Metric icon={CheckCircle2} label="Approved vendors" value={approved} />
+        </section>
 
-      <div className="overflow-x-auto bg-[#0a0a0a] border border-white/5 rounded-2xl">
-        {loading ? (
-          <div className="p-12 text-center text-[var(--color-ivory-muted)] animate-pulse">Loading vendors...</div>
-        ) : filtered.length === 0 ? (
-          <div className="p-12 text-center text-[var(--color-ivory-muted)]">No vendors found.</div>
-        ) : (
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-white/10 text-[10px] uppercase tracking-widest text-[var(--color-ivory-muted)] bg-black/20">
-                <th className="py-4 pl-6 font-semibold">Business Name</th>
-                <th className="py-4 font-semibold">Email</th>
-                <th className="py-4 font-semibold">Status</th>
-                <th className="py-4 font-semibold">Step</th>
-                <th className="py-4 font-semibold">Date Applied</th>
-                <th className="py-4 pr-6 font-semibold text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((v, i) => (
-                <React.Fragment key={v._id}>
-                  <tr className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-                  <td className="py-4 pl-6 text-sm text-[var(--color-ivory)] font-serif">{v.businessInfo?.legalName || 'N/A'}</td>
-                  <td className="py-4 text-xs text-[var(--color-ivory-muted)]">{v.userId?.email || 'N/A'}</td>
-                  <td className="py-4">{getStatusBadge(v.status)}</td>
-                  <td className="py-4 text-xs text-[var(--color-gold)] font-mono">{v.onboardingStep}/10</td>
-                  <td className="py-4 text-xs text-[var(--color-ivory-muted)]">
-                    {new Date(v.createdAt).toLocaleDateString("en-ZA")}
-                  </td>
-                  <td className="py-4 pr-6">
-                    <div className="flex justify-end items-center gap-2">
-                      {v.status === 'pending_approval' && (
-                        <>
-                          <button onClick={() => { setApproveId(v._id); setExpanded(v._id); }} className="px-3 py-1.5 bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded border border-green-500/30 text-[10px] font-bold uppercase tracking-widest transition-colors">
-                            Approve
-                          </button>
-                          <button onClick={() => handleStatusUpdate(v._id, 'rejected')} className="px-3 py-1.5 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded border border-red-500/30 text-[10px] font-bold uppercase tracking-widest transition-colors">
-                            Reject
-                          </button>
-                        </>
-                      )}
-                      {v.status === 'approved' && (
-                        <>
-                          {v.paymentStatus !== 'paid' && (
-                            <button onClick={() => handleRemindPayment(v._id)} disabled={v.paymentReminderSent} className={`px-3 py-1.5 rounded border text-[10px] font-bold uppercase tracking-widest transition-colors ${v.paymentReminderSent ? 'bg-gray-500/20 text-gray-400 border-gray-500/30 cursor-not-allowed' : 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border-blue-500/30'}`}>
-                              {v.paymentReminderSent ? 'Reminder Sent' : 'Remind to Pay'}
-                            </button>
-                          )}
-                          <button onClick={() => handleStatusUpdate(v._id, 'suspended')} className="px-3 py-1.5 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded border border-red-500/30 text-[10px] font-bold uppercase tracking-widest transition-colors">
-                            Suspend
-                          </button>
-                        </>
-                      )}
-                      {v.status === 'rejected' && (
-                        <button onClick={() => handleStatusUpdate(v._id, 'pending_approval')} className="px-3 py-1.5 bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 rounded border border-yellow-500/30 text-[10px] font-bold uppercase tracking-widest transition-colors">
-                          Allow Reapply
-                        </button>
-                      )}
-                      <button
-                        onClick={() => setExpanded(expanded === v._id ? null : v._id)}
-                        className="text-white/20 hover:text-white/60 transition-colors p-1.5 ml-2"
-                      >
-                        {expanded === v._id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                {expanded === v._id && (
-                  <tr className="bg-[#111] border-b border-white/5">
-                    <td colSpan="6" className="p-6">
-                      {approveId === v._id && (
-                        <div className="bg-green-500/10 border border-green-500/20 p-4 mb-6 rounded flex items-center gap-4">
-                          <span className="text-green-400 text-sm font-medium">Set Registration Fee (R):</span>
-                          <input 
-                            type="number" 
-                            value={feeAmount} 
-                            onChange={(e) => setFeeAmount(e.target.value)}
-                            className="bg-black border border-green-500/30 text-white px-3 py-1.5 rounded w-32 focus:outline-none"
-                          />
-                          <button onClick={() => handleStatusUpdate(v._id, 'approved')} className="bg-green-500 text-black font-bold uppercase tracking-widest text-[10px] px-4 py-2 rounded">
-                            Confirm Approval
-                          </button>
-                          <button onClick={() => setApproveId(null)} className="text-white/40 uppercase tracking-widest text-[10px] hover:text-white">
-                            Cancel
-                          </button>
-                        </div>
-                      )}
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                        <div>
-                          <h4 className="text-[var(--color-gold)] text-xs uppercase tracking-widest mb-4">Business Info</h4>
-                          <DetailRow label="Legal Name" value={v.businessInfo?.legalName} />
-                          <DetailRow label="Trading Name" value={v.businessInfo?.tradingName} />
-                          <DetailRow label="Reg Number" value={v.businessInfo?.registrationNumber} />
-                          <DetailRow label="Type" value={v.businessInfo?.businessType} />
-                          <DetailRow label="Address" value={v.businessInfo?.address} />
-                          <div className="mt-4">
-                            <DetailRow label="Contact Number" value={v.kycInfo?.contactNumber} />
-                            <DetailRow label="Director Name" value={v.kycInfo?.directorName} />
-                            <DetailRow label="ID Number" value={v.kycInfo?.idNumber} />
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <h4 className="text-[var(--color-gold)] text-xs uppercase tracking-widest mb-4">Licence & Tax</h4>
-                          <DetailRow label="Tax Number" value={v.taxInfo?.taxNumber} />
-                          <DetailRow label="VAT Number" value={v.taxInfo?.vatNumber} />
-                          <DetailRow label="Export Code" value={v.customsInfo?.exportCode} />
-                          <div className="mt-4">
-                            <DetailRow label="Licence Number" value={v.licenceInfo?.licenceNumber} />
-                            <DetailRow label="Licence Type" value={v.licenceInfo?.licenceType} />
-                          </div>
-                        </div>
-
-                        <div>
-                          <h4 className="text-[var(--color-gold)] text-xs uppercase tracking-widest mb-4">Banking & Delivery</h4>
-                          <DetailRow label="Bank Name" value={v.bankingInfo?.bankName} />
-                          <DetailRow label="Account Name" value={v.bankingInfo?.accountName} />
-                          <DetailRow label="Account Number" value={v.bankingInfo?.accountNumber} />
-                          <DetailRow label="Branch Code" value={v.bankingInfo?.branchCode} />
-                          <DetailRow label="Payout Pref." value={v.bankingInfo?.payoutPreference} />
-                          <div className="mt-4">
-                            <DetailRow label="Fulfillment" value={v.deliveryInfo?.fulfillmentMethod} />
-                            <DetailRow label="Dispatch Loc." value={v.deliveryInfo?.dispatchLocation} />
-                            <DetailRow label="Products" value={v.productCategories?.join(', ')} />
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <h4 className="text-[var(--color-gold)] text-xs uppercase tracking-widest mb-4">Documents</h4>
-                          <DetailRow label="ID Document" value={v.kycInfo?.idDocumentUrl} isLink={true} />
-                          <DetailRow label="Tax Clearance" value={v.taxInfo?.taxClearanceUrl} isLink={true} />
-                          <DetailRow label="Licence Doc" value={v.licenceInfo?.licenceDocumentUrl} isLink={true} />
-                          <DetailRow label="WLA Document" value={v.licenceInfo?.wlaDocumentUrl} isLink={true} />
-                          <DetailRow label="Customs Export" value={v.customsInfo?.exportDocumentUrl} isLink={true} />
-                          <DetailRow label="Bank Confirmation" value={v.bankingInfo?.bankConfirmationUrl} isLink={true} />
-                          <div className="mt-4">
-                            <DetailRow label="Terms Accepted" value={v.agreements?.termsAccepted ? 'Yes' : 'No'} />
-                            <DetailRow label="Info Accurate" value={v.agreements?.informationAccurate ? 'Yes' : 'No'} />
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Optional Brand Story / International fields if they exist */}
-                      {(v.storyInfo?.brandStory || v.credentialsInfo?.exportLicenceNumber) && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 pt-8 border-t border-white/5">
-                          {v.storyInfo?.brandStory && (
-                            <div>
-                              <h4 className="text-[var(--color-gold)] text-xs uppercase tracking-widest mb-4">Brand Story</h4>
-                              <DetailRow label="Bio" value={v.storyInfo?.winemakerBio} />
-                              <DetailRow label="Story" value={v.storyInfo?.brandStory} />
-                              <DetailRow label="Photos" value={v.storyInfo?.wineryPhotosUrl} isLink={true} />
-                            </div>
-                          )}
-                          {v.credentialsInfo?.exportLicenceNumber && (
-                            <div>
-                              <h4 className="text-[var(--color-gold)] text-xs uppercase tracking-widest mb-4">International Trade</h4>
-                              <DetailRow label="Export Licence" value={v.credentialsInfo?.exportLicenceNumber} />
-                              <DetailRow label="Target Regions" value={v.marketInfo?.targetRegions?.join(', ')} />
-                              <DetailRow label="Home Country Lic." value={v.credentialsInfo?.homeCountryLicence} isLink={true} />
-                              <DetailRow label="Certificates" value={v.credentialsInfo?.certificates} isLink={true} />
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </td>
+        <section className="overflow-hidden rounded-xl border border-white/10 bg-[#101010]">
+          {loading ? (
+            <div className="flex min-h-64 items-center justify-center text-sm text-white/50">Loading vendor applications...</div>
+          ) : error ? (
+            <div className="m-5 rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">{error}</div>
+          ) : filtered.length === 0 ? (
+            <div className="flex min-h-64 flex-col items-center justify-center px-5 text-center">
+              <Building2 size={30} className="text-white/25" />
+              <p className="mt-3 font-medium text-white/70">No vendor applications found</p>
+              <p className="mt-1 text-sm text-white/40">Try a different search term.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[860px] text-left">
+                <thead className="border-b border-white/10 bg-white/[0.025] text-[10px] uppercase tracking-[0.16em] text-white/35">
+                  <tr>
+                    <th className="px-5 py-4 font-medium">Applicant</th>
+                    <th className="px-5 py-4 font-medium">Application</th>
+                    <th className="px-5 py-4 font-medium">Status</th>
+                    <th className="px-5 py-4 font-medium">Progress</th>
+                    <th className="px-5 py-4 font-medium">Submitted</th>
+                    <th className="px-5 py-4 text-right font-medium">Review</th>
                   </tr>
-                )}
-              </React.Fragment>
-              ))}
-            </tbody>
-          </table>
-        )}
+                </thead>
+                <tbody className="divide-y divide-white/[0.07]">
+                  {filtered.map((vendor) => {
+                    const businessName = vendor.businessInfo?.tradingName || vendor.businessInfo?.legalName || "Unnamed business";
+                    const progress = getOnboardingProgress(vendor);
+                    return (
+                      <tr
+                        key={vendor._id}
+                        onClick={() => navigate(`/admin/vendors/${vendor._id}`)}
+                        className="group cursor-pointer transition hover:bg-white/[0.035]"
+                      >
+                        <td className="px-5 py-4">
+                          <div className="font-medium text-white">{businessName}</div>
+                          <div className="mt-1 text-xs text-white/40">{vendor.userId?.email || "No account email"}</div>
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="capitalize text-sm text-white/70">{vendor.vendorType || "local"} vendor</div>
+                          <div className="mt-1 text-xs text-white/35">{vendor.businessInfo?.registrationNumber || "No registration number"}</div>
+                        </td>
+                        <td className="px-5 py-4"><StatusBadge status={vendor.status} /></td>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-1.5 w-24 overflow-hidden rounded-full bg-white/10">
+                              <div className="h-full rounded-full bg-[#c9a35b]" style={{ width: `${progress.percent}%` }} />
+                            </div>
+                            <span className="text-xs text-white/50">{progress.current}/{progress.total}</span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4 text-sm text-white/55">
+                          {vendor.createdAt ? new Date(vendor.createdAt).toLocaleDateString() : "—"}
+                        </td>
+                        <td className="px-5 py-4 text-right">
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              navigate(`/admin/vendors/${vendor._id}`);
+                            }}
+                            className="inline-flex items-center gap-2 rounded-md border border-[#c9a35b]/35 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#d8b76f] transition hover:border-[#c9a35b] hover:bg-[#c9a35b]/10"
+                          >
+                            View application <ArrowRight size={14} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );

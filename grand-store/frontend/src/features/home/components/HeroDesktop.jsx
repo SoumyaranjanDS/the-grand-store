@@ -7,16 +7,41 @@ const heroFilms = [
     src: '/assets/media/grand-store-hero-scrub.mp4',
     label: 'A premium whisky being served at an evening gathering',
     maxTime: 7,
+    titleLine1: 'Not simply poured.',
+    titleLine2: 'Remembered.',
+    titleLine2Class: 'hero-title-line italic',
+    ctaText: 'Explore the collection',
+    ctaLink: '#arrivals',
   },
   {
     src: '/assets/media/grand-store-hero-cellar-hd.mp4',
     label: 'A cinematic journey through a premium wine cellar',
     maxTime: 13,
+    titleLine1: 'Not simply poured.',
+    titleLine2: 'Remembered.',
+    titleLine2Class: 'hero-title-line italic',
+    ctaText: 'Explore the collection',
+    ctaLink: '#arrivals',
   },
   {
     src: '/assets/media/grand-store-hero-third.mp4',
     label: 'A refined celebration featuring premium wine and spirits',
     maxTime: 13,
+    titleLine1: 'Not simply poured.',
+    titleLine2: 'Remembered.',
+    titleLine2Class: 'hero-title-line italic',
+    ctaText: 'Explore the collection',
+    ctaLink: '#arrivals',
+  },
+  {
+    src: 'https://res.cloudinary.com/oioqrgj0/video/upload/v1787819585/cigar-store/hero/tqvn9t0up9y8vsxrlbix.mp4',
+    label: 'Premium handcrafted cigars',
+    maxTime: 15,
+    titleLine1: 'Premium Handcrafted',
+    titleLine2: 'Cigars.',
+    titleLine2Class: 'hero-title-line font-serif not-italic text-[#c9a35b]',
+    ctaText: 'Shop Premium Cigars',
+    ctaLink: 'https://cigar.yogapranafitness.com',
   },
 ]
 
@@ -122,13 +147,13 @@ export default function HeroDesktop() {
 
         <div className="shell hero-content" ref={heroContentRef}>
           <div className="hero-copy-block">
-            <h1>
-              <span className="hero-title-line">Not simply poured.</span>
-              <span className="hero-title-line italic">Remembered.</span>
+            <h1 key={activeFilmIndex}>
+              <span className="hero-title-line">{activeFilm.titleLine1}</span>
+              <span className={activeFilm.titleLine2Class || "hero-title-line italic"}>{activeFilm.titleLine2}</span>
             </h1>
-            <div className="hero-cta-row">
-              <a className="button button-gold" href="#arrivals">
-                Explore the collection <ArrowRight size={17} />
+            <div className="hero-cta-row" key={`cta-${activeFilmIndex}`}>
+              <a className="button button-gold" href={activeFilm.ctaLink} target={activeFilm.ctaLink.startsWith('http') ? '_blank' : '_self'} rel="noreferrer">
+                {activeFilm.ctaText} <ArrowRight size={17} />
               </a>
             </div>
           </div>

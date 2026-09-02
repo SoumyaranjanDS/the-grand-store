@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../../api';
-import { Calendar, MapPin, Clock, Users, Tag, Check, ArrowLeft, ShoppingBag, ChevronRight, CreditCard, Landmark } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, Tag, Check, ArrowLeft, ShoppingBag, ChevronRight, CreditCard, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import PaymentForm from '../checkout/PaymentForm';
+import SecurePaymentBadges from '../../components/checkout/SecurePaymentBadges';
 import Price from '../../components/ui/Price';
 import { getEventPhase, getTierAvailability, isEventBookable, resolveEventImage } from './eventPhase';
 
@@ -157,10 +158,7 @@ export default function EventDetails({ onNotify, onAdd }) {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-16 pt-0 grid grid-cols-1 lg:grid-cols-3 gap-16">
-        
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-16">
+      <main className="max-w-6xl mx-auto px-5 md:px-10 lg:px-12 pt-12 md:pt-16 space-y-16 md:space-y-20">
           <section>
             <h2 className="text-2xl font-serif text-white mb-6">About the Experience</h2>
             <div className="text-[#918a7f] leading-relaxed space-y-4 whitespace-pre-wrap">
@@ -208,13 +206,20 @@ export default function EventDetails({ onNotify, onAdd }) {
 
           {/* Host Info */}
           {(event.hostName || event.vendorId) && (
-            <section>
-              <h2 className="text-2xl font-serif text-white mb-6">Meet Your Host</h2>
-              <div className="flex items-center gap-6 bg-white/[0.02] border border-white/5 p-6 rounded-2xl">
-                <div className="w-20 h-20 bg-[#1a1814] rounded-full flex items-center justify-center border border-white/10 shrink-0">
-                  <Users size={32} className="text-[#918a7f]" />
-                </div>
-                <div>
+            <section className="border-t border-white/10 pt-10 md:pt-12">
+              <div className="mb-6 flex items-end justify-between gap-4">
+                <h2 className="text-2xl font-serif text-white">Meet Your Host</h2>
+                <span className="hidden text-[10px] font-bold uppercase tracking-[0.22em] text-[#c9a35b]/70 sm:block">Your experience guide</span>
+              </div>
+              <div className="relative overflow-hidden border border-white/10 bg-[#11100d]">
+                <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-[#c9a35b]/20 via-[#c9a35b] to-[#c9a35b]/20" />
+                <Users size={180} className="pointer-events-none absolute -bottom-14 -right-8 text-white/[0.018]" />
+                <div className="relative grid gap-6 p-6 sm:grid-cols-[112px_minmax(0,1fr)] sm:items-center md:p-8">
+                  <div className="relative flex h-24 w-24 items-center justify-center rounded-full border border-[#c9a35b]/35 bg-[#17130f] sm:h-28 sm:w-28">
+                    <div className="absolute inset-2 rounded-full border border-white/[0.06]" />
+                    <Users size={34} className="text-[#b69a72]" />
+                  </div>
+                  <div className="min-w-0 sm:pr-8">
                   <h3 className="text-xl font-serif text-[#eee8dd] mb-1">{event.hostName || event.vendorId.name}</h3>
                   <p className="text-gold-gradient text-sm uppercase tracking-widest mb-3">
                     {event.hostTitle || 'Distillery Partner'}
@@ -224,120 +229,139 @@ export default function EventDetails({ onNotify, onAdd }) {
                       <span className="flex items-center gap-1">View Vendor Profile <ChevronRight size={14} /></span>
                     </Link>
                   )}
+                  </div>
                 </div>
               </div>
             </section>
           )}
-        </div>
 
-        {/* Sidebar / Booking */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-32 bg-[#11100d] border border-white/10 rounded-2xl p-6 shadow-2xl">
-            <h3 className="text-xl font-serif text-white mb-6 text-center border-b border-white/10 pb-4">Select Tickets</h3>
+        {/* Ticket Booking */}
+        <section className="relative mx-auto max-w-5xl border-t border-white/10 pt-10 md:pt-12">
+          <div className="relative w-full overflow-hidden border border-[#c9a35b]/25 bg-[#100f0c] p-5 shadow-[0_28px_80px_rgba(0,0,0,0.28)] sm:p-6 md:p-7">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#c9a35b] to-transparent opacity-50"></div>
+            <div className="pointer-events-none absolute -right-28 -top-32 h-80 w-80 rounded-full bg-[#c9a35b]/[0.055] blur-3xl" />
             
-            <div className="space-y-4 mb-8">
-              {event.ticketTiers.map(tier => {
-                const available = getTierAvailability(tier);
-                const isSelected = selectedTicket?._id === tier._id;
-                
-                return (
-                  <div 
-                    key={tier._id}
-                    onClick={() => bookable && available > 0 && setSelectedTicket(tier)}
-                    className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                      available === 0 
-                      ? 'border-white/5 opacity-50 cursor-not-allowed bg-black/50' 
-                      : isSelected
-                      ? 'border-[#c9a35b] bg-[#c9a35b]/5'
-                      : 'border-white/10 hover:border-white/30 bg-black/20'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className={`font-bold ${isSelected ? 'text-gold-gradient' : 'text-white'}`}>{tier.name}</h4>
-                          {available === 0 && <span className="text-[10px] uppercase font-bold text-red-500 bg-red-500/10 px-2 py-0.5 rounded">Sold Out</span>}
-                        </div>
-                        <p className="text-xs text-[#918a7f] mt-1">{available} remaining</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-serif text-xl text-white"><Price amount={tier.price} /></p>
-                      </div>
-                    </div>
-                    
-                    {tier.benefits && tier.benefits.length > 0 && (
-                      <ul className="mt-4 space-y-1">
-                        {tier.benefits.map((benefit, i) => (
-                          <li key={i} className="flex items-start gap-2 text-xs text-[#918a7f]">
-                            <Check size={14} className="text-gold-gradient mt-0.5 shrink-0" />
-                            <span>{benefit}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {selectedTicket && (
-              <div className="mb-6">
-                <label className="block text-sm font-bold uppercase tracking-widest text-[#eee8dd] mb-2">Quantity</label>
-                <div className="flex items-center gap-4">
-                  <button 
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-10 h-10 rounded-lg border border-white/20 flex items-center justify-center text-white hover:border-[#c9a35b]"
-                  >-</button>
-                  <span className="text-xl font-serif text-white w-8 text-center">{quantity}</span>
-                  <button 
-                    onClick={() => setQuantity(Math.min(getTierAvailability(selectedTicket), quantity + 1))}
-                    className="w-10 h-10 rounded-lg border border-white/20 flex items-center justify-center text-white hover:border-[#c9a35b]"
-                  >+</button>
+            <div className="relative">
+              <div className="mb-5 flex flex-col justify-between gap-3 border-b border-white/10 pb-5 sm:flex-row sm:items-end">
+                <div>
+                  <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-[#c9a35b]">Reservations</p>
+                  <h3 className="font-serif text-3xl text-white md:text-4xl">Select Tickets</h3>
                 </div>
-                <div className="mt-4 flex flex-col pt-4 border-t border-white/10">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm font-bold uppercase tracking-widest text-[#918a7f]">Total</span>
-                    <span className="text-2xl font-serif text-gold-gradient"><Price amount={selectedTicket.price * quantity} /></span>
-                  </div>
-                  <p className="text-[10px] text-[#918a7f] text-right italic">Service fee & VAT included</p>
-                </div>
+                <span className="w-fit border border-white/10 bg-white/[0.025] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-white/50">{phase}</span>
               </div>
-            )}
+
+              <div className="mb-6 grid gap-3 md:grid-cols-2">
+                {event.ticketTiers.map(tier => {
+                  const available = getTierAvailability(tier);
+                  const isSelected = selectedTicket?._id === tier._id;
+
+                  return (
+                    <div
+                      key={tier._id}
+                      onClick={() => {
+                        if (bookable && available > 0) {
+                          setSelectedTicket(tier);
+                          setQuantity(current => Math.min(current, available));
+                        }
+                      }}
+                      className={`relative flex h-full cursor-pointer flex-col border p-4 transition-all duration-300 ${
+                        available === 0
+                        ? 'border-white/5 opacity-40 cursor-not-allowed bg-black/20'
+                        : isSelected
+                        ? 'border-[#c9a35b] bg-[#c9a35b]/10 shadow-[inset_0_0_30px_rgba(201,163,91,0.04)]'
+                        : 'border-white/10 hover:border-white/30 hover:bg-white/[0.035] bg-black/10'
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="absolute right-4 top-4 flex h-5 w-5 items-center justify-center rounded-full bg-[#c9a35b] text-black"><Check size={12} strokeWidth={3} /></div>
+                      )}
+                      <div className="mb-2 flex items-start justify-between gap-8">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className={`font-serif text-xl ${isSelected ? 'text-gold-gradient' : 'text-white'}`}>{tier.name}</h4>
+                            {available === 0 && <span className="text-xs uppercase font-bold text-red-400 border border-red-500/20 bg-red-500/10 px-2 py-0.5 rounded-md tracking-wider">Sold Out</span>}
+                          </div>
+                          <p className="mt-1 text-sm tracking-wide text-[#a59d91]">{available} remaining</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className={`font-serif text-2xl ${isSelected ? 'text-white' : 'text-[#eee8dd]'}`}><Price amount={tier.price} /></p>
+                        </div>
+                      </div>
+
+                      {tier.benefits && tier.benefits.length > 0 && (
+                        <ul className="mt-3 space-y-1.5 border-t border-white/5 pt-3">
+                          {tier.benefits.map((benefit, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm leading-5 text-[#a59d91]">
+                              <Check size={15} className="text-[#c9a35b] mt-0.5 shrink-0" />
+                              <span>{benefit}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {selectedTicket && (
+                <div className="mb-6 grid animate-in grid-cols-1 border-y border-white/10 bg-black/20 fade-in slide-in-from-top-4 duration-300 sm:grid-cols-2 sm:divide-x sm:divide-white/10">
+                  <div className="flex items-center justify-between gap-5 p-4 md:px-5">
+                    <div>
+                      <label className="text-xs font-bold uppercase tracking-widest text-[#eee8dd]">Quantity</label>
+                      <p className="mt-1 text-sm text-[#a59d91]">{selectedTicket.name}</p>
+                    </div>
+                    <div className="flex items-center gap-2 border border-white/10 bg-[#0a0a0a] px-1 py-1">
+                      <button
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        className="flex h-9 w-9 items-center justify-center text-white/50 transition-colors hover:bg-white/5 hover:text-white"
+                      >-</button>
+                      <span className="w-6 text-center text-base font-medium text-white">{quantity}</span>
+                      <button
+                        onClick={() => setQuantity(Math.min(getTierAvailability(selectedTicket), quantity + 1))}
+                        className="flex h-9 w-9 items-center justify-center text-white/50 transition-colors hover:bg-white/5 hover:text-white"
+                      >+</button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-end justify-between gap-5 border-t border-white/10 p-4 sm:border-t-0 md:px-5">
+                    <div>
+                      <span className="mb-1 block text-xs font-bold uppercase tracking-[0.18em] text-[#c9a35b]">Total Amount</span>
+                      <span className="text-xs italic text-[#a59d91]">Service fee & VAT included</span>
+                    </div>
+                    <span className="font-serif text-2xl leading-none text-gold-gradient md:text-3xl">
+                      <Price amount={selectedTicket.price * quantity} />
+                    </span>
+                  </div>
+                </div>
+              )}
 
             {bookable && selectedTicket && getTierAvailability(selectedTicket) > 0 && (
-              <div className="mb-6 border-t border-white/10 pt-5">
-                <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#918a7f]">Payment Method</p>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                  <label className={`flex min-h-20 cursor-pointer items-center gap-3 rounded-xl border p-4 transition-all ${paymentMethod === 'payfast' ? 'border-[#c9a35b] bg-[#c9a35b]/5' : 'border-white/10 bg-black/20 hover:border-white/30'}`}>
-                    <input
-                      type="radio"
-                      name="eventPaymentMethod"
-                      value="payfast"
-                      checked={paymentMethod === 'payfast'}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="sr-only"
-                    />
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/5 text-[#c9a35b]"><CreditCard size={19} /></span>
-                    <span>
-                      <span className="block text-sm font-semibold text-white">PayFast</span>
-                      <span className="mt-0.5 block text-[10px] text-[#918a7f]">Instant card or EFT</span>
-                    </span>
+              <div className="mb-6">
+                <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-[#a59d91]">Payment Method</p>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <label className={`cursor-pointer bg-[#0a0a0a] border p-4 relative overflow-hidden transition-all ${paymentMethod === 'payfast' ? 'border-[#c9a35b] shadow-[inset_0_0_22px_rgba(201,163,91,0.05)]' : 'border-white/10 hover:border-white/30'}`}>
+                    <input type="radio" name="eventPaymentMethod" value="payfast" checked={paymentMethod === 'payfast'} onChange={(e) => setPaymentMethod(e.target.value)} className="hidden" />
+                    <div className="absolute right-0 top-0 p-3 opacity-[0.07]"><CreditCard size={48} /></div>
+                    <div className="relative z-10">
+                      <h4 className="mb-1 text-lg font-medium text-white">PayFast (Instant)</h4>
+                      <p className="mb-3 text-sm text-[#a59d91]">Credit/Debit Cards, Instant EFT</p>
+                      <div className="inline-flex min-w-[108px] items-center justify-center rounded-md bg-white px-3 py-1.5 shadow-[0_6px_20px_rgba(0,0,0,0.25)]">
+                        <img
+                          src="https://res.cloudinary.com/oioqrgj0/image/upload/v1787729897/grand-store/assets/pkv0g8anwi079fvihl2e.png"
+                          alt="PayFast"
+                          className="h-8 w-auto object-contain"
+                        />
+                      </div>
+                    </div>
                   </label>
 
-                  <label className={`flex min-h-20 cursor-pointer items-center gap-3 rounded-xl border p-4 transition-all ${paymentMethod === 'bank_transfer' ? 'border-[#c9a35b] bg-[#c9a35b]/5' : 'border-white/10 bg-black/20 hover:border-white/30'}`}>
-                    <input
-                      type="radio"
-                      name="eventPaymentMethod"
-                      value="bank_transfer"
-                      checked={paymentMethod === 'bank_transfer'}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="sr-only"
-                    />
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/5 text-[#c9a35b]"><Landmark size={19} /></span>
-                    <span>
-                      <span className="block text-sm font-semibold text-white">Bank Transfer</span>
-                      <span className="mt-0.5 block text-[10px] text-[#918a7f]">Upload proof for review</span>
-                    </span>
+                  <label className={`cursor-pointer bg-[#0a0a0a] border p-4 relative overflow-hidden transition-all ${paymentMethod === 'bank_transfer' ? 'border-[#c9a35b] shadow-[inset_0_0_22px_rgba(201,163,91,0.05)]' : 'border-white/10 hover:border-white/30'}`}>
+                    <input type="radio" name="eventPaymentMethod" value="bank_transfer" checked={paymentMethod === 'bank_transfer'} onChange={(e) => setPaymentMethod(e.target.value)} className="hidden" />
+                    <div className="absolute right-0 top-0 p-3 opacity-[0.07]"><ShieldCheck size={48} /></div>
+                    <div className="relative z-10">
+                      <h4 className="mb-1 text-lg font-medium text-white">Manual Bank Transfer</h4>
+                      <p className="text-sm leading-5 text-[#a59d91]">Transfer funds directly to our bank. Upload proof to verify.</p>
+                    </div>
                   </label>
                 </div>
               </div>
@@ -370,21 +394,22 @@ export default function EventDetails({ onNotify, onAdd }) {
                 <button 
                   onClick={handleBooking}
                   disabled={!selectedTicket || getTierAvailability(selectedTicket) === 0 || bookingLoading}
-                  className="w-full bg-gold-gradient hover:bg-[#e1bd70] text-black font-bold uppercase tracking-wider py-4 rounded-xl transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(201,163,91,0.2)]"
+                  className="w-full rounded-lg bg-gold-gradient py-3.5 text-sm font-bold uppercase tracking-wider text-black shadow-[0_0_20px_rgba(201,163,91,0.2)] transition-all hover:bg-[#e1bd70] disabled:opacity-50"
                 >
                   {bookingLoading ? 'Booking...' : !selectedTicket ? 'Select a Ticket' : paymentMethod === 'bank_transfer' ? 'Reserve & Pay by Bank' : 'Book & Pay Securely'}
                 </button>
               );
             })()}
 
-            <p className="text-center text-[10px] text-[#918a7f] mt-4 tracking-widest uppercase">
+            <SecurePaymentBadges compact />
+            <p className="mt-4 text-center text-xs uppercase tracking-widest text-[#a59d91]">
               {paymentMethod === 'bank_transfer' ? 'Ticket issued after payment approval' : 'Secure checkout via PayFast'}
             </p>
             <PaymentForm paymentData={paymentData} payfastUrl={payfastUrl} />
+            </div>
           </div>
-        </div>
-
-      </div>
+        </section>
+      </main>
     </div>
   );
 }
