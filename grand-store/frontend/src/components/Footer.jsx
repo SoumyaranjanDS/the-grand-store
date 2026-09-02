@@ -134,9 +134,11 @@ export default function Footer() {
         </div>
       </div>
       <div className="border-t border-[#e1bd70]/20 bg-[#070706]">
-        <div className="max-w-[1240px] mx-auto px-6 sm:px-0 grid grid-cols-1 lg:grid-cols-[1fr_minmax(480px,0.9fr)] items-center min-h-[70px] py-[20px] lg:py-0 gap-[18px] lg:gap-[34px] text-[#d6cec0] font-serif text-[16px]">
-          <p className="m-0 whitespace-nowrap text-[14px] sm:text-[16px]">Copyright © <Link className="text-[#f2ede4] no-underline transition-colors hover:text-[#d6a03f]" to="/">The Grand Store</Link>. All Rights Reserved</p>
-          <img className="justify-self-start lg:justify-self-end w-auto h-[26px] object-contain object-left lg:object-right" src="/assets/footer/payment-strip.png" alt="Accepted payment methods" />
+        <div className="max-w-[1240px] mx-auto px-6 flex flex-col md:flex-row items-center justify-between min-h-[80px] py-6 md:py-0 gap-6 text-[#d6cec0] font-serif text-[16px]">
+          <p className="m-0 text-center md:text-left text-[14px] sm:text-[16px] text-[#f2ede4]/80">
+            Copyright © {new Date().getFullYear()} <Link className="text-[var(--color-gold)] font-medium no-underline transition-colors hover:brightness-125 mx-1" to="/">The Grand Store</Link>. All Rights Reserved.
+          </p>
+          <img className="h-10 md:h-12 w-auto object-contain opacity-90 hover:opacity-100 transition-opacity" src="/assets/footer/payment-strip.png" alt="Accepted payment methods" />
         </div>
       </div>
     </footer>

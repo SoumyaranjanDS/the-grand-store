@@ -14,7 +14,6 @@ const productRoutes = require("./routes/productRoutes");
 const testimonialRoutes = require("./routes/testimonialRoutes");
 const attributeRoutes = require("./routes/attributeRoutes");
 const glossaryRoutes = require("./routes/glossaryRoutes");
-
 const app = express();
 app.set('trust proxy', 1);
 
@@ -175,7 +174,7 @@ app.use("/api/trade-enquiries", require("./routes/tradeEnquiryRoutes"));
 app.use("/api/cigar-enquiries", require("./routes/cigarEnquiryRoutes"));
 app.use("/api/newsletter", newsletterRoutes);
 app.use("/api/advertisements", require("./routes/advertisementRoutes"));
-app.use("/api/chatbot", chatbotRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
@@ -186,3 +185,4 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+

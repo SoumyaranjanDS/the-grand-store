@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import ConfirmCheckoutModal from "./modals/ConfirmCheckoutModal";
 import {
   GitCompareArrows,
   Heart,
@@ -271,6 +272,7 @@ export default function ProductCard({
   isCompared = false,
   onQuickView,
 }) {
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const productId = product.id || product._id;
   const productPath = `/product/${product.slug || productId}`;
   const { isWishlisted } = useWishlist();
@@ -280,110 +282,149 @@ export default function ProductCard({
   const badge = product.badge || fallbackBadges[index % fallbackBadges.length];
 
   return (
-    <article className="product-card">
-      <div className="product-visual">
-        <span className="product-badge">{badge}</span>
+    <>
+      <article className="product-card relative">
+        <div className="product-visual">
+          <span className="product-badge">{badge}</span>
 
-        <div className="quick-actions">
-          {onCompare && (
-            <IconButton
-              className={isCompared ? "compare-action-active" : ""}
-              label={
-                isCompared
-                  ? `View ${productName} in comparison`
-                  : `Compare ${productName}`
-              }
-              onClick={() => onCompare(product)}
-            >
-              <GitCompareArrows size={17} />
-            </IconButton>
-          )}
+          <div className="quick-actions">
+            {onCompare && (
+              <IconButton
+                className={isCompared ? "compare-action-active" : ""}
+                label={
+                  isCompared
+                    ? `View ${productName} in comparison`
+                    : `Compare ${productName}`
+                }
+                onClick={() => onCompare(product)}
+              >
+                <GitCompareArrows size={17} />
+              </IconButton>
+            )}
 
-          {onWish && (
-            <IconButton
-              className={wishlisted ? "wishlist-action-active" : ""}
-              label={
-                wishlisted
-                  ? `Remove ${productName} from wishlist`
-                  : `Add ${productName} to wishlist`
-              }
-              onClick={() => onWish(product)}
-            >
-              <Heart size={17} fill={wishlisted ? "currentColor" : "none"} />
-            </IconButton>
-          )}
+            {onWish && (
+              <IconButton
+                className={wishlisted ? "wishlist-action-active" : ""}
+                label={
+                  wishlisted
+                    ? `Remove ${productName} from wishlist`
+                    : `Add ${productName} to wishlist`
+                }
+                onClick={() => onWish(product)}
+              >
+                <Heart size={17} fill={wishlisted ? "currentColor" : "none"} />
+              </IconButton>
+            )}
 
-          {onQuickView ? (
-            <IconButton
-              label={`Quick view ${productName}`}
-              onClick={() => onQuickView(product)}
-            >
-              <Search size={17} />
-            </IconButton>
-          ) : (
-            <Link
-              className="icon-button"
-              to={productPath}
-              aria-label={`View ${productName}`}
-            >
-              <Search size={17} />
-            </Link>
-          )}
+            {onQuickView ? (
+              <IconButton
+                label={`Quick view ${productName}`}
+                onClick={() => onQuickView(product)}
+              >
+                <Search size={17} />
+              </IconButton>
+            ) : (
+              <Link
+                className="icon-button"
+                to={productPath}
+                aria-label={`View ${productName}`}
+              >
+                <Search size={17} />
+              </Link>
+            )}
+          </div>
+
+          <Link
+            className="product-image-link"
+            to={productPath}
+            aria-label={`View ${productName}`}
+          >
+            <VendorProductImage src={product.image} alt={productName} />
+          </Link>
+          <div className="product-glow" />
         </div>
 
-        <Link
-          className="product-image-link"
-          to={productPath}
-          aria-label={`View ${productName}`}
-        >
-          <VendorProductImage src={product.image} alt={productName} />
-        </Link>
-        <div className="product-glow" />
-      </div>
+        <div className="product-info">
+          <p className="product-category">{category}</p>
+          <h3>
+            <Link to={productPath}>{productName}</Link>
+          </h3>
+          {product.brand && <p className="product-origin">{product.brand}</p>}
 
-      <div className="product-info">
-        <p className="product-category">{category}</p>
-        <h3>
-          <Link to={productPath}>{productName}</Link>
-        </h3>
-        {product.brand && <p className="product-origin">{product.brand}</p>}
+          {product.storeName && product.storeId && (
+            <Link
+              to={`/store/${product.storeId}`}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                fontSize: "11px",
+                color: "var(--gold-bright)",
+                marginTop: "4px",
+                marginBottom: "8px",
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                fontWeight: 600,
+              }}
+            >
+              <Store size={12} />
+              {product.storeName}
+            </Link>
+          )}
 
-        {product.storeName && product.storeId && (
-          <Link
-            to={`/store/${product.storeId}`}
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              fontSize: "11px",
-              color: "var(--gold-bright)",
-              marginTop: "4px",
-              marginBottom: "8px",
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
-              fontWeight: 600,
-            }}
-          >
-            <Store size={12} />
-            {product.storeName}
-          </Link>
-        )}
-
-        <div className="product-buy-section" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: 'auto' }}>
-          <strong style={{ fontSize: '1.25rem', color: '#fff', letterSpacing: '0.05em' }}>
-            <Price amount={product.price} />
-          </strong>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', width: '100%' }}>
-            {onAdd && (
+          <div className="product-buy-section" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: 'auto' }}>
+            <strong style={{ fontSize: '1.25rem', color: '#fff', letterSpacing: '0.05em' }}>
+              <Price amount={product.price} />
+            </strong>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', width: '100%' }}>
+              {onAdd && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onAdd(product);
+                  }}
+                  aria-label={`Add ${productName} to bag`}
+                  style={{ 
+                    flex: '1 1 80px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    gap: '6px', 
+                    padding: '10px 4px', 
+                    backgroundColor: 'rgba(255,255,255,0.05)', 
+                    color: '#fff', 
+                    border: '1px solid rgba(255,255,255,0.1)', 
+                    borderRadius: '2px', 
+                    fontSize: '10px', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.1em', 
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxSizing: 'border-box'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                  }}
+                >
+                  <ShoppingBag size={14} style={{ display: 'block' }} /> 
+                  <span style={{ lineHeight: 1, paddingTop: '1px' }}>Add</span>
+                </button>
+              )}
               <button
-                type="button"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  onAdd(product);
+                  if (onAdd) onAdd(product, 1, product.options?.[0] || "Pack of 1", false);
+                  setIsCheckoutModalOpen(true);
                 }}
-                aria-label={`Add ${productName} to bag`}
                 style={{ 
                   flex: '1 1 80px', 
                   display: 'flex', 
@@ -391,71 +432,45 @@ export default function ProductCard({
                   justifyContent: 'center', 
                   gap: '6px', 
                   padding: '10px 4px', 
-                  backgroundColor: 'rgba(255,255,255,0.05)', 
-                  color: '#fff', 
-                  border: '1px solid rgba(255,255,255,0.1)', 
+                  backgroundColor: 'var(--gold-bright)', 
+                  color: '#000', 
+                  border: '1px solid var(--gold-bright)', 
                   borderRadius: '2px', 
                   fontSize: '10px', 
                   textTransform: 'uppercase', 
                   letterSpacing: '0.1em', 
-                  cursor: 'pointer',
+                  cursor: 'pointer', 
+                  textDecoration: 'none', 
+                  fontWeight: 'bold',
                   transition: 'all 0.2s ease',
                   boxSizing: 'border-box'
                 }}
                 onMouseOver={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
+                  e.currentTarget.style.backgroundColor = 'var(--gold)';
+                  e.currentTarget.style.borderColor = 'var(--gold)';
                 }}
                 onMouseOut={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                  e.currentTarget.style.backgroundColor = 'var(--gold-bright)';
+                  e.currentTarget.style.borderColor = 'var(--gold-bright)';
                 }}
               >
-                <ShoppingBag size={14} style={{ display: 'block' }} /> 
-                <span style={{ lineHeight: 1, paddingTop: '1px' }}>Add</span>
+                <CreditCard size={14} style={{ display: 'block' }} /> 
+                <span style={{ lineHeight: 1, paddingTop: '1px' }}>Checkout</span>
               </button>
-            )}
-            <Link
-              to="/customer/checkout"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onAdd) onAdd(product);
-              }}
-              style={{ 
-                flex: '1 1 80px', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                gap: '6px', 
-                padding: '10px 4px', 
-                backgroundColor: 'var(--gold-bright)', 
-                color: '#000', 
-                border: '1px solid var(--gold-bright)', 
-                borderRadius: '2px', 
-                fontSize: '10px', 
-                textTransform: 'uppercase', 
-                letterSpacing: '0.1em', 
-                cursor: 'pointer', 
-                textDecoration: 'none', 
-                fontWeight: 'bold',
-                transition: 'all 0.2s ease',
-                boxSizing: 'border-box'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--gold)';
-                e.currentTarget.style.borderColor = 'var(--gold)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--gold-bright)';
-                e.currentTarget.style.borderColor = 'var(--gold-bright)';
-              }}
-            >
-              <CreditCard size={14} style={{ display: 'block' }} /> 
-              <span style={{ lineHeight: 1, paddingTop: '1px' }}>Checkout</span>
-            </Link>
+            </div>
           </div>
         </div>
-      </div>
-    </article>
+        <ConfirmCheckoutModal 
+          isOpen={isCheckoutModalOpen} 
+          onClose={() => setIsCheckoutModalOpen(false)} 
+          inline={true} 
+        />
+      </article>
+    </>
   );
 }
+
+
+
+
+

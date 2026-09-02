@@ -287,6 +287,7 @@ function App() {
     product,
     quantity = 1,
     option = product.options?.[0] || "Pack of 1",
+    redirect = true
   ) => {
     setCartItems((items) => {
       const prodId = product.id || product._id;
@@ -305,7 +306,9 @@ function App() {
     showToast(
       `${quantity > 1 ? `${quantity} × ` : ""}${product.name} added to your bag`,
     );
-    navigate("/customer/cart");
+    if (redirect) {
+      navigate("/customer/cart");
+    }
   };
 
   const updateCartQuantity = (productId, option, quantity) => {
@@ -893,3 +896,6 @@ function App() {
 }
 
 export default App;
+
+
+

@@ -80,7 +80,6 @@ function ProductDetailPage() {
 
         <section className={`product-review ${product.review ? '' : 'product-review--empty'}`}>
           {product.review && <div><p>Client review</p><h2>{product.review.name}</h2><blockquote>“{product.review.quote}”</blockquote></div>}
-          <aside><h3>Add a Review</h3><p>You must be logged in to post a review.</p><a href="https://cigarconnoisseurclub.com/login" target="_blank" rel="noreferrer">Login</a></aside>
         </section>
 
       </main>

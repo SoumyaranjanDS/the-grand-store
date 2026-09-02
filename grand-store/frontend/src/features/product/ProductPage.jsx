@@ -22,6 +22,7 @@ import ExpertReviewCard from "../../components/social/ExpertReviewCard";
 import Price from "../../components/ui/Price";
 import { getProductIdentity } from "../../utils/productTaxonomy";
 import api from "../../api";
+import ConfirmCheckoutModal from "../../components/modals/ConfirmCheckoutModal";
 
 const preparedVendorImages = {
   '/uploads/images-1787292711461.png': '/assets/products/vendor/whisky-tona-full.png',
@@ -80,6 +81,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
   const [reviews, setReviews] = useState([]);
   const [reviewSummary, setReviewSummary] = useState({ averageRating: 0, reviewCount: 0 });
   const [expertReview, setExpertReview] = useState(null);
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
 
   useEffect(() => {
     if (!product) return;
@@ -525,7 +527,8 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
               type="button"
               onClick={() => {
                 if (product.stock !== 0 && onAdd) {
-                  onAdd(product, quantity, selectedOption);
+                  onAdd(product, quantity, selectedOption, false);
+                  navigate("/customer/checkout");
                 }
               }}
               disabled={product.stock === 0}
@@ -942,3 +945,8 @@ const CornerFlourish = ({ className }) => (
     <circle cx="112" cy="90" r="3.5" fill="#e5e7eb" />
   </svg>
 );
+
+
+
+
+
