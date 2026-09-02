@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Smartphone, QrCode, Mail, User, MessageSquare, Send, CheckCircle2 } from 'lucide-react';
+import { Smartphone, QrCode, Mail, User, MessageSquare, Send, CheckCircle2, Phone } from 'lucide-react';
 
 export default function AppPromoSection() {
-  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (e) => {
@@ -10,7 +10,7 @@ export default function AppPromoSection() {
     setSubmitted(true);
     setTimeout(() => {
       setSubmitted(false);
-      setFormData({ name: '', email: '', message: '' });
+      setFormData({ name: '', email: '', phone: '', message: '' });
     }, 4000);
   };
 
@@ -79,7 +79,7 @@ export default function AppPromoSection() {
         </div>
 
         {/* Contact Form Part */}
-        <div className="max-w-4xl mx-auto">
+        <div className="w-full">
           <div className="text-center mb-12">
             <h3 className="text-3xl lg:text-4xl font-serif text-[var(--color-ivory)] mb-4">
               Get in <span className="text-[var(--color-gold)]">Touch</span>
@@ -91,8 +91,8 @@ export default function AppPromoSection() {
             {/* Subtle glow effect on form */}
             <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-gold)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
-              <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-8 relative z-10">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="relative">
                   <User className="absolute top-1/2 -translate-y-1/2 left-4 text-[var(--color-gold)]/50" size={20} />
                   <input 
@@ -115,19 +115,28 @@ export default function AppPromoSection() {
                     className="w-full bg-black/50 border-b-2 border-white/10 px-12 py-4 text-[var(--color-ivory)] outline-none focus:border-[var(--color-gold)] transition-colors placeholder:text-white/20 font-serif text-lg"
                   />
                 </div>
+                <div className="relative">
+                  <Phone className="absolute top-1/2 -translate-y-1/2 left-4 text-[var(--color-gold)]/50" size={20} />
+                  <input 
+                    type="tel" 
+                    required
+                    placeholder="Phone Number"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    className="w-full bg-black/50 border-b-2 border-white/10 px-12 py-4 text-[var(--color-ivory)] outline-none focus:border-[var(--color-gold)] transition-colors placeholder:text-white/20 font-serif text-lg"
+                  />
+                </div>
               </div>
               
-              <div className="flex flex-col justify-between">
-                <div className="relative h-full">
-                  <MessageSquare className="absolute top-5 left-4 text-[var(--color-gold)]/50" size={20} />
-                  <textarea 
-                    required
-                    placeholder="Your Message"
-                    value={formData.message}
-                    onChange={(e) => setFormData({...formData, message: e.target.value})}
-                    className="w-full h-full min-h-[120px] bg-black/50 border-b-2 border-white/10 px-12 py-4 text-[var(--color-ivory)] outline-none focus:border-[var(--color-gold)] transition-colors placeholder:text-white/20 font-serif text-lg resize-none"
-                  ></textarea>
-                </div>
+              <div className="relative">
+                <MessageSquare className="absolute top-5 left-4 text-[var(--color-gold)]/50" size={20} />
+                <textarea 
+                  required
+                  placeholder="Your Message"
+                  value={formData.message}
+                  onChange={(e) => setFormData({...formData, message: e.target.value})}
+                  className="w-full min-h-[120px] bg-black/50 border-b-2 border-white/10 px-12 py-4 text-[var(--color-ivory)] outline-none focus:border-[var(--color-gold)] transition-colors placeholder:text-white/20 font-serif text-lg resize-none"
+                ></textarea>
               </div>
             </div>
 
