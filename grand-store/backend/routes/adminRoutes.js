@@ -13,6 +13,7 @@ router.get('/users', superAdmin, adminController.getAllUsers);
 router.get('/vendors', superAdmin, adminController.getAllVendors);
 router.get('/vendors/:id', superAdmin, adminController.getVendorById);
 router.put('/vendors/:id/status', superAdmin, adminController.updateVendorStatus);
+router.put('/vendors/:id/payment-status', superAdmin, adminController.updateVendorPaymentStatus);
 router.post('/vendors/:id/remind-payment', superAdmin, adminController.remindVendorPayment);
 router.get('/staff', superAdmin, adminController.getStaffAccounts);
 router.post('/staff', superAdmin, adminController.createStaffAccount);

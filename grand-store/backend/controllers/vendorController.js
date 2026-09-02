@@ -363,3 +363,23 @@ exports.updateStoreProfile = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+exports.submitProof = async (req, res) => {
+  try {
+    const { proofUrl } = req.body;
+    if (!proofUrl) {
+      return res.status(400).json({ message: 'No proof URL provided' });
+    }
+    const vendor = await Vendor.findOne({ userId: req.user._id });
+    if (!vendor) {
+      return res.status(404).json({ message: 'Vendor application not found' });
+    }
+    vendor.proofOfPaymentUrl = proofUrl;
+    vendor.paymentStatus = 'awaiting_verification';
+    await vendor.save();
+    res.json({ message: 'Proof submitted successfully', vendor });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+

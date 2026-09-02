@@ -15,6 +15,11 @@ export default function VendorPaymentGate() {
   const [couponCode, setCouponCode] = useState("");
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [couponError, setCouponError] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("payfast");
+  
+  const [proofFile, setProofFile] = useState(null);
+  const [uploadingProof, setUploadingProof] = useState(false);
+  const [proofError, setProofError] = useState("");
 
   if (!user) {
     return <Navigate to="/login" replace />;
@@ -157,6 +162,49 @@ export default function VendorPaymentGate() {
     }
   };
 
+  const handleUploadProof = async (e) => {
+    e.preventDefault();
+    if (!proofFile) {
+      setProofError("Please select a proof of payment file to upload.");
+      return;
+    }
+    
+    setUploadingProof(true);
+    setProofError("");
+    
+    try {
+      // 1. Upload the file to Cloudinary
+      const formData = new FormData();
+      formData.append('document', proofFile);
+      const uploadRes = await api.post('/vendor/upload-public', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      const proofUrl = uploadRes.data.url;
+      
+      // 2. Submit the proof URL
+      await api.post('/vendor/onboarding/submit-proof', { proofUrl });
+      
+      // Update local storage
+      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+      if (userInfo) {
+        // Technically still unpaid until admin verifies, but we can send them to dashboard
+        localStorage.setItem("userInfo", JSON.stringify(userInfo));
+      }
+      
+      alert("Proof submitted successfully! Your application is awaiting admin verification.");
+      setSuccess(true);
+      setTimeout(() => {
+        navigate("/vendor/dashboard");
+      }, 2000);
+      
+    } catch (error) {
+      console.error("Failed to upload proof", error);
+      setProofError(error.response?.data?.message || "Failed to submit proof of payment.");
+    } finally {
+      setUploadingProof(false);
+    }
+  };
 
   if (verifying) {
     return (
@@ -236,27 +284,107 @@ export default function VendorPaymentGate() {
         <div className="w-full md:w-2/3 bg-[#0a0a0a] border border-white/10 rounded-2xl p-8">
           <h3 className="text-xl text-white mb-6">Payment Method</h3>
 
-          <form onSubmit={handlePayment}>
-            <div className="mb-6">
-              <p className="text-white/60 text-sm mb-6">
-                You will be securely redirected to PayFast to complete your activation payment.
-              </p>
-            </div>
+          <div className="flex flex-col sm:flex-row gap-4 mb-8">
+            <label className={`flex-1 flex flex-col p-4 border rounded cursor-pointer transition-colors ${paymentMethod === 'payfast' ? 'border-[#c9a35b] bg-[#c9a35b]/10' : 'border-white/10 hover:border-white/30 bg-[#111]'}`}>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-white font-medium">PayFast (Instant)</span>
+                <input type="radio" name="paymentMethod" value="payfast" checked={paymentMethod === 'payfast'} onChange={() => setPaymentMethod('payfast')} className="hidden" />
+                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${paymentMethod === 'payfast' ? 'border-[#c9a35b]' : 'border-white/30'}`}>
+                  {paymentMethod === 'payfast' && <div className="w-2 h-2 rounded-full bg-[#c9a35b]"></div>}
+                </div>
+              </div>
+              <span className="text-white/50 text-sm">Credit card, Debit card, Instant EFT</span>
+            </label>
 
-            <button
-              type="submit"
-              disabled={processing}
-              className="w-full bg-gold hover:bg-white text-black py-4 rounded font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mb-8"
-            >
-              {processing ? (
-                "Initializing Secure Gateway..."
-              ) : (
-                <>
-                  Pay Now via PayFast <ShieldCheck size={18} />
-                </>
-              )}
-            </button>
-          </form>
+            <label className={`flex-1 flex flex-col p-4 border rounded cursor-pointer transition-colors ${paymentMethod === 'eft' ? 'border-[#c9a35b] bg-[#c9a35b]/10' : 'border-white/10 hover:border-white/30 bg-[#111]'}`}>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-white font-medium">Manual EFT / Bank Transfer</span>
+                <input type="radio" name="paymentMethod" value="eft" checked={paymentMethod === 'eft'} onChange={() => setPaymentMethod('eft')} className="hidden" />
+                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${paymentMethod === 'eft' ? 'border-[#c9a35b]' : 'border-white/30'}`}>
+                  {paymentMethod === 'eft' && <div className="w-2 h-2 rounded-full bg-[#c9a35b]"></div>}
+                </div>
+              </div>
+              <span className="text-white/50 text-sm">Send proof of payment</span>
+            </label>
+          </div>
+
+          {paymentMethod === 'payfast' ? (
+            <form onSubmit={handlePayment}>
+              <div className="mb-6">
+                <p className="text-white/60 text-sm mb-6">
+                  You will be securely redirected to PayFast to complete your activation payment.
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={processing}
+                className="w-full bg-[#c9a35b] hover:bg-[#b08d4a] text-black py-4 rounded font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mb-8 uppercase tracking-wider"
+              >
+                {processing ? (
+                  "Initializing Secure Gateway..."
+                ) : (
+                  <>
+                    Pay Now via PayFast <ShieldCheck size={18} />
+                  </>
+                )}
+              </button>
+            </form>
+          ) : (
+            <div className="mb-8">
+              <div className="bg-[#111] border border-white/10 p-6 rounded mb-6">
+                <h4 className="text-[#c9a35b] mb-4 text-sm font-semibold uppercase tracking-wider">Bank Details</h4>
+                <div className="space-y-3 text-sm text-white/80">
+                  <div className="flex justify-between border-b border-white/5 pb-2">
+                    <span className="text-white/50">Bank</span>
+                    <span>First National Bank (FNB)</span>
+                  </div>
+                  <div className="flex justify-between border-b border-white/5 pb-2">
+                    <span className="text-white/50">Account Name</span>
+                    <span>The Grand Store (Pty) Ltd</span>
+                  </div>
+                  <div className="flex justify-between border-b border-white/5 pb-2">
+                    <span className="text-white/50">Account Number</span>
+                    <span className="font-mono text-white">62800000000</span>
+                  </div>
+                  <div className="flex justify-between border-b border-white/5 pb-2">
+                    <span className="text-white/50">Branch Code</span>
+                    <span className="font-mono text-white">250655</span>
+                  </div>
+                  <div className="flex justify-between pt-1">
+                    <span className="text-white/50">Reference</span>
+                    <span className="font-mono text-[#c9a35b] font-bold">VEN-{user?._id?.substring(0, 8).toUpperCase() || 'FEE'}</span>
+                  </div>
+                </div>
+              </div>
+              <p className="text-sm text-white/60 bg-yellow-500/10 border border-yellow-500/20 p-4 rounded leading-relaxed mb-6">
+                Please transfer exactly <strong><Price amount={registrationFee} /></strong> to the account above using the exact reference provided. 
+                After transferring, please upload your proof of payment below. 
+                <br/><br/>
+                Your vendor account will be manually activated within 1-2 business days once the funds clear.
+              </p>
+
+              <form onSubmit={handleUploadProof} className="bg-[#111] border border-white/10 p-6 rounded">
+                <h4 className="text-white mb-4">Upload Proof of Payment</h4>
+                <input 
+                  type="file" 
+                  accept=".jpg,.jpeg,.png,.pdf" 
+                  onChange={(e) => setProofFile(e.target.files[0])}
+                  className="w-full text-sm text-white/60 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 mb-4"
+                />
+                <button
+                  type="submit"
+                  disabled={uploadingProof || !proofFile}
+                  className="w-full bg-white hover:bg-white/90 text-black py-3 rounded font-medium transition-colors disabled:opacity-50"
+                >
+                  {uploadingProof ? "Uploading..." : "Submit Proof of Payment"}
+                </button>
+                {proofError && (
+                  <p className="text-red-400 text-sm mt-3">{proofError}</p>
+                )}
+              </form>
+            </div>
+          )}
 
           <div className="pt-6 border-t border-white/10">
             <h4 className="text-white mb-4">Have a Registration Coupon?</h4>

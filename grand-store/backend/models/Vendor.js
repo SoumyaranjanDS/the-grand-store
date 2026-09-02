@@ -28,8 +28,12 @@ const vendorSchema = new mongoose.Schema({
   },
   paymentStatus: {
     type: String,
-    enum: ['unpaid', 'paid'],
+    enum: ['unpaid', 'paid', 'awaiting_verification'],
     default: 'unpaid'
+  },
+  proofOfPaymentUrl: {
+    type: String,
+    default: null
   },
   paymentReminderSent: {
     type: Boolean,

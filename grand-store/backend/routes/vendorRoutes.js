@@ -47,6 +47,7 @@ router.get('/onboarding', vendorController.getOnboardingProgress);
 router.post('/onboarding', vendorController.saveOnboardingProgress);
 router.post('/onboarding/upload', uploadSingleDocument, vendorController.uploadDocument);
 router.post('/onboarding/submit', vendorController.submitApplication);
+router.post('/onboarding/submit-proof', vendorController.submitProof);
 router.post('/apply-coupon', vendorController.applyCoupon);
 
 // Store Profile Routes

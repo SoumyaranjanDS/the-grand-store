@@ -404,6 +404,26 @@ const remindVendorPayment = async (req, res) => {
   }
 };
 
+const updateVendorPaymentStatus = async (req, res) => {
+  try {
+    const { paymentStatus } = req.body;
+    const vendor = await Vendor.findById(req.params.id);
+    if (!vendor) return res.status(404).json({ message: 'Vendor not found' });
+    vendor.paymentStatus = paymentStatus;
+    await vendor.save();
+    if (paymentStatus === 'paid') {
+      const user = await User.findById(vendor.userId);
+      if (user) {
+        user.role = 'vendor_active';
+        await user.save();
+      }
+    }
+    res.json({ message: 'Payment status updated', vendor });
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error', error: error.message });
+  }
+};
+
 module.exports = {
   getDashboardStats,
   getAllUsers,
@@ -415,4 +435,5 @@ module.exports = {
   getStaffAccounts,
   updateStaffCredentials,
   createStaffAccount,
+  updateVendorPaymentStatus,
 };

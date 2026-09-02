@@ -194,11 +194,26 @@ export default function AdminVendorDetail() {
       setWorking("reminder");
       setError("");
       setMessage("");
-      const { data } = await api.post(`/admin/vendors/${id}/remind-payment`);
-      setMessage(data.message || "Payment reminder sent.");
+      await api.post(`/admin/vendors/${id}/remind-payment`);
+      setMessage("Payment reminder sent to vendor.");
       await fetchVendor();
     } catch (err) {
-      setError(err.response?.data?.message || "The payment reminder could not be sent.");
+      setError(err.response?.data?.message || "Could not send payment reminder.");
+    } finally {
+      setWorking("");
+    }
+  };
+
+  const updatePaymentStatus = async (status) => {
+    try {
+      setWorking("payment");
+      setError("");
+      setMessage("");
+      await api.put(`/admin/vendors/${id}/payment-status`, { paymentStatus: status });
+      setMessage(`Payment status updated to ${status}.`);
+      await fetchVendor();
+    } catch (err) {
+      setError(err.response?.data?.message || "Could not update payment status.");
     } finally {
       setWorking("");
     }
@@ -390,12 +405,50 @@ export default function AdminVendorDetail() {
 
             {vendor.status === "approved" && vendor.paymentStatus !== "paid" && (
               <section className="rounded-xl border border-white/10 bg-[#101010] p-5">
-                <div className="flex items-center gap-2 text-sm font-semibold"><Mail size={17} className="text-[#c9a35b]" /> Registration payment</div>
-                <p className="mt-2 text-xs leading-5 text-white/40">The approved vendor has not completed the registration payment.</p>
-                <button disabled={Boolean(working)} onClick={sendPaymentReminder} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#c9a35b]/30 px-3 py-2.5 text-xs font-bold uppercase tracking-[0.12em] text-[#d5b46c] hover:bg-[#c9a35b]/10 disabled:opacity-50">
-                  <Send size={14} /> {working === "reminder" ? "Sending..." : "Send payment reminder"}
-                </button>
-                {vendor.paymentReminderSent && <p className="mt-3 text-center text-[10px] uppercase tracking-[0.12em] text-emerald-300/70">A reminder has already been sent</p>}
+                <div className="flex items-center gap-2 text-sm font-semibold">
+                  <Mail size={17} className="text-[#c9a35b]" /> Registration payment
+                </div>
+                
+                {vendor.proofOfPaymentUrl ? (
+                  <div className="mt-4">
+                    <p className="text-xs leading-5 text-emerald-300/80 mb-3 bg-emerald-500/10 p-2 rounded border border-emerald-500/20">
+                      Vendor has submitted a proof of payment.
+                    </p>
+                    <a 
+                      href={vendor.proofOfPaymentUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/5 px-3 py-2.5 text-xs font-medium text-white hover:bg-white/10 mb-3 transition"
+                    >
+                      View Proof of Payment
+                    </a>
+                    <button 
+                      disabled={Boolean(working)} 
+                      onClick={() => updatePaymentStatus('paid')} 
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#c9a35b] px-3 py-2.5 text-xs font-bold uppercase tracking-[0.12em] text-black hover:bg-[#d5b46c] disabled:opacity-50 transition"
+                    >
+                      <CheckCircle2 size={14} /> {working === "payment" ? "Verifying..." : "Verify Payment as Paid"}
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <p className="mt-2 text-xs leading-5 text-white/40">
+                      The approved vendor has not completed the registration payment.
+                    </p>
+                    <button 
+                      disabled={Boolean(working)} 
+                      onClick={sendPaymentReminder} 
+                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#c9a35b]/30 px-3 py-2.5 text-xs font-bold uppercase tracking-[0.12em] text-[#d5b46c] hover:bg-[#c9a35b]/10 disabled:opacity-50"
+                    >
+                      <Send size={14} /> {working === "reminder" ? "Sending..." : "Send payment reminder"}
+                    </button>
+                    {vendor.paymentReminderSent && (
+                      <p className="mt-3 text-center text-[10px] uppercase tracking-[0.12em] text-emerald-300/70">
+                        A reminder has already been sent
+                      </p>
+                    )}
+                  </>
+                )}
               </section>
             )}
 

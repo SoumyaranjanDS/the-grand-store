@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api';
 import { useAuth } from '../../context/AuthContext';
-import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Loader2, Store, Clock } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuth();
@@ -84,6 +85,52 @@ export default function ProfilePage() {
           Manage your personal information and security.
         </p>
       </section>
+
+      {/* Vendor Application Status Section */}
+      {(user.role === 'vendor_pending' || user.role === 'vendor_approved_unpaid') && (
+        <section className="bg-[#11100e] border border-[#c9a35b]/30 rounded-lg p-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[#c9a35b]/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none" />
+          
+          <h2 className="text-xl text-[var(--color-ivory)] font-serif mb-4 flex items-center gap-2">
+            <Store size={20} className="text-[#c9a35b]" />
+            Vendor Application Status
+          </h2>
+          
+          {user.role === 'vendor_pending' ? (
+            <div className="flex items-start gap-4">
+              <div className="bg-yellow-500/10 p-2 rounded-full mt-1">
+                <Clock className="text-yellow-500" size={20} />
+              </div>
+              <div>
+                <p className="text-[#eee8dd] font-medium text-lg">Under Review</p>
+                <p className="text-[#918a7f] text-sm mt-1">
+                  Your vendor application is currently being reviewed by our administration team. We will notify you once a decision has been made.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <div className="bg-green-500/10 p-2 rounded-full mt-1">
+                  <CheckCircle2 className="text-green-500" size={20} />
+                </div>
+                <div>
+                  <p className="text-[#eee8dd] font-medium text-lg">Application Approved</p>
+                  <p className="text-[#918a7f] text-sm mt-1 max-w-sm">
+                    Congratulations! Your application is approved. Please pay the registration fee to activate your store.
+                  </p>
+                </div>
+              </div>
+              <Link 
+                to="/vendor/payment" 
+                className="bg-[#c9a35b] hover:bg-[#b08d4a] text-black font-semibold py-2 px-6 rounded transition-colors whitespace-nowrap w-full sm:w-auto text-center"
+              >
+                Pay Registration Fee
+              </Link>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Profile Form */}
       <section>

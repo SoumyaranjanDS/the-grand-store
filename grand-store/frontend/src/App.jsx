@@ -35,6 +35,7 @@ import AppPromoSection from './features/home/components/AppPromoSection'
 import DownloadAppRedirect from './pages/DownloadAppRedirect'
 import Footer from './components/Footer'
 import CookieConsent from './components/CookieConsent'
+import VendorApprovalPopup from './features/vendor/VendorApprovalPopup'
 import SiteMotion from './components/SiteMotion'
 import ProductCard from './components/ProductCard'
 import ProductQuickView from './components/ProductQuickView'
@@ -891,6 +892,7 @@ function App() {
         </>
       )}
       {!isAdminRoute && <ChatbotWidget />}
+      <VendorApprovalPopup />
       <CookieConsent />
       {import.meta.env.DEV && <Agentation />}
     </div>
