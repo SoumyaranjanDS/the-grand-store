@@ -64,7 +64,58 @@ export default function TequilaShowcase({ onAdd, onWish, onCompare, compareItems
   return (
     <>
       <section className="section tequila-showcase home-product-editorial" id="tequila" ref={sectionRef}>
-        <div className="shell">
+        <div className="shell relative">
+          
+          {/* Floating Cigar Character */}
+          <style>{`
+            @keyframes slideInRightCigar {
+              0% { transform: translateX(120%); opacity: 0; }
+              100% { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes floatSpeechBubble {
+              0%, 100% { transform: translateY(0px); }
+              50% { transform: translateY(-8px); }
+            }
+            .animate-slide-cigar {
+              animation: slideInRightCigar 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+              animation-delay: 0.5s;
+              opacity: 0;
+            }
+            .animate-float-bubble {
+              animation: floatSpeechBubble 4s ease-in-out infinite;
+            }
+          `}</style>
+            <div 
+              onClick={() => document.getElementById('partners')?.scrollIntoView({ behavior: 'smooth' })}
+              className="absolute right-0 md:right-5 top-[60px] md:top-[120px] z-30 cursor-pointer group animate-slide-cigar"
+              title="View our Cigar Partners"
+            >
+              <div className="relative flex items-center gap-3 md:gap-5 overflow-visible w-[320px] md:w-[480px]">
+                
+                {/* Speech Bubble */}
+                <div className="relative flex-1 bg-[#151515]/95 backdrop-blur-md border border-[#c9a35b]/30 rounded-t-3xl rounded-bl-3xl rounded-br-md p-4 md:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.7)] animate-float-bubble transform group-hover:border-[#c9a35b]/80 group-hover:shadow-[0_20px_60px_rgba(201,163,91,0.2)] transition-all duration-500">
+                  <p className="text-[#c9a35b] text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold mb-2">Private Collection</p>
+                  <p className="text-white font-serif text-base md:text-xl leading-snug mb-4">"Looking for a truly exceptional cigar?"</p>
+                  <div className="inline-flex items-center gap-2 border-b border-[#c9a35b]/40 pb-1 group-hover:border-[#c9a35b] transition-colors">
+                    <span className="text-[#eee8dd] text-[10px] md:text-xs uppercase tracking-widest font-semibold">Explore Club</span>
+                    <ArrowRight size={14} className="text-[#c9a35b]" />
+                  </div>
+                  
+                  {/* Pointer pointing to mouth */}
+                  <div className="absolute top-8 -right-[9px] w-5 h-5 bg-[#151515]/95 border-t border-r border-[#c9a35b]/30 rotate-45 group-hover:border-[#c9a35b]/80 transition-colors duration-500"></div>
+                </div>
+                
+                {/* Character */}
+                <div className="relative z-20 shrink-0">
+                  <img 
+                    src="/assets/images/cigar_character_full.png" 
+                    alt="Cigar Aficionado"
+                    className="w-32 md:w-48 h-auto drop-shadow-[0_0_20px_rgba(0,0,0,0.8)] transform group-hover:scale-105 group-hover:-translate-y-2 transition-transform duration-500"
+                  />
+                </div>
+              </div>
+            </div>
+
           <div className="section-heading flex flex-col items-start text-left md:flex-row md:text-left md:justify-between md:items-end gap-3 md:gap-0">
             <div className="flex flex-col items-start md:items-start w-full">
               <p className="eyebrow hidden md:block">From the heart of agave country</p>

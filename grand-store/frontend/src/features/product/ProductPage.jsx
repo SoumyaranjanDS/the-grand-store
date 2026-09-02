@@ -1,7 +1,7 @@
 import { useProducts } from "../../context/ProductContext";
 import React, { useState, useEffect } from "react";
 import SEO from "../../components/SEO";
-import { Link, Navigate, useParams } from "react-router-dom";
+import { Link, Navigate, useParams, useNavigate } from "react-router-dom";
 import {
   ChevronRight,
   ChevronLeft,
@@ -50,6 +50,7 @@ const resolveImageUrl = (src) => {
 };
 
 export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
+  const navigate = useNavigate();
   const { products } = useProducts();
   const { slug } = useParams();
   const { currency, country_name } = useGeoLocation();
@@ -59,7 +60,7 @@ export default function ProductPage({ onAdd, onWish, compareItems, onNotify }) {
       item.slug === slug ||
       item.id === slug ||
       item.id === Number(slug) ||
-      item._id === slug,
+      item._id === slug
   );
   const { isWishlisted } = useWishlist();
   const wishlisted = product ? isWishlisted(product) : false;
@@ -945,6 +946,7 @@ const CornerFlourish = ({ className }) => (
     <circle cx="112" cy="90" r="3.5" fill="#e5e7eb" />
   </svg>
 );
+
 
 
 

@@ -17,10 +17,10 @@ const InputField = ({ label, value, onChange, placeholder, type = 'text' }) => (
 const DOCUMENT_ACCEPT = '.pdf,.png,.jpg,.jpeg,.webp,.gif,.heic,.heif,.doc,.docx';
 const MAX_DOCUMENT_SIZE = 10 * 1024 * 1024;
 
-const getFileKind = (url, mimeType = '') => {
-  const cleanUrl = String(url || '').split(/[?#]/)[0].toLowerCase();
-  if (mimeType.startsWith('image/') || /\.(jpe?g|png|gif|webp|heic|heif)$/.test(cleanUrl)) return 'image';
-  if (mimeType === 'application/pdf' || cleanUrl.endsWith('.pdf')) return 'pdf';
+const getFileKind = (url, mimeType = '', fileName = '') => {
+  const fileIdentifier = `${String(url || '').split(/[?#]/)[0]} ${fileName}`.toLowerCase();
+  if (mimeType.startsWith('image/') || /\.(jpe?g|png|gif|webp|heic|heif)(?:\s|$)/.test(fileIdentifier)) return 'image';
+  if (mimeType === 'application/pdf' || /\.pdf(?:\s|$)/.test(fileIdentifier)) return 'pdf';
   return 'document';
 };
 
@@ -35,14 +35,31 @@ const getFileName = (url) => {
 
 const FileUploadField = ({ label, url, onChange, uploadFile, required = false }) => {
   const inputRef = useRef(null);
+  const previewObjectUrlRef = useRef('');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [localPreview, setLocalPreview] = useState('');
   const [localMimeType, setLocalMimeType] = useState('');
+  const [localFileName, setLocalFileName] = useState('');
   const [previewOpen, setPreviewOpen] = useState(true);
   const [previewFailed, setPreviewFailed] = useState(false);
   const previewUrl = localPreview || url;
-  const fileKind = getFileKind(previewUrl, localMimeType);
+  const displayedFileName = localFileName || getFileName(url);
+  const fileKind = getFileKind(previewUrl, localMimeType, displayedFileName);
+
+  const releaseLocalPreview = () => {
+    if (previewObjectUrlRef.current) {
+      URL.revokeObjectURL(previewObjectUrlRef.current);
+      previewObjectUrlRef.current = '';
+    }
+    setLocalPreview('');
+    setLocalMimeType('');
+    setLocalFileName('');
+  };
+
+  useEffect(() => () => {
+    if (previewObjectUrlRef.current) URL.revokeObjectURL(previewObjectUrlRef.current);
+  }, []);
 
   useEffect(() => {
     setPreviewFailed(false);
@@ -57,28 +74,34 @@ const FileUploadField = ({ label, url, onChange, uploadFile, required = false })
       return;
     }
 
+    releaseLocalPreview();
     const objectUrl = URL.createObjectURL(file);
+    previewObjectUrlRef.current = objectUrl;
     setLocalPreview(objectUrl);
     setLocalMimeType(file.type);
+    setLocalFileName(file.name);
     setPreviewOpen(true);
     setError('');
     setUploading(true);
 
     try {
-      const uploadedUrl = await uploadFile(file);
+      const uploadedFile = await uploadFile(file);
+      const uploadedUrl = typeof uploadedFile === 'string' ? uploadedFile : uploadedFile?.url;
+      if (!uploadedUrl) throw new Error('The server did not return an uploaded file URL.');
+      setLocalMimeType(uploadedFile?.mimeType || file.type);
+      setLocalFileName(uploadedFile?.originalName || file.name);
       onChange(uploadedUrl);
     } catch (err) {
+      releaseLocalPreview();
       setError(err.response?.data?.message || err.message || 'Upload failed. Please try again.');
     } finally {
       setUploading(false);
-      setLocalPreview('');
-      setLocalMimeType('');
-      URL.revokeObjectURL(objectUrl);
     }
   };
 
   const removeFile = () => {
     if (required && !window.confirm(`Remove the required ${label.toLowerCase()}? You will need to upload another file before submitting.`)) return;
+    releaseLocalPreview();
     onChange('');
     setError('');
     setPreviewOpen(false);
@@ -115,7 +138,7 @@ const FileUploadField = ({ label, url, onChange, uploadFile, required = false })
                 </div>
               )}
               <div className="min-w-0">
-                <p className="truncate text-sm text-[#eee8dd]">{localPreview ? 'Uploading selected file…' : getFileName(url)}</p>
+                <p className="truncate text-sm text-[#eee8dd]">{displayedFileName || 'Selected document'}</p>
                 <p className="mt-0.5 text-[10px] uppercase tracking-wider text-white/35">{fileKind === 'image' ? 'Image' : fileKind === 'pdf' ? 'PDF document' : 'Document'} {uploading ? '· uploading' : '· ready'}</p>
               </div>
             </div>
@@ -125,7 +148,7 @@ const FileUploadField = ({ label, url, onChange, uploadFile, required = false })
                   {previewOpen ? <EyeOff size={13} /> : <Eye size={13} />} {previewOpen ? 'Hide' : 'Preview'}
                 </button>
               )}
-              {!localPreview && <a href={url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded border border-white/10 px-2.5 py-2 text-[10px] font-bold uppercase tracking-wider text-white/60 hover:bg-white/5"><ExternalLink size={13} /> Open</a>}
+              {!uploading && <a href={previewUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded border border-white/10 px-2.5 py-2 text-[10px] font-bold uppercase tracking-wider text-white/60 hover:bg-white/5"><ExternalLink size={13} /> Open</a>}
               <button type="button" disabled={uploading} onClick={() => inputRef.current?.click()} className="inline-flex items-center gap-1.5 rounded border border-[#c9a35b]/35 px-2.5 py-2 text-[10px] font-bold uppercase tracking-wider text-[#dabb76] hover:bg-[#c9a35b]/10 disabled:opacity-50"><RefreshCw size={13} /> Replace</button>
               <button type="button" disabled={uploading} onClick={removeFile} aria-label={`Remove ${label}`} className="rounded border border-red-500/20 p-2 text-red-300/70 hover:bg-red-500/10 hover:text-red-300 disabled:opacity-50"><Trash2 size={14} /></button>
             </div>
@@ -299,9 +322,13 @@ export default function OnboardingWizard() {
   const uploadFile = async (file) => {
     const formData = new FormData();
     formData.append('document', file);
-    const { data } = await api.post('/vendor/upload-public', formData);
+    const { data } = await api.post('/vendor/upload-public', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     if (!data?.url) throw new Error('The server did not return an uploaded file URL.');
-    return data.url;
+    return data;
   };
 
   const isStepComplete = (stepId) => {

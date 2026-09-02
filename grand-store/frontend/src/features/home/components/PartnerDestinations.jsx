@@ -54,6 +54,7 @@ export default function PartnerDestinations() {
 
   return (
     <section
+      id="partners"
       className="relative overflow-hidden border-y border-[#c9a35b]/15 bg-[#0b0907] py-7 lg:py-8"
       ref={sectionRef}
       aria-labelledby="partner-title"

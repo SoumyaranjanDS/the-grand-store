@@ -103,12 +103,14 @@ export default function CartPage({ cartItems, onUpdateQuantity, onRemove, onClea
                             <div><dt>Unit Price</dt><dd><Price amount={getProductPrice(item.price)} /></dd></div>
                           </dl>
                         </div>
-                        <div className="cart-item-purchase">
-                          <div className="cart-line-price">
-                            <span>Item total</span>
-                            <strong><Price amount={getProductPrice(item.price) * item.quantity} /></strong>
-                          </div>
-                          <div className="cart-item-controls">
+                          <div className="cart-item-purchase">
+                            <div className="flex flex-col mb-4">
+                              <span className="text-[10px] uppercase tracking-widest text-white/50 mb-1">Item total</span>
+                              <div className="text-2xl font-semibold leading-none text-[#e1bd70]">
+                                <Price amount={getProductPrice(item.price) * item.quantity} presentation="product" />
+                              </div>
+                            </div>
+                            <div className="cart-item-controls">
                             <div className="cart-quantity-picker" aria-label={`Quantity for ${item.name}`}>
                               <button type="button" onClick={() => onUpdateQuantity(item.id, item.option, item.quantity - 1)} aria-label={`Decrease ${item.name} quantity`}><Minus size={15} /></button>
                               <span>{item.quantity}</span>

@@ -99,6 +99,7 @@ import AdminDashboard from './features/admin/AdminDashboard'
 import AdminUsers from './features/admin/AdminUsers'
 import AdminStaff from './features/admin/AdminStaff'
 import AdminVendors from './features/admin/AdminVendors'
+import AdminVendorDetail from './features/admin/AdminVendorDetail'
 import AdminCoupons from './features/admin/AdminCoupons'
 import AdminExpertReviews from './features/admin/AdminExpertReviews'
 import AdminSettings from './features/admin/AdminSettings'
@@ -750,6 +751,7 @@ function App() {
           <Route path="categories" element={<AdminCategories />} />
           <Route path="marquees" element={<AdminMarquees />} />
           <Route path="vendors" element={<AdminVendors />} />
+          <Route path="vendors/:id" element={<AdminVendorDetail />} />
           <Route path="coupons" element={<AdminCoupons />} />
           <Route path="expert-reviews" element={<AdminExpertReviews />} />
           <Route path="accessories" element={<AdminAccessories />} />

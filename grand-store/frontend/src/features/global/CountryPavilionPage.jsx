@@ -68,7 +68,14 @@ export default function CountryPavilionPage({ onAdd, onWish, onCompare, compareI
     // Filter products from the context where country matches the route param
     const filtered = products.filter(p => p.country && p.country.toLowerCase() === country?.toLowerCase());
     setPavilionWines(filtered);
-    window.scrollTo(0, 0);
+    
+    // Auto-scroll directly to products after a short delay to allow rendering
+    setTimeout(() => {
+      const el = document.getElementById('products');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
   }, [country, products]);
 
   return (
@@ -110,7 +117,7 @@ export default function CountryPavilionPage({ onAdd, onWish, onCompare, compareI
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 mt-8 relative z-10">
+      <div id="products" className="max-w-7xl mx-auto px-4 mt-8 relative z-10">
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 border-b border-[#c9a35b]/20 pb-4 shadow-[0_4px_20px_-10px_rgba(201,163,91,0.2)]">
           <div>
             <h2 className="text-3xl font-serif text-[#eee8dd] tracking-wider">Featured Collection</h2>

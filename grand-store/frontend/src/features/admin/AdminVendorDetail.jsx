@@ -268,7 +268,15 @@ export default function AdminVendorDetail() {
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <SummaryCard icon={PackageCheck} label="Progress">{onboarding.percent}% complete</SummaryCard>
-          <SummaryCard icon={CircleDollarSign} label="Payment"><span className="capitalize">{vendor.paymentStatus || "unpaid"}</span></SummaryCard>
+          <SummaryCard icon={CircleDollarSign} label="Subscription">
+            <span className="capitalize text-xs">
+              {vendor.couponUsed ? (
+                <>1 month free ends on {formatDate(new Date(new Date(vendor.createdAt).setMonth(new Date(vendor.createdAt).getMonth() + 1)))}. After that, payment is required.</>
+              ) : (
+                <span className="text-sm">{vendor.paymentStatus || "Unpaid"}</span>
+              )}
+            </span>
+          </SummaryCard>
           <SummaryCard icon={Banknote} label="Registration fee">R {Number(vendor.registrationFee || 0).toLocaleString()}</SummaryCard>
           <SummaryCard icon={CalendarDays} label="Application created">{formatDate(vendor.createdAt)}</SummaryCard>
         </div>

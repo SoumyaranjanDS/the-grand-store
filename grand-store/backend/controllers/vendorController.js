@@ -201,9 +201,14 @@ exports.uploadDocument = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
-    // Return the Cloudinary URL so frontend can send it in saveOnboardingProgress
-    const fileUrl = req.file.path;
-    res.json({ url: fileUrl });
+    // Include file metadata so the onboarding UI can identify and label the
+    // selected document without relying only on the generated Cloudinary URL.
+    res.json({
+      url: req.file.path,
+      originalName: req.file.originalname,
+      mimeType: req.file.mimetype,
+      size: req.file.size,
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
