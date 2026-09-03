@@ -81,6 +81,12 @@ const addOrderItems = async (req, res) => {
         await user.save();
     }
 
+    if (shippingAddress && (shippingAddress.phone || shippingAddress.phoneNumber) && user && !user.phone) {
+      user.phone = (shippingAddress.phone || shippingAddress.phoneNumber).trim();
+      user.phoneNumber = user.phone;
+      await user.save();
+    }
+
     const finalTotal = parseFloat((calculatedTotal - appliedWelcomeDiscount - appliedRewards).toFixed(2));
 
     let allOrderItems = [];

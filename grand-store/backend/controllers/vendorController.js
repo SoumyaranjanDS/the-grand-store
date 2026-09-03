@@ -1,5 +1,7 @@
 const Vendor = require('../models/Vendor');
 const User = require('../models/User');
+const PlatformSettings = require('../models/PlatformSettings');
+const { createInAppNotification } = require('./notificationController');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
@@ -297,6 +299,31 @@ exports.processVendorPayment = async (vendorId) => {
     }
 
     vendor.paymentStatus = 'paid';
+
+    // Initialize Monthly Maintenance Fee
+    let monthlyFee = 500;
+    try {
+      const settings = await PlatformSettings.findOne();
+      if (settings && settings.vendorMonthlyMaintenanceFee) {
+        monthlyFee = settings.vendorMonthlyMaintenanceFee;
+      }
+    } catch (e) {
+      console.error('Failed to read settings for maintenance fee:', e);
+    }
+
+    vendor.maintenanceFee = {
+      amount: monthlyFee,
+      status: 'paid',
+      lastPaidAt: new Date(),
+      nextDueAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      paymentHistory: [{
+        amount: vendor.registrationFee || 0,
+        paidAt: new Date(),
+        paymentMethod: 'PayFast',
+        reference: `REG-${vendor._id}`
+      }]
+    };
+
     await vendor.save();
 
     const user = await User.findById(vendor.userId);
@@ -319,6 +346,16 @@ exports.processVendorPayment = async (vendorId) => {
         date: new Date()
       });
     }
+
+    // In-app notification for vendor
+    await createInAppNotification({
+      recipient: vendor.userId,
+      recipientType: 'vendor',
+      title: 'Vendor Account Activated',
+      message: `Registration fee received! Your vendor privileges and storefront are now active. Your first monthly maintenance fee of R ${monthlyFee} will be due in 30 days.`,
+      type: 'maintenance_fee',
+      link: '/vendor/dashboard'
+    });
 
   } catch (error) {
     console.error('Error processing vendor payment:', error);
@@ -379,6 +416,158 @@ exports.submitProof = async (req, res) => {
     await vendor.save();
     res.json({ message: 'Proof submitted successfully', vendor });
   } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+exports.getMaintenanceFeeStatus = async (req, res) => {
+  try {
+    const vendor = await Vendor.findOne({ userId: req.user._id });
+    if (!vendor) {
+      return res.status(404).json({ message: 'Vendor application not found' });
+    }
+
+    let defaultMonthlyFee = 500;
+    let graceDays = 7;
+    try {
+      const settings = await PlatformSettings.findOne();
+      if (settings) {
+        if (settings.vendorMonthlyMaintenanceFee !== undefined) defaultMonthlyFee = settings.vendorMonthlyMaintenanceFee;
+        if (settings.vendorMaintenanceGraceDays !== undefined) graceDays = settings.vendorMaintenanceGraceDays;
+      }
+    } catch (e) {
+      console.error("Error reading platform settings for maintenance fee", e);
+    }
+
+    // If maintenanceFee subdocument is not yet initialized, initialize with defaults
+    if (!vendor.maintenanceFee || !vendor.maintenanceFee.nextDueAt) {
+      vendor.maintenanceFee = {
+        amount: defaultMonthlyFee,
+        status: 'paid',
+        lastPaidAt: vendor.createdAt || new Date(),
+        nextDueAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        paymentHistory: []
+      };
+      await vendor.save();
+    }
+
+    const now = new Date();
+    const nextDue = new Date(vendor.maintenanceFee.nextDueAt);
+    const msDiff = nextDue.getTime() - now.getTime();
+    const daysRemaining = Math.ceil(msDiff / (1000 * 60 * 60 * 24));
+
+    // Evaluate live status
+    let currentStatus = 'paid';
+    if (daysRemaining <= 0) {
+      if (Math.abs(daysRemaining) <= graceDays) {
+        currentStatus = 'due';
+      } else {
+        currentStatus = 'overdue';
+      }
+    } else if (daysRemaining <= 5) {
+      currentStatus = 'due';
+    } else {
+      currentStatus = 'paid';
+    }
+
+    if (vendor.maintenanceFee.status !== currentStatus) {
+      vendor.maintenanceFee.status = currentStatus;
+      await vendor.save();
+    }
+
+    res.json({
+      amount: vendor.maintenanceFee.amount || defaultMonthlyFee,
+      configuredMonthlyFee: defaultMonthlyFee,
+      status: currentStatus,
+      lastPaidAt: vendor.maintenanceFee.lastPaidAt,
+      nextDueAt: vendor.maintenanceFee.nextDueAt,
+      daysRemaining,
+      graceDays,
+      paymentHistory: vendor.maintenanceFee.paymentHistory || []
+    });
+  } catch (error) {
+    console.error('Error fetching maintenance fee status:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+exports.payMaintenanceFee = async (req, res) => {
+  try {
+    const vendor = await Vendor.findOne({ userId: req.user._id });
+    if (!vendor) {
+      return res.status(404).json({ message: 'Vendor application not found' });
+    }
+
+    let defaultMonthlyFee = 500;
+    try {
+      const settings = await PlatformSettings.findOne();
+      if (settings && settings.vendorMonthlyMaintenanceFee !== undefined) {
+        defaultMonthlyFee = settings.vendorMonthlyMaintenanceFee;
+      }
+    } catch (e) {
+      console.error("Error reading platform settings", e);
+    }
+
+    const feeAmount = vendor.maintenanceFee?.amount || defaultMonthlyFee;
+    const paymentMethod = req.body.paymentMethod || 'PayFast / Card';
+    const reference = req.body.reference || `MNF-${vendor._id}-${Date.now().toString().slice(-6)}`;
+
+    // Advance nextDueAt by 30 days
+    const currentDue = (vendor.maintenanceFee?.nextDueAt && new Date(vendor.maintenanceFee.nextDueAt) > new Date())
+      ? new Date(vendor.maintenanceFee.nextDueAt)
+      : new Date();
+    const newNextDue = new Date(currentDue.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+    if (!vendor.maintenanceFee) vendor.maintenanceFee = {};
+    vendor.maintenanceFee.amount = feeAmount;
+    vendor.maintenanceFee.status = 'paid';
+    vendor.maintenanceFee.lastPaidAt = new Date();
+    vendor.maintenanceFee.nextDueAt = newNextDue;
+
+    if (!Array.isArray(vendor.maintenanceFee.paymentHistory)) {
+      vendor.maintenanceFee.paymentHistory = [];
+    }
+
+    vendor.maintenanceFee.paymentHistory.unshift({
+      amount: feeAmount,
+      paidAt: new Date(),
+      paymentMethod,
+      reference
+    });
+
+    await vendor.save();
+
+    // Create Transaction Record
+    const Transaction = require('../models/Transaction');
+    if (Transaction) {
+      await Transaction.create({
+        user: req.user._id,
+        orderId: vendor._id,
+        amount: feeAmount,
+        type: 'Vendor Maintenance Fee',
+        status: 'Completed',
+        reference,
+        gateway: paymentMethod,
+        date: new Date()
+      });
+    }
+
+    // In-app notification for vendor
+    await createInAppNotification({
+      recipient: req.user._id,
+      recipientType: 'vendor',
+      title: 'Monthly Maintenance Fee Paid',
+      message: `Your monthly maintenance fee of R ${feeAmount} has been paid successfully. Store privileges are active through ${newNextDue.toLocaleDateString()}.`,
+      type: 'maintenance_fee',
+      link: '/vendor/dashboard'
+    });
+
+    res.json({
+      message: 'Monthly maintenance fee paid successfully',
+      maintenanceFee: vendor.maintenanceFee
+    });
+  } catch (error) {
+    console.error('Error paying maintenance fee:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

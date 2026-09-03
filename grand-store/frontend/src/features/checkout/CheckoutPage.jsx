@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { ChevronRight, ChevronDown, ChevronUp, ArrowRight, ShieldCheck, Lock, CreditCard, Loader2, Truck, AlertTriangle, CheckCircle2, ShoppingCart, MapPin, FileText, Download, Plus, Minus, Trash2 } from 'lucide-react';
+import { ChevronRight, ChevronDown, ChevronUp, ArrowRight, ShieldCheck, Lock, CreditCard, Loader2, Truck, AlertTriangle, CheckCircle2, ShoppingCart, MapPin, FileText, Download, Plus, Minus, Trash2, Phone } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getProductPrice } from '../../data';
 import LocationInput from '../../components/LocationInput';
@@ -32,7 +32,8 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
   const [formData, setFormData] = useState({
     email: user ? user.email : '',
     firstName: user ? user.name.split(' ')[0] : '',
-    lastName: user && user.name.split(' ').length > 1 ? user.name.split(' ')[1] : '',
+    lastName: user && user.name.split(' ').length > 1 ? user.name.split(' ').slice(1).join(' ') : '',
+    phone: user ? (user.phone || user.phoneNumber || '') : '',
     address: '',
     city: '',
     postalCode: '',
@@ -85,6 +86,18 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
       return;
     }
   }, [vendorCartItems, navigate, user, onNotify, vendorId]);
+
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        email: prev.email || user.email || '',
+        firstName: prev.firstName || (user.name ? user.name.split(' ')[0] : ''),
+        lastName: prev.lastName || (user.name && user.name.split(' ').length > 1 ? user.name.split(' ').slice(1).join(' ') : ''),
+        phone: prev.phone || user.phone || user.phoneNumber || ''
+      }));
+    }
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -408,7 +421,9 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
           address: formData.address || quote.shipments.find((shipment) => shipment.selectedPickupStore)?.selectedPickupStore?.address,
           city: formData.city,
           postalCode: formData.postalCode,
-          country: formData.country
+          country: formData.country,
+          phone: formData.phone || user?.phone || user?.phoneNumber || '',
+          phoneNumber: formData.phone || user?.phone || user?.phoneNumber || ''
         },
         deliveryPreference,
         paymentMethod: paymentMethod === 'payfast' ? 'PayFast' : 'Bank Transfer',
@@ -836,6 +851,30 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
                     <div>
                       <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-2">Last Name</label>
                       <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} required className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--color-gold)]/50 focus:outline-none transition-colors" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
+                        <label className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] flex items-center gap-1.5">
+                          <Phone size={13} className="text-[var(--color-gold)]" /> Phone Number (For Courier & Delivery Tracking)
+                        </label>
+                        {(user?.phone || user?.phoneNumber) && formData.phone === (user.phone || user.phoneNumber) && (
+                          <span className="text-[11px] text-[var(--color-gold)] font-medium flex items-center gap-1 bg-[var(--color-gold)]/10 px-2.5 py-0.5 rounded-full border border-[var(--color-gold)]/25 self-start sm:self-auto">
+                            <CheckCircle2 size={12} /> Auto-filled from profile
+                          </span>
+                        )}
+                      </div>
+                      <input 
+                        type="tel" 
+                        name="phone" 
+                        value={formData.phone} 
+                        onChange={handleChange} 
+                        required 
+                        placeholder="e.g. +27 82 123 4567" 
+                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--color-gold)]/50 focus:outline-none transition-colors text-white" 
+                      />
+                      <p className="mt-1.5 text-xs text-[var(--color-ivory-muted)] font-light">
+                        Couriers require a mobile contact number to send tracking notifications and arrange gate access.
+                      </p>
                     </div>
                     {deliveryPreference !== 'postnet' ? (
                       <div className="md:col-span-2">

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { Settings, Save, RefreshCw, Percent, Truck, ShieldCheck, ShoppingBag, Users } from "lucide-react";
+import { Settings, Save, RefreshCw, Percent, Truck, ShieldCheck, ShoppingBag, Users, Gift, Send, AlertCircle, CheckCircle2 } from "lucide-react";
 import api from '../../api';
 import Price from '../../components/ui/Price';
 
@@ -10,6 +10,8 @@ export default function AdminSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [testEmailSending, setTestEmailSending] = useState(false);
+  const [testEmailResult, setTestEmailResult] = useState(null);
 
   const goldText = "text-[#c9a35b]";
   useEffect(() => {
@@ -58,6 +60,21 @@ export default function AdminSettings() {
     }
   };
 
+  const handleSendTestBirthdayEmail = async () => {
+    setTestEmailSending(true);
+    setTestEmailResult(null);
+    try {
+      const res = await api.post('/auth/test-birthday-email');
+      setTestEmailResult({ type: 'success', text: res.data.message || 'Test birthday email sent successfully!' });
+      setTimeout(() => setTestEmailResult(null), 5000);
+    } catch (err) {
+      setTestEmailResult({ type: 'error', text: err.response?.data?.message || 'Failed to send test email. Check SMTP settings.' });
+      setTimeout(() => setTestEmailResult(null), 7000);
+    } finally {
+      setTestEmailSending(false);
+    }
+  };
+
   if (loading || !settings) {
     return <div className="p-8 text-gold-gradient animate-pulse">Loading settings...</div>;
   }
@@ -77,7 +94,7 @@ export default function AdminSettings() {
     </div>
   );
 
-  const FeeRow = ({ label, field, note }) => (
+  const FeeRow = ({ label, field, note, isAmount = false }) => (
     <div className="flex items-center justify-between gap-4">
       <div className="flex-1">
         <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">{label}</label>
@@ -86,14 +103,14 @@ export default function AdminSettings() {
       <div className="flex items-center gap-2">
         <input
           type="number"
-          step="0.1"
+          step={isAmount ? "100" : "0.1"}
           min="0"
-          max="100"
-          value={settings[field]}
+          max={isAmount ? undefined : "100"}
+          value={settings[field] !== undefined ? settings[field] : ""}
           onChange={e => handleChange(field, e.target.value)}
-          className="w-24 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono text-right focus:outline-none focus:border-[var(--color-gold)]/50 transition-colors [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+          className="w-28 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono text-right focus:outline-none focus:border-[var(--color-gold)]/50 transition-colors [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
         />
-        <span className="text-[var(--color-ivory-muted)] text-sm w-4">{field.endsWith("Fee") ? "R" : "%"}</span>
+        <span className="text-[var(--color-ivory-muted)] text-sm w-4">{isAmount || field.endsWith("Fee") ? "R" : "%"}</span>
       </div>
     </div>
   );
@@ -105,7 +122,7 @@ export default function AdminSettings() {
           Platform <span className={goldText} >Rates & Fees</span>
         </h1>
         <p className="text-[var(--color-ivory-muted)] text-sm">
-          Set the global rates for taxes, shipping, and commissions. The calculators below show exactly how these rates affect payouts.
+          Set the global rates for taxes, shipping, commissions, and refundable bidding deposits.
         </p>
       </section>
 
@@ -118,16 +135,36 @@ export default function AdminSettings() {
             <div className="space-y-6">
               <FeeRow label="VAT Rate" field="vatPct" note="Value Added Tax (Deducted from vendor)" />
               <FeeRow label="Marketplace Commission" field="marketplaceCommissionPct" note="The Grand Store's cut on shop product sales" />
-              <FeeRow label="Shipping Fee (ZAR)" field="shippingFee" note="Flat-rate delivery fee charged to customer" />
+              <FeeRow label="Shipping Fee (ZAR)" field="shippingFee" isAmount={true} note="Flat-rate delivery fee charged to customer" />
             </div>
           </div>
 
           <div className="bg-[#111] border border-white/10 rounded-xl p-6">
-            <h2 className="text-white font-serif text-xl mb-6 border-b border-white/10 pb-4">Auction Fees</h2>
+            <h2 className="text-white font-serif text-xl mb-6 border-b border-white/10 pb-4">Auction Fees & Bidding Deposits</h2>
             <div className="space-y-6">
               <FeeRow label="Auction Commission" field="auctionCommissionPct" note="Deducted from the vendor's winning bid payout" />
               <FeeRow label="Buyer Premium" field="buyerPremiumPct" note="Extra charge paid by the winning buyer" />
               <FeeRow label="BAR Charge" field="barChargePct" note="Buyer Admin Reserve paid by buyer" />
+              <div className="pt-2 border-t border-white/5 space-y-6">
+                <FeeRow 
+                  label="Refundable Premium Deposit" 
+                  field="auctionPremiumDepositAmount" 
+                  isAmount={true} 
+                  note="Security guarantee paid by 18+ buyers to unlock Premium VIP bidding limits (100% refundable to bank)" 
+                />
+                <FeeRow 
+                  label="Standard Bidding Limit" 
+                  field="auctionStandardBiddingLimit" 
+                  isAmount={true} 
+                  note="Default bidding ceiling for verified 18+ bidders without a deposit" 
+                />
+                <FeeRow 
+                  label="Premium VIP Bidding Limit" 
+                  field="auctionPremiumBiddingLimit" 
+                  isAmount={true} 
+                  note="High-value bidding ceiling unlocked upon deposit verification" 
+                />
+              </div>
             </div>
           </div>
 
@@ -136,6 +173,31 @@ export default function AdminSettings() {
             <div className="space-y-6">
               <FeeRow label="Event Ticket Commission" field="eventCommissionPct" note="Deducted from event organizer payouts" />
               <FeeRow label="Payment Gateway Fee" field="gatewayFeePct" note="Internal cost tracking (not shown to customers)" />
+            </div>
+          </div>
+
+          <div className="bg-[#111] border border-white/10 rounded-xl p-6">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+              <h2 className="text-white font-serif text-xl flex items-center gap-2">
+                <span>Vendor Maintenance & Platform Fees</span>
+              </h2>
+              <span className="text-xs uppercase tracking-widest text-[#c9a35b] font-mono bg-[#c9a35b]/10 px-2.5 py-1 rounded-full border border-[#c9a35b]/20">
+                Monthly Billing
+              </span>
+            </div>
+            <div className="space-y-6">
+              <FeeRow 
+                label="Monthly Maintenance Fee" 
+                field="vendorMonthlyMaintenanceFee" 
+                isAmount={true} 
+                note="Recurring fee charged to active vendors every 30 days after registration fee" 
+              />
+              <FeeRow 
+                label="Grace Period (Days)" 
+                field="vendorMaintenanceGraceDays" 
+                isAmount={true} 
+                note="Number of days before an unpaid maintenance fee is flagged overdue" 
+              />
             </div>
           </div>
 
@@ -209,6 +271,141 @@ export default function AdminSettings() {
                 </div>
               </div>
 
+            </div>
+          </div>
+
+          {/* CUSTOMER BIRTHDAY AUTOMATION & PROMOTIONS */}
+          <div className="bg-[#111] border border-white/10 rounded-xl p-6">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+              <h2 className="text-white font-serif text-xl flex items-center gap-2">
+                <Gift className="text-[var(--color-gold)]" size={22} /> Customer Birthday Automation
+              </h2>
+              <span className="text-xs uppercase tracking-widest text-[var(--color-gold)] font-mono bg-[var(--color-gold)]/10 px-2.5 py-1 rounded-full border border-[var(--color-gold)]/20">
+                Daily 8:00 AM SMTP
+              </span>
+            </div>
+
+            <div className="space-y-6">
+              {/* Toggle 1: Birthday Greeting Email */}
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">
+                    Automated Birthday Greeting Emails
+                  </label>
+                  <p className="text-[10px] text-white/30 italic">
+                    Automatically dispatch a prestigious birthday email to customers on their birthday
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleChange('birthdayEmailEnabled', settings.birthdayEmailEnabled === false ? true : false)}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    settings.birthdayEmailEnabled !== false ? 'bg-[#c9a35b]' : 'bg-white/10'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-black shadow transition duration-200 ease-in-out ${
+                      settings.birthdayEmailEnabled !== false ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Toggle 2: Promotional Discount / Voucher */}
+              <div className="flex items-center justify-between gap-4 pt-4 border-t border-white/5">
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">
+                    Include Promotional Discount / Voucher
+                  </label>
+                  <p className="text-[10px] text-white/30 italic">
+                    When enabled, email includes an exclusive discount code. If disabled, sends greeting only.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleChange('birthdayDiscountEnabled', settings.birthdayDiscountEnabled === false ? true : false)}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    settings.birthdayDiscountEnabled !== false ? 'bg-[#c9a35b]' : 'bg-white/10'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-black shadow transition duration-200 ease-in-out ${
+                      settings.birthdayDiscountEnabled !== false ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {settings.birthdayDiscountEnabled !== false && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-4 border-t border-white/5">
+                  <div>
+                    <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">
+                      Discount Percentage (%)
+                    </label>
+                    <div className="flex items-center">
+                      <input
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={settings.birthdayDiscountPercent || 15}
+                        onChange={e => handleChange('birthdayDiscountPercent', e.target.value)}
+                        className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-[var(--color-gold)]/50 transition-colors"
+                      />
+                      <span className="ml-2 text-xs text-white/40 font-bold">%</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">
+                      Birthday Promo Code
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.birthdayPromoCode || 'BDAY-LUXURY15'}
+                      onChange={e => handleChange('birthdayPromoCode', e.target.value)}
+                      className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono uppercase focus:outline-none focus:border-[var(--color-gold)]/50 transition-colors"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-4 border-t border-white/5">
+                <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">
+                  Custom Birthday Celebration Wish
+                </label>
+                <textarea
+                  rows="2"
+                  value={settings.birthdayCustomMessage || ''}
+                  onChange={e => handleChange('birthdayCustomMessage', e.target.value)}
+                  placeholder="To commemorate another distinguished year, we invite you to indulge in South Africa’s finest reserve vintages..."
+                  className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--color-gold)]/50 transition-colors placeholder:text-white/20 resize-none"
+                />
+              </div>
+
+              {/* Test Email Dispatcher */}
+              <div className="pt-4 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <p className="text-xs text-white/50">
+                  Preview email formatting with your current SMTP settings.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleSendTestBirthdayEmail}
+                  disabled={testEmailSending}
+                  className="py-2 px-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/15 text-white text-xs font-semibold uppercase tracking-wider flex items-center gap-2 transition-all shrink-0 cursor-pointer disabled:opacity-50"
+                >
+                  {testEmailSending ? <RefreshCw size={14} className="animate-spin" /> : <Send size={14} />}
+                  Send Test Birthday Email
+                </button>
+              </div>
+
+              {testEmailResult && (
+                <div className={`p-3 rounded-lg text-xs flex items-center gap-2 ${
+                  testEmailResult.type === 'error' ? 'bg-rose-500/10 border border-rose-500/20 text-rose-400' : 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
+                }`}>
+                  {testEmailResult.type === 'error' ? <AlertCircle size={15} /> : <CheckCircle2 size={15} />}
+                  <span>{testEmailResult.text}</span>
+                </div>
+              )}
             </div>
           </div>
 

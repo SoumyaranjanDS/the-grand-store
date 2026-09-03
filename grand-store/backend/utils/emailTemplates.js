@@ -397,6 +397,66 @@ const bulkNewsletterTemplate = (subject, htmlContent) => {
   return generateEmailTemplate(subject, htmlContent);
 };
 
+const birthdayCelebrationEmailTemplate = ({
+  name,
+  discountEnabled = true,
+  discountPercent = 15,
+  promoCode = 'BDAY-LUXURY15',
+  customMessage = '',
+  storeUrl = process.env.CLIENT_URL || 'http://localhost:5173'
+}) => {
+  const celebrationMessage = customMessage || 'To commemorate another distinguished year, we invite you to indulge in South Africa’s finest reserve vintages, rare single malts, and hand-rolled artisanal cigars.';
+
+  const discountBlock = discountEnabled ? `
+    <div style="margin: 30px 0; padding: 25px; background: linear-gradient(145deg, #161410 0%, #0d0c0a 100%); border: 1px solid #c9a35b; border-radius: 12px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+      <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 3px; color: #c9a35b; font-weight: bold; display: block; margin-bottom: 8px;">Exclusive Birthday Privilege</span>
+      <h2 style="font-family: 'Times New Roman', serif; font-size: 36px; color: #fff; margin: 0 0 8px 0; font-weight: normal; letter-spacing: 1px;">${discountPercent}% OFF</h2>
+      <p style="font-size: 13px; color: #a0998f; margin: 0 0 18px 0;">Use the private code below at checkout on your next luxury order.</p>
+      <div style="display: inline-block; padding: 12px 28px; background: #000; border: 1px dashed #c9a35b; border-radius: 8px; font-family: monospace; font-size: 20px; font-weight: bold; color: #f5d77f; letter-spacing: 3px;">
+        ${promoCode}
+      </div>
+      <p style="font-size: 11px; color: #777; margin: 12px 0 0 0; text-transform: uppercase; letter-spacing: 1px;">Valid for 30 days from your birthday</p>
+    </div>
+  ` : `
+    <div style="margin: 25px 0; padding: 20px; background: #12100d; border-left: 3px solid #c9a35b; border-radius: 4px;">
+      <p style="font-style: italic; color: #d0c8be; margin: 0; font-size: 15px;">
+        "May your year ahead be as exceptional and refined as the rare vintages resting in our private reserve."
+      </p>
+    </div>
+  `;
+
+  const content = `
+    <div style="text-align: center; margin-bottom: 25px;">
+      <span style="font-size: 32px;">🍾 🥂 ✦</span>
+      <h1 style="color: #c9a35b; font-size: 28px; font-family: 'Times New Roman', serif; margin: 15px 0 5px 0; letter-spacing: 1px;">Happy Birthday, ${name || 'Valued Member'}!</h1>
+      <p style="color: #8c827a; font-size: 13px; text-transform: uppercase; letter-spacing: 2px; margin: 0;">A Celebration of Distinction</p>
+    </div>
+
+    <p style="font-size: 16px; line-height: 1.7; color: #ded8ce; margin-bottom: 20px;">
+      On behalf of everyone at <strong>The Grand Store</strong>, we wish you a joyous and memorable birthday filled with fine company and unforgettable moments.
+    </p>
+
+    <p style="font-size: 15px; line-height: 1.7; color: #b8b0a4;">
+      ${celebrationMessage}
+    </p>
+
+    ${discountBlock}
+
+    <div style="margin: 35px 0 25px 0; text-align: center;">
+      <a href="${storeUrl}" style="display: inline-block; background: linear-gradient(135deg, #c9a35b 0%, #e5a93c 100%); color: #0a0a0a; font-weight: bold; text-decoration: none; padding: 16px 36px; border-radius: 8px; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; box-shadow: 0 4px 20px rgba(201, 163, 91, 0.4);">
+        Celebrate with The Grand Store &rarr;
+      </a>
+    </div>
+
+    <div style="border-top: 1px solid #222; margin-top: 35px; padding-top: 20px; font-size: 12px; color: #666; text-align: center; line-height: 1.6;">
+      <p style="margin: 0;">You are receiving this birthday greeting as a registered member of The Grand Store.</p>
+      <p style="margin: 4px 0 0 0;">Strictly 18+ for wine, spirits, and tobacco products. Enjoy responsibly.</p>
+    </div>
+  `;
+
+  return generateEmailTemplate(`Happy Birthday from The Grand Store! 🥂`, content);
+};
+
 module.exports = {
   welcomeEmailTemplate,
   verificationEmailTemplate,
@@ -412,5 +472,6 @@ module.exports = {
   auctionReminderTemplate,
   auctionWinTemplate,
   bulkNewsletterTemplate,
-  genericNotificationTemplate
+  genericNotificationTemplate,
+  birthdayCelebrationEmailTemplate,
 };

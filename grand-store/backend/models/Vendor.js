@@ -197,6 +197,27 @@ const vendorSchema = new mongoose.Schema({
     type: String,
     enum: ['none', 'active', 'expired'],
     default: 'none'
+  },
+
+  // Recurring Monthly Maintenance Fee
+  maintenanceFee: {
+    amount: { type: Number, default: 500 },
+    status: {
+      type: String,
+      enum: ['paid', 'due', 'overdue', 'grace_period'],
+      default: 'paid'
+    },
+    lastPaidAt: { type: Date, default: Date.now },
+    nextDueAt: {
+      type: Date,
+      default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    },
+    paymentHistory: [{
+      amount: Number,
+      paidAt: { type: Date, default: Date.now },
+      paymentMethod: { type: String, default: 'card' },
+      reference: String
+    }]
   }
 }, { timestamps: true });
 

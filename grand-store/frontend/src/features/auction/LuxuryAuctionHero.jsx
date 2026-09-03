@@ -5,6 +5,7 @@ import { ArrowRight, Clock, ShieldCheck, ChevronDown, Check } from 'lucide-react
 import AuctionCountdown from './AuctionCountdown';
 import { getAuctionPhase, getAuctionTargetTime } from './auctionPhase';
 import Price from '../../components/ui/Price';
+import { useCurrency } from '../../context/CurrencyContext';
 
 export default function LuxuryAuctionHero({ lots, now, onNotify, onRefresh }) {
   if (!lots || lots.length === 0) return null;
@@ -43,23 +44,69 @@ export default function LuxuryAuctionHero({ lots, now, onNotify, onRefresh }) {
   );
 }
 
+const CURRENCY_SYMBOLS = {
+  ZAR: 'R',
+  USD: '$',
+  EUR: '€',
+  GBP: '£',
+  INR: '₹',
+  AUD: 'A$',
+  CAD: 'C$'
+};
+
 function LuxuryAuctionSlide({ lot, now, index, total, onNotify, onRefresh }) {
+  const { currency, rates, changeCurrency, availableCurrencies } = useCurrency();
   const [bidAmount, setBidAmount] = useState('');
   const [isMaxBid, setIsMaxBid] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
   
   const phase = lot.displayStatus || getAuctionPhase(lot, now);
   const isUpcoming = phase === 'upcoming';
   const targetTime = getAuctionTargetTime(lot, now);
-  const nextMinimum = lot.currentBid === 0 ? lot.startingBid : lot.currentBid + lot.bidIncrement;
+  const nextMinimumZar = lot.currentBid === 0 ? lot.startingBid : lot.currentBid + (lot.bidIncrement || 50);
   const vendorName = lot.vendor ? (lot.vendor.storeName || lot.vendor.name) : 'The Grand Store';
+
+  // Dynamic currency conversion helpers
+  const convertFromZar = (zarAmt, curr = currency) => {
+    if (!rates || curr === 'ZAR' || !rates[curr] || !rates['ZAR']) return zarAmt;
+    const rateZarToCurr = rates[curr] / rates['ZAR'];
+    return zarAmt * rateZarToCurr;
+  };
+
+  const convertToZar = (currAmt, curr = currency) => {
+    if (!rates || curr === 'ZAR' || !rates[curr] || !rates['ZAR']) return currAmt;
+    const rateCurrToZar = rates['ZAR'] / rates[curr];
+    return currAmt * rateCurrToZar;
+  };
+
+  const activeSymbol = CURRENCY_SYMBOLS[currency] || currency;
+
+  // Next minimum bid converted to user's selected currency
+  const nextMinimumInCurrency = currency === 'ZAR'
+    ? nextMinimumZar
+    : Math.ceil(convertFromZar(nextMinimumZar, currency) * 100) / 100;
+
+  // Live converted ZAR reference for entered amount
+  const enteredNum = parseFloat(bidAmount);
+  const estimatedZar = !isNaN(enteredNum) && enteredNum > 0
+    ? Math.round(convertToZar(enteredNum, currency))
+    : null;
 
   const submitBid = async (e) => {
     e.preventDefault();
-    const amt = Number(bidAmount);
+    const enteredAmt = Number(bidAmount);
     
-    if (isNaN(amt) || amt < nextMinimum) {
-      onNotify(`Your bid must be at least R${nextMinimum.toLocaleString('en-ZA')}`);
+    if (isNaN(enteredAmt) || enteredAmt <= 0) {
+      onNotify('Please enter a valid bid amount.');
+      return;
+    }
+
+    const amtInZar = Math.round(convertToZar(enteredAmt, currency));
+
+    if (amtInZar < nextMinimumZar) {
+      const minStr = `${activeSymbol} ${nextMinimumInCurrency.toLocaleString(undefined, { minimumFractionDigits: currency === 'ZAR' ? 0 : 2, maximumFractionDigits: 2 })}`;
+      onNotify(`Your bid must be at least ${minStr} (≈ R${nextMinimumZar.toLocaleString('en-ZA')})`);
       return;
     }
     
@@ -73,8 +120,10 @@ function LuxuryAuctionSlide({ lot, now, index, total, onNotify, onRefresh }) {
     setSubmitting(true);
     try {
       const res = await api.post(`/auction/${lot._id}/bid`, {
-        amount: amt,
-        isMaxBid
+        amount: amtInZar,
+        isMaxBid,
+        placedCurrency: currency,
+        placedAmount: enteredAmt
       });
       
       onNotify(res.data.message || 'Bid placed successfully!');
@@ -175,26 +224,84 @@ function LuxuryAuctionSlide({ lot, now, index, total, onNotify, onRefresh }) {
               </div>
             ) : (
             <form onSubmit={submitBid} className="flex flex-col gap-4">
-               <div className="flex flex-col sm:flex-row gap-4">
-                 <div className="relative flex-1">
-                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[var(--color-ivory-muted)] font-serif text-lg">R</span>
-                    <input 
-                      type="number"
-                      required
-                      value={bidAmount}
-                      onChange={e => setBidAmount(e.target.value)}
-                      placeholder={nextMinimum.toLocaleString('en-ZA')}
-                      min={nextMinimum}
-                      step="1"
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 text-lg font-mono text-[var(--color-ivory)] focus:outline-none focus:border-[var(--color-gold)] transition-colors placeholder-white/20"
-                    />
+               <div className="flex flex-col gap-2">
+                 <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+                   <div className="relative flex-1">
+                     {/* Currency Selector Pill */}
+                     <div className="absolute left-3 top-1/2 -translate-y-1/2 z-20 flex items-center">
+                       <button
+                         type="button"
+                         onClick={() => setShowCurrencyDropdown(!showCurrencyDropdown)}
+                         className="flex items-center gap-1.5 bg-black/70 hover:bg-white/10 border border-white/20 hover:border-[var(--color-gold)]/60 px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold text-[#f5d77f] transition-all cursor-pointer shadow-md"
+                         title="Change bidding currency"
+                       >
+                         <span>{activeSymbol}</span>
+                         <span className="text-[11px] text-white/70">{currency}</span>
+                         <ChevronDown size={11} className={`text-white/40 transition-transform ${showCurrencyDropdown ? 'rotate-180' : ''}`} />
+                       </button>
+
+                       {/* Currency Dropdown Menu */}
+                       {showCurrencyDropdown && (
+                         <div className="absolute top-full left-0 mt-2 w-44 bg-[#12110e] border border-[#c9a35b]/40 rounded-2xl shadow-2xl py-2 z-50 max-h-56 overflow-y-auto scrollbar-thin">
+                           <div className="px-3 py-1.5 text-[9px] uppercase tracking-widest text-white/40 font-bold border-b border-white/5 mb-1">
+                             Select Currency
+                           </div>
+                           {(availableCurrencies || ['ZAR', 'USD', 'EUR', 'GBP', 'INR', 'AUD', 'CAD']).map((c) => (
+                             <button
+                               key={c}
+                               type="button"
+                               onClick={() => {
+                                 changeCurrency(c);
+                                 setShowCurrencyDropdown(false);
+                               }}
+                               className={`w-full px-3 py-1.5 text-left text-xs font-mono flex items-center justify-between hover:bg-white/10 transition-colors cursor-pointer ${
+                                 currency === c ? 'text-[#f5d77f] font-bold bg-white/5' : 'text-white/70'
+                               }`}
+                             >
+                               <span>{CURRENCY_SYMBOLS[c] || c} {c}</span>
+                               {currency === c && <Check size={12} className="text-[#f5d77f]" />}
+                             </button>
+                           ))}
+                         </div>
+                       )}
+                     </div>
+
+                     <input 
+                       type="number"
+                       required
+                       value={bidAmount}
+                       onChange={e => setBidAmount(e.target.value)}
+                       placeholder={`Min: ${nextMinimumInCurrency.toLocaleString(undefined, { minimumFractionDigits: currency === 'ZAR' ? 0 : 2, maximumFractionDigits: 2 })}`}
+                       min={nextMinimumInCurrency}
+                       step={currency === 'ZAR' ? "1" : "0.01"}
+                       className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-28 pr-6 text-lg font-mono text-[var(--color-ivory)] focus:outline-none focus:border-[var(--color-gold)] transition-colors placeholder-white/20"
+                     />
+                   </div>
+                   <button 
+                     disabled={submitting}
+                     className="bg-gold-gradient text-black font-bold uppercase tracking-widest text-xs px-8 py-4 rounded-2xl hover:shadow-[0_0_25px_rgba(212,175,55,0.4)] transition-all flex items-center justify-center gap-3 disabled:opacity-50 whitespace-nowrap cursor-pointer shrink-0"
+                   >
+                     {submitting ? 'Placing...' : 'Place Bid'} <ArrowRight size={14} />
+                   </button>
                  </div>
-                 <button 
-                   disabled={submitting}
-                   className="bg-gold-gradient text-black font-bold uppercase tracking-widest text-xs px-8 py-4 rounded-2xl hover:shadow-[0_0_25px_rgba(212,175,55,0.4)] transition-all flex items-center justify-center gap-3 disabled:opacity-50 whitespace-nowrap"
-                 >
-                   {submitting ? 'Placing...' : 'Place Bid'} <ArrowRight size={14} />
-                 </button>
+
+                 {/* Live Converted ZAR Reference if not bidding in ZAR */}
+                 {currency !== 'ZAR' && (
+                   <div className="flex flex-wrap items-center justify-between gap-2 px-2 text-xs font-mono text-white/50">
+                     <span>
+                       {estimatedZar ? (
+                         <span className="text-[var(--color-gold)] font-semibold">
+                           ≈ R {estimatedZar.toLocaleString('en-ZA')} ZAR
+                         </span>
+                       ) : (
+                         <span>Next min in ZAR: R {nextMinimumZar.toLocaleString('en-ZA')}</span>
+                       )}
+                     </span>
+                     <span className="text-[10px] text-white/40">
+                       Official live exchange rate applied
+                     </span>
+                   </div>
+                 )}
                </div>
                
                <div className="flex items-center justify-between mt-2">

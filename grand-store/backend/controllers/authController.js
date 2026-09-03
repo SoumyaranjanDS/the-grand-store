@@ -42,6 +42,8 @@ const sendTokenResponse = (user, statusCode, res) => {
     name: user.name,
     email: user.email,
     role: user.role,
+    phone: user.phone || user.phoneNumber || '',
+    phoneNumber: user.phoneNumber || user.phone || '',
     token: token,
     referralCode: user.referralCode,
     rewardBalance: user.rewardBalance || 0,
@@ -318,6 +320,13 @@ const updateUserProfile = async (req, res) => {
 
     if (user) {
       user.name = req.body.name || user.name;
+      if (req.body.phone !== undefined) {
+        user.phone = req.body.phone;
+        user.phoneNumber = req.body.phone;
+      } else if (req.body.phoneNumber !== undefined) {
+        user.phone = req.body.phoneNumber;
+        user.phoneNumber = req.body.phoneNumber;
+      }
       // Note: Email cannot be changed
       // user.email = req.body.email || user.email;
 
@@ -519,6 +528,354 @@ const getReferralSummary = async (req, res) => {
   }
 };
 
+// @desc    Get customer banking details
+// @route   GET /api/auth/banking
+// @access  Private
+const getCustomerBankDetails = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('bankAccountDetails');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    let bankDetails = user.bankAccountDetails || null;
+    if (!bankDetails?.accountNumber) {
+      const BidderDeposit = require('../models/BidderDeposit');
+      const deposit = await BidderDeposit.findOne({ 
+        bidder: req.user._id, 
+        'bankAccountDetails.accountNumber': { $exists: true, $ne: '' } 
+      }).sort({ createdAt: -1 });
+
+      if (deposit?.bankAccountDetails?.accountNumber) {
+        bankDetails = deposit.bankAccountDetails;
+        user.bankAccountDetails = {
+          ...deposit.bankAccountDetails,
+          updatedAt: new Date()
+        };
+        await user.save();
+      }
+    }
+
+    res.json({
+      bankAccountDetails: bankDetails || {
+        bankName: '',
+        accountHolder: '',
+        accountNumber: '',
+        branchCode: ''
+      }
+    });
+  } catch (error) {
+    console.error('Get Bank Details Error:', error);
+    res.status(500).json({ message: 'Server error loading bank details' });
+  }
+};
+
+// @desc    Update customer banking details
+// @route   PUT /api/auth/banking
+// @access  Private
+const updateCustomerBankDetails = async (req, res) => {
+  try {
+    const { bankName, accountHolder, accountNumber, branchCode } = req.body;
+
+    if (!bankName || !accountHolder || !accountNumber) {
+      return res.status(400).json({ message: 'Bank name, account holder name, and account number are required.' });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.bankAccountDetails = {
+      bankName: bankName.trim(),
+      accountHolder: accountHolder.trim(),
+      accountNumber: accountNumber.trim(),
+      branchCode: (branchCode || '').trim(),
+      updatedAt: new Date()
+    };
+
+    await user.save();
+
+    res.json({
+      message: 'Bank details saved successfully',
+      bankAccountDetails: user.bankAccountDetails
+    });
+  } catch (error) {
+    console.error('Update Bank Details Error:', error);
+    res.status(500).json({ message: 'Failed to save bank details' });
+  }
+};
+
+// @desc    Get customer unified calendar activities (Orders, Deliveries, Tickets, Auctions, Birthday)
+// @route   GET /api/auth/calendar-activities
+// @access  Private
+const getCustomerCalendarActivities = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('name email dateOfBirth');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const Order = require('../models/Order');
+    const Booking = require('../models/Booking');
+    const Bid = require('../models/Bid');
+    const AuctionLot = require('../models/AuctionLot');
+    const PlatformSettings = require('../models/PlatformSettings');
+
+    const [orders, bookings, bids, wonLots, settings] = await Promise.all([
+      Order.find({ user: user._id })
+        .populate('shipments')
+        .sort({ createdAt: -1 }),
+      Booking.find({ user: user._id })
+        .populate('event')
+        .sort({ bookingDate: -1 }),
+      Bid.find({ user: user._id })
+        .populate('lot')
+        .sort({ createdAt: -1 }),
+      AuctionLot.find({ winner: user._id })
+        .sort({ endDate: -1 }),
+      PlatformSettings.findOne()
+    ]);
+
+    // Format activities into a normalized calendar stream
+    const activities = [];
+
+    // 1. Birthday milestone (previous year, current year, next year for calendar navigation)
+    if (user.dateOfBirth) {
+      const dob = new Date(user.dateOfBirth);
+      if (!isNaN(dob.getTime())) {
+        const currentYear = new Date().getFullYear();
+        [currentYear - 1, currentYear, currentYear + 1].forEach((yr) => {
+          const bdayDate = new Date(yr, dob.getMonth(), dob.getDate(), 9, 0, 0);
+          activities.push({
+            id: `bday-${yr}`,
+            type: 'birthday',
+            category: 'birthday',
+            date: bdayDate,
+            title: `Your Birthday 🥂`,
+            subtitle: `Annual Celebration Milestone (${yr})`,
+            badge: 'Birthday',
+            status: 'celebration',
+            year: yr,
+            details: {
+              dateOfBirth: user.dateOfBirth,
+              discountEnabled: settings?.birthdayDiscountEnabled ?? true,
+              discountPercent: settings?.birthdayDiscountPercent || 15,
+              promoCode: settings?.birthdayPromoCode || 'BDAY-LUXURY15',
+              customMessage: settings?.birthdayCustomMessage || ''
+            }
+          });
+        });
+      }
+    }
+
+    // 2. Orders and Courier Deliveries (consolidate multiple events for the same order)
+    orders.forEach((order) => {
+      const orderRef = order.orderId || order.transactionId?.slice(-8) || order._id.toString().slice(-6);
+
+      if (order.shipments && order.shipments.length > 0) {
+        // Use the latest/active shipment status
+        const shp = order.shipments[order.shipments.length - 1];
+        const targetDate = shp.actualDeliveryDate || shp.estimatedDeliveryDate || order.createdAt;
+        activities.push({
+          id: `ord-${order._id}`,
+          type: 'delivery',
+          category: 'orders',
+          date: targetDate,
+          title: `Order #${orderRef}: ${shp.status || 'In Transit'}`,
+          subtitle: `Tracking: ${shp.mainTrackingNumber || shp.shipmentId || 'Standard Courier'} • R${Number(order.totalPrice || 0).toLocaleString()}`,
+          badge: shp.status || (order.isDelivered ? 'Delivered' : 'In Transit'),
+          status: shp.status === 'Delivered' || order.isDelivered ? 'delivered' : 'in_transit',
+          details: {
+            trackingNumber: shp.mainTrackingNumber,
+            trackingUrl: shp.mainTrackingUrl,
+            deliveryMethod: shp.deliveryMethod,
+            status: shp.status,
+            estimatedDeliveryDate: shp.estimatedDeliveryDate,
+            actualDeliveryDate: shp.actualDeliveryDate,
+            orderRef: order.orderId || order._id,
+            totalPrice: order.totalPrice,
+            items: order.orderItems,
+            link: '/customer/orders'
+          }
+        });
+      } else {
+        const isDeliv = order.isDelivered && order.deliveredAt;
+        activities.push({
+          id: `ord-${order._id}`,
+          type: isDeliv ? 'delivery' : 'order_placed',
+          category: 'orders',
+          date: isDeliv ? order.deliveredAt : order.createdAt,
+          title: isDeliv ? `Delivered: Order #${orderRef}` : `Order #${orderRef}`,
+          subtitle: `${order.orderItems?.length || 0} item${(order.orderItems?.length || 0) === 1 ? '' : 's'} • R${Number(order.totalPrice || 0).toLocaleString()}`,
+          badge: isDeliv ? 'Delivered' : (order.paymentStatus || 'Placed'),
+          status: isDeliv ? 'delivered' : (order.paymentStatus || 'placed'),
+          details: {
+            orderId: order.orderId,
+            totalPrice: order.totalPrice,
+            items: order.orderItems,
+            shippingAddress: order.shippingAddress,
+            isDelivered: order.isDelivered,
+            paymentStatus: order.paymentStatus,
+            link: '/customer/orders'
+          }
+        });
+      }
+    });
+
+    // 3. Event Tickets (group multiple bookings for same event)
+    const seenEvents = new Map();
+    bookings.forEach((booking) => {
+      const eventId = booking.event?._id?.toString() || booking._id.toString();
+      const eventDate = booking.event?.date || booking.bookingDate;
+
+      if (seenEvents.has(eventId)) {
+        const existing = seenEvents.get(eventId);
+        existing.details.quantity = (existing.details.quantity || 1) + (booking.quantity || 1);
+        existing.subtitle = `${booking.ticketType || 'Ticket'} (x${existing.details.quantity}) • ${booking.event?.startTime || 'TBA'}`;
+        return;
+      }
+
+      const item = {
+        id: `bkg-${booking._id}`,
+        type: 'event_ticket',
+        category: 'events',
+        date: eventDate,
+        title: booking.event?.title || 'Exclusive Tasting Event',
+        subtitle: `${booking.ticketType || 'Ticket'} (x${booking.quantity}) • ${booking.event?.startTime || 'TBA'}`,
+        badge: booking.paymentStatus === 'Paid' ? 'Ticket Confirmed' : (booking.paymentStatus || 'Pending'),
+        status: booking.paymentStatus,
+        details: {
+          ticketId: booking.ticketId,
+          gsReference: booking.gsReference,
+          ticketType: booking.ticketType,
+          quantity: booking.quantity,
+          location: booking.event?.location || 'Grand Store Venue',
+          startTime: booking.event?.startTime,
+          format: booking.event?.format,
+          eventId: booking.event?._id,
+          ticketStatus: booking.ticketStatus,
+          link: '/customer/tickets'
+        }
+      };
+      seenEvents.set(eventId, item);
+      activities.push(item);
+    });
+
+    // 4. Won Lots (priority)
+    const wonLotIds = new Set(wonLots.map(l => l._id.toString()));
+    wonLots.forEach((lot) => {
+      activities.push({
+        id: `won-${lot._id}`,
+        type: 'auction_win',
+        category: 'auctions',
+        date: lot.endDate || lot.updatedAt || new Date(),
+        title: `🏆 Won Lot #${lot.lotNumber}: ${lot.title}`,
+        subtitle: `Winning Bid: R${Number(lot.winningBid || lot.currentBid || 0).toLocaleString()}`,
+        badge: 'Auction Won',
+        status: 'won',
+        details: {
+          lotTitle: lot.title,
+          lotNumber: lot.lotNumber,
+          lotId: lot._id,
+          winningBid: lot.winningBid || lot.currentBid,
+          status: lot.status,
+          link: `/auction/${lot._id}`
+        }
+      });
+    });
+
+    // 5. Auction Bids (Deduplicate: only keep highest/latest bid per lot, ignore already won lots)
+    const seenLots = new Set();
+    bids.forEach((bid) => {
+      if (!bid.lot) return;
+      const lotId = bid.lot._id ? bid.lot._id.toString() : bid.lot.toString();
+
+      // Skip intermediate bids if user already won this lot
+      if (wonLotIds.has(lotId)) return;
+
+      // Only show user's latest/highest bid on each lot
+      if (seenLots.has(lotId)) return;
+      seenLots.add(lotId);
+
+      activities.push({
+        id: `bid-${bid._id}`,
+        type: 'auction_bid',
+        category: 'auctions',
+        date: bid.createdAt,
+        title: `Bid: R${Number(bid.amount).toLocaleString()} on Lot #${bid.lot.lotNumber || ''}`,
+        subtitle: bid.lot.title,
+        badge: bid.status === 'winning' ? 'Highest Bid' : (bid.status || 'Bid Placed'),
+        status: bid.status,
+        details: {
+          lotTitle: bid.lot.title,
+          lotNumber: bid.lot.lotNumber,
+          lotId: bid.lot._id,
+          amount: bid.amount,
+          status: bid.status,
+          currentBid: bid.lot.currentBid,
+          endDate: bid.lot.endDate,
+          link: `/auction/${bid.lot._id}`
+        }
+      });
+    });
+
+    // 6. Chronological Sort: newest/upcoming first
+    activities.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    res.json({
+      activities,
+      user: {
+        name: user.name,
+        email: user.email,
+        dateOfBirth: user.dateOfBirth
+      },
+      birthdaySettings: {
+        enabled: settings?.birthdayEmailEnabled ?? true,
+        discountEnabled: settings?.birthdayDiscountEnabled ?? true,
+        discountPercent: settings?.birthdayDiscountPercent || 15,
+        promoCode: settings?.birthdayPromoCode || 'BDAY-LUXURY15',
+        customMessage: settings?.birthdayCustomMessage || ''
+      }
+    });
+  } catch (error) {
+    console.error('Calendar activities error:', error);
+    res.status(500).json({ message: 'Failed to load calendar activities' });
+  }
+};
+
+// @desc    Send test birthday email to current logged in user
+// @route   POST /api/auth/test-birthday-email
+// @access  Private
+const testBirthdayEmail = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user || !user.email) {
+      return res.status(400).json({ message: 'User does not have a valid email' });
+    }
+
+    const PlatformSettings = require('../models/PlatformSettings');
+    const { sendEmail } = require('../utils/emailService');
+    const { birthdayCelebrationEmailTemplate } = require('../utils/emailTemplates');
+
+    const settings = (await PlatformSettings.findOne()) || {};
+
+    await sendEmail({
+      to: user.email,
+      subject: `[TEST] Happy Birthday from The Grand Store! 🍾 🥂`,
+      html: birthdayCelebrationEmailTemplate({
+        name: user.name || 'Esteemed Connoisseur',
+        discountEnabled: settings.birthdayDiscountEnabled !== undefined ? settings.birthdayDiscountEnabled : true,
+        discountPercent: settings.birthdayDiscountPercent || 15,
+        promoCode: settings.birthdayPromoCode || 'BDAY-LUXURY15',
+        customMessage: settings.birthdayCustomMessage || '',
+        storeUrl: process.env.CLIENT_URL || 'http://localhost:5173'
+      })
+    });
+
+    res.json({
+      message: `Test birthday email successfully dispatched to ${user.email}!`
+    });
+  } catch (error) {
+    console.error('Test birthday email error:', error);
+    res.status(500).json({ message: 'Failed to send test birthday email: ' + error.message });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -531,4 +888,8 @@ module.exports = {
   deleteUserProfile,
   googleAuth,
   getReferralSummary,
+  getCustomerBankDetails,
+  updateCustomerBankDetails,
+  getCustomerCalendarActivities,
+  testBirthdayEmail,
 };

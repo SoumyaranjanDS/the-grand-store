@@ -14,6 +14,8 @@ import {
   MapPin,
   LogOut,
   Trash2,
+  Landmark,
+  Calendar,
 } from "lucide-react";
 import api from '../../api';
 
@@ -55,6 +57,32 @@ export default function CustomerLayout() {
         }`}
       >
         <User size={16} /> My Profile
+      </button>
+      <button
+        onClick={() => {
+          navigate("/customer/calendar");
+          setMobileMenuOpen(false);
+        }}
+        className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all text-left text-xs uppercase tracking-widest border ${
+          location.pathname === "/customer/calendar"
+            ? "bg-white/[0.05] text-gold-gradient shadow-[0_0_15px_rgba(212,175,55,0.05)] font-semibold border-white/[0.05]"
+            : "text-[var(--color-ivory-muted)] hover:bg-white/[0.03] hover:text-[var(--color-ivory)] border-transparent"
+        }`}
+      >
+        <Calendar size={16} /> Activity Calendar
+      </button>
+      <button
+        onClick={() => {
+          navigate("/customer/banking");
+          setMobileMenuOpen(false);
+        }}
+        className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all text-left text-xs uppercase tracking-widest border ${
+          location.pathname === "/customer/banking"
+            ? "bg-white/[0.05] text-gold-gradient shadow-[0_0_15px_rgba(212,175,55,0.05)] font-semibold border-white/[0.05]"
+            : "text-[var(--color-ivory-muted)] hover:bg-white/[0.03] hover:text-[var(--color-ivory)] border-transparent"
+        }`}
+      >
+        <Landmark size={16} /> Bank Details
       </button>
       <button
         onClick={() => {
@@ -268,7 +296,7 @@ export default function CustomerLayout() {
         </AnimatePresence>
 
         {/* Main Content Area */}
-        <main className="flex-1 lg:ml-64 p-4 md:p-8 lg:p-16 flex flex-col gap-8 md:gap-12 z-10 w-full overflow-x-hidden min-h-0">
+        <main className="flex-1 lg:ml-64 p-3 sm:p-6 lg:p-8 xl:p-10 flex flex-col gap-6 md:gap-10 z-10 w-full overflow-x-hidden min-h-0">
           <Outlet />
         </main>
       </div>

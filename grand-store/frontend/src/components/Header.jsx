@@ -24,6 +24,7 @@ import { useProducts } from "../context/ProductContext";
 import { useGeoLocation } from "../context/LocationContext";
 import { useCurrency } from "../context/CurrencyContext";
 import LocaleSelector, { LocaleIcon } from "./LocaleSelector";
+import NotificationBell from "./NotificationBell";
 
 const currencyFlagCountries = {
   AED: 'AE', AUD: 'AU', BWP: 'BW', BRL: 'BR', CAD: 'CA', CHF: 'CH', CNY: 'CN',
@@ -421,6 +422,8 @@ export default function Header({
 
           {/* Right: Header Actions */}
           <div className="header-actions flex items-center justify-end gap-1 sm:gap-2.5 shrink-0">
+            {user && <NotificationBell />}
+
             {user ? (
               <IconButton
                 label="Profile"

@@ -16,6 +16,16 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
+  phone: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  phoneNumber: {
+    type: String,
+    default: '',
+    trim: true,
+  },
   isEmailVerified: {
     type: Boolean,
     default: false,
@@ -132,6 +142,16 @@ const userSchema = new mongoose.Schema({
   },
   rulesAcceptedAt: {
     type: Date
+  },
+  bankAccountDetails: {
+    bankName: { type: String },
+    accountHolder: { type: String },
+    accountNumber: { type: String },
+    branchCode: { type: String },
+    updatedAt: { type: Date }
+  },
+  lastBirthdayEmailSentYear: {
+    type: Number
   },
   isBiddingSuspended: {
     type: Boolean,

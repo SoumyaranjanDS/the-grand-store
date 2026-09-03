@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../../api';
 import { 
   ChevronRight, ArrowRight, ShieldCheck, CreditCard, Loader2, 
-  Landmark, UploadCloud, CheckCircle2, Copy, FileText, X, ExternalLink, Clock, Sparkles
+  Landmark, UploadCloud, CheckCircle2, Copy, FileText, X, ExternalLink, Clock, Sparkles, Phone
 } from 'lucide-react';
 import LocationInput from '../../components/LocationInput';
 import PaymentForm from '../checkout/PaymentForm';
@@ -27,9 +27,18 @@ export default function AuctionCheckout({ onNotify }) {
   const [bankTransferSubmitted, setBankTransferSubmitted] = useState(false);
   const [createdOrder, setCreatedOrder] = useState(null);
 
+  const storedUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('userInfo')) || {};
+    } catch {
+      return {};
+    }
+  })();
+
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    firstName: storedUser.name ? storedUser.name.split(' ')[0] : '',
+    lastName: storedUser.name && storedUser.name.split(' ').length > 1 ? storedUser.name.split(' ').slice(1).join(' ') : '',
+    phone: storedUser.phone || storedUser.phoneNumber || '',
     address: '',
     city: '',
     postalCode: '',
@@ -110,7 +119,9 @@ export default function AuctionCheckout({ onNotify }) {
           address: formData.address, 
           city: formData.city, 
           postalCode: formData.postalCode, 
-          country: formData.country 
+          country: formData.country,
+          phone: formData.phone || storedUser.phone || storedUser.phoneNumber || '',
+          phoneNumber: formData.phone || storedUser.phone || storedUser.phoneNumber || ''
         },
         calculatedShipping: dynamicShipping,
         paymentMethod: paymentMethod === 'bank_transfer' ? 'Bank Transfer' : 'PayFast',
@@ -191,6 +202,27 @@ export default function AuctionCheckout({ onNotify }) {
                     <div>
                       <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-2">Last Name</label>
                       <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} required className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--color-gold)]/50 focus:outline-none transition-colors" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] flex items-center gap-1.5">
+                          <Phone size={13} className="text-[var(--color-gold)]" /> Contact Phone Number (For Courier Tracking)
+                        </label>
+                        {(storedUser.phone || storedUser.phoneNumber) && formData.phone === (storedUser.phone || storedUser.phoneNumber) && (
+                          <span className="text-[10px] text-[var(--color-gold)] font-medium flex items-center gap-1 bg-[var(--color-gold)]/10 px-2 py-0.5 rounded-full border border-[var(--color-gold)]/20">
+                            <CheckCircle2 size={11} /> Auto-filled from profile
+                          </span>
+                        )}
+                      </div>
+                      <input 
+                        type="tel" 
+                        name="phone" 
+                        value={formData.phone} 
+                        onChange={handleChange} 
+                        required 
+                        placeholder="e.g. +27 82 123 4567" 
+                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--color-gold)]/50 focus:outline-none transition-colors text-white" 
+                      />
                     </div>
                     <div className="md:col-span-2">
                       <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-2">Street Address</label>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import gsap from 'gsap'
 import { ArrowDown, ArrowRight } from 'lucide-react'
 
@@ -15,23 +16,23 @@ const heroFilms = [
   },
   {
     src: '/assets/media/grand-store-hero-cellar-hd.mp4',
-    label: 'A cinematic journey through a premium wine cellar',
+    label: 'Exclusive Rare Spirits & Fine Wine Auctions',
     maxTime: 13,
-    titleLine1: 'Not simply poured.',
-    titleLine2: 'Remembered.',
-    titleLine2Class: 'hero-title-line italic',
-    ctaText: 'Explore the collection',
-    ctaLink: '#arrivals',
+    titleLine1: 'Rare Vintages.',
+    titleLine2: 'Live Auctions.',
+    titleLine2Class: 'hero-title-line italic text-[#e5a93c]',
+    ctaText: 'Explore Live Auctions',
+    ctaLink: '/auction',
   },
   {
     src: '/assets/media/grand-store-hero-third.mp4',
-    label: 'A refined celebration featuring premium wine and spirits',
+    label: 'Curated Masterclasses & Exclusive Tastings',
     maxTime: 13,
-    titleLine1: 'Not simply poured.',
-    titleLine2: 'Remembered.',
-    titleLine2Class: 'hero-title-line italic',
-    ctaText: 'Explore the collection',
-    ctaLink: '#arrivals',
+    titleLine1: 'Exclusive Tastings.',
+    titleLine2: 'Private Events.',
+    titleLine2Class: 'hero-title-line italic text-[#e5a93c]',
+    ctaText: 'Discover Upcoming Events',
+    ctaLink: '/events',
   },
   {
     src: 'https://res.cloudinary.com/oioqrgj0/video/upload/v1787819585/cigar-store/hero/tqvn9t0up9y8vsxrlbix.mp4',
@@ -152,9 +153,15 @@ export default function HeroDesktop() {
               <span className={activeFilm.titleLine2Class || "hero-title-line italic"}>{activeFilm.titleLine2}</span>
             </h1>
             <div className="hero-cta-row" key={`cta-${activeFilmIndex}`}>
-              <a className="button button-gold" href={activeFilm.ctaLink} target={activeFilm.ctaLink.startsWith('http') ? '_blank' : '_self'} rel="noreferrer">
-                {activeFilm.ctaText} <ArrowRight size={17} />
-              </a>
+              {activeFilm.ctaLink.startsWith('http') || activeFilm.ctaLink.startsWith('#') ? (
+                <a className="button button-gold" href={activeFilm.ctaLink} target={activeFilm.ctaLink.startsWith('http') ? '_blank' : '_self'} rel="noreferrer">
+                  {activeFilm.ctaText} <ArrowRight size={17} />
+                </a>
+              ) : (
+                <Link className="button button-gold" to={activeFilm.ctaLink}>
+                  {activeFilm.ctaText} <ArrowRight size={17} />
+                </Link>
+              )}
             </div>
           </div>
         </div>

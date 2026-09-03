@@ -15,6 +15,13 @@ const bidSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  placedCurrency: {
+    type: String,
+    default: 'ZAR'
+  },
+  placedAmount: {
+    type: Number
+  },
   bidType: {
     type: String,
     enum: ['manual', 'proxy'],

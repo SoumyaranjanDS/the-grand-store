@@ -1076,8 +1076,9 @@ export default function AdminAuctionPanel({ onNotify }) {
                     <tr>
                       <th className="p-4">Reference</th>
                       <th className="p-4">Bidder</th>
-                      <th className="p-4">Amount</th>
-                      <th className="p-4">Method</th>
+                      <th className="p-4">Tier & Deposit</th>
+                      <th className="p-4">Method & Proof</th>
+                      <th className="p-4">Refund Bank Account</th>
                       <th className="p-4">Status</th>
                       <th className="p-4">Date</th>
                       <th className="p-4 text-right">Actions</th>
@@ -1091,10 +1092,43 @@ export default function AdminAuctionPanel({ onNotify }) {
                           <p className="font-medium text-white">{d.bidder?.name || 'N/A'}</p>
                           <p className="text-[10px] text-white/40">{d.bidder?.email}</p>
                         </td>
-                        <td className="p-4 font-mono text-[var(--color-gold)] font-bold">
-                          R{d.amount?.toLocaleString()}
+                        <td className="p-4">
+                          <span className="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-amber-500/10 text-amber-300 border border-amber-500/20 mb-1">
+                            {d.tier === 'premium' ? 'VIP Premium Tier' : 'Standard'}
+                          </span>
+                          <p className="font-mono text-[var(--color-gold)] font-bold text-sm">
+                            R{d.amount?.toLocaleString()}
+                          </p>
                         </td>
-                        <td className="p-4 uppercase text-[10px] tracking-wider text-white/60">{d.paymentMethod}</td>
+                        <td className="p-4">
+                          <span className="uppercase text-[10px] tracking-wider text-white/70 block mb-1">{d.paymentMethod}</span>
+                          {d.proofOfPayment ? (
+                            <a
+                              href={d.proofOfPayment}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[10px] text-blue-400 hover:text-blue-300 underline flex items-center gap-1"
+                            >
+                              <ExternalLink size={10} /> View Proof
+                            </a>
+                          ) : (
+                            <span className="text-[10px] text-white/30">Direct Gateway</span>
+                          )}
+                        </td>
+                        <td className="p-4 text-[11px]">
+                          {d.bankAccountDetails?.accountNumber ? (
+                            <div className="bg-black/40 p-2 rounded border border-white/5 space-y-0.5 text-[10px]">
+                              <p className="text-white font-medium">{d.bankAccountDetails.bankName}</p>
+                              <p className="text-white/60 font-mono">Acc: {d.bankAccountDetails.accountNumber}</p>
+                              <p className="text-white/40">Holder: {d.bankAccountDetails.accountHolder || d.bidder?.name}</p>
+                              {d.bankAccountDetails.branchCode && (
+                                <p className="text-white/40">Branch: {d.bankAccountDetails.branchCode}</p>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-white/30 text-[10px]">Gateway Reversal</span>
+                          )}
+                        </td>
                         <td className="p-4">
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${d.paymentStatus === 'paid' ? 'bg-emerald-500/20 text-emerald-400' : d.paymentStatus === 'refunded' ? 'bg-blue-500/20 text-blue-400' : 'bg-amber-500/20 text-amber-400'}`}>
                             {d.paymentStatus}

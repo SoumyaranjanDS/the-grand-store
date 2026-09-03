@@ -84,6 +84,96 @@ const startVendorJobs = () => {
     } catch (error) {
       console.error("Error running vendor trial expiry job", error);
     }
+
+    // 3. Monthly Maintenance Fee Audit & Due Date Reminders
+    try {
+      console.log("Running Vendor Monthly Maintenance Fee Audit...");
+      const PlatformSettings = require("../models/PlatformSettings");
+      const { createInAppNotification } = require("../controllers/notificationController");
+
+      const settings = (await PlatformSettings.findOne()) || {};
+      const configuredFee = settings.vendorMonthlyMaintenanceFee || 500;
+      const graceDays = settings.vendorMaintenanceGraceDays || 7;
+      const now = new Date();
+
+      // Find all active vendors
+      const activeVendors = await Vendor.find({
+        status: "approved",
+        paymentStatus: "paid"
+      });
+
+      for (const vendor of activeVendors) {
+        if (!vendor.maintenanceFee || !vendor.maintenanceFee.nextDueAt) {
+          // Initialize if missing
+          vendor.maintenanceFee = {
+            amount: configuredFee,
+            status: "paid",
+            lastPaidAt: vendor.createdAt || now,
+            nextDueAt: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+            paymentHistory: []
+          };
+          await vendor.save();
+          continue;
+        }
+
+        const nextDue = new Date(vendor.maintenanceFee.nextDueAt);
+        const msRemaining = nextDue.getTime() - now.getTime();
+        const daysRemaining = Math.ceil(msRemaining / (1000 * 60 * 60 * 24));
+
+        if (daysRemaining <= 0) {
+          // Fee is due or overdue
+          const isOverdue = Math.abs(daysRemaining) > graceDays;
+          const newStatus = isOverdue ? "overdue" : "due";
+
+          if (vendor.maintenanceFee.status !== newStatus) {
+            vendor.maintenanceFee.status = newStatus;
+            await vendor.save();
+
+            // Send in-app notification
+            await createInAppNotification({
+              recipient: vendor.userId,
+              recipientType: "vendor",
+              title: isOverdue ? "URGENT: Maintenance Fee Overdue" : "Monthly Maintenance Fee Due",
+              message: `Your monthly maintenance fee of R ${vendor.maintenanceFee.amount || configuredFee} is ${isOverdue ? 'overdue' : 'now due'}. Please settle the payment to keep your store operational.`,
+              type: "maintenance_fee",
+              link: "/vendor/dashboard"
+            });
+
+            // Send email notification
+            const user = await User.findById(vendor.userId);
+            if (user && user.email) {
+              try {
+                await sendEmail({
+                  to: user.email,
+                  subject: isOverdue ? "Overdue Notice: Monthly Vendor Maintenance Fee" : "Action Required: Monthly Vendor Maintenance Fee Due",
+                  html: `
+                    <h3>Monthly Maintenance Fee Notice</h3>
+                    <p>Hi ${user.name},</p>
+                    <p>Your monthly maintenance fee of <strong>R ${vendor.maintenanceFee.amount || configuredFee}</strong> is ${isOverdue ? 'currently overdue' : 'due today'}.</p>
+                    <p>Please log in to your vendor dashboard to process your payment and maintain full access to product sales and services.</p>
+                    <p><a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/vendor/dashboard" style="display:inline-block;padding:10px 20px;background:#c9a35b;color:#000;text-decoration:none;border-radius:6px;font-weight:bold;">Pay Maintenance Fee</a></p>
+                  `
+                });
+              } catch (e) {
+                console.error("Failed to email maintenance fee reminder to", user.email, e);
+              }
+            }
+          }
+        } else if (daysRemaining === 3) {
+          // Upcoming 3-day reminder
+          await createInAppNotification({
+            recipient: vendor.userId,
+            recipientType: "vendor",
+            title: "Upcoming Monthly Maintenance Fee",
+            message: `Your monthly maintenance fee of R ${vendor.maintenanceFee.amount || configuredFee} will be due in 3 days on ${nextDue.toLocaleDateString()}.`,
+            type: "maintenance_fee",
+            link: "/vendor/dashboard"
+          });
+        }
+      }
+    } catch (maintErr) {
+      console.error("Error in vendor maintenance fee cron job:", maintErr);
+    }
   });
 };
 

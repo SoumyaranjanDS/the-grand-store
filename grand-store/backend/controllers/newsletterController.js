@@ -82,10 +82,18 @@ const subscribeNewsletter = async (req, res) => {
 // @access  Private/Admin
 const getSubscribers = async (req, res) => {
   try {
-    const { country } = req.query;
+    const { country, search } = req.query;
     const filter = {};
     if (country && country !== 'All') {
       filter.country = country;
+    }
+    if (search && search.trim()) {
+      const regex = new RegExp(search.trim(), 'i');
+      filter.$or = [
+        { email: regex },
+        { country: regex },
+        { ipAddress: regex }
+      ];
     }
     const subscribers = await Newsletter.find(filter).sort({ createdAt: -1 });
     res.json(subscribers);
@@ -100,38 +108,48 @@ const getSubscribers = async (req, res) => {
 // @access  Private/Admin
 const sendBulkNewsletter = async (req, res) => {
   try {
-    const { subject, htmlContent, country } = req.body;
+    const { subject, htmlContent, country, recipientEmails } = req.body;
     
     if (!subject || !htmlContent) {
       return res.status(400).json({ message: 'Subject and HTML content are required' });
     }
 
-    const filter = { status: 'subscribed' };
-    if (country && country !== 'All') {
-      filter.country = country;
+    let emails = [];
+
+    if (Array.isArray(recipientEmails) && recipientEmails.length > 0) {
+      emails = [...new Set(recipientEmails.map(e => String(e).trim().toLowerCase()).filter(Boolean))];
+    } else {
+      const filter = { status: 'subscribed' };
+      if (country && country !== 'All') {
+        filter.country = country;
+      }
+
+      const subscribers = await Newsletter.find(filter);
+
+      if (subscribers.length === 0) {
+        return res.status(400).json({ message: 'No active subscribers found for this filter' });
+      }
+
+      emails = subscribers.map(sub => sub.email);
     }
 
-    const subscribers = await Newsletter.find(filter);
-
-    if (subscribers.length === 0) {
-      return res.status(400).json({ message: 'No active subscribers found for this filter' });
+    if (emails.length === 0) {
+      return res.status(400).json({ message: 'No recipients selected for newsletter' });
     }
-
-    const emails = subscribers.map(sub => sub.email);
 
     try {
       await sendEmail({
-        to: process.env.SMTP_USER, // Send one copy to the admin
-        bcc: emails.join(','),     // Hide all 200+ emails in the BCC field
+        to: process.env.SMTP_USER || emails[0],
+        bcc: emails.join(','),
         subject,
         html: bulkNewsletterTemplate(subject, htmlContent)
       });
     } catch (err) {
       console.error(`Failed to send bulk newsletter batch:`, err);
-      return res.status(500).json({ message: 'Failed to send newsletter. SMTP Limit Exceeded.' });
+      return res.status(500).json({ message: 'Failed to send newsletter. SMTP error: ' + (err.message || 'Delivery failed') });
     }
 
-    res.json({ message: `Newsletter sent successfully to ${emails.length} subscribers` });
+    res.json({ message: `Newsletter sent successfully to ${emails.length} subscriber${emails.length > 1 ? 's' : ''}` });
   } catch (error) {
     console.error('Error sending bulk newsletter:', error);
     res.status(500).json({ message: 'Server Error' });

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../../api';
 import { ChevronLeft, Gavel, PackageCheck, Heart, AlertCircle } from 'lucide-react';
 import Price from '../../components/ui/Price';
+import BidderKycCard from '../../components/auction/BidderKycCard';
 
 export default function UserAuctionDashboard() {
   const [bids, setBids] = useState([]);
@@ -35,7 +36,7 @@ export default function UserAuctionDashboard() {
   return (
     <div className="w-full max-w-5xl mx-auto flex flex-col gap-8 md:gap-12">
 
-        <div className="flex items-center justify-between mb-12 border-b border-white/10 pb-8">
+        <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-8">
           <div>
             <h1 className="text-[#eee8dd] font-serif text-4xl font-medium tracking-tight mb-2 flex items-center gap-4">
               <Gavel className="text-purple-500" size={32} /> Auction Bids
@@ -43,6 +44,9 @@ export default function UserAuctionDashboard() {
             <p className="text-[#918a7f]">Track your active bids, watched lots, and auction wins.</p>
           </div>
         </div>
+
+        {/* 18+ Bidder Qualification & VIP Upgrade */}
+        <BidderKycCard />
 
         <div className="grid md:grid-cols-2 gap-8">
           {/* Active Bids */}

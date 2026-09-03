@@ -180,6 +180,7 @@ app.use("/api/cigar-enquiries", require("./routes/cigarEnquiryRoutes"));
 app.use("/api/newsletter", newsletterRoutes);
 app.use("/api/advertisements", require("./routes/advertisementRoutes"));
 app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/notifications', require("./routes/notificationRoutes"));
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {

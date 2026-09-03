@@ -42,6 +42,17 @@ const bidderDepositSchema = new mongoose.Schema({
   refundedAt: {
     type: Date
   },
+  bankAccountDetails: {
+    bankName: { type: String },
+    accountHolder: { type: String },
+    accountNumber: { type: String },
+    branchCode: { type: String }
+  },
+  tier: {
+    type: String,
+    enum: ['standard', 'premium'],
+    default: 'premium'
+  },
   verifiedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'

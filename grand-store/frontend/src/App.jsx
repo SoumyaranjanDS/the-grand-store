@@ -62,6 +62,8 @@ import VerifyEmail from './features/auth/VerifyEmail'
 import ForgotPassword from './features/auth/ForgotPassword'
 import ResetPassword from './features/auth/ResetPassword'
 import ProfilePage from './features/customer/ProfilePage'
+import CustomerBankDetails from './features/customer/CustomerBankDetails'
+import CustomerCalendar from './features/customer/CustomerCalendar'
 import ReferralsTab from './features/customer/ReferralsTab'
 import CustomerOrdersPage from './features/customer/CustomerOrdersPage'
 import UserAuctionDashboard from './features/customer/UserAuctionDashboard'
@@ -655,6 +657,8 @@ function App() {
         {/* Customer Profile & Related */}
         <Route element={<CustomerLayout />}>
           <Route path="/customer/profile" element={<ProfilePage />} />
+          <Route path="/customer/calendar" element={<CustomerCalendar />} />
+          <Route path="/customer/banking" element={<CustomerBankDetails />} />
           <Route path="/customer/referrals" element={<ReferralsTab />} />
           <Route path="/customer/orders" element={<CustomerOrdersPage />} />
           <Route path="/customer/auctions" element={<UserAuctionDashboard />} />
@@ -798,6 +802,7 @@ function App() {
         </Route>
 
         <Route path="/auction" element={<AuctionPage onNotify={showToast} />} />
+        <Route path="/auctions" element={<Navigate to="/auction" replace />} />
         <Route
           path="/auction/:id"
           element={<AuctionLotDetail onNotify={showToast} />}

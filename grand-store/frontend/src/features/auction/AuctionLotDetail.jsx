@@ -2,10 +2,11 @@ import Price from '../../components/ui/Price';
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../../api';
-import { ChevronLeft, ShieldCheck, Clock, History, AlertCircle, ArrowRight, Play, Video, Film, Image as ImageIcon } from 'lucide-react';
+import { ChevronLeft, ShieldCheck, Clock, History, AlertCircle, ArrowRight, Play, Video, Film, Image as ImageIcon, Crown, ChevronDown, Check } from 'lucide-react';
 import AuctionCountdown from './AuctionCountdown';
 import BidConfirmationModal from '../../components/modals/BidConfirmationModal';
 import BidderVerificationModal from '../../components/modals/BidderVerificationModal';
+import { useCurrency } from '../../context/CurrencyContext';
 
 const getEmbedVideoUrl = (url) => {
   if (!url) return null;
@@ -32,8 +33,22 @@ export default function AuctionLotDetail({ onNotify }) {
   const [verificationModalOpen, setVerificationModalOpen] = useState(false);
   const [bidderProfile, setBidderProfile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
+  const [confirmedZarAmount, setConfirmedZarAmount] = useState(0);
+
+  const { currency, rates, changeCurrency, availableCurrencies } = useCurrency();
 
   const [now, setNow] = useState(() => Date.now());
+
+  const CURRENCY_SYMBOLS = {
+    ZAR: 'R',
+    USD: '$',
+    EUR: '€',
+    GBP: '£',
+    INR: '₹',
+    AUD: 'A$',
+    CAD: 'C$'
+  };
 
   const fetchBidderProfile = async () => {
     try {
@@ -52,26 +67,22 @@ export default function AuctionLotDetail({ onNotify }) {
   const fetchLot = async () => {
     try {
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-      const headers = {};
-      if (userInfo && userInfo.token) {
-         headers.Authorization = `Bearer ${userInfo.token}`;
-      }
-
+      const headers = userInfo && userInfo.token ? { Authorization: `Bearer ${userInfo.token}` } : {};
       const res = await api.get(`/auction/${id}`, { headers });
       setLot(res.data.lot);
-      setBids(res.data.bids);
-      setLoading(false);
+      setBids(res.data.bids || []);
     } catch (err) {
       console.error(err);
+      onNotify('Failed to fetch lot details');
+    } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
-    
     fetchLot();
     fetchBidderProfile();
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
     const interval = setInterval(fetchLot, 5000);
 
     return () => {
@@ -80,16 +91,6 @@ export default function AuctionLotDetail({ onNotify }) {
     };
   }, [id]);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-white font-serif">Loading Luxury Lot...</div>;
-  if (!lot) return <div className="min-h-screen flex items-center justify-center text-white font-serif">Lot not found</div>;
-
-  const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-  const user = userInfo;
-
-  const isWinner = user && lot.winner && (user._id === (typeof lot.winner === 'object' ? lot.winner._id : lot.winner));
-  const isAdmin = user && user.role === 'admin';
-  const isVendor = user && lot.vendor && (user._id === (typeof lot.vendor === 'object' ? lot.vendor._id : lot.vendor));
-  
   // Dynamic Increment Ladder
   const getDynamicInc = (cBid) => {
     if (cBid < 5000) return 250;
@@ -98,14 +99,44 @@ export default function AuctionLotDetail({ onNotify }) {
     if (cBid < 100000) return 2500;
     return 5000;
   };
-  const activeIncrement = lot.bidIncrement || getDynamicInc(lot.currentBid || 0);
-  const nextMinimum = lot.currentBid === 0 ? lot.startingBid : lot.currentBid + activeIncrement;
-  const isLive = lot.status === 'live' || lot.status === 'extended';
-  const hasEnded = new Date(lot.endDate).getTime() < now;
+  const activeIncrement = lot?.bidIncrement || getDynamicInc(lot?.currentBid || 0);
+  const nextMinimum = (lot?.currentBid === 0 ? lot?.startingBid : (lot?.currentBid || 0) + activeIncrement) || 0;
+  const isLive = lot?.status === 'live' || lot?.status === 'extended';
+  const hasEnded = lot ? new Date(lot.endDate).getTime() < now : false;
+
+  // Currency conversion helpers
+  const convertFromZar = (zarAmt, curr = currency) => {
+    if (!rates || curr === 'ZAR' || !rates[curr] || !rates['ZAR']) return zarAmt;
+    const rateZarToCurr = rates[curr] / rates['ZAR'];
+    return zarAmt * rateZarToCurr;
+  };
+
+  const convertToZar = (currAmt, curr = currency) => {
+    if (!rates || curr === 'ZAR' || !rates[curr] || !rates['ZAR']) return currAmt;
+    const rateCurrToZar = rates['ZAR'] / rates[curr];
+    return currAmt * rateCurrToZar;
+  };
+
+  const activeSymbol = CURRENCY_SYMBOLS[currency] || currency;
+
+  const nextMinimumInCurrency = currency === 'ZAR'
+    ? nextMinimum
+    : Math.ceil(convertFromZar(nextMinimum, currency) * 100) / 100;
+
+  const enteredNum = parseFloat(bidAmount);
+  const estimatedZar = !isNaN(enteredNum) && enteredNum > 0
+    ? Math.round(convertToZar(enteredNum, currency))
+    : null;
 
   const handleBidClick = (e) => {
     e.preventDefault();
     const amt = Number(bidAmount);
+    if (isNaN(amt) || amt <= 0) {
+      onNotify('Please enter a valid bid amount.');
+      return;
+    }
+
+    const amtInZar = Math.round(convertToZar(amt, currency));
     
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
     const token = userInfo?.token;
@@ -132,8 +163,9 @@ export default function AuctionLotDetail({ onNotify }) {
         onNotify(`Your bidding privileges are suspended: ${bidderProfile.biddingSuspensionReason || 'Account under review'}`);
         return;
       }
-      if (bidderProfile.biddingLimit > 0 && amt > bidderProfile.biddingLimit) {
-        onNotify(`Bid of R${amt.toLocaleString()} exceeds your approved limit of R${bidderProfile.biddingLimit.toLocaleString()}. Contact support to upgrade.`);
+      if (bidderProfile.biddingLimit > 0 && amtInZar > bidderProfile.biddingLimit) {
+        onNotify(`Bid of R${amtInZar.toLocaleString()} exceeds your current limit of R${bidderProfile.biddingLimit.toLocaleString()}. Please upgrade to Premium VIP Bidding to place this bid.`);
+        setVerificationModalOpen(true);
         return;
       }
     } else {
@@ -141,11 +173,13 @@ export default function AuctionLotDetail({ onNotify }) {
       return;
     }
 
-    if (isNaN(amt) || amt < nextMinimum) {
-      onNotify(`Your bid must be at least R${nextMinimum.toLocaleString('en-ZA')}`);
+    if (amtInZar < nextMinimum) {
+      const minFormatted = `${activeSymbol} ${nextMinimumInCurrency.toLocaleString(undefined, { minimumFractionDigits: currency === 'ZAR' ? 0 : 2, maximumFractionDigits: 2 })}`;
+      onNotify(`Your bid must be at least ${minFormatted} (≈ R${nextMinimum.toLocaleString('en-ZA')})`);
       return;
     }
 
+    setConfirmedZarAmount(amtInZar);
     setModalOpen(true);
   };
 
@@ -153,8 +187,10 @@ export default function AuctionLotDetail({ onNotify }) {
     setSubmitting(true);
     try {
       const res = await api.post(`/auction/${id}/bid`, {
-        amount: Number(bidAmount),
-        isMaxBid
+        amount: confirmedZarAmount,
+        isMaxBid,
+        placedCurrency: currency,
+        placedAmount: Number(bidAmount)
       });
       
       onNotify(res.data.message || 'Bid placed successfully!');
@@ -169,6 +205,16 @@ export default function AuctionLotDetail({ onNotify }) {
       setSubmitting(false);
     }
   };
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-white font-serif">Loading Luxury Lot...</div>;
+  if (!lot) return <div className="min-h-screen flex items-center justify-center text-white font-serif">Lot not found</div>;
+
+  const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+  const user = userInfo;
+
+  const isWinner = user && lot.winner && (user._id === (typeof lot.winner === 'object' ? lot.winner._id : lot.winner));
+  const isAdmin = user && user.role === 'admin';
+  const isVendor = user && lot.vendor && (user._id === (typeof lot.vendor === 'object' ? lot.vendor._id : lot.vendor));
 
   const vendorName = lot.vendor ? (lot.vendor.storeName || lot.vendor.name) : 'The Grand Store';
 
@@ -418,9 +464,20 @@ export default function AuctionLotDetail({ onNotify }) {
                            <ShieldCheck size={16} className="text-emerald-400" />
                            <span className="font-medium">Approved Bidder: <strong className="text-white font-mono">{bidderProfile.bidderNumber}</strong></span>
                          </div>
-                         <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">
-                           Limit: R{(bidderProfile.biddingLimit || 0).toLocaleString()}
-                         </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">
+                              Limit: R{(bidderProfile.biddingLimit || 0).toLocaleString()}
+                            </span>
+                            {bidderProfile.bidderLevel !== 'level_3_enhanced' && bidderProfile.bidderLevel !== 'level_4_vip' && (
+                              <button
+                                type="button"
+                                onClick={() => setVerificationModalOpen(true)}
+                                className="px-2 py-0.5 bg-gold-gradient text-black font-bold uppercase tracking-wider text-[10px] rounded hover:brightness-110 flex items-center gap-1 cursor-pointer transition-all shadow-[0_0_10px_rgba(212,175,55,0.25)]"
+                              >
+                                <Crown size={11} /> Upgrade to VIP
+                              </button>
+                            )}
+                          </div>
                        </div>
                      )}
 
@@ -440,25 +497,81 @@ export default function AuctionLotDetail({ onNotify }) {
                      )}
 
                    <form onSubmit={handleBidClick} className="flex flex-col gap-6">
-                    <div>
-                      <div className="flex justify-between items-center mb-3">
-                         <label className="text-[10px] uppercase tracking-widest text-[var(--color-ivory)] font-bold">Your Bid</label>
-                         <span className="text-[10px] text-[var(--color-gold)] font-mono flex items-center">Next Bid: <Price amount={nextMinimum} /></span>
-                      </div>
-                      <div className="relative">
-                         <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[var(--color-ivory-muted)] font-serif text-lg">R</span>
-                         <input 
-                           type="number"
-                           required
-                           value={bidAmount}
-                           onChange={(e) => setBidAmount(e.target.value)}
-                           placeholder={nextMinimum}
-                           min={nextMinimum}
-                           step="1"
-                           className="w-full bg-transparent border border-white/20 rounded-none py-5 pl-12 pr-6 text-xl font-mono text-[var(--color-ivory)] focus:outline-none focus:border-[var(--color-gold)] transition-colors placeholder-white/20"
-                         />
-                      </div>
-                    </div>
+                     <div>
+                       <div className="flex justify-between items-center mb-3">
+                          <label className="text-[10px] uppercase tracking-widest text-[var(--color-ivory)] font-bold">Your Bid</label>
+                          <span className="text-[10px] text-[var(--color-gold)] font-mono flex items-center">Next Bid: <Price amount={nextMinimum} /></span>
+                       </div>
+                       <div className="relative">
+                          {/* Currency Selector Pill */}
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 z-20 flex items-center">
+                            <button
+                              type="button"
+                              onClick={() => setShowCurrencyDropdown(!showCurrencyDropdown)}
+                              className="flex items-center gap-1.5 bg-black/80 hover:bg-white/10 border border-white/20 hover:border-[var(--color-gold)]/60 px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold text-[#f5d77f] transition-all cursor-pointer shadow-md"
+                              title="Change bidding currency"
+                            >
+                              <span>{activeSymbol}</span>
+                              <span className="text-[11px] text-white/70">{currency}</span>
+                              <ChevronDown size={11} className={`text-white/40 transition-transform ${showCurrencyDropdown ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {/* Currency Dropdown Menu */}
+                            {showCurrencyDropdown && (
+                              <div className="absolute top-full left-0 mt-2 w-44 bg-[#12110e] border border-[#c9a35b]/40 rounded-xl shadow-2xl py-2 z-50 max-h-56 overflow-y-auto scrollbar-thin">
+                                <div className="px-3 py-1.5 text-[9px] uppercase tracking-widest text-white/40 font-bold border-b border-white/5 mb-1">
+                                  Select Currency
+                                </div>
+                                {(availableCurrencies || ['ZAR', 'USD', 'EUR', 'GBP', 'INR', 'AUD', 'CAD']).map((c) => (
+                                  <button
+                                    key={c}
+                                    type="button"
+                                    onClick={() => {
+                                      changeCurrency(c);
+                                      setShowCurrencyDropdown(false);
+                                    }}
+                                    className={`w-full px-3 py-1.5 text-left text-xs font-mono flex items-center justify-between hover:bg-white/10 transition-colors cursor-pointer ${
+                                      currency === c ? 'text-[#f5d77f] font-bold bg-white/5' : 'text-white/70'
+                                    }`}
+                                  >
+                                    <span>{CURRENCY_SYMBOLS[c] || c} {c}</span>
+                                    {currency === c && <Check size={12} className="text-[#f5d77f]" />}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <input 
+                            type="number"
+                            required
+                            value={bidAmount}
+                            onChange={(e) => setBidAmount(e.target.value)}
+                            placeholder={`Min: ${nextMinimumInCurrency.toLocaleString(undefined, { minimumFractionDigits: currency === 'ZAR' ? 0 : 2, maximumFractionDigits: 2 })}`}
+                            min={nextMinimumInCurrency}
+                            step={currency === 'ZAR' ? "1" : "0.01"}
+                            className="w-full bg-transparent border border-white/20 rounded-none py-5 pl-28 pr-6 text-xl font-mono text-[var(--color-ivory)] focus:outline-none focus:border-[var(--color-gold)] transition-colors placeholder-white/20"
+                          />
+                       </div>
+
+                       {/* Live Converted ZAR Reference if not bidding in ZAR */}
+                       {currency !== 'ZAR' && (
+                         <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-xs font-mono text-white/50 mt-2">
+                           <span>
+                             {estimatedZar ? (
+                               <span className="text-[var(--color-gold)] font-semibold">
+                                 ≈ R {estimatedZar.toLocaleString('en-ZA')} ZAR
+                               </span>
+                             ) : (
+                               <span>Settlement in ZAR: R {nextMinimum.toLocaleString('en-ZA')}</span>
+                             )}
+                           </span>
+                           <span className="text-[10px] text-white/40">
+                             Official live exchange rate applied
+                           </span>
+                         </div>
+                       )}
+                     </div>
 
                     <div className="flex items-center justify-between mt-2">
                       <label className="flex items-center gap-3 cursor-pointer group">
@@ -673,7 +786,8 @@ export default function AuctionLotDetail({ onNotify }) {
         isOpen={modalOpen} 
         onClose={() => setModalOpen(false)} 
         lot={lot} 
-        bidAmount={Number(bidAmount)} 
+        bidAmount={confirmedZarAmount} 
+        currency={currency}
         isMaxBid={isMaxBid} 
         onConfirm={submitBid} 
         loading={submitting} 
@@ -682,9 +796,9 @@ export default function AuctionLotDetail({ onNotify }) {
       <BidderVerificationModal
         isOpen={verificationModalOpen}
         onClose={() => setVerificationModalOpen(false)}
+        bidderProfile={bidderProfile}
         onSuccess={(bidder) => {
-          setBidderProfile({ ...bidder, isVerified: true });
-          if (onNotify) onNotify('Verification successful! You can now place bids up to R25,000.');
+          setBidderProfile(prev => ({ ...prev, ...(bidder || {}), isVerified: true }));
           fetchLot();
         }}
         onNotify={onNotify}

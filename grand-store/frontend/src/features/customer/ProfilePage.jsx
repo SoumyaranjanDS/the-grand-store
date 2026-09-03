@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api';
 import { useAuth } from '../../context/AuthContext';
-import { CheckCircle2, AlertCircle, Loader2, Store, Clock } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Loader2, Store, Clock, Landmark, ArrowRight, Phone, Calendar as CalendarIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import BidderKycCard from '../../components/auction/BidderKycCard';
+import CustomerCalendar from './CustomerCalendar';
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuth();
@@ -12,7 +14,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
 
   // Form States
-  const [profileForm, setProfileForm] = useState({ name: '', email: '' });
+  const [profileForm, setProfileForm] = useState({ name: '', email: '', phone: '' });
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -27,10 +29,27 @@ export default function ProfilePage() {
     } else if (user.role === 'admin') {
       navigate('/admin/auctions');
     } else {
-      setProfileForm({ name: user.name, email: user.email });
+      setProfileForm({ 
+        name: user.name || '', 
+        email: user.email || '', 
+        phone: user.phone || user.phoneNumber || '' 
+      });
       setLoading(false);
+
+      // Fetch latest profile to sync phone if updated on server
+      api.get('/auth/profile').then(res => {
+        if (res.data) {
+          updateUser(res.data);
+          setProfileForm(prev => ({
+            ...prev,
+            name: res.data.name || prev.name,
+            email: res.data.email || prev.email,
+            phone: res.data.phone || res.data.phoneNumber || prev.phone || ''
+          }));
+        }
+      }).catch(() => {});
     }
-  }, [user, navigate]);
+  }, [user?._id, navigate]);
 
   if (!user || loading) return null;
 
@@ -39,9 +58,13 @@ export default function ProfilePage() {
     setIsSavingProfile(true);
     setProfileMessage(null);
     try {
-      const { data } = await api.put(`/auth/profile`, profileForm);
+      const { data } = await api.put(`/auth/profile`, {
+        name: profileForm.name,
+        phone: profileForm.phone,
+        phoneNumber: profileForm.phone
+      });
       updateUser(data);
-      setProfileMessage({ type: 'success', text: 'Profile updated successfully' });
+      setProfileMessage({ type: 'success', text: 'Profile updated successfully! Phone number saved.' });
       setTimeout(() => setProfileMessage(null), 3000);
     } catch (err) {
       setProfileMessage({ type: 'error', text: err.response?.data?.message || 'Failed to update profile' });
@@ -74,7 +97,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto flex flex-col gap-12 pb-16">
+    <div className="w-full max-w-5xl mx-auto flex flex-col gap-12 pb-16">
       
       {/* Header */}
       <section className="mb-4">
@@ -132,6 +155,28 @@ export default function ProfilePage() {
         </section>
       )}
 
+      {/* 18+ Auction Bidder Qualification & KYC */}
+      <BidderKycCard onNotify={(msg) => setProfileMessage({ type: 'success', text: msg })} />
+
+      {/* Bank Details & Refund Accounts Quick Card */}
+      <section className="bg-gradient-to-r from-[#14120e] via-[#0d0d0d] to-black border border-white/10 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-[var(--color-gold)]/15 border border-[var(--color-gold)]/30 flex items-center justify-center text-[var(--color-gold)] shrink-0">
+            <Landmark size={20} />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-white">Bank Details & Refund Accounts</h3>
+            <p className="text-xs text-white/50">Manage your South African bank account for auction deposit refunds and escrow returns.</p>
+          </div>
+        </div>
+        <Link
+          to="/customer/banking"
+          className="py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 transition-all self-start sm:self-auto shrink-0 cursor-pointer"
+        >
+          Manage Bank Account <ArrowRight size={13} />
+        </Link>
+      </section>
+
       {/* Profile Form */}
       <section>
         <h2 className="text-xl text-[var(--color-ivory)] font-serif mb-6 border-b border-white/10 pb-2">
@@ -166,11 +211,34 @@ export default function ProfilePage() {
                 className="w-full bg-transparent border-b border-white/10 px-0 py-2 text-white/50 focus:outline-none font-light text-lg cursor-not-allowed"
               />
             </div>
+            <div className="md:col-span-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
+                <label className="text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] flex items-center gap-1.5">
+                  <Phone size={13} className="text-[var(--color-gold)]" /> Phone Number
+                </label>
+                <span className="text-[11px] text-[var(--color-gold)]/80">
+                  Auto-fills during checkout for courier & SMS tracking
+                </span>
+              </div>
+              <input 
+                type="tel" 
+                placeholder="e.g. +27 82 123 4567"
+                value={profileForm.phone}
+                onChange={(e) => setProfileForm({...profileForm, phone: e.target.value})}
+                className="w-full bg-transparent border-b border-white/20 px-0 py-2 text-white focus:border-[var(--color-gold)] focus:outline-none transition-colors font-light text-lg placeholder:text-white/20"
+              />
+              <p className="text-xs text-[var(--color-ivory-muted)] mt-2 font-light leading-relaxed">
+                Your saved phone number is automatically populated in checkout and shared with couriers (Courier Guy / DHL) for delivery alerts, gate access, and collection pin codes.
+              </p>
+            </div>
           </div>
           <div>
             <button 
               type="submit" 
-              disabled={isSavingProfile || (profileForm.name === user.name && profileForm.email === user.email)}
+              disabled={isSavingProfile || (
+                profileForm.name === (user.name || '') && 
+                profileForm.phone === (user.phone || user.phoneNumber || '')
+              )}
               className="mt-2 text-xs uppercase tracking-widest font-bold text-black bg-[var(--color-gold)] px-8 py-3 hover:bg-[#b58b38] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[140px]"
             >
               {isSavingProfile ? <Loader2 size={16} className="animate-spin" /> : 'Save Changes'}
@@ -235,6 +303,27 @@ export default function ProfilePage() {
             </button>
           </div>
         </form>
+      </section>
+
+      {/* Customer Activity & Delivery Schedule Calendar */}
+      <section className="border-t border-white/10 pt-10">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-2xl text-[var(--color-ivory)] font-serif mb-1 tracking-wide flex items-center gap-2.5">
+              <CalendarIcon className="text-[var(--color-gold)]" size={24} /> Activity & Delivery Calendar
+            </h2>
+            <p className="text-xs text-[var(--color-ivory-muted)]">
+              Track scheduled order deliveries, booked tasting tickets, auction deadlines, and birthday privileges.
+            </p>
+          </div>
+          <Link
+            to="/customer/calendar"
+            className="py-2 px-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl text-xs uppercase tracking-wider font-semibold transition-all flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+          >
+            Standalone Calendar <ArrowRight size={13} />
+          </Link>
+        </div>
+        <CustomerCalendar embedded={true} />
       </section>
 
     </div>

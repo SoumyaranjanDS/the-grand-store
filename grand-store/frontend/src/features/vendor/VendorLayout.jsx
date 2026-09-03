@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation, Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Building2, Package, PlusCircle, User, LayoutDashboard, Wallet, Megaphone, GraduationCap, Menu, X, ShoppingBag, Calendar, Settings, Truck, LogOut, Store, Gavel, MapPin } from 'lucide-react';
+import NotificationBell from '../../components/NotificationBell';
 
 export default function VendorLayout() {
   const { user, logout } = useAuth();
@@ -92,7 +93,8 @@ export default function VendorLayout() {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4 sm:gap-6">
+          <NotificationBell isVendor={true} />
           <div className="flex items-center gap-3">
             <div className="text-right hidden md:block">
               <div className="text-sm font-serif">{user.name}</div>

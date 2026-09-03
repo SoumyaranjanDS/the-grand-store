@@ -15,6 +15,9 @@ const getPublicSettings = async (req, res) => {
       auctionCommissionPct: settings.auctionCommissionPct,
       buyerPremiumPct: settings.buyerPremiumPct,
       barChargePct: settings.barChargePct,
+      auctionPremiumDepositAmount: settings.auctionPremiumDepositAmount !== undefined ? settings.auctionPremiumDepositAmount : 5000,
+      auctionStandardBiddingLimit: settings.auctionStandardBiddingLimit !== undefined ? settings.auctionStandardBiddingLimit : 25000,
+      auctionPremiumBiddingLimit: settings.auctionPremiumBiddingLimit !== undefined ? settings.auctionPremiumBiddingLimit : 250000,
       eventCommissionPct: settings.eventCommissionPct,
       vatPct: settings.vatPct,
       gatewayFeePct: settings.gatewayFeePct,
@@ -23,6 +26,13 @@ const getPublicSettings = async (req, res) => {
       referralRewardType: settings.referralRewardType,
       referralWelcomeDiscount: settings.referralWelcomeDiscount,
       referralWelcomeDiscountType: settings.referralWelcomeDiscountType,
+      birthdayEmailEnabled: settings.birthdayEmailEnabled !== undefined ? settings.birthdayEmailEnabled : true,
+      birthdayDiscountEnabled: settings.birthdayDiscountEnabled !== undefined ? settings.birthdayDiscountEnabled : true,
+      birthdayDiscountPercent: settings.birthdayDiscountPercent !== undefined ? settings.birthdayDiscountPercent : 15,
+      birthdayPromoCode: settings.birthdayPromoCode || 'BDAY-LUXURY15',
+      birthdayCustomMessage: settings.birthdayCustomMessage || 'To celebrate your special day, enjoy an exclusive luxury treat on us.',
+      vendorMonthlyMaintenanceFee: settings.vendorMonthlyMaintenanceFee !== undefined ? settings.vendorMonthlyMaintenanceFee : 500,
+      vendorMaintenanceGraceDays: settings.vendorMaintenanceGraceDays !== undefined ? settings.vendorMaintenanceGraceDays : 7,
     });
   } catch (error) {
     console.error("Get Settings Error:", error);
@@ -44,6 +54,9 @@ const updateSettings = async (req, res) => {
       auctionCommissionPct,
       buyerPremiumPct,
       barChargePct,
+      auctionPremiumDepositAmount,
+      auctionStandardBiddingLimit,
+      auctionPremiumBiddingLimit,
       eventCommissionPct,
       vatPct,
       gatewayFeePct,
@@ -52,6 +65,13 @@ const updateSettings = async (req, res) => {
       referralRewardType,
       referralWelcomeDiscount,
       referralWelcomeDiscountType,
+      birthdayEmailEnabled,
+      birthdayDiscountEnabled,
+      birthdayDiscountPercent,
+      birthdayPromoCode,
+      birthdayCustomMessage,
+      vendorMonthlyMaintenanceFee,
+      vendorMaintenanceGraceDays,
     } = req.body;
 
     let settings = await PlatformSettings.findOne();
@@ -64,10 +84,23 @@ const updateSettings = async (req, res) => {
     if (auctionCommissionPct !== undefined) settings.auctionCommissionPct = auctionCommissionPct;
     if (buyerPremiumPct !== undefined) settings.buyerPremiumPct = buyerPremiumPct;
     if (barChargePct !== undefined) settings.barChargePct = barChargePct;
+    if (auctionPremiumDepositAmount !== undefined) settings.auctionPremiumDepositAmount = Number(auctionPremiumDepositAmount) || 5000;
+    if (auctionStandardBiddingLimit !== undefined) settings.auctionStandardBiddingLimit = Number(auctionStandardBiddingLimit) || 25000;
+    if (auctionPremiumBiddingLimit !== undefined) settings.auctionPremiumBiddingLimit = Number(auctionPremiumBiddingLimit) || 250000;
     if (eventCommissionPct !== undefined) settings.eventCommissionPct = eventCommissionPct;
     if (vatPct !== undefined) settings.vatPct = vatPct;
     if (gatewayFeePct !== undefined) settings.gatewayFeePct = gatewayFeePct;
     if (bankDetails !== undefined) settings.bankDetails = bankDetails;
+
+    if (birthdayEmailEnabled !== undefined) settings.birthdayEmailEnabled = Boolean(birthdayEmailEnabled);
+    if (birthdayDiscountEnabled !== undefined) settings.birthdayDiscountEnabled = Boolean(birthdayDiscountEnabled);
+    if (birthdayDiscountPercent !== undefined) settings.birthdayDiscountPercent = Number(birthdayDiscountPercent) || 0;
+    if (birthdayPromoCode !== undefined) settings.birthdayPromoCode = String(birthdayPromoCode).trim();
+    if (birthdayCustomMessage !== undefined) settings.birthdayCustomMessage = String(birthdayCustomMessage).trim();
+
+    if (vendorMonthlyMaintenanceFee !== undefined) settings.vendorMonthlyMaintenanceFee = Number(vendorMonthlyMaintenanceFee) || 0;
+    if (vendorMaintenanceGraceDays !== undefined) settings.vendorMaintenanceGraceDays = Number(vendorMaintenanceGraceDays) || 0;
+
     const validReferralTypes = ['fixed', 'percentage'];
     if (referralRewardType !== undefined && !validReferralTypes.includes(referralRewardType)) {
       return res.status(400).json({ message: 'Invalid referral reward type' });
@@ -85,14 +118,15 @@ const updateSettings = async (req, res) => {
       }
       settings.referralRewardAmount = amount;
     }
-    if (referralWelcomeDiscount !== undefined) {
-      const amount = Number(referralWelcomeDiscount);
-      if (!Number.isFinite(amount) || amount < 0 || (nextWelcomeDiscountType === 'percentage' && amount > 100)) {
-        return res.status(400).json({ message: 'Welcome discount must be a valid non-negative amount (maximum 100 for percentage discounts)' });
-      }
-      settings.referralWelcomeDiscount = amount;
-    }
     if (referralRewardType !== undefined) settings.referralRewardType = referralRewardType;
+
+    if (referralWelcomeDiscount !== undefined) {
+      const discount = Number(referralWelcomeDiscount);
+      if (!Number.isFinite(discount) || discount < 0 || (nextWelcomeDiscountType === 'percentage' && discount > 100)) {
+        return res.status(400).json({ message: 'Welcome discount must be a valid non-negative amount (maximum 100 for percentage rewards)' });
+      }
+      settings.referralWelcomeDiscount = discount;
+    }
     if (referralWelcomeDiscountType !== undefined) settings.referralWelcomeDiscountType = referralWelcomeDiscountType;
 
     await settings.save();

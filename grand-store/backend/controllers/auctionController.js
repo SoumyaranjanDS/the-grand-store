@@ -132,7 +132,7 @@ exports.getLotDetails = async (req, res) => {
 // AUTHENTICATED: Place a bid
 exports.placeBid = async (req, res) => {
   try {
-    const { amount, isMaxBid } = req.body;
+    const { amount, isMaxBid, placedCurrency = 'ZAR', placedAmount = amount } = req.body;
     const lotId = req.params.id;
     const userId = req.user._id;
 
@@ -196,7 +196,7 @@ exports.placeBid = async (req, res) => {
     const nextMinimum = lot.currentBid === 0 ? lot.startingBid : lot.currentBid + currentIncrement;
     
     if (amount < nextMinimum) {
-      return res.status(400).json({ message: `Minimum bid must be at least R${nextMinimum.toLocaleString()}` });
+      return res.status(400).json({ message: `Minimum bid must be at least R${nextMinimum.toLocaleString()}`, nextMinimum });
     }
 
     const bidderHandle = req.user.bidderNumber || `Bidder GS-${String(req.user._id).slice(-4).toUpperCase()}`;
@@ -210,6 +210,8 @@ exports.placeBid = async (req, res) => {
         user: userId,
         lot: lotId,
         amount: amount,
+        placedCurrency,
+        placedAmount,
         isMaxBid: true,
         bidType: 'proxy',
         maxProxyAmount: amount,
@@ -316,6 +318,8 @@ exports.placeBid = async (req, res) => {
         user: userId,
         lot: lotId,
         amount: amount,
+        placedCurrency,
+        placedAmount,
         isMaxBid: false,
         bidType: 'manual',
         bidderNumber: bidderHandle,
@@ -1022,7 +1026,18 @@ exports.getAllLots = async (req, res) => {
 // CUSTOMER: Register and complete 18+ age / KYC verification (Requires Admin Approval)
 exports.registerBidder = async (req, res) => {
   try {
-    const { dateOfBirth, idType, idNumber, idDocumentUrl, acceptRulesVersion } = req.body;
+    const { 
+      dateOfBirth, 
+      idType, 
+      idNumber, 
+      idDocumentUrl, 
+      acceptRulesVersion,
+      tier = 'normal', // 'normal' | 'premium'
+      bankAccountDetails,
+      depositPaymentMethod = 'payfast',
+      depositProofUrl
+    } = req.body;
+
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -1053,7 +1068,7 @@ exports.registerBidder = async (req, res) => {
     user.rulesAcceptedVersion = acceptRulesVersion || 'v1.0';
     user.rulesAcceptedAt = new Date();
 
-    // Strict Admin Approval Pipeline: applicant is set to pending_approval with 0 limit
+    // Strict Admin Approval Pipeline: applicant is set to pending_approval with 0 limit until verified
     user.bidderApprovalStatus = 'pending_approval';
     user.bidderLevel = 'level_1_registered';
     user.biddingLimit = 0;
@@ -1064,6 +1079,46 @@ exports.registerBidder = async (req, res) => {
       user.bidderNumber = `GS-B${Math.floor(1000 + Math.random() * 9000)}`;
     }
 
+    // Dynamic Platform Settings for Deposit
+    const settings = await PlatformSettings.findOne();
+    const dynamicDepositFee = settings?.auctionPremiumDepositAmount !== undefined ? settings.auctionPremiumDepositAmount : 5000;
+
+    let createdDeposit = null;
+
+    if (tier === 'premium') {
+      user.bidderDepositRequired = true;
+      user.bidderDepositAmount = dynamicDepositFee;
+      user.bidderDepositStatus = 'pending';
+
+      const depositRef = `DEP-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      
+      let parsedBankDetails = bankAccountDetails;
+      if (typeof bankAccountDetails === 'string') {
+        try { parsedBankDetails = JSON.parse(bankAccountDetails); } catch (e) {}
+      }
+
+      if (parsedBankDetails && parsedBankDetails.bankName) {
+        user.bankAccountDetails = { ...parsedBankDetails, updatedAt: new Date() };
+      }
+
+      createdDeposit = new BidderDeposit({
+        bidder: user._id,
+        amount: dynamicDepositFee,
+        tier: 'premium',
+        paymentMethod: depositPaymentMethod === 'eft' ? 'eft' : 'payfast',
+        paymentStatus: 'pending',
+        paymentReference: depositRef,
+        proofOfPayment: depositProofUrl || '',
+        bankAccountDetails: parsedBankDetails
+      });
+
+      await createdDeposit.save();
+    } else {
+      user.bidderDepositRequired = false;
+      user.bidderDepositAmount = 0;
+      user.bidderDepositStatus = 'none';
+    }
+
     await user.save();
 
     await logAuctionEvent({
@@ -1071,6 +1126,9 @@ exports.registerBidder = async (req, res) => {
       eventType: 'AUTHENTICATION_STATUS_CHANGED',
       details: { 
         action: 'BIDDER_APPLICATION_SUBMITTED',
+        tier,
+        depositRequired: user.bidderDepositRequired,
+        depositAmount: user.bidderDepositAmount,
         bidderApprovalStatus: 'pending_approval', 
         bidderNumber: user.bidderNumber 
       },
@@ -1078,8 +1136,12 @@ exports.registerBidder = async (req, res) => {
     });
 
     res.json({
-      message: 'Your bidder verification application has been submitted. Our compliance team will review and approve your account before you can place bids.',
+      message: tier === 'premium'
+        ? `Your 18+ verification and Premium VIP Bidding request (R${dynamicDepositFee.toLocaleString()} refundable deposit) have been submitted for administrator review.`
+        : 'Your 18+ bidder verification has been submitted for standard administrator approval.',
       status: 'pending_approval',
+      tier,
+      deposit: createdDeposit,
       bidder: {
         bidderApprovalStatus: user.bidderApprovalStatus,
         bidderLevel: user.bidderLevel,
@@ -1098,9 +1160,20 @@ exports.registerBidder = async (req, res) => {
 exports.getBidderStatus = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select(
-      'bidderApprovalStatus bidderRejectionReason bidderLevel biddingLimit bidderNumber bidderReliabilityScore isBiddingSuspended biddingSuspensionReason rulesAcceptedVersion idType idNumber dateOfBirth idDocumentUrl bidderDepositStatus bidderDepositAmount'
+      'bidderApprovalStatus bidderRejectionReason bidderLevel biddingLimit bidderNumber bidderReliabilityScore isBiddingSuspended biddingSuspensionReason rulesAcceptedVersion idType idNumber dateOfBirth idDocumentUrl bidderDepositStatus bidderDepositAmount bankAccountDetails'
     );
     if (!user) return res.status(404).json({ message: 'User not found' });
+
+    let bankAccountDetails = user.bankAccountDetails || null;
+    if (!bankAccountDetails?.accountNumber) {
+      const deposit = await BidderDeposit.findOne({ 
+        bidder: req.user._id, 
+        'bankAccountDetails.accountNumber': { $exists: true, $ne: '' } 
+      }).sort({ createdAt: -1 });
+      if (deposit?.bankAccountDetails) {
+        bankAccountDetails = deposit.bankAccountDetails;
+      }
+    }
 
     res.json({
       bidderApprovalStatus: user.bidderApprovalStatus || 'unregistered',
@@ -1118,7 +1191,8 @@ exports.getBidderStatus = async (req, res) => {
       idType: user.idType,
       idNumber: user.idNumber,
       dateOfBirth: user.dateOfBirth,
-      idDocumentUrl: user.idDocumentUrl
+      idDocumentUrl: user.idDocumentUrl,
+      bankAccountDetails: bankAccountDetails || null
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -1287,30 +1361,47 @@ exports.updateBidderLimit = async (req, res) => {
 // CUSTOMER: Submit a Refundable Bidding Deposit (PayFast or EFT)
 exports.createBidderDeposit = async (req, res) => {
   try {
-    const { amount = 10000, paymentMethod = 'payfast', proofOfPayment, lotId } = req.body;
+    const { amount, paymentMethod = 'payfast', proofOfPayment, lotId, bankAccountDetails, tier = 'premium' } = req.body;
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
+    // Fetch dynamic deposit amount from platform settings
+    const settings = await PlatformSettings.findOne();
+    const dynamicDeposit = settings?.auctionPremiumDepositAmount !== undefined ? settings.auctionPremiumDepositAmount : 5000;
+    const depositAmount = Number(amount) || dynamicDeposit;
+
     const depositRef = `DEP-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    let parsedBankDetails = bankAccountDetails;
+    if (typeof bankAccountDetails === 'string') {
+      try { parsedBankDetails = JSON.parse(bankAccountDetails); } catch (e) {}
+    }
 
     const deposit = new BidderDeposit({
       bidder: user._id,
       lot: lotId || undefined,
-      amount: Number(amount) || 10000,
+      amount: depositAmount,
+      tier: tier || 'premium',
       paymentMethod,
-      paymentStatus: paymentMethod === 'eft' ? 'pending' : 'pending',
+      paymentStatus: 'pending',
       paymentReference: depositRef,
-      proofOfPayment: proofOfPayment || (req.file ? req.file.path : undefined)
+      proofOfPayment: proofOfPayment || (req.file ? req.file.path : undefined),
+      bankAccountDetails: parsedBankDetails
     });
 
     await deposit.save();
 
+    if (parsedBankDetails && parsedBankDetails.bankName) {
+      user.bankAccountDetails = { ...parsedBankDetails, updatedAt: new Date() };
+    }
+
+    user.bidderDepositRequired = true;
     user.bidderDepositStatus = 'pending';
     user.bidderDepositAmount = deposit.amount;
     await user.save();
 
     res.status(201).json({
-      message: 'Bidding deposit initiated successfully.',
+      message: `Refundable bidding deposit of R${deposit.amount.toLocaleString()} initiated successfully. Awaiting verification.`,
       deposit,
       depositReference: depositRef
     });
@@ -1350,6 +1441,10 @@ exports.verifyAdminDeposit = async (req, res) => {
     const deposit = await BidderDeposit.findById(id).populate('bidder');
     if (!deposit) return res.status(404).json({ message: 'Deposit not found' });
 
+    const settings = await PlatformSettings.findOne();
+    const premiumLimit = settings?.auctionPremiumBiddingLimit || 250000;
+    const standardLimit = settings?.auctionStandardBiddingLimit || 25000;
+
     if (action === 'verify_paid') {
       deposit.paymentStatus = 'paid';
       deposit.verifiedBy = req.user._id;
@@ -1357,7 +1452,7 @@ exports.verifyAdminDeposit = async (req, res) => {
       deposit.adminNotes = notes || 'Verified by administrator';
       await deposit.save();
 
-      // Upgrade bidder to Level 3 Enhanced (limit R250,000)
+      // Upgrade bidder to Level 3 Enhanced / VIP with dynamic limit
       if (deposit.bidder) {
         const bidder = await User.findById(deposit.bidder._id);
         if (bidder) {
@@ -1365,7 +1460,7 @@ exports.verifyAdminDeposit = async (req, res) => {
           bidder.bidderApprovalStatus = 'approved';
           bidder.kycVerified = true;
           bidder.bidderLevel = 'level_3_enhanced';
-          bidder.biddingLimit = Math.max(bidder.biddingLimit || 0, 250000);
+          bidder.biddingLimit = Math.max(bidder.biddingLimit || 0, premiumLimit);
           await bidder.save();
         }
       }
@@ -1373,13 +1468,15 @@ exports.verifyAdminDeposit = async (req, res) => {
       deposit.paymentStatus = 'refunded';
       deposit.refundStatus = 'refunded';
       deposit.refundedAt = new Date();
-      deposit.adminNotes = notes || 'Refund issued by administrator';
+      deposit.adminNotes = notes || 'Refund issued to customer bank account by administrator';
       await deposit.save();
 
       if (deposit.bidder) {
         const bidder = await User.findById(deposit.bidder._id);
         if (bidder) {
           bidder.bidderDepositStatus = 'refunded';
+          bidder.biddingLimit = standardLimit;
+          bidder.bidderLevel = 'level_2_verified';
           await bidder.save();
         }
       }
