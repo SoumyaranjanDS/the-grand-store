@@ -29,6 +29,7 @@ const storage = new CloudinaryStorage({
     folder: 'grandstore-uploads',
     resource_type: async (req, file) => {
       if (!file) return 'auto';
+      if (file.mimetype && file.mimetype.startsWith('video/')) return 'video';
       // Cloudinary treats PDFs as image assets. This preserves the .pdf format
       // in the delivery URL and allows browsers to render the uploaded file.
       if (isPdf(file)) return 'image';
@@ -40,7 +41,7 @@ const storage = new CloudinaryStorage({
     public_id: async (req, file) => isRawDocument(file)
       ? `document-${randomUUID()}${getFileExtension(file)}`
       : undefined,
-    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'heif', 'pdf', 'doc', 'docx'],
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'heif', 'pdf', 'doc', 'docx', 'mp4', 'mov', 'webm', 'mkv', 'avi'],
   }
 });
 

@@ -336,12 +336,17 @@ const getPendingBankTransfers = async (req, res) => {
         .lean(),
     ]);
 
-    const shopRecords = orders.map((order) => ({
-      ...order,
-      recordType: "shop",
-      recordLabel: "Shop order",
-      reviewStatus: order.paymentStatus,
-    }));
+    const shopRecords = orders.map((order) => {
+      const isAuction = order.orderItems?.some((item) =>
+        item.name?.toLowerCase().includes("auction lot") || item.category === "Auction"
+      );
+      return {
+        ...order,
+        recordType: isAuction ? "auction" : "shop",
+        recordLabel: isAuction ? "Auction lot" : "Shop order",
+        reviewStatus: order.paymentStatus,
+      };
+    });
     const eventRecords = eventBookings.map((booking) => ({
       ...booking,
       recordType: "event",

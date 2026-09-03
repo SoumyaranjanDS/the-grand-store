@@ -243,6 +243,7 @@ export default function AdminBankTransfers() {
                     <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Payment For</p>
                     <p className="text-sm text-white">{order.recordLabel || 'Shop order'}</p>
                     {order.event?.title && <p className="mt-1 text-xs text-gray-400">{order.event.title}</p>}
+                    {order.orderItems?.[0]?.name && <p className="mt-1 text-xs text-[#c9a35b]">{order.orderItems[0].name}</p>}
                   </div>
                   <div>
                     <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">

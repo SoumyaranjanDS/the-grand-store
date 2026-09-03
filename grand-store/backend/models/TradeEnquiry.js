@@ -27,7 +27,7 @@ const tradeEnquirySchema = new mongoose.Schema(
     },
     source: {
       type: String,
-      enum: ['enquiry', 'contact'],
+      enum: ['enquiry', 'contact', 'app_promo'],
       default: 'enquiry'
     },
     status: {

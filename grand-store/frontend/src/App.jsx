@@ -111,6 +111,8 @@ import AdminAccessories from './features/admin/AdminAccessories'
 import AdminCategories from './features/admin/AdminCategories'
 import AdminMarquees from './features/admin/AdminMarquees'
 import AdminTradeEnquiries from './features/admin/AdminTradeEnquiries'
+import AdminCigarEnquiries from './features/admin/AdminCigarEnquiries'
+import AdminCigarEnquiryDetail from './features/admin/AdminCigarEnquiryDetail'
 import AdminAttributes from './features/admin/AdminAttributes'
 import AdminAdvertisementRequests from './features/admin/AdminAdvertisementRequests'
 import AdminAdvertisementRequestDetail from './features/admin/AdminAdvertisementRequestDetail'
@@ -721,7 +723,7 @@ function App() {
           <Route path="events" element={<VendorEvents />} />
           <Route path="events/:id/attendees" element={<EventAttendees />} />
           <Route path="event-add" element={<EventAdd />} />
-          <Route path="auction-submit" element={<AuctionSubmission />} />
+          <Route path="auction-submit" element={<AuctionSubmission onNotify={showToast} />} />
         </Route>
 
         {/* Public Host Application Forms */}
@@ -741,7 +743,7 @@ function App() {
           <Route path="dashboard" element={<AuctionHostDashboard />} />
           <Route path="wallet" element={<AuctionHostWallet />} />
           <Route path="inventory" element={<VendorInventory />} />
-          <Route path="auction-submit" element={<AuctionSubmission />} />
+          <Route path="auction-submit" element={<AuctionSubmission onNotify={showToast} />} />
           <Route path="profile" element={<VendorProfile />} />
         </Route>
 
@@ -775,6 +777,8 @@ function App() {
           <Route path="settings" element={<AdminSettings />} />
           <Route path="testimonials" element={<AdminTestimonials />} />
           <Route path="trade-enquiries" element={<AdminTradeEnquiries />} />
+          <Route path="cigar-enquiries" element={<AdminCigarEnquiries />} />
+          <Route path="cigar-enquiries/:id" element={<AdminCigarEnquiryDetail />} />
           <Route path="financials" element={<AdminFinancials />} />
           <Route path="bank-transfers" element={<AdminBankTransfers />} />
           <Route path="glossary" element={<AdminGlossary />} />

@@ -414,6 +414,23 @@ const processOrderPayment = async (orderId) => {
     await wallet.save();
   }
 
+  // 4. Update AuctionLot if this order contains an auction lot
+  try {
+    const AuctionLot = require('../models/AuctionLot');
+    for (const item of order.orderItems) {
+      if (item.product) {
+        const lot = await AuctionLot.findById(item.product);
+        if (lot) {
+          lot.paymentStatus = 'Paid';
+          lot.status = 'sold';
+          await lot.save();
+        }
+      }
+    }
+  } catch (auctionSyncErr) {
+    console.error('Error syncing auction lot status in processOrderPayment:', auctionSyncErr);
+  }
+
   return true;
 };
 

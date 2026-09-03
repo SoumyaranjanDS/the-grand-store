@@ -91,6 +91,21 @@ exports.rejectPayment = async (req, res) => {
     await order.save();
 
     try {
+      const AuctionLot = require('../models/AuctionLot');
+      for (const item of order.orderItems) {
+        if (item.product) {
+          const lot = await AuctionLot.findById(item.product);
+          if (lot) {
+            lot.paymentStatus = 'Failed';
+            await lot.save();
+          }
+        }
+      }
+    } catch (lotErr) {
+      console.error('Error updating auction lot on rejection:', lotErr);
+    }
+
+    try {
       const { sendEmail } = require('../utils/emailService');
       const { genericNotificationTemplate } = require('../utils/emailTemplates');
       const User = require('../models/User');

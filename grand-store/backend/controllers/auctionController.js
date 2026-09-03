@@ -1,5 +1,9 @@
 const AuctionLot = require('../models/AuctionLot');
 const Bid = require('../models/Bid');
+const User = require('../models/User');
+const AuctionFraudAlert = require('../models/AuctionFraudAlert');
+const AuctionLedger = require('../models/AuctionLedger');
+const BidderDeposit = require('../models/BidderDeposit');
 const PlatformSettings = require('../models/PlatformSettings');
 const Order = require('../models/Order');
 const Transaction = require('../models/Transaction');
@@ -7,6 +11,15 @@ const Wallet = require('../models/Wallet');
 const { getNextSequence } = require('../utils/sequenceGenerator');
 const { sendEmail } = require('../utils/emailService');
 const { auctionWinTemplate } = require('../utils/emailTemplates');
+const { evaluateBidIntegrity, logAuctionEvent } = require('../services/auctionFraudService');
+
+const calculateDynamicIncrement = (currentBid) => {
+  if (currentBid < 5000) return 250;
+  if (currentBid < 10000) return 500;
+  if (currentBid < 50000) return 1000;
+  if (currentBid < 100000) return 2500;
+  return 5000;
+};
 
 const parseAuctionSchedule = (startDate, endDate) => {
   const parsedStart = new Date(startDate);
@@ -121,21 +134,54 @@ exports.placeBid = async (req, res) => {
   try {
     const { amount, isMaxBid } = req.body;
     const lotId = req.params.id;
-    const userId = req.user._id; // Requires authenticateUser middleware
+    const userId = req.user._id;
 
     const lot = await AuctionLot.findById(lotId);
     if (!lot) return res.status(404).json({ message: 'Lot not found' });
     
-    if (req.user.role === 'admin' || req.user.role === 'vendor_active') {
-      return res.status(403).json({ message: 'Admins and vendors are not allowed to place bids.' });
+    // Bidder Permission, KYC & Admin Approval checks
+    if (req.user.isBiddingSuspended) {
+      return res.status(403).json({ message: 'Your bidding privileges are temporarily suspended. Reason: ' + (req.user.biddingSuspensionReason || 'Account under review') });
+    }
+
+    if (req.user.bidderApprovalStatus !== 'approved') {
+      const isPending = req.user.bidderApprovalStatus === 'pending_approval';
+      return res.status(403).json({ 
+        message: isPending
+          ? 'Your bidder application is currently under administrator review and approval. You will be notified once approved.'
+          : 'Bidder qualification required. Please submit your 18+ age verification and ID details to request bidding approval.',
+        requiresVerification: !isPending,
+        isPending
+      });
+    }
+
+    const userLimit = req.user.biddingLimit || 0;
+    if (amount > userLimit) {
+      return res.status(403).json({ 
+        message: `This bid exceeds your approved limit of R${userLimit.toLocaleString()}. Please complete deposit verification or contact support to request a limit increase.` 
+      });
+    }
+
+    // Fraud & Shill Bidding Evaluation
+    const integrityCheck = await evaluateBidIntegrity({
+      lot,
+      bidder: req.user,
+      bidAmount: amount,
+      ipAddress: req.ip || req.connection.remoteAddress,
+      userAgent: req.headers['user-agent']
+    });
+
+    if (integrityCheck.isBlocked) {
+      return res.status(403).json({ message: integrityCheck.blockReason });
     }
     
+    // State transitions
     if (lot.status === 'upcoming' && new Date() >= new Date(lot.startDate)) {
       lot.status = 'live';
       await lot.save();
     }
 
-    if (lot.status !== 'live') {
+    if (lot.status !== 'live' && lot.status !== 'extended') {
       return res.status(400).json({ message: 'Auction is not live' });
     }
 
@@ -145,70 +191,187 @@ exports.placeBid = async (req, res) => {
       return res.status(400).json({ message: 'Auction has ended' });
     }
 
-    // Minimum bid required
-    const nextMinimum = lot.currentBid === 0 ? lot.startingBid : lot.currentBid + lot.bidIncrement;
+    // Dynamic Increment Ladder
+    const currentIncrement = calculateDynamicIncrement(lot.currentBid);
+    const nextMinimum = lot.currentBid === 0 ? lot.startingBid : lot.currentBid + currentIncrement;
     
     if (amount < nextMinimum) {
-      return res.status(400).json({ message: `Bid must be at least R${nextMinimum}` });
+      return res.status(400).json({ message: `Minimum bid must be at least R${nextMinimum.toLocaleString()}` });
     }
 
-    // Max Bid Logic
+    const bidderHandle = req.user.bidderNumber || `Bidder GS-${String(req.user._id).slice(-4).toUpperCase()}`;
+
+    // Max / Proxy Bid Logic
+    let winningUserId = userId;
+    let effectiveWinningAmt = amount;
+
     if (isMaxBid) {
-      // Save max bid secretly
-      const newMaxBid = new Bid({ user: userId, lot: lotId, amount, isMaxBid: true });
+      const newMaxBid = new Bid({
+        user: userId,
+        lot: lotId,
+        amount: amount,
+        isMaxBid: true,
+        bidType: 'proxy',
+        maxProxyAmount: amount,
+        bidderNumber: bidderHandle,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent']
+      });
       await newMaxBid.save();
 
-      // See if there's another active max bid to compete with
-      const highestExistingMax = await Bid.findOne({ lot: lotId, isMaxBid: true, _id: { $ne: newMaxBid._id } }).sort({ amount: -1 });
+      // Compete with existing max bid
+      const highestExistingMax = await Bid.findOne({
+        lot: lotId,
+        isMaxBid: true,
+        _id: { $ne: newMaxBid._id }
+      }).sort({ amount: -1 });
 
       if (highestExistingMax && highestExistingMax.amount >= amount) {
-        // They outbid us instantly up to our max
-        lot.currentBid = amount; // Pushed to our max
-        await lot.save();
+        // Existing max bidder remains in lead
+        winningUserId = highestExistingMax.user;
+        const counterBidAmt = Math.min(highestExistingMax.amount, amount + currentIncrement);
         
-        // Push their bid above ours (if they have room)
-        const counterBidAmt = Math.min(highestExistingMax.amount, amount + lot.bidIncrement);
-        if (counterBidAmt > amount) {
-           await new Bid({ user: highestExistingMax.user, lot: lotId, amount: counterBidAmt, isMaxBid: false }).save();
-           lot.currentBid = counterBidAmt;
-           await lot.save();
-           return res.status(400).json({ message: 'You have been outbid instantly by an automatic bid.', lot });
-        }
-      } else {
-        // We beat their max bid. Push to their max + increment (or minimum if none)
-        let winningAmt = nextMinimum;
-        if (highestExistingMax) {
-          winningAmt = Math.min(amount, highestExistingMax.amount + lot.bidIncrement);
-        }
-        await new Bid({ user: userId, lot: lotId, amount: winningAmt, isMaxBid: false }).save();
-        lot.currentBid = winningAmt;
-      }
-
-    } else {
-      // Normal bid
-      const highestExistingMax = await Bid.findOne({ lot: lotId, isMaxBid: true }).sort({ amount: -1 });
-      
-      if (highestExistingMax && highestExistingMax.user.toString() !== userId.toString() && highestExistingMax.amount >= amount) {
-        // Existing max bid beats this normal bid instantly
-        const counterBidAmt = Math.min(highestExistingMax.amount, amount + lot.bidIncrement);
-        await new Bid({ user: highestExistingMax.user, lot: lotId, amount: counterBidAmt, isMaxBid: false }).save();
         lot.currentBid = counterBidAmt;
+        lot.highBidder = winningUserId;
+        lot.bidCount = (lot.bidCount || 0) + 1;
+        lot.lastBidTime = new Date();
+
+        await new Bid({
+          user: highestExistingMax.user,
+          lot: lotId,
+          amount: counterBidAmt,
+          isMaxBid: false,
+          bidType: 'proxy',
+          bidderNumber: `Bidder GS-${String(highestExistingMax.user).slice(-4).toUpperCase()}`,
+          ipAddress: 'SYSTEM_PROXY'
+        }).save();
+
         await lot.save();
-        return res.status(400).json({ message: 'You have been outbid instantly by an automatic bid.', lot });
+
+        await logAuctionEvent({
+          lotId: lot._id,
+          userId: req.user._id,
+          eventType: 'PROXY_TRIGGERED',
+          details: { challengerBid: amount, winningCounter: counterBidAmt, leader: highestExistingMax.user },
+          ipAddress: req.ip
+        });
+
+        return res.status(200).json({
+          message: 'Your maximum bid was recorded, but an existing automatic bid has outbid you.',
+          lot,
+          outbid: true
+        });
+      } else {
+        // Challenger takes lead
+        if (highestExistingMax) {
+          effectiveWinningAmt = Math.min(amount, highestExistingMax.amount + currentIncrement);
+        } else {
+          effectiveWinningAmt = nextMinimum;
+        }
+
+        await new Bid({
+          user: userId,
+          lot: lotId,
+          amount: effectiveWinningAmt,
+          isMaxBid: false,
+          bidType: 'proxy',
+          bidderNumber: bidderHandle,
+          ipAddress: req.ip
+        }).save();
+
+        lot.currentBid = effectiveWinningAmt;
+        winningUserId = userId;
+      }
+    } else {
+      // Normal Manual Bid
+      const highestExistingMax = await Bid.findOne({ lot: lotId, isMaxBid: true }).sort({ amount: -1 });
+
+      if (highestExistingMax && highestExistingMax.user.toString() !== userId.toString() && highestExistingMax.amount >= amount) {
+        const counterBidAmt = Math.min(highestExistingMax.amount, amount + currentIncrement);
+        
+        await new Bid({
+          user: highestExistingMax.user,
+          lot: lotId,
+          amount: counterBidAmt,
+          isMaxBid: false,
+          bidType: 'proxy',
+          bidderNumber: `Bidder GS-${String(highestExistingMax.user).slice(-4).toUpperCase()}`,
+          ipAddress: 'SYSTEM_PROXY'
+        }).save();
+
+        lot.currentBid = counterBidAmt;
+        lot.highBidder = highestExistingMax.user;
+        lot.bidCount = (lot.bidCount || 0) + 1;
+        lot.lastBidTime = new Date();
+        await lot.save();
+
+        return res.status(200).json({
+          message: 'Your bid was recorded, but an existing automatic bid has outbid you.',
+          lot,
+          outbid: true
+        });
       }
 
-      // We win for now
-      await new Bid({ user: userId, lot: lotId, amount, isMaxBid: false }).save();
+      await new Bid({
+        user: userId,
+        lot: lotId,
+        amount: amount,
+        isMaxBid: false,
+        bidType: 'manual',
+        bidderNumber: bidderHandle,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent']
+      }).save();
+
       lot.currentBid = amount;
+      winningUserId = userId;
     }
 
-    // Anti-Sniping: If bid placed within last 5 minutes, extend by 5 minutes
-    const msRemaining = new Date(lot.endDate).getTime() - new Date().getTime();
-    if (msRemaining < 300000) { // 5 mins
-      lot.endDate = new Date(new Date(lot.endDate).getTime() + 300000);
+    // Update Lot state
+    lot.highBidder = winningUserId;
+    lot.bidCount = (lot.bidCount || 0) + 1;
+    lot.lastBidTime = new Date();
+
+    // Check Reserve Price
+    if (lot.reservePrice && lot.currentBid >= lot.reservePrice && !lot.reserveMet) {
+      lot.reserveMet = true;
+      await logAuctionEvent({
+        lotId: lot._id,
+        userId,
+        eventType: 'RESERVE_MET',
+        details: { currentBid: lot.currentBid, reservePrice: lot.reservePrice }
+      });
+    }
+
+    // Anti-Sniping (Dynamic Extension: if bid placed within final 2 minutes, extend by 2 mins)
+    const msRemaining = new Date(lot.endDate).getTime() - Date.now();
+    const TWO_MINUTES_MS = 120000;
+    
+    if (msRemaining > 0 && msRemaining < TWO_MINUTES_MS) {
+      lot.endDate = new Date(Date.now() + TWO_MINUTES_MS);
+      lot.status = 'extended';
+      lot.isExtended = true;
+      lot.extensionCount = (lot.extensionCount || 0) + 1;
+
+      await logAuctionEvent({
+        lotId: lot._id,
+        userId,
+        eventType: 'EXTENSION_TRIGGERED',
+        details: { newEndDate: lot.endDate, extensionCount: lot.extensionCount },
+        ipAddress: req.ip
+      });
     }
 
     await lot.save();
+
+    await logAuctionEvent({
+      lotId: lot._id,
+      userId,
+      eventType: 'BID_PLACED',
+      details: { amount: lot.currentBid, isMaxBid },
+      ipAddress: req.ip
+    });
+
     res.json({ message: 'Bid placed successfully', lot });
 
   } catch (error) {
@@ -219,10 +382,15 @@ exports.placeBid = async (req, res) => {
 // VENDOR: Submit new lot
 exports.submitLot = async (req, res) => {
   try {
-    const { title, description, category, startingBid, reservePrice, condition, provenance, startDate, endDate } = req.body;
+    const { 
+      title, description, category, startingBid, reservePrice, condition, provenance, startDate, endDate,
+      distillery, expression, vintage, bottlingYear, ageStatement, bottleNumber, caskNumber, bottleSizeMl, abv, countryOfOrigin,
+      fillLevel, boxCondition, sealCondition, provenanceHistory,
+      estimatedValueMin, estimatedValueMax, reserveType
+    } = req.body;
     
-    if (req.user.role !== 'vendor_active' && req.user.role !== 'auction_host') {
-       return res.status(403).json({ message: 'Only active vendors and auction hosts can submit lots.' });
+    if (req.user.role !== 'vendor_active' && req.user.role !== 'auction_host' && req.user.role !== 'admin') {
+       return res.status(403).json({ message: 'Only active vendors, auction hosts, and admins can submit lots.' });
     }
 
     if (req.user.role === 'auction_host') {
@@ -236,23 +404,79 @@ exports.submitLot = async (req, res) => {
     if (schedule.error) return res.status(400).json({ message: schedule.error });
 
     let images = [];
-    if (req.files && req.files.length > 0) {
-      images = req.files.map(file => file.path);
+    let documentationImages = [];
+    let videoUrl = req.body.videoUrl || '';
+
+    if (req.files) {
+      if (Array.isArray(req.files)) {
+        images = req.files.map(file => file.path);
+      } else {
+        if (req.files.images && req.files.images.length > 0) {
+          images = req.files.images.map(file => file.path);
+        }
+        if (req.files.video && req.files.video.length > 0) {
+          videoUrl = req.files.video[0].path;
+        }
+        if (req.files.documentationImages && req.files.documentationImages.length > 0) {
+          documentationImages = req.files.documentationImages.map(file => file.path);
+        }
+      }
     } else if (req.body.images) {
       images = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
     }
 
+    if (req.body.documentationImages && documentationImages.length === 0) {
+      documentationImages = Array.isArray(req.body.documentationImages) ? req.body.documentationImages : [req.body.documentationImages];
+    }
+
     const lot = new AuctionLot({
-      title, description, category, startingBid, reservePrice, condition, provenance, images,
+      title, 
+      description, 
+      category, 
+      startingBid: Number(startingBid) || 1000, 
+      reservePrice: Number(reservePrice) || Number(startingBid) || 1000, 
+      condition, 
+      provenance, 
+      images,
+      videoUrl,
+      documentationImages,
+      distillery,
+      expression,
+      vintage,
+      bottlingYear,
+      ageStatement,
+      bottleNumber,
+      caskNumber,
+      bottleSizeMl: Number(bottleSizeMl) || 750,
+      abv: Number(abv) || 40,
+      countryOfOrigin: countryOfOrigin || 'Scotland',
+      fillLevel: fillLevel || 'Into Neck',
+      boxCondition: boxCondition || 'Original Box / Case Pristine',
+      sealCondition: sealCondition || 'Intact & Pristine',
+      provenanceHistory: provenanceHistory || provenance,
+      estimatedValueMin: Number(estimatedValueMin) || undefined,
+      estimatedValueMax: Number(estimatedValueMax) || undefined,
+      reserveType: reserveType || 'confidential',
       startDate: schedule.startDate,
       endDate: schedule.endDate,
       vendor: req.user._id,
-      status: 'pending_approval'
+      status: 'pending_approval',
+      authenticationStatus: 'Pending'
     });
 
     await lot.save();
+
+    await logAuctionEvent({
+      lotId: lot._id,
+      userId: req.user._id,
+      eventType: 'LOT_STATUS_CHANGED',
+      details: { newStatus: 'pending_approval', title: lot.title },
+      ipAddress: req.ip
+    });
+
     res.status(201).json(lot);
   } catch (error) {
+    console.error('Submit lot error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -417,7 +641,9 @@ exports.getAdminPendingLots = async (req, res) => {
     if (req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Admin access required' });
     }
-    const lots = await AuctionLot.find({ status: 'pending_approval' }).sort({ createdAt: -1 });
+    const lots = await AuctionLot.find({ status: 'pending_approval' })
+      .populate('vendor', 'name email storeName')
+      .sort({ createdAt: -1 });
     res.json(lots);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -542,6 +768,49 @@ const closeAuctionInternal = async (lotId) => {
   });
   await transaction.save();
 
+  // Create CPA Section 45 compliant double-entry trust ledger record
+  try {
+    const paymentDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    let ledgerEntry = await AuctionLedger.findOne({ lot: lot._id });
+    if (!ledgerEntry) {
+      ledgerEntry = new AuctionLedger({
+        lot: lot._id,
+        transactionRef: gsReference,
+        buyer: winningBidDoc.user._id,
+        vendor: lot.vendor,
+        hammerPrice: winningBid,
+        buyerPremiumPct,
+        buyerPremiumAmount,
+        barChargeAmount,
+        shippingCost,
+        vatAmount,
+        totalPaidByBuyer,
+        sellerCommissionPct: commissionPct,
+        sellerCommissionAmount: commissionAmount,
+        vendorPayable,
+        grandStoreGrossRevenue: parseFloat((buyerPremiumAmount + commissionAmount).toFixed(2)),
+        paymentDeadline,
+        settlementStatus: 'AWAITING_PAYMENT'
+      });
+      await ledgerEntry.save();
+    }
+
+    await logAuctionEvent({
+      lotId: lot._id,
+      userId: winningBidDoc.user._id,
+      eventType: 'AUCTION_CLOSED_HAMMER',
+      metadata: {
+        winningBid,
+        hammerPrice: winningBid,
+        totalPaidByBuyer,
+        gsReference,
+        paymentDeadline
+      }
+    });
+  } catch (ledgerErr) {
+    console.error('Error recording auction ledger entry:', ledgerErr);
+  }
+
   // Send email to winner
   try {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
@@ -595,27 +864,85 @@ exports.payAuction = async (req, res) => {
        return res.status(400).json({ message: 'Lot already paid' });
     }
 
-    const { shippingAddress, calculatedShipping } = req.body;
+    const { shippingAddress, calculatedShipping, paymentMethod, proofUrl } = req.body;
     
-    // Find associated Order
-    const order = await Order.findOne({ 'orderItems.product': lot._id });
+    // Update shipping & total
+    lot.shippingCost = calculatedShipping !== undefined ? calculatedShipping : (lot.shippingCost || 0);
+    lot.totalPaidByBuyer = lot.winningBid + lot.buyerPremiumAmount + lot.barChargeAmount + (lot.vatAmount || 0) + lot.shippingCost;
 
-    // Update lot as Pending
-    lot.paymentStatus = 'Pending';
-    lot.shippingCost = calculatedShipping || lot.shippingCost || 0;
-    lot.totalPaidByBuyer = lot.winningBid + lot.buyerPremiumAmount + lot.barChargeAmount + lot.shippingCost;
-    
-    if (order) {
-      order.paymentStatus = 'Pending';
+    const isBankTransfer = paymentMethod === 'Bank Transfer' || paymentMethod === 'bank_transfer';
+    const isAwaitingApproval = isBankTransfer && Boolean(proofUrl);
+
+    lot.paymentStatus = isAwaitingApproval ? 'Awaiting_Approval' : 'Pending';
+
+    // Find or create associated Order
+    let order = await Order.findOne({ 'orderItems.product': lot._id.toString() });
+    if (!order) {
+      const year = new Date().getFullYear().toString().slice(-2);
+      const seqNum = await getNextSequence('auctionPay');
+      const gsReference = `GS-${year}-AUC-PAY-${seqNum.toString().padStart(6, '0')}`;
+      const orderId = `ORD-${Date.now().toString().slice(-6)}`;
+      const invoiceNumber = `INV-${Date.now().toString().slice(-6)}`;
+      const paymentId = `PAY-${Date.now().toString().slice(-6)}`;
+
+      order = new Order({
+        user: lot.winner,
+        transactionId: gsReference,
+        orderId,
+        invoiceNumber,
+        paymentId,
+        orderItems: [{
+          product: lot._id.toString(),
+          vendorId: lot.vendor,
+          name: `Auction Lot ${lot.lotNumber || ''}: ${lot.title}`.trim(),
+          category: 'Auction',
+          quantity: 1,
+          price: lot.winningBid,
+          image: lot.images && lot.images.length > 0 ? lot.images[0] : ''
+        }],
+        shippingAddress: shippingAddress || { address: 'Pending', city: 'Pending', postalCode: 'Pending', country: 'South Africa' },
+        paymentMethod: isBankTransfer ? 'Bank Transfer' : 'PayFast',
+        subTotal: lot.winningBid,
+        shippingCost: lot.shippingCost,
+        vatPct: lot.vatPct || 15,
+        vatAmount: lot.vatAmount || 0,
+        commissionPct: lot.commissionPct || 15,
+        commissionAmount: lot.commissionAmount || 0,
+        totalPrice: lot.totalPaidByBuyer,
+        paymentStatus: isAwaitingApproval ? 'Awaiting_Approval' : 'Pending',
+        proofUrl: proofUrl || ''
+      });
+    } else {
       if (shippingAddress) order.shippingAddress = shippingAddress;
       order.shippingCost = lot.shippingCost;
       order.totalPrice = lot.totalPaidByBuyer;
-      await order.save();
+      order.paymentMethod = isBankTransfer ? 'Bank Transfer' : 'PayFast';
+      if (isAwaitingApproval) {
+        order.paymentStatus = 'Awaiting_Approval';
+        order.proofUrl = proofUrl;
+      }
     }
 
+    await order.save();
     await lot.save();
 
-    res.json({ message: 'Shipping saved, pending payment', lot, order });
+    // Event sourcing if proof is uploaded
+    if (proofUrl) {
+      try {
+        const CheckoutEngine = require('../services/CheckoutEngine');
+        await CheckoutEngine.appendEvent(order._id.toString(), 'ProofOfPaymentUploaded', { proofUrl }, req.user._id);
+      } catch (e) {
+        console.warn('CheckoutEngine event error:', e.message);
+      }
+    }
+
+    res.json({ 
+      message: isAwaitingApproval 
+        ? 'Bank transfer proof submitted. Awaiting admin verification.' 
+        : 'Shipping saved, pending payment', 
+      lot, 
+      order 
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -670,7 +997,7 @@ exports.getAllLots = async (req, res) => {
     if (req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Admin access required' });
     }
-    const lots = await AuctionLot.find().sort({ createdAt: -1 }).populate('vendor', 'name email').populate('winner', 'name email').lean();
+    const lots = await AuctionLot.find().sort({ createdAt: -1 }).populate('vendor', 'name email storeName').populate('winner', 'name email').lean();
     
     // Attach order shipping address if available
     for (let lot of lots) {
@@ -683,6 +1010,503 @@ exports.getAllLots = async (req, res) => {
     }
     
     res.json(lots);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// ==========================================
+// BIDDER QUALIFICATION & KYC (PHASE 4)
+// ==========================================
+
+// CUSTOMER: Register and complete 18+ age / KYC verification (Requires Admin Approval)
+exports.registerBidder = async (req, res) => {
+  try {
+    const { dateOfBirth, idType, idNumber, idDocumentUrl, acceptRulesVersion } = req.body;
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (!dateOfBirth) {
+      return res.status(400).json({ message: 'Date of birth is required for legal 18+ age verification.' });
+    }
+
+    const birthDate = new Date(dateOfBirth);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
+    if (age < 18) {
+      return res.status(403).json({ message: 'You must be at least 18 years of age to participate in alcohol auctions.' });
+    }
+
+    if (!acceptRulesVersion) {
+      return res.status(400).json({ message: 'You must read and accept the Rules of Auction.' });
+    }
+
+    user.dateOfBirth = birthDate;
+    user.idType = idType || 'National ID';
+    user.idNumber = idNumber || '';
+    if (idDocumentUrl) user.idDocumentUrl = idDocumentUrl;
+    user.rulesAcceptedVersion = acceptRulesVersion || 'v1.0';
+    user.rulesAcceptedAt = new Date();
+
+    // Strict Admin Approval Pipeline: applicant is set to pending_approval with 0 limit
+    user.bidderApprovalStatus = 'pending_approval';
+    user.bidderLevel = 'level_1_registered';
+    user.biddingLimit = 0;
+    user.kycVerified = false;
+    user.auctionRegistered = true;
+
+    if (!user.bidderNumber) {
+      user.bidderNumber = `GS-B${Math.floor(1000 + Math.random() * 9000)}`;
+    }
+
+    await user.save();
+
+    await logAuctionEvent({
+      userId: user._id,
+      eventType: 'AUTHENTICATION_STATUS_CHANGED',
+      details: { 
+        action: 'BIDDER_APPLICATION_SUBMITTED',
+        bidderApprovalStatus: 'pending_approval', 
+        bidderNumber: user.bidderNumber 
+      },
+      ipAddress: req.ip
+    });
+
+    res.json({
+      message: 'Your bidder verification application has been submitted. Our compliance team will review and approve your account before you can place bids.',
+      status: 'pending_approval',
+      bidder: {
+        bidderApprovalStatus: user.bidderApprovalStatus,
+        bidderLevel: user.bidderLevel,
+        biddingLimit: user.biddingLimit,
+        bidderNumber: user.bidderNumber,
+        bidderReliabilityScore: user.bidderReliabilityScore
+      }
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// CUSTOMER: Get bidder verification status & limit
+exports.getBidderStatus = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select(
+      'bidderApprovalStatus bidderRejectionReason bidderLevel biddingLimit bidderNumber bidderReliabilityScore isBiddingSuspended biddingSuspensionReason rulesAcceptedVersion idType idNumber dateOfBirth idDocumentUrl bidderDepositStatus bidderDepositAmount'
+    );
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    res.json({
+      bidderApprovalStatus: user.bidderApprovalStatus || 'unregistered',
+      bidderRejectionReason: user.bidderRejectionReason || null,
+      bidderLevel: user.bidderLevel || 'level_1_registered',
+      biddingLimit: user.biddingLimit || 0,
+      bidderNumber: user.bidderNumber || null,
+      bidderReliabilityScore: user.bidderReliabilityScore || 100,
+      isBiddingSuspended: user.isBiddingSuspended || false,
+      biddingSuspensionReason: user.biddingSuspensionReason || null,
+      isVerified: user.bidderApprovalStatus === 'approved',
+      isPending: user.bidderApprovalStatus === 'pending_approval',
+      bidderDepositStatus: user.bidderDepositStatus || 'none',
+      bidderDepositAmount: user.bidderDepositAmount || 0,
+      idType: user.idType,
+      idNumber: user.idNumber,
+      dateOfBirth: user.dateOfBirth,
+      idDocumentUrl: user.idDocumentUrl
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// ==========================================
+// ADMIN BIDDER APPROVALS & KYC MANAGEMENT
+// ==========================================
+
+// ADMIN: Get all bidder applicants
+exports.getAdminBidders = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    const bidders = await User.find({
+      $or: [
+        { bidderApprovalStatus: { $in: ['pending_approval', 'approved', 'rejected'] } },
+        { auctionRegistered: true }
+      ]
+    })
+    .select('name email phone role bidderApprovalStatus bidderRejectionReason bidderApprovedAt bidderApprovedBy bidderLevel biddingLimit bidderNumber bidderReliabilityScore isBiddingSuspended biddingSuspensionReason dateOfBirth idType idNumber idDocumentUrl rulesAcceptedVersion rulesAcceptedAt bidderDepositStatus bidderDepositAmount createdAt')
+    .sort({ createdAt: -1 });
+
+    res.json(bidders);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// ADMIN: Approve a bidder application
+exports.approveBidder = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    const { id } = req.params;
+    const { bidderLevel = 'level_2_verified', biddingLimit = 25000, notes } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.bidderApprovalStatus = 'approved';
+    user.kycVerified = true;
+    user.bidderLevel = bidderLevel;
+    user.biddingLimit = Number(biddingLimit) || 25000;
+    user.bidderApprovedAt = new Date();
+    user.bidderApprovedBy = req.user._id;
+    user.isBiddingSuspended = false;
+    user.bidderRejectionReason = undefined;
+
+    if (!user.bidderNumber) {
+      user.bidderNumber = `GS-B${Math.floor(1000 + Math.random() * 9000)}`;
+    }
+
+    await user.save();
+
+    await logAuctionEvent({
+      userId: user._id,
+      eventType: 'ADMIN_OVERRIDE',
+      details: { 
+        action: 'BIDDER_APPROVED', 
+        approvedBy: req.user._id,
+        bidderLevel: user.bidderLevel,
+        biddingLimit: user.biddingLimit,
+        bidderNumber: user.bidderNumber,
+        notes
+      },
+      ipAddress: req.ip
+    });
+
+    res.json({ 
+      message: `Bidder ${user.name} approved successfully with limit R${user.biddingLimit.toLocaleString()}`, 
+      user 
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// ADMIN: Reject a bidder application
+exports.rejectBidder = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    const { id } = req.params;
+    const { reason = 'Identity documents or age verification could not be validated.' } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.bidderApprovalStatus = 'rejected';
+    user.bidderRejectionReason = reason;
+    user.kycVerified = false;
+    user.bidderLevel = 'level_1_registered';
+    user.biddingLimit = 0;
+
+    await user.save();
+
+    await logAuctionEvent({
+      userId: user._id,
+      eventType: 'ADMIN_OVERRIDE',
+      details: { action: 'BIDDER_REJECTED', rejectedBy: req.user._id, reason },
+      ipAddress: req.ip
+    });
+
+    res.json({ message: `Bidder application for ${user.name} has been rejected.`, user });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// ADMIN: Update bidder limit or toggle suspension
+exports.updateBidderLimit = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    const { id } = req.params;
+    const { biddingLimit, isBiddingSuspended, suspensionReason, bidderLevel } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (biddingLimit !== undefined) user.biddingLimit = Number(biddingLimit);
+    if (bidderLevel !== undefined) user.bidderLevel = bidderLevel;
+    if (isBiddingSuspended !== undefined) {
+      user.isBiddingSuspended = Boolean(isBiddingSuspended);
+      if (user.isBiddingSuspended && suspensionReason) {
+        user.biddingSuspensionReason = suspensionReason;
+      } else if (!user.isBiddingSuspended) {
+        user.biddingSuspensionReason = undefined;
+      }
+    }
+
+    await user.save();
+
+    await logAuctionEvent({
+      userId: user._id,
+      eventType: 'ADMIN_OVERRIDE',
+      details: { 
+        action: 'BIDDER_LIMIT_UPDATED', 
+        updatedBy: req.user._id, 
+        biddingLimit: user.biddingLimit, 
+        isBiddingSuspended: user.isBiddingSuspended 
+      },
+      ipAddress: req.ip
+    });
+
+    res.json({ message: `Bidder settings updated for ${user.name}`, user });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// ==========================================
+// BIDDER DEPOSITS (SECTION 19)
+// ==========================================
+
+// CUSTOMER: Submit a Refundable Bidding Deposit (PayFast or EFT)
+exports.createBidderDeposit = async (req, res) => {
+  try {
+    const { amount = 10000, paymentMethod = 'payfast', proofOfPayment, lotId } = req.body;
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const depositRef = `DEP-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const deposit = new BidderDeposit({
+      bidder: user._id,
+      lot: lotId || undefined,
+      amount: Number(amount) || 10000,
+      paymentMethod,
+      paymentStatus: paymentMethod === 'eft' ? 'pending' : 'pending',
+      paymentReference: depositRef,
+      proofOfPayment: proofOfPayment || (req.file ? req.file.path : undefined)
+    });
+
+    await deposit.save();
+
+    user.bidderDepositStatus = 'pending';
+    user.bidderDepositAmount = deposit.amount;
+    await user.save();
+
+    res.status(201).json({
+      message: 'Bidding deposit initiated successfully.',
+      deposit,
+      depositReference: depositRef
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// ADMIN: Get all bidder deposits
+exports.getAdminDeposits = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    const deposits = await BidderDeposit.find()
+      .populate('bidder', 'name email phone bidderNumber')
+      .populate('lot', 'title lotNumber')
+      .sort({ createdAt: -1 });
+
+    res.json(deposits);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// ADMIN: Verify / Refund a bidder deposit
+exports.verifyAdminDeposit = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    const { id } = req.params;
+    const { action, notes } = req.body; // action: 'verify_paid' | 'refund' | 'forfeit'
+
+    const deposit = await BidderDeposit.findById(id).populate('bidder');
+    if (!deposit) return res.status(404).json({ message: 'Deposit not found' });
+
+    if (action === 'verify_paid') {
+      deposit.paymentStatus = 'paid';
+      deposit.verifiedBy = req.user._id;
+      deposit.verifiedAt = new Date();
+      deposit.adminNotes = notes || 'Verified by administrator';
+      await deposit.save();
+
+      // Upgrade bidder to Level 3 Enhanced (limit R250,000)
+      if (deposit.bidder) {
+        const bidder = await User.findById(deposit.bidder._id);
+        if (bidder) {
+          bidder.bidderDepositStatus = 'paid';
+          bidder.bidderApprovalStatus = 'approved';
+          bidder.kycVerified = true;
+          bidder.bidderLevel = 'level_3_enhanced';
+          bidder.biddingLimit = Math.max(bidder.biddingLimit || 0, 250000);
+          await bidder.save();
+        }
+      }
+    } else if (action === 'refund') {
+      deposit.paymentStatus = 'refunded';
+      deposit.refundStatus = 'refunded';
+      deposit.refundedAt = new Date();
+      deposit.adminNotes = notes || 'Refund issued by administrator';
+      await deposit.save();
+
+      if (deposit.bidder) {
+        const bidder = await User.findById(deposit.bidder._id);
+        if (bidder) {
+          bidder.bidderDepositStatus = 'refunded';
+          await bidder.save();
+        }
+      }
+    }
+
+    res.json({ message: `Deposit updated (${action})`, deposit });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// ==========================================
+// LOT AUTHENTICATION & CUSTODY PIPELINE (PHASE 3)
+// ==========================================
+
+// ADMIN: Update lot authentication & custody status
+exports.updateLotAuthentication = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    const { id } = req.params;
+    const { authenticationStatus, authenticationNotes, custodyLocation, approvedToAuction } = req.body;
+
+    const lot = await AuctionLot.findById(id);
+    if (!lot) return res.status(404).json({ message: 'Lot not found' });
+
+    if (authenticationStatus) lot.authenticationStatus = authenticationStatus;
+    if (authenticationNotes) lot.authenticationNotes = authenticationNotes;
+    if (custodyLocation) lot.custodyLocation = custodyLocation;
+    lot.authenticatedBy = req.user._id;
+    lot.authenticatedAt = new Date();
+
+    if (approvedToAuction === true && lot.status === 'pending_approval') {
+      lot.status = 'upcoming';
+    }
+
+    await lot.save();
+
+    await logAuctionEvent({
+      lotId: lot._id,
+      userId: req.user._id,
+      eventType: 'AUTHENTICATION_STATUS_CHANGED',
+      details: { authenticationStatus, custodyLocation, approvedToAuction },
+      ipAddress: req.ip
+    });
+
+    res.json({ message: 'Lot authentication updated successfully', lot });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// ==========================================
+// FRAUD & INTEGRITY ALERTS (PHASE 7)
+// ==========================================
+
+// ADMIN: Get active fraud alerts
+exports.getAuctionFraudAlerts = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    const alerts = await AuctionFraudAlert.find()
+      .populate('lot', 'title lotNumber currentBid')
+      .populate('bidder', 'name email bidderNumber')
+      .populate('vendor', 'name email storeName')
+      .sort({ createdAt: -1 })
+      .limit(50);
+
+    res.json(alerts);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// ADMIN: Resolve fraud alert
+exports.resolveFraudAlert = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    const { id } = req.params;
+    const { status, resolutionNotes, suspendBidder } = req.body;
+
+    const alert = await AuctionFraudAlert.findById(id);
+    if (!alert) return res.status(404).json({ message: 'Alert not found' });
+
+    alert.status = status || 'ACTION_TAKEN';
+    alert.resolutionNotes = resolutionNotes || '';
+    alert.resolvedBy = req.user._id;
+    await alert.save();
+
+    if (suspendBidder && alert.bidder) {
+      await User.findByIdAndUpdate(alert.bidder, {
+        isBiddingSuspended: true,
+        biddingSuspensionReason: resolutionNotes || 'Fraud prevention suspension'
+      });
+    }
+
+    res.json({ message: 'Alert updated successfully', alert });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// ==========================================
+// AUCTION LEDGER (PHASE 10)
+// ==========================================
+
+// ADMIN: Get auction double-entry ledger entries
+exports.getAuctionLedger = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    const ledger = await AuctionLedger.find()
+      .populate('lot', 'title lotNumber')
+      .populate('buyer', 'name email')
+      .populate('vendor', 'name email storeName')
+      .sort({ createdAt: -1 });
+
+    res.json(ledger);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

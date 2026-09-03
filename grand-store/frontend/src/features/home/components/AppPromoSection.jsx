@@ -4,14 +4,45 @@ import { Smartphone, QrCode, Mail, User, MessageSquare, Send, CheckCircle2, Phon
 export default function AppPromoSection() {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setFormData({ name: '', email: '', phone: '', message: '' });
-    }, 4000);
+    setLoading(true);
+    setErrorMessage('');
+    
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/trade-enquiries`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullname: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          message: formData.message,
+          source: 'app_promo'
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setSubmitted(true);
+        setFormData({ name: '', email: '', phone: '', message: '' });
+        setTimeout(() => {
+          setSubmitted(false);
+        }, 5000);
+      } else {
+        setErrorMessage(data.message || 'Failed to send message. Please try again.');
+      }
+    } catch (err) {
+      console.error('Submission error:', err);
+      setErrorMessage('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -140,15 +171,27 @@ export default function AppPromoSection() {
               </div>
             </div>
 
+            {errorMessage && (
+              <div className="mt-6 text-center text-rose-400 text-sm font-sans bg-rose-500/10 border border-rose-500/20 py-2 px-4 rounded-xl">
+                {errorMessage}
+              </div>
+            )}
+
             <div className="mt-12 flex justify-center relative z-10">
               <button 
                 type="submit"
-                disabled={submitted}
-                className="group/btn relative overflow-hidden bg-[var(--color-gold)] text-black px-12 py-4 rounded-full font-bold text-sm uppercase tracking-[0.2em] transition-all hover:scale-105 disabled:opacity-80 disabled:hover:scale-100 flex items-center gap-3"
+                disabled={submitted || loading}
+                className="group/btn relative overflow-hidden bg-[var(--color-gold)] text-black px-12 py-4 rounded-full font-bold text-sm uppercase tracking-[0.2em] transition-all hover:scale-105 disabled:opacity-80 disabled:hover:scale-100 flex items-center gap-3 cursor-pointer"
               >
                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300 ease-out"></div>
-                <span className="relative z-10">{submitted ? 'Message Sent' : 'Send Message'}</span>
-                {submitted ? <CheckCircle2 size={18} className="relative z-10" /> : <Send size={18} className="relative z-10 group-hover/btn:translate-x-1 transition-transform" />}
+                <span className="relative z-10">
+                  {loading ? 'Sending...' : submitted ? 'Message Sent to Admin' : 'Send Message'}
+                </span>
+                {submitted ? (
+                  <CheckCircle2 size={18} className="relative z-10 text-emerald-950" />
+                ) : (
+                  <Send size={18} className="relative z-10 group-hover/btn:translate-x-1 transition-transform" />
+                )}
               </button>
             </div>
           </form>

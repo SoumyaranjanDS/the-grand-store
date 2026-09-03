@@ -115,7 +115,12 @@ const startVendorJobs = require("./jobs/vendorJobs");
 
 // Database Connection
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGO_URI, {
+    maxPoolSize: 50,
+    minPoolSize: 10,
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+  })
   .then(async () => {
     console.log("MongoDB connected successfully");
     const seedAdminStaff = require("./services/seedAdminStaff");

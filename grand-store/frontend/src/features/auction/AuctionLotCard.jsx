@@ -25,6 +25,19 @@ export default function AuctionLotCard({ lot, endTime, now, saved, onSave, onBid
         ) : (
           <span className="absolute top-4 left-4 bg-red-500/20 text-red-400 border border-red-500/30 text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded backdrop-blur-md">Live Auction</span>
         )}
+
+        <div className="absolute top-4 right-4 flex items-center gap-1.5 z-10">
+          {lot.videoUrl && (
+            <span className="bg-black/80 text-[#e1bd70] border border-[#e1bd70]/40 text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded backdrop-blur-md flex items-center gap-1 shadow">
+              ▶ Video
+            </span>
+          )}
+          {lot.images && lot.images.length > 1 && (
+            <span className="bg-black/80 text-white/80 border border-white/10 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded backdrop-blur-md shadow">
+              📷 {lot.images.length}
+            </span>
+          )}
+        </div>
         
         <div className="absolute bottom-4 left-4 text-[10px] font-bold tracking-widest text-[var(--color-ivory)] uppercase bg-black/60 px-3 py-1.5 rounded backdrop-blur-md border border-white/10">Lot {lot.lotNumber}</div>
       </div>

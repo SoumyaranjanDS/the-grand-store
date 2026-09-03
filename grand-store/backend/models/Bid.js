@@ -15,10 +15,43 @@ const bidSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  bidType: {
+    type: String,
+    enum: ['manual', 'proxy'],
+    default: 'manual'
+  },
   isMaxBid: {
     type: Boolean,
-    default: false // True if this bid record represents an automatic maximum bid ceiling
+    default: false
+  },
+  maxProxyAmount: {
+    type: Number
+  },
+  bidderNumber: {
+    type: String // Anonymous reference e.g., 'GS-B1048'
+  },
+  ipAddress: {
+    type: String
+  },
+  userAgent: {
+    type: String
+  },
+  deviceFingerprint: {
+    type: String
+  },
+  status: {
+    type: String,
+    enum: ['valid', 'outbid', 'winning', 'disqualified', 'retracted'],
+    default: 'valid'
+  },
+  serverTimestamp: {
+    type: Date,
+    default: Date.now
   }
 }, { timestamps: true });
+
+// High-scale performance indexes for fast live auction queries
+bidSchema.index({ lot: 1, createdAt: -1 });
+bidSchema.index({ user: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Bid', bidSchema);

@@ -60,6 +60,17 @@ const getProducts = async (req, res) => {
     if (req.query.type) {
       query.type = req.query.type;
     }
+    if (req.query.category) {
+      query.category = { $regex: new RegExp(`^${req.query.category}$`, 'i') };
+    }
+    if (req.query.country) {
+      const c = req.query.country.toLowerCase().trim();
+      if (['usa', 'united states', 'us'].includes(c)) {
+        query.country = { $in: [/^usa$/i, /^united states$/i, /^us$/i] };
+      } else {
+        query.country = { $regex: new RegExp(`^${req.query.country}$`, 'i') };
+      }
+    }
     const products = await Product.find(query).sort({ createdAt: -1 }).lean();
     
     const vendorIds = [...new Set(products.filter(p => p.vendorId).map(p => p.vendorId.toString()))];
