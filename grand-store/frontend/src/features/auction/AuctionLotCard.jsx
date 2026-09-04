@@ -63,18 +63,51 @@ export default function AuctionLotCard({ lot, endTime, now, saved, onSave, onBid
 
         <div className="mt-auto">
           <div className="flex justify-between items-end mb-5">
-            <div>
-              <div className="text-[9px] uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1 font-semibold">Starting Bid</div>
-              <div className="text-sm font-serif opacity-70 line-through decoration-white/20 flex items-center whitespace-nowrap">
-                <Price amount={lot.startingBid || 0} />
+            {isUpcoming ? (
+              <div className="w-full">
+                <div className="text-[9px] uppercase tracking-widest text-blue-400 mb-1 font-bold flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                  {lot.estimatedValueMin ? 'Estimated Valuation' : 'Starting Price'}
+                </div>
+                <div className="text-xl font-serif font-bold text-gold-gradient flex items-center flex-wrap gap-1.5 whitespace-nowrap">
+                  {lot.estimatedValueMin ? (
+                    <>
+                      <Price amount={lot.estimatedValueMin} />
+                      {lot.estimatedValueMax && lot.estimatedValueMax !== lot.estimatedValueMin && (
+                        <>
+                          <span className="text-white/30 font-light">–</span>
+                          <Price amount={lot.estimatedValueMax} />
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <Price amount={lot.startingBid || 0} />
+                  )}
+                </div>
+                {lot.estimatedValueMin && lot.startingBid && (
+                  <div className="text-[10px] text-[var(--color-ivory-muted)] mt-1 font-light">
+                    Starting Valuation: <span className="text-white font-medium"><Price amount={lot.startingBid} /></span>
+                  </div>
+                )}
               </div>
-            </div>
-            <div className="text-right">
-              <div className="text-[9px] uppercase tracking-widest text-[#c9a35b] mb-1 font-semibold">Current Bid</div>
-              <div className="text-xl font-serif font-bold text-[#c9a35b] flex items-center justify-end whitespace-nowrap">
-                <Price amount={lot.currentBid || lot.startingBid || 0} />
-              </div>
-            </div>
+            ) : (
+              <>
+                <div>
+                  <div className="text-[9px] uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1 font-semibold">Starting Bid</div>
+                  <div className="text-sm font-serif opacity-70 line-through decoration-white/20 flex items-center whitespace-nowrap">
+                    <Price amount={lot.startingBid || 0} />
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[9px] uppercase tracking-widest text-[#c9a35b] mb-1 font-semibold">
+                    {lot.currentBid && lot.currentBid > 0 ? 'Current Bid' : 'Starting Bid'}
+                  </div>
+                  <div className="text-xl font-serif font-bold text-[#c9a35b] flex items-center justify-end whitespace-nowrap">
+                    <Price amount={lot.currentBid || lot.startingBid || 0} />
+                  </div>
+                </div>
+              </>
+            )}
           </div>
           
           <div className={`flex items-center justify-between mb-5 ${isUpcoming ? 'bg-blue-500/5 border-blue-500/10' : 'bg-red-500/5 border-red-500/10'} p-3 rounded-lg border`}>

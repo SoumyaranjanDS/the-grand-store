@@ -51,7 +51,20 @@ const CURRENCY_SYMBOLS = {
   GBP: '£',
   INR: '₹',
   AUD: 'A$',
-  CAD: 'C$'
+  CAD: 'C$',
+  JPY: '¥',
+  CNY: '¥',
+  CHF: 'CHF',
+  AED: 'AED',
+  SGD: 'S$',
+  HKD: 'HK$',
+  NZD: 'NZ$',
+  BRL: 'R$',
+  KRW: '₩',
+  THB: '฿',
+  NGN: '₦',
+  KES: 'KSh',
+  GHS: 'GH₵',
 };
 
 function LuxuryAuctionSlide({ lot, now, index, total, onNotify, onRefresh }) {
@@ -197,14 +210,34 @@ function LuxuryAuctionSlide({ lot, now, index, total, onNotify, onRefresh }) {
           {/* Bidding Console */}
           <div className="bg-black/40 backdrop-blur-2xl border border-white/10 p-8 rounded-[2rem] max-w-xl shadow-[0_20px_60px_rgba(0,0,0,0.6)]">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-8 pb-8 border-b border-white/[0.05]">
-               <div>
-                  <p className="text-[10px] uppercase tracking-widest text-gold-gradient mb-2 font-bold flex items-center gap-2">
-                    <span className={`w-1.5 h-1.5 rounded-full ${isUpcoming ? 'bg-blue-500' : 'bg-red-500 animate-pulse'}`} /> {isUpcoming ? 'Starting Bid' : 'Current Bid'}
-                  </p>
-                  <div className="text-4xl md:text-5xl font-serif font-bold text-[var(--color-ivory)]">
-                    <Price amount={lot.currentBid || lot.startingBid || 0} />
-                  </div>
-               </div>
+                <div>
+                   <p className="text-[10px] uppercase tracking-widest text-gold-gradient mb-2 font-bold flex items-center gap-2">
+                     <span className={`w-1.5 h-1.5 rounded-full ${isUpcoming ? 'bg-blue-500' : 'bg-red-500 animate-pulse'}`} /> 
+                     {isUpcoming 
+                       ? (lot.estimatedValueMin ? 'Estimated Valuation' : 'Starting Price') 
+                       : (lot.currentBid > 0 ? 'Current Bid' : 'Starting Bid')}
+                   </p>
+                   <div className="text-3xl md:text-5xl font-serif font-bold text-[var(--color-ivory)] flex items-center flex-wrap gap-2">
+                     {isUpcoming && lot.estimatedValueMin ? (
+                       <>
+                         <Price amount={lot.estimatedValueMin} />
+                         {lot.estimatedValueMax && lot.estimatedValueMax !== lot.estimatedValueMin && (
+                           <>
+                             <span className="text-white/30 text-2xl font-light">–</span>
+                             <Price amount={lot.estimatedValueMax} />
+                           </>
+                         )}
+                       </>
+                     ) : (
+                       <Price amount={lot.currentBid || lot.startingBid || 0} />
+                     )}
+                   </div>
+                   {isUpcoming && lot.estimatedValueMin && lot.startingBid && (
+                     <p className="text-xs text-[var(--color-ivory-muted)] mt-1 font-light">
+                       Opening Bid: <span className="text-white font-medium"><Price amount={lot.startingBid} /></span>
+                     </p>
+                   )}
+                </div>
                <div className="text-left sm:text-right">
                   <p className="text-[10px] uppercase tracking-widest text-[var(--color-ivory-muted)] mb-2 font-bold flex items-center sm:justify-end gap-2">
                     <Clock size={12} className={isUpcoming ? 'text-blue-400' : 'text-red-400'} /> {isUpcoming ? 'Starts In' : 'Ends In'}

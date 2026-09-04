@@ -69,7 +69,20 @@ export default function AuctionLotDetail({ onNotify }) {
     GBP: '£',
     INR: '₹',
     AUD: 'A$',
-    CAD: 'C$'
+    CAD: 'C$',
+    JPY: '¥',
+    CNY: '¥',
+    CHF: 'CHF',
+    AED: 'AED',
+    SGD: 'S$',
+    HKD: 'HK$',
+    NZD: 'NZ$',
+    BRL: 'R$',
+    KRW: '₩',
+    THB: '฿',
+    NGN: '₦',
+    KES: 'KSh',
+    GHS: 'GH₵',
   };
 
   const fetchBidderProfile = async () => {
@@ -123,8 +136,10 @@ export default function AuctionLotDetail({ onNotify }) {
   };
   const activeIncrement = lot?.bidIncrement || getDynamicInc(lot?.currentBid || 0);
   const nextMinimum = (lot?.currentBid === 0 ? lot?.startingBid : (lot?.currentBid || 0) + activeIncrement) || 0;
-  const isLive = lot?.status === 'live' || lot?.status === 'extended';
-  const hasEnded = lot ? new Date(lot.endDate).getTime() < now : false;
+  const hasStarted = lot?.startDate ? new Date(lot.startDate).getTime() <= now : true;
+  const hasEnded = lot ? (new Date(lot.endDate).getTime() < now || lot.status === 'closed' || lot.status === 'sold' || lot.status === 'unsold') : false;
+  const isUpcoming = lot ? (lot.status === 'upcoming' || lot.status === 'pending_approval' || !hasStarted) : false;
+  const isLive = lot ? ((lot.status === 'live' || lot.status === 'extended') && hasStarted && !hasEnded) : false;
 
   // Currency conversion helpers
   const convertFromZar = (zarAmt, curr = currency) => {
@@ -244,8 +259,7 @@ export default function AuctionLotDetail({ onNotify }) {
 
   const currentUserId = user?._id;
   const isRestrictedRole = user?.role === 'admin' || user?.role === 'vendor_active';
-  const isUpcoming = lot.status === 'upcoming';
-  const targetTime = isUpcoming ? new Date(lot.startDate).getTime() : new Date(lot.endDate).getTime();
+  const targetTime = isUpcoming && lot?.startDate ? new Date(lot.startDate).getTime() : new Date(lot.endDate).getTime();
 
   return (
     <main className="min-h-screen bg-[#050505] text-[var(--color-ivory)] font-sans">
@@ -429,12 +443,65 @@ export default function AuctionLotDetail({ onNotify }) {
             {/* Bidding Console */}
             <div className="mb-16">
                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-8 border-b border-white/[0.05] pb-8">
-                 <div>
-                    <p className="text-[10px] uppercase tracking-widest text-[var(--color-ivory-muted)] mb-3 font-bold">Current Bid</p>
-                    <div className="text-4xl md:text-5xl font-serif font-medium text-[var(--color-ivory)] mb-2">
-                      <Price amount={lot.currentBid || lot.startingBid || 0} />
-                    </div>
-                 </div>
+                  <div>
+                    {isUpcoming ? (
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="w-2 h-2 rounded-full bg-blue-400" />
+                          <p className="text-[10px] uppercase tracking-widest text-blue-400 font-bold">
+                            {lot.estimatedValueMin ? 'Estimated Valuation' : 'Opening Price'}
+                          </p>
+                        </div>
+                        <div className="text-3xl md:text-5xl font-serif font-medium text-gold-gradient mb-2 flex items-center flex-wrap gap-2">
+                          {lot.estimatedValueMin ? (
+                            <>
+                              <Price amount={lot.estimatedValueMin} />
+                              {lot.estimatedValueMax && lot.estimatedValueMax !== lot.estimatedValueMin && (
+                                <>
+                                  <span className="text-white/30 text-2xl font-light">–</span>
+                                  <Price amount={lot.estimatedValueMax} />
+                                </>
+                              )}
+                            </>
+                          ) : (
+                            <Price amount={lot.startingBid || 0} />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-[var(--color-ivory-muted)] font-light flex-wrap">
+                          <span>Starting Valuation: <strong className="text-white font-medium"><Price amount={lot.startingBid || 0} /></strong></span>
+                          {lot.reserveType === 'none' && (
+                            <span className="text-emerald-400 font-semibold">• No Reserve</span>
+                          )}
+                          {lot.reserveType === 'confidential' && (
+                            <span className="text-white/40">• Reserve Protected</span>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={`w-2 h-2 rounded-full ${hasEnded ? 'bg-white/40' : (lot.currentBid > 0 ? 'bg-red-500 animate-pulse' : 'bg-emerald-400')}`} />
+                          <p className="text-[10px] uppercase tracking-widest text-[var(--color-ivory-muted)] font-bold">
+                            {hasEnded 
+                              ? (lot.status === 'sold' || lot.winningBid > 0 ? 'Winning Bid' : 'Final Bid')
+                              : (lot.currentBid && lot.currentBid > 0 ? 'Current Bid' : 'Starting Bid')}
+                          </p>
+                        </div>
+                        <div className="text-3xl sm:text-4xl lg:text-5xl font-serif font-medium text-[var(--color-ivory)] mb-2 tracking-tight whitespace-nowrap overflow-x-auto scrollbar-none flex items-center">
+                          <Price amount={hasEnded && lot.winningBid ? lot.winningBid : (lot.currentBid || lot.startingBid || 0)} />
+                        </div>
+                        {isLive && (
+                          <p className="text-xs text-[var(--color-ivory-muted)] font-light">
+                            {lot.currentBid && lot.currentBid > 0 ? (
+                              <span>{lot.bidCount || 1} {(lot.bidCount === 1) ? 'bid' : 'bids'} placed • Reserve {lot.reserveMet ? 'met' : 'not yet met'}</span>
+                            ) : (
+                              <span>Opening bid required • No bids placed yet</span>
+                            )}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                  <div className="text-left sm:text-right">
                     <p className="text-[10px] uppercase tracking-widest text-[var(--color-ivory-muted)] mb-3 font-bold">
                       {isUpcoming ? 'Bidding Opens In' : (hasEnded ? 'Auction Ended' : 'Time Remaining')}

@@ -3,6 +3,7 @@ import axios from 'axios';
 import api from '../api';
 import { useGeoLocation } from './LocationContext';
 
+
 const CurrencyContext = createContext();
 
 export const useCurrency = () => {
@@ -17,16 +18,35 @@ const CURRENCY_SYMBOLS = {
   GBP: '£',
   INR: '₹',
   AUD: 'A$',
-  CAD: 'C$'
+  CAD: 'C$',
+  JPY: '¥',
+  CNY: '¥',
+  CHF: 'CHF',
+  AED: 'AED',
+  SGD: 'S$',
+  HKD: 'HK$',
+  NZD: 'NZ$',
+  BRL: 'R$',
+  KRW: '₩',
+  THB: '฿',
+  NGN: '₦',
+  KES: 'KSh',
+  GHS: 'GH₵',
 };
 
+// Currencies that conventionally do not use fractional/decimal subdivisions
+const ZERO_DECIMAL_CURRENCIES = new Set(['JPY', 'KRW', 'VND', 'CLP', 'PYG', 'UGX']);
+
 const formatCurrencyAmount = (amount, currencyCode) => {
+  const isZeroDec = ZERO_DECIMAL_CURRENCIES.has(currencyCode);
   const formatted = new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    minimumFractionDigits: isZeroDec ? 0 : 2,
+    maximumFractionDigits: isZeroDec ? 0 : 2
   }).format(amount);
 
-  return `${CURRENCY_SYMBOLS[currencyCode] || currencyCode} ${formatted}`;
+  const symbol = CURRENCY_SYMBOLS[currencyCode] || currencyCode;
+  // Use non-breaking space (\u00A0) so the symbol and digits can never break across lines
+  return `${symbol}\u00A0${formatted}`;
 };
 
 export const CurrencyProvider = ({ children }) => {
@@ -74,17 +94,17 @@ export const CurrencyProvider = ({ children }) => {
 
   const convertAndFormat = (amountInZar) => {
     if (!amountInZar && amountInZar !== 0) return '';
-    const numericStr = String(amountInZar).replace(/[^0-9.]/g, '');
+    const numericStr = String(amountInZar).replace(/[^0-9.-]/g, '');
     const num = parseFloat(numericStr);
     if (isNaN(num)) return amountInZar;
 
-    // If no rates loaded or viewing in base currency, just return ZAR formatted
-    if (!rates || currency === 'ZAR') {
+    // If no rates loaded or viewing in base currency or missing rates, fallback to base ZAR
+    if (!rates || currency === 'ZAR' || !rates['ZAR'] || !rates[currency]) {
       return formatCurrencyAmount(num, 'ZAR');
     }
 
     // Convert: ZAR -> USD -> Target Currency
-    // Since rates are based in USD (1 USD = X ZAR, 1 USD = Y GBP)
+    // Since rates are based in USD (1 USD = X ZAR, 1 USD = Y Currency)
     const rateZarToUsd = 1 / rates['ZAR'];
     const amountInUsd = num * rateZarToUsd;
     const amountInTarget = amountInUsd * rates[currency];
