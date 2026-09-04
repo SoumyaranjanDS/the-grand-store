@@ -142,10 +142,3 @@ Grandstore-web-main (1)/
 grandsto_codedb.sql
 
 TheGrandStore/
-
-# Deployment credentials and local host verification files
-grand-store-deploy
-grand-store-deploy.pub
-grandstore-known-hosts
-.vps_known_hosts
-**/.env.backup*
