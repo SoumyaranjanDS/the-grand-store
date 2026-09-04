@@ -1,60 +1,160 @@
-name: Deploy Grand Store to Production
+name: Grand Store CI/CD
 
 on:
+  pull_request:
+    branches: [main]
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
-  group: production-deploy
-  cancel-in-progress: true
+  group: grand-store-production-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "24"
 
 jobs:
-  deploy:
-    name: Deploy to Production VPS (191.215.37.241)
+  verify:
+    name: Test and build
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
-      - name: Connect via SSH and Deploy
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
         with:
-          host: '191.215.37.241'
-          username: 'root'
-          password: ${{ secrets.SERVER_PASSWORD }}
-          script_stop: true
-          script: |
-            echo "=========================================================="
-            echo "🚀 Starting Automated Deployment to Production"
-            echo "Host: 191.215.37.241"
-            echo "Date: $(date)"
-            echo "=========================================================="
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            grand-store/backend/package-lock.json
+            grand-store/frontend/package-lock.json
 
-            # 1. Navigate to Project
-            cd /var/www/grandstore-all
+      - name: Install backend dependencies
+        working-directory: grand-store/backend
+        run: npm ci --no-audit --no-fund
 
-            # 2. Pull Latest Commits
-            echo "📥 Pulling latest code from main..."
-            git pull origin main
+      - name: Run backend tests
+        working-directory: grand-store/backend
+        run: npm test
 
-            # 3. Update Backend and Reload PM2
-            echo "📦 Installing Backend Dependencies & Reloading PM2..."
-            cd /var/www/grandstore-all/grand-store/backend
-            npm ci --omit=dev || npm install --omit=dev
-            pm2 reload grandstore-backend || pm2 restart grandstore-backend
+      - name: Install frontend dependencies
+        working-directory: grand-store/frontend
+        run: npm ci --no-audit --no-fund
 
-            # 4. Build Frontend
-            echo "🎨 Building Frontend..."
-            cd /var/www/grandstore-all/grand-store/frontend
-            npm ci || npm install
-            npm run build
+      - name: Build frontend
+        working-directory: grand-store/frontend
+        env:
+          VITE_API_URL: http://localhost:5000
+        run: npm run build
 
-            # 5. Reload Nginx
-            echo "🌐 Testing and Reloading Nginx..."
-            nginx -t
-            systemctl reload nginx
+  deploy:
+    name: Deploy production
+    needs: verify
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: production
+      url: ${{ vars.PRODUCTION_URL || 'https://grandstore.co.za' }}
+    env:
+      VPS_HOST: ${{ vars.VPS_HOST || '191.215.37.241' }}
+      VPS_PORT: ${{ vars.VPS_PORT || '22' }}
+      VPS_USER: ${{ vars.VPS_USER || 'root' }}
+      VPS_APP_DIR: ${{ vars.VPS_APP_DIR || '/var/www/grand-store' }}
+      VPS_LEGACY_BACKEND_DIR: ${{ vars.VPS_LEGACY_BACKEND_DIR || '/var/www/grandstore-all/grand-store/backend' }}
+      VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+      VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+      VITE_API_URL: ${{ vars.VITE_API_URL }}
+      VITE_FRONTEND_URL: ${{ vars.VITE_FRONTEND_URL || vars.PRODUCTION_URL }}
+      VITE_APP_URL: ${{ vars.VITE_APP_URL || vars.PRODUCTION_URL }}
+      VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+      VITE_GOOGLE_MAPS_API_KEY: ${{ vars.VITE_GOOGLE_MAPS_API_KEY }}
 
-            echo "=========================================================="
-            echo "✅ Deployment Succeeded!"
-            echo "Live URL: https://grandstoreglobal.com"
-            echo "API URL:  https://api.grandstoreglobal.com"
-            echo "=========================================================="
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: grand-store/frontend/package-lock.json
+
+      - name: Validate deployment configuration
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          [[ -n "$VPS_SSH_PRIVATE_KEY" ]] || { echo "VPS_SSH_PRIVATE_KEY is not configured." >&2; exit 1; }
+          [[ -n "$VPS_KNOWN_HOSTS" ]] || { echo "VPS_KNOWN_HOSTS is not configured." >&2; exit 1; }
+          [[ "$VPS_HOST" =~ ^[A-Za-z0-9.-]+$ ]] || { echo "VPS_HOST is invalid." >&2; exit 1; }
+          [[ "$VPS_PORT" =~ ^[0-9]+$ ]] || { echo "VPS_PORT is invalid." >&2; exit 1; }
+          [[ "$VPS_USER" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "VPS_USER is invalid." >&2; exit 1; }
+          [[ "$VPS_APP_DIR" =~ ^/var/www/[A-Za-z0-9._/-]+$ ]] || { echo "VPS_APP_DIR must be a directory below /var/www." >&2; exit 1; }
+          [[ "$VPS_LEGACY_BACKEND_DIR" =~ ^/var/www/[A-Za-z0-9._/-]+$ ]] || { echo "VPS_LEGACY_BACKEND_DIR must be a directory below /var/www." >&2; exit 1; }
+          [[ "$VITE_API_URL" == https://* ]] || { echo "VITE_API_URL must be configured as an HTTPS URL." >&2; exit 1; }
+
+      - name: Build production frontend
+        working-directory: grand-store/frontend
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+
+      - name: Package release
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          release_root="$RUNNER_TEMP/grand-store-release"
+          archive="$RUNNER_TEMP/grand-store-${GITHUB_SHA}-${GITHUB_RUN_ATTEMPT}.tar.gz"
+          mkdir -p "$release_root/backend" "$release_root/frontend"
+
+          cp grand-store/backend/server.js "$release_root/backend/"
+          cp grand-store/backend/package.json grand-store/backend/package-lock.json "$release_root/backend/"
+          cp grand-store/backend/ecosystem.config.cjs "$release_root/backend/"
+          cp -a grand-store/backend/config "$release_root/backend/"
+          cp -a grand-store/backend/controllers "$release_root/backend/"
+          cp -a grand-store/backend/engines "$release_root/backend/"
+          cp -a grand-store/backend/jobs "$release_root/backend/"
+          cp -a grand-store/backend/middleware "$release_root/backend/"
+          cp -a grand-store/backend/models "$release_root/backend/"
+          cp -a grand-store/backend/routes "$release_root/backend/"
+          cp -a grand-store/backend/services "$release_root/backend/"
+          cp -a grand-store/backend/utils "$release_root/backend/"
+          cp -a grand-store/frontend/dist/. "$release_root/frontend/"
+
+          tar --create --gzip --file "$archive" --directory "$release_root" .
+          echo "RELEASE_ARCHIVE=$archive" >> "$GITHUB_ENV"
+
+      - name: Configure SSH
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" > "$HOME/.ssh/grand_store_deploy"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/grand_store_deploy" "$HOME/.ssh/known_hosts"
+
+      - name: Upload and activate release
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          release_id="${GITHUB_SHA}-${GITHUB_RUN_ATTEMPT}"
+          remote_archive="/tmp/grand-store-${release_id}.tar.gz"
+          ssh_options=(-i "$HOME/.ssh/grand_store_deploy" -p "$VPS_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes)
+
+          scp -i "$HOME/.ssh/grand_store_deploy" -P "$VPS_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$RELEASE_ARCHIVE" "$VPS_USER@$VPS_HOST:$remote_archive"
+
+          ssh "${ssh_options[@]}" "$VPS_USER@$VPS_HOST" \
+            "bash -s -- '$release_id' '$VPS_APP_DIR' '$remote_archive' '$VPS_LEGACY_BACKEND_DIR'" \
+            < grand-store/deploy/deploy-release.sh

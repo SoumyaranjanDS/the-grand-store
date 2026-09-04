@@ -295,9 +295,7 @@ exports.itnWebhook = async (req, res) => {
     const axios = require('axios');
     let pfParamString = '';
     for (let key in payload) {
-      if (key !== 'signature') {
-        pfParamString += `${key}=${encodeURIComponent(payload[key].toString().trim()).replace(/%20/g, '+')}&`;
-      }
+      pfParamString += `${key}=${encodeURIComponent(payload[key].toString().trim()).replace(/%20/g, '+')}&`;
     }
     pfParamString = pfParamString.slice(0, -1);
 

@@ -1,74 +1,58 @@
-# ==============================================================================
-# Grand Store - Nginx Production Reverse Proxy Configuration
-# Server: 191.215.37.241 (Ubuntu 24.04 LTS)
-# ==============================================================================
+# Grand Store frontend and API on one HTTPS origin.
+# Copy/adapt this file in /etc/nginx/sites-available/grandstore.co.za.
 
-# 1. Backend API (Reverse Proxy to Node.js / PM2 on Port 5015)
 server {
-    server_name api.grandstoreglobal.com store-api.yogapranafitness.com;
+    listen 80;
+    listen [::]:80;
+    server_name grandstore.co.za www.grandstore.co.za;
+    return 301 https://grandstore.co.za$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name grandstore.co.za www.grandstore.co.za;
+
+    ssl_certificate /etc/letsencrypt/live/grandstore.co.za/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/grandstore.co.za/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    root /var/www/grand-store/current/frontend;
+    index index.html;
     client_max_body_size 50M;
 
-    location / {
+    location ^~ /api/ {
         proxy_pass http://127.0.0.1:5015;
         proxy_http_version 1.1;
-
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-
-        proxy_cache_bypass $http_upgrade;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 120s;
     }
 
-    listen 443 ssl;
-    ssl_certificate /etc/letsencrypt/live/grandstoreglobal.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/grandstoreglobal.com/privkey.pem;
-    include /etc/letsencrypt/options-ssl-nginx.conf;
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
-}
+    location ^~ /uploads/ {
+        proxy_pass http://127.0.0.1:5015;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
 
-# HTTP to HTTPS Redirect for Backend API
-server {
-    listen 80;
-    server_name api.grandstoreglobal.com store-api.yogapranafitness.com;
-    return 301 https://$host$request_uri;
-}
-
-# 2. Frontend React / Vite Application (Static Files)
-server {
-    server_name grandstoreglobal.com www.grandstoreglobal.com grandstore.yogapranafitness.com;
-
-    root /var/www/grandstore-all/grand-store/frontend/dist;
-    index index.html;
-
-    # Gzip Compression
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml;
-    gzip_min_length 1000;
-
-    # Static Assets Caching
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|webp)$ {
-        expires 1y;
+    location ~* \.(?:css|js|mjs|png|jpe?g|gif|ico|svg|webp|woff2?|ttf|eot|mp4|webm)$ {
+        expires 30d;
         add_header Cache-Control "public, immutable";
+        try_files $uri =404;
     }
 
-    # SPA Client Routing Fallback
     location / {
         try_files $uri $uri/ /index.html;
     }
 
-    listen 443 ssl;
-    ssl_certificate /etc/letsencrypt/live/grandstoreglobal.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/grandstoreglobal.com/privkey.pem;
-    include /etc/letsencrypt/options-ssl-nginx.conf;
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
-}
-
-# HTTP to HTTPS Redirect for Frontend
-server {
-    listen 80;
-    server_name grandstoreglobal.com www.grandstoreglobal.com grandstore.yogapranafitness.com;
-    return 301 https://$host$request_uri;
+    gzip on;
+    gzip_min_length 1000;
+    gzip_types text/plain text/css application/json application/javascript application/xml image/svg+xml;
 }
