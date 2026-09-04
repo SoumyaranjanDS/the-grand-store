@@ -24,14 +24,26 @@ export default function LoginPage() {
       
       let defaultRoute = '/customer/profile';
       const role = userData.role;
+      const isVendor = ['vendor', 'vendor_active', 'vendor_pending', 'vendor_approved_unpaid', 'vendor_rejected', 'vendor_suspended'].includes(role);
+
       if (['admin', 'super_admin', 'accountant'].includes(role)) defaultRoute = '/admin/dashboard';
       else if (role === 'product_manager') defaultRoute = '/admin/products';
       else if (role === 'event_host') defaultRoute = '/event-manager/dashboard';
       else if (role === 'auction_host') defaultRoute = '/auction-manager/dashboard';
-      else if (role === 'vendor_pending' || role === 'vendor_active') defaultRoute = '/vendor/dashboard';
+      else if (['vendor_pending', 'vendor_active', 'vendor'].includes(role)) defaultRoute = '/vendor/dashboard';
       else if (role === 'vendor_approved_unpaid') defaultRoute = '/vendor/payment';
       
-      const targetRoute = searchParams.get('redirect') || defaultRoute;
+      const redirectParam = searchParams.get('redirect');
+      let targetRoute = defaultRoute;
+      if (redirectParam) {
+        if (isVendor) {
+          if (redirectParam.startsWith('/vendor') || redirectParam.startsWith('/auction') || redirectParam === '/') {
+            targetRoute = redirectParam;
+          }
+        } else {
+          targetRoute = redirectParam;
+        }
+      }
       navigate(targetRoute);
     } catch (err) {
       setError(err.message);
@@ -48,13 +60,26 @@ export default function LoginPage() {
         const userData = await googleLogin(tokenResponse.credential || tokenResponse.access_token, 'customer');
         let defaultRoute = '/customer/profile';
         const role = userData.role;
+        const isVendor = ['vendor', 'vendor_active', 'vendor_pending', 'vendor_approved_unpaid', 'vendor_rejected', 'vendor_suspended'].includes(role);
+
         if (['admin', 'super_admin', 'accountant'].includes(role)) defaultRoute = '/admin/dashboard';
         else if (role === 'product_manager') defaultRoute = '/admin/products';
         else if (role === 'event_host') defaultRoute = '/event-manager/dashboard';
         else if (role === 'auction_host') defaultRoute = '/auction-manager/dashboard';
-        else if (role === 'vendor_pending' || role === 'vendor_active') defaultRoute = '/vendor/dashboard';
+        else if (['vendor_pending', 'vendor_active', 'vendor'].includes(role)) defaultRoute = '/vendor/dashboard';
+        else if (role === 'vendor_approved_unpaid') defaultRoute = '/vendor/payment';
         
-        const targetRoute = searchParams.get('redirect') || defaultRoute;
+        const redirectParam = searchParams.get('redirect');
+        let targetRoute = defaultRoute;
+        if (redirectParam) {
+          if (isVendor) {
+            if (redirectParam.startsWith('/vendor') || redirectParam.startsWith('/auction') || redirectParam === '/') {
+              targetRoute = redirectParam;
+            }
+          } else {
+            targetRoute = redirectParam;
+          }
+        }
         navigate(targetRoute);
       } catch (err) {
         setError(err.message);

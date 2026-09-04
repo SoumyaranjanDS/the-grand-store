@@ -33,7 +33,13 @@ exports.registerFullVendor = async (req, res) => {
         return res.status(400).json({ message: 'Account information is required' });
       }
 
-      user = await User.findOne({ email: accountInfo.email });
+      const cleanEmail = String(accountInfo.email || '').trim().toLowerCase();
+      user = await User.findOne({
+        $or: [
+          { email: cleanEmail },
+          { email: { $regex: new RegExp(`^${cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } }
+        ]
+      });
 
       if (!user) {
         if (!accountInfo.password) {
@@ -45,9 +51,10 @@ exports.registerFullVendor = async (req, res) => {
         // Create new user if they don't exist
         user = await User.create({
           name: accountInfo.name,
-          email: accountInfo.email,
+          email: cleanEmail,
           password: hashedPassword,
-          role: 'vendor_pending'
+          role: 'vendor_pending',
+          isEmailVerified: true
         });
       } else {
         // If user exists, verify password before giving access to update their account
@@ -61,11 +68,13 @@ exports.registerFullVendor = async (req, res) => {
 
         // If password matches, update their role
         user.role = 'vendor_pending';
+        user.isEmailVerified = true;
         await user.save();
       }
     } else {
       // User was authenticated via token, just update their role
       user.role = 'vendor_pending';
+      user.isEmailVerified = true;
       await user.save();
     }
 

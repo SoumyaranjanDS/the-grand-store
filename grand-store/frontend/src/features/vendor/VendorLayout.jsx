@@ -53,7 +53,8 @@ export default function VendorLayout() {
   }
 
   // Allow admin OR active vendors OR unpaid vendors
-  if (user.role !== 'vendor_active' && user.role !== 'admin' && user.role !== 'vendor_approved_unpaid') {
+  const allowedVendorRoles = ['vendor_active', 'vendor', 'admin', 'super_admin', 'vendor_approved_unpaid'];
+  if (!allowedVendorRoles.includes(user.role)) {
     return <Navigate to="/login" replace />;
   }
 

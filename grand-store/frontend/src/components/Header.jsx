@@ -451,19 +451,25 @@ export default function Header({
             {user ? (
               <IconButton
                 label="Profile"
-                onClick={() =>
-                  navigate(
-                    user.role === "admin"
-                      ? "/admin/auctions"
-                      : user.role === "vendor_active"
-                        ? "/vendor/dashboard"
-                        : user.role === "auction_host"
-                          ? "/auction-manager/dashboard"
-                          : user.role === "event_host"
-                            ? "/event-manager/dashboard"
-                            : "/customer/profile",
-                  )
-                }
+                onClick={() => {
+                  if (!user) {
+                    navigate("/login");
+                    return;
+                  }
+                  if (["admin", "super_admin", "accountant", "product_manager"].includes(user.role)) {
+                    navigate("/admin/auctions");
+                  } else if (["vendor_active", "vendor", "vendor_pending"].includes(user.role)) {
+                    navigate("/vendor/dashboard");
+                  } else if (user.role === "vendor_approved_unpaid") {
+                    navigate("/vendor/payment");
+                  } else if (user.role === "auction_host") {
+                    navigate("/auction-manager/dashboard");
+                  } else if (user.role === "event_host") {
+                    navigate("/event-manager/dashboard");
+                  } else {
+                    navigate("/customer/profile");
+                  }
+                }}
               >
                 <CircleUserRound size={21} className="text-gold-gradient" />
               </IconButton>
@@ -1450,15 +1456,21 @@ export default function Header({
             className="drawer-foot bg-[#0a0a0a] border-t border-white/10 shrink-0 z-10"
             onClick={() => {
               closeMenus();
-              navigate(
-                user
-                  ? user.role === "admin"
-                    ? "/admin/auctions"
-                    : user.role === "vendor_active"
-                      ? "/vendor/dashboard"
-                      : "/customer/profile"
-                  : "/login",
-              );
+              if (!user) {
+                navigate("/login");
+              } else if (["admin", "super_admin", "accountant", "product_manager"].includes(user.role)) {
+                navigate("/admin/auctions");
+              } else if (["vendor_active", "vendor", "vendor_pending"].includes(user.role)) {
+                navigate("/vendor/dashboard");
+              } else if (user.role === "vendor_approved_unpaid") {
+                navigate("/vendor/payment");
+              } else if (user.role === "auction_host") {
+                navigate("/auction-manager/dashboard");
+              } else if (user.role === "event_host") {
+                navigate("/event-manager/dashboard");
+              } else {
+                navigate("/customer/profile");
+              }
             }}
           >
             <CircleUserRound

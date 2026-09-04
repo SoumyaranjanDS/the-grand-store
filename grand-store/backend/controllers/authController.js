@@ -143,7 +143,17 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Please provide email and password' });
+    }
+
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const user = await User.findOne({
+      $or: [
+        { email: cleanEmail },
+        { email: { $regex: new RegExp(`^${cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } }
+      ]
+    });
 
     if (user && user.password && (await bcrypt.compare(password, user.password))) {
       // Disallow administrative accounts on this standard endpoint
@@ -154,10 +164,20 @@ const loginUser = async (req, res) => {
         });
       }
 
-      const isExemptVerification = ['auction_host', 'event_host'].includes(user.role);
+      const vendorRoles = ['vendor', 'vendor_active', 'vendor_pending', 'vendor_approved_unpaid', 'vendor_rejected', 'vendor_suspended'];
+      const isVendorRole = vendorRoles.includes(user.role);
+      const isExemptVerification = isVendorRole || ['auction_host', 'event_host'].includes(user.role);
+
       if (!user.isEmailVerified && !isExemptVerification) {
         return res.status(401).json({ message: 'Please verify your email address before logging in. Check your inbox.' });
       }
+
+      // Automatically persist verified status for vendor accounts
+      if (isVendorRole && !user.isEmailVerified) {
+        user.isEmailVerified = true;
+        await user.save();
+      }
+
       sendTokenResponse(user, 200, res);
     } else {
       res.status(401).json({ message: 'Invalid email or password' });
@@ -454,7 +474,13 @@ const googleAuth = async (req, res) => {
     const { sub: googleId, email, name } = payload;
 
     // Check if user exists
-    let user = await User.findOne({ email });
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    let user = await User.findOne({
+      $or: [
+        { email: cleanEmail },
+        { email: { $regex: new RegExp(`^${cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } }
+      ]
+    });
 
     if (user) {
       // Disallow administrative accounts from logging in via public Google login
@@ -465,16 +491,24 @@ const googleAuth = async (req, res) => {
         });
       }
 
+      let modified = false;
       // If user exists without googleId, link it
       if (!user.googleId) {
         user.googleId = googleId;
-        await user.save();
+        modified = true;
+      }
+      if (!user.isEmailVerified) {
+        user.isEmailVerified = true;
+        modified = true;
       }
       
       // We don't overwrite the role if it's already a vendor, unless requested by the frontend
       // But if the frontend passes 'vendor_pending' and they are 'customer', we can upgrade them.
       if (role === 'vendor_pending' && user.role === 'customer') {
         user.role = 'vendor_pending';
+        modified = true;
+      }
+      if (modified) {
         await user.save();
       }
     } else {
@@ -492,9 +526,10 @@ const googleAuth = async (req, res) => {
       // Create new user
       user = await User.create({
         name,
-        email,
+        email: cleanEmail,
         googleId,
         role: role,
+        isEmailVerified: true,
         referralCode: newReferralCode,
         referredBy
         // password is required: false in schema, so we can omit it
