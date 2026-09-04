@@ -771,7 +771,7 @@ const closeAuctionInternal = async (lotId) => {
       title: `🏆 You Won Lot ${lot.lotNumber || ''}: ${lot.title}`,
       message: `Congratulations! You won "${lot.title}" with a hammer bid of R${winningBid.toLocaleString('en-ZA')}. Proceed to checkout to settle and secure vault delivery.`,
       type: 'auction',
-      link: `/auction/checkout/${lot._id}`,
+      link: `/auction/${lot._id}?celebrate=true`,
       metadata: { lotId: lot._id, orderId }
     }).catch(err => console.error('Winner notification failed:', err));
   } catch (e) {

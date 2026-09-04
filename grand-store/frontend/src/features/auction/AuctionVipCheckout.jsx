@@ -123,11 +123,19 @@ export default function AuctionVipCheckout({ onNotify }) {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Selected file exceeds the 10 MB limit. Please upload a smaller file.');
+      if (onNotify) onNotify('Selected file exceeds 10MB limit');
+      if (e.target) e.target.value = '';
+      return;
+    }
+
     setUploadingProof(true);
     setError('');
     try {
       const data = new FormData();
       data.append('file', file);
+      data.append('document', file);
       const res = await api.post('/vendor/upload-public', data, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
@@ -135,10 +143,12 @@ export default function AuctionVipCheckout({ onNotify }) {
       if (onNotify) onNotify('Proof of payment uploaded successfully.');
     } catch (err) {
       console.error('Upload error:', err);
-      setError(err.response?.data?.message || 'Failed to upload proof document.');
-      if (onNotify) onNotify('Failed to upload proof document');
+      const msg = err.response?.data?.message || err.response?.data?.error || 'Failed to upload proof document.';
+      setError(msg);
+      if (onNotify) onNotify(msg);
     } finally {
       setUploadingProof(false);
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -614,7 +624,7 @@ export default function AuctionVipCheckout({ onNotify }) {
                           <span className="text-[10px] text-white/40 mt-1">PDF, JPG, PNG accepted (max 10MB)</span>
                           <input 
                             type="file" 
-                            accept=".pdf,image/*" 
+                            accept="image/jpeg,image/png,image/webp,image/jpg,image/gif,application/pdf,.pdf,.jpg,.jpeg,.png,.webp" 
                             onChange={handleFileUpload} 
                             disabled={uploadingProof} 
                             className="hidden" 

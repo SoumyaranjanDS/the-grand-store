@@ -15,22 +15,35 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, callback) => {
     const extension = path.extname(file.originalname || '').toLowerCase();
-    if (!allowedDocumentExtensions.has(extension)) {
-      return callback(new multer.MulterError('LIMIT_UNEXPECTED_FILE', 'document'));
+    const isAllowedExt = allowedDocumentExtensions.has(extension);
+    const isAllowedMime = file.mimetype && (
+      file.mimetype === 'application/pdf' ||
+      file.mimetype.startsWith('image/') ||
+      file.mimetype.includes('pdf') ||
+      file.mimetype.includes('msword') ||
+      file.mimetype.includes('document')
+    );
+    if (!isAllowedExt && !isAllowedMime) {
+      return callback(new multer.MulterError('LIMIT_UNEXPECTED_FILE', file.fieldname || 'file'));
     }
     return callback(null, true);
   },
 });
 
 const uploadSingleDocument = (req, res, next) => {
-  upload.single('document')(req, res, (error) => {
-    if (!error) return next();
+  upload.any()(req, res, (error) => {
+    if (!error) {
+      if (req.files && req.files.length > 0) {
+        req.file = req.files[0];
+      }
+      return next();
+    }
     console.error('Vendor document upload error:', error);
     if (error.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({ message: 'The selected file is larger than 10 MB.' });
     }
     if (error.code === 'LIMIT_UNEXPECTED_FILE') {
-      return res.status(400).json({ message: 'Unsupported file type. Upload an image, PDF, DOC or DOCX file.' });
+      return res.status(400).json({ message: 'Unsupported file type. Upload an image (PNG, JPG, WEBP) or PDF file up to 10MB.' });
     }
     return res.status(400).json({ message: 'The document could not be uploaded.', error: error.message || String(error) });
   });

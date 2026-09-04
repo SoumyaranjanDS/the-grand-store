@@ -8,6 +8,7 @@ router.post('/generate-auction', protect, payfastController.generateAuctionPayme
 router.post('/generate-deposit', protect, payfastController.generateDepositPayment);
 router.post('/generate-event', protect, payfastController.generateEventPayment);
 router.post('/generate-vendor', protect, payfastController.generateVendorPayment);
+router.post('/confirm-order', protect, payfastController.confirmOrderPayment);
 // PayFast posts ITNs as application/x-www-form-urlencoded form data, not JSON.
 // Keep this parser on the public callback route so req.body contains the
 // payment_status, m_payment_id, and signature fields sent by PayFast.

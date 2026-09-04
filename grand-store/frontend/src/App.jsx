@@ -51,6 +51,7 @@ import AuctionPage from './features/auction/AuctionPage'
 import AuctionLotDetail from './features/auction/AuctionLotDetail'
 import AuctionCheckout from './features/auction/AuctionCheckout'
 import AuctionVipCheckout from './features/auction/AuctionVipCheckout'
+import AuctionWinnerHomeAlert from './features/auction/components/AuctionWinnerHomeAlert'
 import AdminAuctionPanel from './features/admin/AdminAuctionPanel'
 import AdminEventsPanel from './features/admin/AdminEventsPanel'
 import TastingPage from './features/tasting/TastingPage'
@@ -452,6 +453,7 @@ function App() {
           path="/"
           element={
             <main className="home-page">
+              <AuctionWinnerHomeAlert />
               <Hero />
               <Arrivals
                 onAdd={addToCart}

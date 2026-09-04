@@ -12,6 +12,7 @@ import BidConfirmationModal from '../../components/modals/BidConfirmationModal';
 import BidderVerificationModal from '../../components/modals/BidderVerificationModal';
 import GoldenCelebrationShower from './GoldenCelebrationShower';
 import MagicalBidEffect from './MagicalBidEffect';
+import AuctionWinnerCelebrationModal from './components/AuctionWinnerCelebrationModal';
 import { useCurrency } from '../../context/CurrencyContext';
 
 const formatRelativeTime = (dateStr) => {
@@ -57,6 +58,8 @@ export default function AuctionLotDetail({ onNotify }) {
   const [confirmedZarAmount, setConfirmedZarAmount] = useState(0);
   const [showMagicalBid, setShowMagicalBid] = useState(false);
   const [lastBidAmount, setLastBidAmount] = useState(0);
+  const [showCelebrationModal, setShowCelebrationModal] = useState(false);
+  const shouldCelebrate = searchParams.get('celebrate') === 'true';
 
   const { currency, rates, changeCurrency, availableCurrencies } = useCurrency();
 
@@ -254,6 +257,14 @@ export default function AuctionLotDetail({ onNotify }) {
   const isWinner = user && lot.winner && (user._id === (typeof lot.winner === 'object' ? lot.winner._id : lot.winner));
   const isAdmin = user && user.role === 'admin';
   const isVendor = user && lot.vendor && (user._id === (typeof lot.vendor === 'object' ? lot.vendor._id : lot.vendor));
+
+  // Trigger celebration modal when visiting via notification or as unpaid winner
+  useEffect(() => {
+    if (!lot) return;
+    if (isWinner && (shouldCelebrate || (lot.status === 'sold' && lot.paymentStatus !== 'Paid'))) {
+      setShowCelebrationModal(true);
+    }
+  }, [lot, isWinner, shouldCelebrate]);
 
   const vendorName = lot.vendor ? (lot.vendor.storeName || lot.vendor.name) : 'The Grand Store';
 
@@ -693,7 +704,7 @@ export default function AuctionLotDetail({ onNotify }) {
                ) : (
                   <div className="flex flex-col gap-6">
                     {lot.status === 'sold' && isWinner ? (
-                      <div className="relative overflow-hidden rounded-2xl border border-[var(--color-gold)]/60 bg-gradient-to-b from-[#181308] via-[#0d0d0d] to-[#080808] p-6 sm:p-8 shadow-[0_0_50px_rgba(212,175,55,0.22)]">
+                      <div id="acquisition-certificate" className="relative overflow-hidden rounded-2xl border border-[var(--color-gold)]/60 bg-gradient-to-b from-[#181308] via-[#0d0d0d] to-[#080808] p-6 sm:p-8 shadow-[0_0_50px_rgba(212,175,55,0.22)]">
                         {/* Regal Background Ambient Aura */}
                         <div className="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-[var(--color-gold)]/10 blur-3xl pointer-events-none" />
                         <div className="absolute -left-12 -bottom-12 w-48 h-48 rounded-full bg-[var(--color-gold)]/10 blur-3xl pointer-events-none" />
@@ -1021,9 +1032,17 @@ export default function AuctionLotDetail({ onNotify }) {
       </div>
 
       {/* Golden Celebration Shower for Auction Winner */}
-      {lot.status === 'sold' && isWinner && (
-        <GoldenCelebrationShower duration={8000} />
+      {((lot.status === 'sold' && isWinner) || shouldCelebrate) && (
+        <GoldenCelebrationShower duration={9000} />
       )}
+
+      {/* Grand Victory Celebration Modal */}
+      <AuctionWinnerCelebrationModal
+        isOpen={showCelebrationModal}
+        onClose={() => setShowCelebrationModal(false)}
+        lot={lot}
+        user={user}
+      />
 
       {/* Magical Bid Effect with Audio Synthesizer */}
       {showMagicalBid && (

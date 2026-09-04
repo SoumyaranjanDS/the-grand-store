@@ -87,6 +87,19 @@ export default function NotificationBell({ className = "", isVendor = false }) {
       handleMarkAsRead(notification._id);
     }
     setIsOpen(false);
+
+    // If this is an auction victory notification, route to the specific lot with celebration experience
+    if (
+      notification.type === 'auction' &&
+      (notification.title?.includes('Won') || notification.message?.toLowerCase().includes('won'))
+    ) {
+      const lotId = notification.metadata?.lotId || notification.link?.split('/').pop();
+      if (lotId) {
+        navigate(`/auction/${lotId}?celebrate=true`);
+        return;
+      }
+    }
+
     if (notification.link) {
       navigate(notification.link);
     }

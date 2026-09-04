@@ -355,3 +355,37 @@ exports.itnWebhook = async (req, res) => {
     res.status(500).send('Error');
   }
 };
+
+// @desc    Confirm order payment via PayFast (invoked upon client gateway success or webhook)
+// @route   POST /api/payfast/confirm-order
+// @access  Private
+exports.confirmOrderPayment = async (req, res) => {
+  try {
+    const { orderId } = req.body;
+    const mongoose = require('mongoose');
+    let order = null;
+    if (orderId) {
+      if (mongoose.Types.ObjectId.isValid(orderId)) {
+        order = await Order.findById(orderId);
+      }
+      if (!order) {
+        order = await Order.findOne({ orderId });
+      }
+    }
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // Process payment ledger, wallet, events, isPaid
+    if (!order.isPaid) {
+      await processOrderPayment(order._id);
+    }
+
+    const updated = await Order.findById(order._id);
+    res.json(updated);
+  } catch (error) {
+    console.error('Error confirming PayFast order:', error);
+    res.status(500).json({ message: 'Error confirming PayFast order', error: error.message });
+  }
+};
+

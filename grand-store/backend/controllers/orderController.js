@@ -568,11 +568,52 @@ const updateShipmentStatus = async (req, res) => {
   }
 };
 
+// @desc    Mark order as paid (from client payment gateway / PayFast callback)
+// @route   PUT /api/orders/:id/pay
+// @access  Private
+const markOrderAsPaid = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const mongoose = require('mongoose');
+    let order = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      order = await Order.findById(id);
+    }
+    if (!order) {
+      order = await Order.findOne({ orderId: id });
+    }
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // Verify user ownership or staff/admin
+    const isOwner = order.user && order.user.toString() === req.user._id.toString();
+    const isAdmin = ['admin', 'super_admin', 'product_manager', 'finance_staff'].includes(req.user?.role);
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: 'Not authorized to update this order' });
+    }
+
+    if (order.isPaid) {
+      return res.json(order);
+    }
+
+    // Process ledger, wallet, referrer rewards, events, and set isPaid=true
+    await processOrderPayment(order._id);
+
+    const updated = await Order.findById(order._id);
+    res.json(updated);
+  } catch (error) {
+    console.error('Mark order as paid error:', error);
+    res.status(500).json({ message: 'Server error updating order to paid', error: error.message });
+  }
+};
+
 module.exports = {
   addOrderItems,
   getOrderById,
   getVendorOrders,
   updateShipmentStatus,
   getMyOrders,
+  markOrderAsPaid,
   processOrderPayment // Exported for ITN webhook
 };

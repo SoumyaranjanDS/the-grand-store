@@ -5,12 +5,14 @@ const {
   getOrderById,
   getVendorOrders,
   updateShipmentStatus,
-  getMyOrders
+  getMyOrders,
+  markOrderAsPaid
 } = require('../controllers/orderController');
 const { protect, requireRoles, financeStaff } = require('../middleware/authMiddleware');
 
 router.route('/').post(protect, addOrderItems);
 router.route('/myorders').get(protect, getMyOrders);
+router.route('/:id/pay').put(protect, markOrderAsPaid).post(protect, markOrderAsPaid);
 router.route('/vendor/sales').get(
   protect,
   requireRoles('vendor_active', 'admin', 'super_admin', 'product_manager'),

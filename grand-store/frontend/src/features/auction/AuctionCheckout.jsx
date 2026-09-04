@@ -85,20 +85,30 @@ export default function AuctionCheckout({ onNotify }) {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // 10MB limit check
+    if (file.size > 10 * 1024 * 1024) {
+      if (onNotify) onNotify('Selected file exceeds the 10 MB limit. Please choose a smaller file.');
+      if (e.target) e.target.value = '';
+      return;
+    }
+
     setUploadingProof(true);
     try {
       const data = new FormData();
       data.append('file', file);
+      data.append('document', file);
       const res = await api.post('/vendor/upload-public', data, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setProofUrl(res.data.url);
-      if (onNotify) onNotify('Proof of payment screenshot uploaded successfully');
+      if (onNotify) onNotify('Proof of payment receipt uploaded successfully');
     } catch (err) {
       console.error('File upload error:', err);
-      if (onNotify) onNotify(err.response?.data?.message || 'Failed to upload screenshot file');
+      const msg = err.response?.data?.message || err.response?.data?.error || 'Failed to upload receipt file';
+      if (onNotify) onNotify(msg);
     } finally {
       setUploadingProof(false);
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -536,7 +546,7 @@ export default function AuctionCheckout({ onNotify }) {
                             <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-white/15 rounded-xl hover:border-[#e1bd70]/50 bg-black/30 cursor-pointer transition-colors">
                               <input
                                 type="file"
-                                accept="image/*,application/pdf"
+                                accept="image/jpeg,image/png,image/webp,image/jpg,image/gif,application/pdf,.pdf,.jpg,.jpeg,.png,.webp"
                                 className="hidden"
                                 onChange={handleFileUpload}
                                 disabled={uploadingProof}
