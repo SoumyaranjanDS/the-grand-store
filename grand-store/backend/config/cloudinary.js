@@ -2,6 +2,8 @@ const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const { randomUUID } = require('crypto');
 const path = require('path');
+// Ensure .env is explicitly loaded from backend directory regardless of cwd
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 require('dotenv').config();
 
 const RAW_DOCUMENT_EXTENSIONS = new Set(['.pdf', '.doc', '.docx', '.txt', '.xls', '.xlsx', '.csv']);
@@ -19,11 +21,19 @@ const isRawDocument = (file) => {
     || file?.mimetype?.includes('pdf');
 };
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_API_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
+const cloudName = process.env.CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_API_NAME || 'oioqrgj0';
+const apiKey = process.env.CLOUDINARY_API_KEY || '782922137546894';
+const apiSecret = process.env.CLOUDINARY_API_SECRET || '9sgEWIPABZjV0aOy1gIFu9i7KXY';
+
+if (process.env.CLOUDINARY_URL) {
+  cloudinary.config(true);
+} else {
+  cloudinary.config({
+    cloud_name: cloudName,
+    api_key: apiKey,
+    api_secret: apiSecret
+  });
+}
 
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,

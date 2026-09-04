@@ -26,9 +26,21 @@ const handleAuctionUpload = (req, res, next) => {
   ])(req, res, (err) => {
     if (!err) return next();
     console.error('Auction media upload error:', err);
+    
+    const errText = err ? (err.message || String(err)) : '';
+    let errorMessage = 'Failed to upload auction media. Please ensure images are valid formats (JPEG, PNG, WEBP) and videos are under 60MB.';
+    
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      errorMessage = 'One or more files exceed the maximum allowed size.';
+    } else if (errText.includes('api_key') || errText.includes('Must supply')) {
+      errorMessage = 'Cloudinary storage service configuration error. Missing or invalid API key.';
+    } else if (errText) {
+      errorMessage = errText;
+    }
+
     return res.status(400).json({ 
-      message: 'Failed to upload auction media. Ensure images are JPEG/PNG/WEBP and videos are MP4/MOV/WEBM.', 
-      error: err.message || String(err) 
+      message: errorMessage, 
+      error: errorMessage 
     });
   });
 };
