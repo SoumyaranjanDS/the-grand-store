@@ -92,7 +92,7 @@ jobs:
           username: ${{ secrets.SERVER_USER || 'root' }}
           password: ${{ secrets.SERVER_PASSWORD }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          envs: GITHUB_TOKEN
+          envs: GITHUB_TOKEN,GITHUB_REPOSITORY
           script_stop: true
           script: |
             echo "============================================================"
@@ -105,7 +105,7 @@ jobs:
 
             echo "📥 Pulling latest commits from origin/main..."
             # Authenticate fetch using the GitHub Actions token
-            git pull https://x-access-token:${GITHUB_TOKEN}@github.com/SoumyaranjanDS/the-grand-store.git main
+            git pull https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git main
 
             echo "📦 Installing Backend Dependencies & Reloading PM2..."
             cd /var/www/grandstore-all/grand-store/backend
