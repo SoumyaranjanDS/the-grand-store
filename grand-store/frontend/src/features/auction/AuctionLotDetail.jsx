@@ -129,6 +129,24 @@ export default function AuctionLotDetail({ onNotify }) {
     };
   }, [id]);
 
+  const userInfo = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('userInfo'));
+    } catch {
+      return null;
+    }
+  })();
+  const user = userInfo;
+  const isWinner = Boolean(user && lot?.winner && (user._id === (typeof lot.winner === 'object' ? lot.winner._id : lot.winner)));
+
+  // Trigger celebration modal when visiting via notification or as unpaid winner
+  useEffect(() => {
+    if (!lot) return;
+    if (isWinner && (shouldCelebrate || (lot.status === 'sold' && lot.paymentStatus !== 'Paid'))) {
+      setShowCelebrationModal(true);
+    }
+  }, [lot, isWinner, shouldCelebrate]);
+
   // Dynamic Increment Ladder
   const getDynamicInc = (cBid) => {
     if (cBid < 5000) return 250;
@@ -251,20 +269,8 @@ export default function AuctionLotDetail({ onNotify }) {
   if (loading) return <div className="min-h-screen flex items-center justify-center text-white font-serif">Loading Luxury Lot...</div>;
   if (!lot) return <div className="min-h-screen flex items-center justify-center text-white font-serif">Lot not found</div>;
 
-  const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-  const user = userInfo;
-
-  const isWinner = user && lot.winner && (user._id === (typeof lot.winner === 'object' ? lot.winner._id : lot.winner));
   const isAdmin = user && user.role === 'admin';
   const isVendor = user && lot.vendor && (user._id === (typeof lot.vendor === 'object' ? lot.vendor._id : lot.vendor));
-
-  // Trigger celebration modal when visiting via notification or as unpaid winner
-  useEffect(() => {
-    if (!lot) return;
-    if (isWinner && (shouldCelebrate || (lot.status === 'sold' && lot.paymentStatus !== 'Paid'))) {
-      setShowCelebrationModal(true);
-    }
-  }, [lot, isWinner, shouldCelebrate]);
 
   const vendorName = lot.vendor ? (lot.vendor.storeName || lot.vendor.name) : 'The Grand Store';
 

@@ -3,11 +3,12 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../../api';
 import { 
   ChevronRight, ArrowRight, ShieldCheck, CreditCard, Loader2, 
-  Landmark, UploadCloud, CheckCircle2, Copy, FileText, X, ExternalLink, Clock, Sparkles, Phone
+  Landmark, UploadCloud, CheckCircle2, Copy, FileText, X, ExternalLink, Clock, Sparkles, Phone, Eye
 } from 'lucide-react';
 import LocationInput from '../../components/LocationInput';
 import PaymentForm from '../checkout/PaymentForm';
 import Price from '../../components/ui/Price';
+import ReceiptPreviewModal from './components/ReceiptPreviewModal';
 
 export default function AuctionCheckout({ onNotify }) {
   const { id } = useParams();
@@ -23,6 +24,9 @@ export default function AuctionCheckout({ onNotify }) {
   // Payment selection: 'payfast' | 'bank_transfer'
   const [paymentMethod, setPaymentMethod] = useState('payfast');
   const [proofUrl, setProofUrl] = useState('');
+  const [proofFileName, setProofFileName] = useState('');
+  const [proofFileSize, setProofFileSize] = useState('');
+  const [showReceiptPreview, setShowReceiptPreview] = useState(false);
   const [uploadingProof, setUploadingProof] = useState(false);
   const [bankTransferSubmitted, setBankTransferSubmitted] = useState(false);
   const [createdOrder, setCreatedOrder] = useState(null);
@@ -91,6 +95,10 @@ export default function AuctionCheckout({ onNotify }) {
       if (e.target) e.target.value = '';
       return;
     }
+
+    setProofFileName(file.name);
+    const sizeInKb = Math.round(file.size / 1024);
+    setProofFileSize(sizeInKb > 1024 ? `${(sizeInKb / 1024).toFixed(1)} MB` : `${sizeInKb} KB`);
 
     setUploadingProof(true);
     try {
@@ -509,37 +517,64 @@ export default function AuctionCheckout({ onNotify }) {
                         </p>
 
                         {proofUrl ? (
-                          <div className="p-4 rounded-xl bg-black/60 border border-[#e1bd70]/40 flex items-center justify-between">
-                            <div className="flex items-center gap-3 overflow-hidden">
+                          <div className="p-4 rounded-xl bg-black/60 border border-[#e1bd70]/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 overflow-hidden min-w-0">
                               {/\.(jpeg|jpg|png|webp|gif)($|\?)/i.test(proofUrl) ? (
-                                <img src={proofUrl} alt="Proof" className="w-12 h-12 object-cover rounded-lg border border-white/10" />
-                              ) : (
-                                <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center text-[#e1bd70]">
-                                  <FileText size={20} />
-                                </div>
-                              )}
-                              <div className="overflow-hidden">
-                                <div className="text-xs font-bold text-emerald-400 flex items-center gap-1">
-                                  <CheckCircle2 size={13} /> Proof Screenshot Ready
-                                </div>
-                                <a 
-                                  href={proofUrl} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer" 
-                                  className="text-[10px] text-white/60 hover:underline truncate block"
+                                <button
+                                  type="button"
+                                  onClick={() => setShowReceiptPreview(true)}
+                                  className="relative group cursor-pointer flex-shrink-0"
+                                  title="Click to preview receipt"
                                 >
-                                  Preview uploaded receipt
-                                </a>
+                                  <img src={proofUrl} alt="Proof" className="w-12 h-12 object-cover rounded-lg border border-white/15 group-hover:border-[#e1bd70] transition-colors" />
+                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 rounded-lg flex items-center justify-center transition-opacity text-white">
+                                    <Eye size={14} />
+                                  </div>
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => setShowReceiptPreview(true)}
+                                  className="w-12 h-12 rounded-lg bg-white/10 hover:bg-[#e1bd70]/20 flex items-center justify-center text-[#e1bd70] border border-white/10 hover:border-[#e1bd70]/40 transition-colors cursor-pointer flex-shrink-0"
+                                  title="Click to preview PDF receipt"
+                                >
+                                  <FileText size={22} />
+                                </button>
+                              )}
+                              <div className="overflow-hidden min-w-0">
+                                <div className="text-xs font-bold text-emerald-400 flex items-center gap-1.5 truncate">
+                                  <CheckCircle2 size={13} className="flex-shrink-0" />
+                                  <span>Receipt Attached</span>
+                                  {proofFileSize && (
+                                    <span className="text-[10px] text-white/40 font-normal">({proofFileSize})</span>
+                                  )}
+                                </div>
+                                <p className="text-[11px] text-white/80 font-medium truncate max-w-[200px] sm:max-w-[260px] mt-0.5">
+                                  {proofFileName || (proofUrl.includes('.pdf') || proofUrl.includes('/raw/upload/') ? 'EFT_Payment_Proof.pdf' : 'Receipt_Screenshot.jpg')}
+                                </p>
                               </div>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => setProofUrl('')}
-                              className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs font-bold transition-colors cursor-pointer"
-                              title="Remove screenshot"
-                            >
-                              <X size={14} />
-                            </button>
+                            <div className="flex items-center gap-2 self-end sm:self-center flex-shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => setShowReceiptPreview(true)}
+                                className="px-3 py-1.5 rounded-lg bg-[#e1bd70]/10 hover:bg-[#e1bd70]/20 text-[#e1bd70] border border-[#e1bd70]/30 text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer"
+                              >
+                                <Eye size={13} /> Quick View
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setProofUrl('');
+                                  setProofFileName('');
+                                  setProofFileSize('');
+                                }}
+                                className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs font-bold transition-colors cursor-pointer"
+                                title="Remove file and select another"
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
                           </div>
                         ) : (
                           <div className="space-y-3">
@@ -684,6 +719,16 @@ export default function AuctionCheckout({ onNotify }) {
 
         </div>
       </div>
+
+      <ReceiptPreviewModal
+        isOpen={showReceiptPreview}
+        onClose={() => setShowReceiptPreview(false)}
+        proofUrl={proofUrl}
+        fileName={proofFileName}
+        fileSize={proofFileSize}
+        reference={paymentReference}
+        title="Payment Receipt Preview"
+      />
     </main>
   );
 }

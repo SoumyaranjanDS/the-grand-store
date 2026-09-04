@@ -12,6 +12,7 @@ const { getNextSequence } = require('../utils/sequenceGenerator');
 const { sendEmail } = require('../utils/emailService');
 const { auctionWinTemplate } = require('../utils/emailTemplates');
 const { evaluateBidIntegrity, logAuctionEvent } = require('../services/auctionFraudService');
+const { createInAppNotification } = require('./notificationController');
 
 const calculateDynamicIncrement = (currentBid) => {
   if (currentBid < 5000) return 250;
@@ -124,18 +125,35 @@ exports.getLotDetails = async (req, res) => {
     // Convert to plain object to attach custom properties
     const lotObj = lot.toObject();
 
-    // Attach shipping address if sold and authorized
-    if (lotObj.status === 'sold' && lotObj.paymentStatus === 'Paid' && currentUser) {
-       const isWinner = lotObj.winner && lotObj.winner.toString() === currentUser._id.toString();
-       const isAdmin = currentUser.role === 'admin';
-       const isVendor = lotObj.vendor && lotObj.vendor._id.toString() === currentUser._id.toString();
+    // Attach payment status and shipping address if sold
+    if (lotObj.status === 'sold') {
+      const order = await Order.findOne({
+        $or: [
+          { 'orderItems.product': lotObj._id.toString() },
+          { 'orderItems.product': lotObj._id },
+          ...(lotObj.gsReference ? [{ transactionId: lotObj.gsReference }] : [])
+        ]
+      });
 
-       if (isWinner || isAdmin || isVendor) {
-          const order = await Order.findOne({ 'orderItems.product': lotObj._id.toString() });
-          if (order && order.shippingAddress) {
-             lotObj.shippingAddress = order.shippingAddress;
+      if (order) {
+        if (order.isPaid || order.paymentStatus === 'Paid') {
+          lotObj.paymentStatus = 'Paid';
+          lotObj.isPaid = true;
+        } else if (order.paymentStatus === 'Awaiting_Approval' || order.proofUrl) {
+          lotObj.paymentStatus = 'Awaiting_Approval';
+          lotObj.proofUrl = order.proofUrl || lotObj.proofUrl;
+        }
+
+        if (order.shippingAddress && currentUser) {
+          const isWinner = lotObj.winner && lotObj.winner.toString() === currentUser._id.toString();
+          const isAdmin = currentUser.role === 'admin';
+          const isVendor = lotObj.vendor && lotObj.vendor._id.toString() === currentUser._id.toString();
+
+          if (isWinner || isAdmin || isVendor) {
+            lotObj.shippingAddress = order.shippingAddress;
           }
-       }
+        }
+      }
     }
 
     res.json({ lot: lotObj, bids: sanitizedBids });
@@ -622,6 +640,36 @@ exports.getUserBids = async (req, res) => {
     // 1. Get lots the user has won
     const wonLots = await AuctionLot.find({ winner: userId, status: 'sold' }).populate('vendor', 'storeName name');
 
+    // Enrich won lots with order payment and proof status
+    const wonLotIds = wonLots.map(l => l._id.toString());
+    const wonGsRefs = wonLots.map(l => l.gsReference).filter(Boolean);
+    const wonOrders = await Order.find({
+      user: userId,
+      $or: [
+        { 'orderItems.product': { $in: wonLotIds } },
+        ...(wonGsRefs.length > 0 ? [{ transactionId: { $in: wonGsRefs } }] : [])
+      ]
+    }).lean();
+
+    const enrichedWonLots = wonLots.map(lot => {
+      const lotObj = lot.toObject();
+      const matchedOrder = wonOrders.find(o =>
+        (o.orderItems || []).some(item => item.product?.toString() === lot._id.toString()) ||
+        (lot.gsReference && o.transactionId === lot.gsReference)
+      );
+
+      if (matchedOrder) {
+        if (matchedOrder.isPaid || matchedOrder.paymentStatus === 'Paid') {
+          lotObj.paymentStatus = 'Paid';
+          lotObj.isPaid = true;
+        } else if (matchedOrder.paymentStatus === 'Awaiting_Approval' || matchedOrder.proofUrl) {
+          lotObj.paymentStatus = 'Awaiting_Approval';
+          lotObj.proofUrl = matchedOrder.proofUrl || lotObj.proofUrl;
+        }
+      }
+      return lotObj;
+    });
+
     // 2. Get active bids (where user is the max bidder on a live lot)
     // For simplicity, we fetch all live lots where current max bid is from this user
     // A better approach in a real app would be querying the Bid collection
@@ -648,7 +696,7 @@ exports.getUserBids = async (req, res) => {
     });
 
     res.json({
-      wonLots,
+      wonLots: enrichedWonLots,
       activeLots: userActiveLots,
       watchlist: user.auctionWatchlist || []
     });
@@ -778,58 +826,72 @@ const closeAuctionInternal = async (lotId) => {
     console.error('Failed to create winner notification:', e);
   }
 
-  // Create Order
-  const order = new Order({
-    user: winningBidDoc.user._id,
-    transactionId: gsReference,
-    orderId,
-    invoiceNumber,
-    paymentId,
-    orderItems: [{
-      product: lot._id,
-      vendorId: lot.vendor,
-      name: `Auction Lot ${lot.lotNumber || ''}: ${lot.title}`,
-      quantity: 1,
-      price: winningBid,
-      image: lot.images && lot.images.length > 0 ? lot.images[0] : ''
-    }],
-    shippingAddress: { address: 'Pending', city: 'Pending', postalCode: 'Pending', country: 'Pending' },
-    paymentMethod: 'Pending',
-    subTotal: winningBid,
-    shippingCost: shippingCost,
-    vatPct: vatPct,
-    vatAmount: vatAmount,
-    commissionPct: commissionPct,
-    commissionAmount: commissionAmount,
-    totalPrice: totalPaidByBuyer, // We can bundle buyer premiums into a fee or adjust totalPrice
-    vendorPayables: [{
-      vendorId: lot.vendor,
-      grossAmount: winningBid,
-      commission: commissionAmount,
-      vatDeducted: vatAmount,
-      netPayable: vendorPayable,
-      paid: false
-    }],
-    paymentStatus: 'Pending',
-    isPaid: false
-  });
-  
-  await order.save();
+  // Check if an Order already exists for this lot to prevent duplicate ghost orders
+  let order = await Order.findOne({ 'orderItems.product': lot._id.toString() });
+  if (!order) {
+    order = new Order({
+      user: winningBidDoc.user._id,
+      transactionId: gsReference,
+      orderId,
+      invoiceNumber,
+      paymentId,
+      orderItems: [{
+        product: lot._id,
+        vendorId: lot.vendor,
+        name: `Auction Lot ${lot.lotNumber || ''}: ${lot.title}`,
+        quantity: 1,
+        price: winningBid,
+        image: lot.images && lot.images.length > 0 ? lot.images[0] : ''
+      }],
+      shippingAddress: { address: 'Pending', city: 'Pending', postalCode: 'Pending', country: 'Pending' },
+      paymentMethod: 'Pending',
+      subTotal: winningBid,
+      shippingCost: shippingCost,
+      vatPct: vatPct,
+      vatAmount: vatAmount,
+      commissionPct: commissionPct,
+      commissionAmount: commissionAmount,
+      totalPrice: totalPaidByBuyer,
+      vendorPayables: [{
+        vendorId: lot.vendor,
+        grossAmount: winningBid,
+        commission: commissionAmount,
+        vatDeducted: vatAmount,
+        netPayable: vendorPayable,
+        paid: false
+      }],
+      paymentStatus: 'Pending',
+      isPaid: false
+    });
+    await order.save();
 
-  // Create pending Transaction
-  const transaction = new Transaction({
-    gsReference,
-    type: 'payment',
-    module: 'auction',
-    amount: totalPaidByBuyer,
-    netAmount: totalPaidByBuyer, // Will be updated on actual payment
-    customer: winningBidDoc.user._id,
-    vendor: lot.vendor,
-    order: order._id,
-    status: 'pending',
-    description: `Auction Payment - Lot ${lot.lotNumber || ''}`
-  });
-  await transaction.save();
+    // Create pending Transaction only if not exists
+    const existingTx = await Transaction.findOne({ gsReference });
+    if (!existingTx) {
+      const transaction = new Transaction({
+        gsReference,
+        type: 'payment',
+        module: 'auction',
+        amount: totalPaidByBuyer,
+        netAmount: totalPaidByBuyer,
+        customer: winningBidDoc.user._id,
+        vendor: lot.vendor,
+        order: order._id,
+        status: 'pending',
+        description: `Auction Payment - Lot ${lot.lotNumber || ''}`
+      });
+      await transaction.save();
+    }
+  } else {
+    // Keep lot's gsReference aligned with the existing order's transaction ID
+    if (order.transactionId) {
+      lot.gsReference = order.transactionId;
+      if (order.isPaid || order.paymentStatus === 'Paid') {
+        lot.paymentStatus = 'Paid';
+      }
+      await lot.save();
+    }
+  }
 
   // Create CPA Section 45 compliant double-entry trust ledger record
   try {
@@ -919,8 +981,9 @@ exports.payAuction = async (req, res) => {
     const lot = await AuctionLot.findById(req.params.id);
     if (!lot) return res.status(404).json({ message: 'Lot not found' });
     
-    if (lot.winner.toString() !== req.user._id.toString()) {
-       return res.status(403).json({ message: 'Only the winner can checkout' });
+    const winnerId = lot.winner ? (lot.winner._id ? lot.winner._id.toString() : lot.winner.toString()) : null;
+    if (!winnerId || winnerId !== req.user._id.toString()) {
+       return res.status(403).json({ message: 'Only the winner can checkout and settle this auction' });
     }
     
     if (lot.paymentStatus === 'Paid') {
@@ -929,17 +992,40 @@ exports.payAuction = async (req, res) => {
 
     const { shippingAddress, calculatedShipping, paymentMethod, proofUrl } = req.body;
     
-    // Update shipping & total
-    lot.shippingCost = calculatedShipping !== undefined ? calculatedShipping : (lot.shippingCost || 0);
-    lot.totalPaidByBuyer = lot.winningBid + lot.buyerPremiumAmount + lot.barChargeAmount + (lot.vatAmount || 0) + lot.shippingCost;
+    // Update shipping & total safely
+    lot.shippingCost = calculatedShipping !== undefined ? (Number(calculatedShipping) || 0) : (lot.shippingCost || 0);
+    const winBid = Number(lot.winningBid) || 0;
+    const bPremium = Number(lot.buyerPremiumAmount) || 0;
+    const bCharge = Number(lot.barChargeAmount) || 0;
+    const vatAmt = Number(lot.vatAmount) || 0;
+    lot.totalPaidByBuyer = winBid + bPremium + bCharge + vatAmt + lot.shippingCost;
 
     const isBankTransfer = paymentMethod === 'Bank Transfer' || paymentMethod === 'bank_transfer';
     const isAwaitingApproval = isBankTransfer && Boolean(proofUrl);
 
     lot.paymentStatus = isAwaitingApproval ? 'Awaiting_Approval' : 'Pending';
+    if (proofUrl) {
+      lot.proofUrl = proofUrl;
+    }
+
+    const safeShipping = {
+      address: (shippingAddress && shippingAddress.address) ? String(shippingAddress.address).trim() : 'Pending Collection',
+      city: (shippingAddress && shippingAddress.city) ? String(shippingAddress.city).trim() : 'Pending',
+      postalCode: (shippingAddress && shippingAddress.postalCode) ? String(shippingAddress.postalCode).trim() : '0000',
+      country: (shippingAddress && shippingAddress.country) ? String(shippingAddress.country).trim() : 'South Africa',
+      phone: (shippingAddress && (shippingAddress.phone || shippingAddress.phoneNumber)) || req.user.phone || req.user.phoneNumber || '',
+      phoneNumber: (shippingAddress && (shippingAddress.phoneNumber || shippingAddress.phone)) || req.user.phoneNumber || req.user.phone || ''
+    };
 
     // Find or create associated Order
-    let order = await Order.findOne({ 'orderItems.product': lot._id.toString() });
+    let order = await Order.findOne({
+      $or: [
+        { 'orderItems.product': lot._id.toString() },
+        { 'orderItems.product': lot._id },
+        ...(lot.gsReference ? [{ transactionId: lot.gsReference }] : [])
+      ]
+    });
+
     if (!order) {
       const year = new Date().getFullYear().toString().slice(-2);
       const seqNum = await getNextSequence('auctionPay');
@@ -960,15 +1046,15 @@ exports.payAuction = async (req, res) => {
           name: `Auction Lot ${lot.lotNumber || ''}: ${lot.title}`.trim(),
           category: 'Auction',
           quantity: 1,
-          price: lot.winningBid,
+          price: winBid,
           image: lot.images && lot.images.length > 0 ? lot.images[0] : ''
         }],
-        shippingAddress: shippingAddress || { address: 'Pending', city: 'Pending', postalCode: 'Pending', country: 'South Africa' },
+        shippingAddress: safeShipping,
         paymentMethod: isBankTransfer ? 'Bank Transfer' : 'PayFast',
-        subTotal: lot.winningBid,
+        subTotal: winBid,
         shippingCost: lot.shippingCost,
         vatPct: lot.vatPct || 15,
-        vatAmount: lot.vatAmount || 0,
+        vatAmount: vatAmt,
         commissionPct: lot.commissionPct || 15,
         commissionAmount: lot.commissionAmount || 0,
         totalPrice: lot.totalPaidByBuyer,
@@ -976,7 +1062,7 @@ exports.payAuction = async (req, res) => {
         proofUrl: proofUrl || ''
       });
     } else {
-      if (shippingAddress) order.shippingAddress = shippingAddress;
+      order.shippingAddress = safeShipping;
       order.shippingCost = lot.shippingCost;
       order.totalPrice = lot.totalPaidByBuyer;
       order.paymentMethod = isBankTransfer ? 'Bank Transfer' : 'PayFast';
@@ -1007,7 +1093,8 @@ exports.payAuction = async (req, res) => {
       order 
     });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('payAuction error:', error);
+    res.status(500).json({ message: error.message || 'Server error', error: error.message });
   }
 };
 
@@ -1079,12 +1166,14 @@ exports.processBidderDepositPayment = async (depositId, gatewayTransactionId) =>
     await user.save();
 
     try {
-      await Notification.create({
-        user: user._id,
-        type: 'auction',
+      await createInAppNotification({
+        recipient: user._id,
+        recipientType: 'customer',
         title: '👑 VIP Bidding Privileges Activated!',
         message: `Your refundable deposit of R${deposit.amount.toLocaleString()} is confirmed. Your VIP bidding limit of R${vipLimit.toLocaleString()} is now active.`,
-        link: '/customer/auctions'
+        type: 'auction',
+        link: '/customer/auctions',
+        metadata: { depositId: deposit._id, amount: deposit.amount, biddingLimit: vipLimit }
       });
     } catch (nErr) {
       console.error('Notification error on deposit confirmation:', nErr);
@@ -1233,6 +1322,37 @@ exports.registerBidder = async (req, res) => {
       ipAddress: req.ip
     });
 
+    try {
+      // Notify customer
+      await createInAppNotification({
+        recipient: user._id,
+        recipientType: 'customer',
+        title: tier === 'premium' ? '👑 VIP Bidder Registration Submitted' : '📋 18+ Bidder Application Submitted',
+        message: tier === 'premium'
+          ? `Your 18+ verification and Premium VIP Bidding application (R${dynamicDepositFee.toLocaleString()} refundable deposit) have been submitted for Administrator review.`
+          : 'Your 18+ bidder verification has been submitted for standard administrator approval.',
+        type: 'auction',
+        link: '/customer/auctions',
+        metadata: { tier, bidderNumber: user.bidderNumber }
+      });
+
+      // Notify all administrators
+      const admins = await User.find({ role: 'admin' }).select('_id');
+      for (const adm of admins) {
+        await createInAppNotification({
+          recipient: adm._id,
+          recipientType: 'admin',
+          title: '📋 New Bidder Verification Application',
+          message: `${user.name} submitted an 18+ bidder application (${tier.toUpperCase()}). Please review their documents.`,
+          type: 'auction',
+          link: '/admin/auctions',
+          metadata: { applicantId: user._id, tier }
+        });
+      }
+    } catch (notifErr) {
+      console.error('Error creating registration notifications:', notifErr);
+    }
+
     res.json({
       message: tier === 'premium'
         ? `Your 18+ verification and Premium VIP Bidding request (R${dynamicDepositFee.toLocaleString()} refundable deposit) have been submitted for administrator review.`
@@ -1365,6 +1485,20 @@ exports.approveBidder = async (req, res) => {
       ipAddress: req.ip
     });
 
+    try {
+      await createInAppNotification({
+        recipient: user._id,
+        recipientType: 'customer',
+        title: '✅ 18+ Bidder Verification Approved!',
+        message: `Your auction registration has been approved by the Administrator. Assigned Bidder #${user.bidderNumber} with an approved bidding limit of R${user.biddingLimit.toLocaleString()}.`,
+        type: 'auction',
+        link: '/customer/auctions',
+        metadata: { bidderNumber: user.bidderNumber, biddingLimit: user.biddingLimit }
+      });
+    } catch (notifErr) {
+      console.error('Error sending bidder approval notification:', notifErr);
+    }
+
     res.json({ 
       message: `Bidder ${user.name} approved successfully with limit R${user.biddingLimit.toLocaleString()}`, 
       user 
@@ -1401,6 +1535,20 @@ exports.rejectBidder = async (req, res) => {
       details: { action: 'BIDDER_REJECTED', rejectedBy: req.user._id, reason },
       ipAddress: req.ip
     });
+
+    try {
+      await createInAppNotification({
+        recipient: user._id,
+        recipientType: 'customer',
+        title: '⚠️ Bidder Application Rejected',
+        message: `Your bidder verification application was not approved. Reason: ${reason}. Please update your documents or contact concierge.`,
+        type: 'auction',
+        link: '/customer/auctions',
+        metadata: { reason }
+      });
+    } catch (notifErr) {
+      console.error('Error sending bidder rejection notification:', notifErr);
+    }
 
     res.json({ message: `Bidder application for ${user.name} has been rejected.`, user });
   } catch (error) {
@@ -1445,6 +1593,22 @@ exports.updateBidderLimit = async (req, res) => {
       },
       ipAddress: req.ip
     });
+
+    try {
+      await createInAppNotification({
+        recipient: user._id,
+        recipientType: 'customer',
+        title: user.isBiddingSuspended ? '⚠️ Bidding Privileges Suspended' : '📈 Bidding Limit Updated',
+        message: user.isBiddingSuspended 
+          ? `Your bidding privileges have been suspended. Reason: ${suspensionReason || 'Administrative review'}.`
+          : `Your bidding limit has been updated to R${user.biddingLimit.toLocaleString()} by the Administrator.`,
+        type: 'auction',
+        link: '/customer/auctions',
+        metadata: { biddingLimit: user.biddingLimit, isBiddingSuspended: user.isBiddingSuspended }
+      });
+    } catch (notifErr) {
+      console.error('Error sending limit update notification:', notifErr);
+    }
 
     res.json({ message: `Bidder settings updated for ${user.name}`, user });
   } catch (error) {
@@ -1497,6 +1661,41 @@ exports.createBidderDeposit = async (req, res) => {
     user.bidderDepositStatus = 'pending';
     user.bidderDepositAmount = deposit.amount;
     await user.save();
+
+    try {
+      // Notify customer
+      await createInAppNotification({
+        recipient: user._id,
+        recipientType: 'customer',
+        title: deposit.paymentMethod === 'eft' 
+          ? '📄 EFT Deposit Statement Submitted for Audit'
+          : '💳 VIP Guarantee Deposit Initiated',
+        message: deposit.paymentMethod === 'eft'
+          ? `Your EFT payment proof for R${deposit.amount.toLocaleString()} (Ref: ${depositRef}) has been received and queued for Administrator audit. Your VIP privileges will activate once verified.`
+          : `Your VIP deposit of R${deposit.amount.toLocaleString()} has been initiated. Complete payment via PayFast to activate VIP bidding.`,
+        type: 'auction',
+        link: '/auction/vip-checkout',
+        metadata: { depositId: deposit._id, amount: deposit.amount, paymentReference: depositRef, method: deposit.paymentMethod }
+      });
+
+      // If EFT, notify admins that an audit is waiting
+      if (deposit.paymentMethod === 'eft') {
+        const admins = await User.find({ role: 'admin' }).select('_id');
+        for (const adm of admins) {
+          await createInAppNotification({
+            recipient: adm._id,
+            recipientType: 'admin',
+            title: '🛡️ New EFT Bidder Deposit Proof Received',
+            message: `${user.name} submitted an EFT statement/proof for R${deposit.amount.toLocaleString()} (${depositRef}). Please verify in the Auction Admin panel.`,
+            type: 'auction',
+            link: '/admin/auctions',
+            metadata: { depositId: deposit._id, bidderId: user._id, amount: deposit.amount }
+          });
+        }
+      }
+    } catch (notifErr) {
+      console.error('Error sending deposit creation notification:', notifErr);
+    }
 
     res.status(201).json({
       message: `Refundable bidding deposit of R${deposit.amount.toLocaleString()} initiated successfully. Awaiting verification.`,
@@ -1560,6 +1759,20 @@ exports.verifyAdminDeposit = async (req, res) => {
           bidder.bidderLevel = 'level_3_enhanced';
           bidder.biddingLimit = Math.max(bidder.biddingLimit || 0, premiumLimit);
           await bidder.save();
+
+          try {
+            await createInAppNotification({
+              recipient: bidder._id,
+              recipientType: 'customer',
+              title: '👑 VIP Bidding Privileges Activated!',
+              message: `Your EFT bank statement of R${deposit.amount.toLocaleString()} has been verified and approved by the Administrator. Your VIP bidding ceiling of R${premiumLimit.toLocaleString()} is now active!`,
+              type: 'auction',
+              link: '/customer/auctions',
+              metadata: { depositId: deposit._id, amount: deposit.amount, biddingLimit: premiumLimit, status: 'paid' }
+            });
+          } catch (notifErr) {
+            console.error('Error notifying bidder of deposit approval:', notifErr);
+          }
         }
       }
     } else if (action === 'refund') {
@@ -1576,6 +1789,20 @@ exports.verifyAdminDeposit = async (req, res) => {
           bidder.biddingLimit = standardLimit;
           bidder.bidderLevel = 'level_2_verified';
           await bidder.save();
+
+          try {
+            await createInAppNotification({
+              recipient: bidder._id,
+              recipientType: 'customer',
+              title: '💸 VIP Deposit Refund Processed',
+              message: `Your refundable deposit of R${deposit.amount.toLocaleString()} has been processed for refund to your registered bank account (${deposit.bankAccountDetails?.bankName || 'bank account'}). Standard bidding limit is active.`,
+              type: 'auction',
+              link: '/customer/bank-details',
+              metadata: { depositId: deposit._id, amount: deposit.amount, status: 'refunded' }
+            });
+          } catch (notifErr) {
+            console.error('Error notifying bidder of deposit refund:', notifErr);
+          }
         }
       }
     }

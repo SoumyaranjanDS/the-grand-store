@@ -49,34 +49,55 @@ export function LocationProvider({ children }) {
       }
 
       try {
-        let data;
+        let data = null;
         try {
-          const response = await axios.get('https://freeipapi.com/api/json');
-          if (!response.data || !response.data.countryCode) throw new Error('freeipapi error');
-          data = {
-            country_code: response.data.countryCode,
-            country_name: response.data.countryName,
-            currency: response.data.currencies?.[0] || 'ZAR'
-          };
-        } catch (err) {
-          console.warn('freeipapi failed, falling back to ipapi.co', err);
-          const fallbackRes = await axios.get('https://ipapi.co/json/');
-          if (fallbackRes.data.error) throw new Error('ipapi.co error');
-          data = fallbackRes.data;
+          const res = await axios.get('https://ipwho.is/', { timeout: 3500 });
+          if (res.data && res.data.success && res.data.country_code) {
+            data = {
+              country_code: res.data.country_code,
+              country_name: res.data.country,
+              currency: res.data.currency?.code || 'ZAR'
+            };
+          }
+        } catch {
+          // Fallback to api.country.is
+          try {
+            const fallbackRes = await axios.get('https://api.country.is', { timeout: 3500 });
+            if (fallbackRes.data && fallbackRes.data.country) {
+              const matchedCountry = countries.find(c => c.code === fallbackRes.data.country);
+              data = {
+                country_code: fallbackRes.data.country,
+                country_name: matchedCountry ? matchedCountry.name : fallbackRes.data.country,
+                currency: 'ZAR'
+              };
+            }
+          } catch {
+            // Ignored, will fall through to default
+          }
         }
 
-        setLocation({
-          country_code: data.country_code,
-          country_name: data.country_name,
-          currency: data.currency,
-          isLoading: false,
-          isManual: false,
-          error: null
-        });
+        if (data && data.country_code) {
+          setLocation({
+            country_code: data.country_code,
+            country_name: data.country_name,
+            currency: data.currency,
+            isLoading: false,
+            isManual: false,
+            error: null
+          });
+        } else {
+          setLocation({
+            country_code: 'ZA',
+            country_name: 'South Africa',
+            currency: 'ZAR',
+            isLoading: false,
+            isManual: false,
+            error: null
+          });
+        }
       } catch (err) {
-        console.error('IP Geolocation completely failed:', err);
         setLocation({
-          country_code: 'ZA', // Default to SA if API fails
+          country_code: 'ZA',
           country_name: 'South Africa',
           currency: 'ZAR',
           isLoading: false,

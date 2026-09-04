@@ -3,11 +3,12 @@ import {
   Calendar as CalendarIcon, ChevronLeft, ChevronRight, Package, 
   Ticket, Gavel, Cake, Clock, MapPin, ExternalLink, ArrowRight, 
   CheckCircle2, AlertCircle, Copy, Loader2, Sparkles, Filter, Info,
-  Truck, ShieldCheck, ChevronDown, ChevronUp, Lock
+  Truck, ShieldCheck, ChevronDown, ChevronUp, Lock, Crown, Download
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../../api';
 import { useAuth } from '../../context/AuthContext';
+import { createGoogleCalendarUrl, downloadIcsFile } from '../../utils/calendarUtils';
 
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
@@ -220,6 +221,11 @@ export default function CustomerCalendar({ embedded = false }) {
   const getActivityColor = (type, category) => {
     if (category === 'birthday') return { dot: 'bg-rose-400', badge: 'bg-rose-500/15 text-rose-300 border-rose-500/30' };
     if (category === 'events') return { dot: 'bg-amber-400', badge: 'bg-amber-500/15 text-amber-300 border-amber-500/30' };
+    if (type === 'auction_win') return { dot: 'bg-[var(--color-gold)]', badge: 'bg-[var(--color-gold)]/15 text-[var(--color-gold)] border-[var(--color-gold)]/30' };
+    if (type === 'auction_deposit_verified') return { dot: 'bg-[var(--color-gold)]', badge: 'bg-[var(--color-gold)]/15 text-[var(--color-gold)] border-[var(--color-gold)]/30' };
+    if (type === 'bidder_kyc_approved') return { dot: 'bg-emerald-400', badge: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' };
+    if (type === 'auction_deposit_pending') return { dot: 'bg-amber-400', badge: 'bg-amber-500/15 text-amber-300 border-amber-500/30' };
+    if (type === 'auction_deposit_refunded') return { dot: 'bg-white/40', badge: 'bg-white/10 text-white/70 border-white/20' };
     if (category === 'auctions') return { dot: 'bg-[var(--color-gold)]', badge: 'bg-[var(--color-gold)]/15 text-[var(--color-gold)] border-[var(--color-gold)]/30' };
     if (type === 'delivery') return { dot: 'bg-emerald-400', badge: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' };
     return { dot: 'bg-sky-400', badge: 'bg-sky-500/15 text-sky-300 border-sky-500/30' };
@@ -228,6 +234,10 @@ export default function CustomerCalendar({ embedded = false }) {
   const getActivityIcon = (category, type) => {
     if (category === 'birthday') return <Cake size={16} className="text-rose-400" />;
     if (category === 'events') return <Ticket size={16} className="text-amber-400" />;
+    if (type === 'auction_win') return <Crown size={16} className="text-[var(--color-gold)]" />;
+    if (type === 'auction_deposit_verified') return <Crown size={16} className="text-[var(--color-gold)]" />;
+    if (type === 'bidder_kyc_approved') return <ShieldCheck size={16} className="text-emerald-400" />;
+    if (type === 'auction_deposit_pending') return <Clock size={16} className="text-amber-400" />;
     if (category === 'auctions') return <Gavel size={16} className="text-[var(--color-gold)]" />;
     if (type === 'delivery') return <Truck size={16} className="text-emerald-400" />;
     return <Package size={16} className="text-sky-400" />;
@@ -557,7 +567,7 @@ export default function CustomerCalendar({ embedded = false }) {
               <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" /> Event Tickets
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[var(--color-gold)] shrink-0" /> Auction Bids & Wins
+              <span className="w-2 h-2 rounded-full bg-[var(--color-gold)] shrink-0" /> Auctions, VIP Deposits & Approvals
             </span>
             <span className="flex items-center gap-1.5 col-span-2 sm:col-span-1">
               <span className="w-2 h-2 rounded-full bg-rose-400 shrink-0" /> Birthday Milestone
@@ -605,32 +615,98 @@ export default function CustomerCalendar({ embedded = false }) {
                   return (
                     <div 
                       key={act.id} 
-                      className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 transition-all space-y-2.5 sm:space-y-3"
+                      className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 transition-all space-y-3"
                     >
-                      <div className="flex items-start justify-between gap-2.5 sm:gap-3">
-                        <div className="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
-                          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0 mt-0.5">
-                            {getActivityIcon(act.category, act.type)}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <h4 className="text-xs sm:text-sm font-semibold text-white leading-snug break-words">{act.title}</h4>
-                            <p className="text-[11px] sm:text-xs text-white/50 mt-0.5 break-words">{act.subtitle}</p>
-                          </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-lg sm:rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0 mt-0.5">
+                          {getActivityIcon(act.category, act.type)}
                         </div>
-                        <span className={`text-[9px] sm:text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full border shrink-0 whitespace-nowrap ${colors.badge}`}>
-                          {act.badge}
-                        </span>
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1">
+                            <span className={`text-[9px] sm:text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full border inline-flex items-center leading-tight ${colors.badge}`}>
+                              {act.badge}
+                            </span>
+                            <span className="text-[10px] text-white/40 font-medium shrink-0">
+                              {actDate.toLocaleDateString('en-ZA', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </span>
+                          </div>
+                          <h4 className="text-xs sm:text-sm font-semibold text-white leading-snug break-words">
+                            {act.title}
+                          </h4>
+                          {act.subtitle && (
+                            <p className="text-[11px] sm:text-xs text-white/50 leading-relaxed break-words">
+                              {act.subtitle}
+                            </p>
+                          )}
+                        </div>
                       </div>
 
-                      {/* Date & Time */}
+                      {/* Extra details (deposit info, bidding limit, proof) */}
+                      {(act.details?.paymentReference || act.details?.biddingLimit || act.details?.proofOfPayment) && (
+                        <div className="flex flex-wrap items-center gap-2 pt-1 text-[10px] text-white/60">
+                          {act.details?.paymentReference && (
+                            <span className="font-mono bg-white/5 px-2 py-0.5 rounded border border-white/10 text-white/70">
+                              Ref: {act.details.paymentReference}
+                            </span>
+                          )}
+                          {act.details?.biddingLimit && (
+                            <span className="font-sans bg-[var(--color-gold)]/10 text-[var(--color-gold)] px-2 py-0.5 rounded border border-[var(--color-gold)]/20 font-medium">
+                              Limit: R{act.details.biddingLimit.toLocaleString()}
+                            </span>
+                          )}
+                          {act.details?.proofOfPayment && (
+                            <a
+                              href={act.details.proofOfPayment}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-white/70 hover:text-[var(--color-gold)] underline flex items-center gap-1"
+                            >
+                              <ExternalLink size={10} /> View Bank Statement
+                            </a>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Calendar Sync & Details Link */}
                       <div className="flex items-center justify-between text-[11px] sm:text-xs text-white/40 pt-2 border-t border-white/5">
-                        <span>
-                          {actDate.toLocaleDateString('en-ZA', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-white/40 font-medium">Sync:</span>
+                          <button
+                            onClick={() => {
+                              const url = createGoogleCalendarUrl({
+                                title: act.title,
+                                description: `${act.subtitle}\nStatus: ${act.badge}`,
+                                location: 'Grand Store Luxury Vault',
+                                startTime: act.date
+                              });
+                              window.open(url, '_blank');
+                            }}
+                            className="text-[10px] text-white/50 hover:text-[var(--color-gold)] transition-colors px-1.5 py-0.5 rounded bg-white/5 border border-white/5 hover:border-[var(--color-gold)]/30"
+                            title="Add to Google Calendar"
+                          >
+                            Google
+                          </button>
+                          <button
+                            onClick={() => {
+                              downloadIcsFile({
+                                filename: `${(act.id || 'activity')}.ics`,
+                                title: act.title,
+                                description: `${act.subtitle}\nStatus: ${act.badge}`,
+                                location: 'Grand Store Luxury Vault',
+                                startTime: act.date
+                              });
+                            }}
+                            className="text-[10px] text-white/50 hover:text-[var(--color-gold)] transition-colors flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5 border border-white/5 hover:border-[var(--color-gold)]/30"
+                            title="Download .ICS Calendar file"
+                          >
+                            <Download size={9} /> .ics
+                          </button>
+                        </div>
+
                         {act.details?.link && (
                           <Link 
                             to={act.details.link} 
-                            className="text-[var(--color-gold)] hover:underline flex items-center gap-1 font-medium"
+                            className="text-[var(--color-gold)] hover:underline flex items-center gap-1 font-medium text-xs ml-2 shrink-0"
                           >
                             Details <ArrowRight size={11} />
                           </Link>

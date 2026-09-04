@@ -3,11 +3,12 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { 
   Crown, ShieldCheck, CreditCard, Landmark, CheckCircle2, ArrowRight, 
   ChevronRight, Lock, Copy, UploadCloud, AlertCircle, FileText, Sparkles, 
-  ExternalLink, Clock, ShieldAlert, ArrowLeft, RefreshCw
+  ExternalLink, Clock, ShieldAlert, ArrowLeft, RefreshCw, Eye, X
 } from 'lucide-react';
 import api from '../../api';
 import Price from '../../components/ui/Price';
 import PaymentForm from '../checkout/PaymentForm';
+import ReceiptPreviewModal from './components/ReceiptPreviewModal';
 
 export default function AuctionVipCheckout({ onNotify }) {
   const navigate = useNavigate();
@@ -24,6 +25,9 @@ export default function AuctionVipCheckout({ onNotify }) {
   // Payment Selection: 'payfast' | 'eft'
   const [paymentMethod, setPaymentMethod] = useState('payfast');
   const [proofUrl, setProofUrl] = useState('');
+  const [proofFileName, setProofFileName] = useState('');
+  const [proofFileSize, setProofFileSize] = useState('');
+  const [showReceiptPreview, setShowReceiptPreview] = useState(false);
   const [uploadingProof, setUploadingProof] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submittedDeposit, setSubmittedDeposit] = useState(null);
@@ -129,6 +133,10 @@ export default function AuctionVipCheckout({ onNotify }) {
       if (e.target) e.target.value = '';
       return;
     }
+
+    setProofFileName(file.name);
+    const sizeInKb = Math.round(file.size / 1024);
+    setProofFileSize(sizeInKb > 1024 ? `${(sizeInKb / 1024).toFixed(1)} MB` : `${sizeInKb} KB`);
 
     setUploadingProof(true);
     setError('');
@@ -599,23 +607,62 @@ export default function AuctionVipCheckout({ onNotify }) {
                       </label>
 
                       {proofUrl ? (
-                        <div className="flex items-center justify-between p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
-                          <div className="flex items-center gap-2.5">
-                            <CheckCircle2 size={18} className="text-emerald-400" />
-                            <div>
-                              <p className="text-xs font-bold text-emerald-300">Proof Document Attached</p>
-                              <a href={proofUrl} target="_blank" rel="noreferrer" className="text-[10px] text-emerald-400/70 hover:underline flex items-center gap-1">
-                                View document <ExternalLink size={10} />
-                              </a>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+                          <div className="flex items-center gap-3 overflow-hidden min-w-0">
+                            {/\.(jpeg|jpg|png|webp|gif)($|\?)/i.test(proofUrl) ? (
+                              <button
+                                type="button"
+                                onClick={() => setShowReceiptPreview(true)}
+                                className="relative group cursor-pointer flex-shrink-0"
+                                title="Click to preview receipt"
+                              >
+                                <img src={proofUrl} alt="Deposit Proof" className="w-10 h-10 object-cover rounded-lg border border-emerald-500/30 group-hover:border-[var(--color-gold)] transition-colors" />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 rounded-lg flex items-center justify-center transition-opacity text-white">
+                                  <Eye size={12} />
+                                </div>
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setShowReceiptPreview(true)}
+                                className="w-10 h-10 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 flex items-center justify-center text-emerald-300 border border-emerald-500/30 transition-colors cursor-pointer flex-shrink-0"
+                                title="Click to preview PDF receipt"
+                              >
+                                <FileText size={20} />
+                              </button>
+                            )}
+                            <div className="overflow-hidden min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <CheckCircle2 size={14} className="text-emerald-400 flex-shrink-0" />
+                                <p className="text-xs font-bold text-emerald-300 truncate">Proof Attached</p>
+                                {proofFileSize && <span className="text-[10px] text-white/40 font-normal">({proofFileSize})</span>}
+                              </div>
+                              <p className="text-[11px] text-white/70 truncate max-w-[200px] sm:max-w-[260px] mt-0.5 font-mono">
+                                {proofFileName || (proofUrl.includes('.pdf') || proofUrl.includes('/raw/upload/') ? 'VIP_Deposit_Receipt.pdf' : 'Receipt_Screenshot.jpg')}
+                              </p>
                             </div>
                           </div>
-                          <button 
-                            type="button" 
-                            onClick={() => setProofUrl('')} 
-                            className="text-xs text-white/40 hover:text-white underline"
-                          >
-                            Replace
-                          </button>
+                          <div className="flex items-center gap-2 self-end sm:self-center flex-shrink-0">
+                            <button 
+                              type="button" 
+                              onClick={() => setShowReceiptPreview(true)}
+                              className="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer"
+                            >
+                              <Eye size={13} /> Quick View
+                            </button>
+                            <button 
+                              type="button" 
+                              onClick={() => {
+                                setProofUrl('');
+                                setProofFileName('');
+                                setProofFileSize('');
+                              }} 
+                              className="text-xs text-white/40 hover:text-red-400 p-1.5 transition-colors cursor-pointer"
+                              title="Replace proof"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
                         </div>
                       ) : (
                         <label className="border-2 border-dashed border-white/20 hover:border-[var(--color-gold)]/50 rounded-xl p-5 flex flex-col items-center justify-center cursor-pointer transition-colors bg-white/[0.02] text-center">
@@ -748,6 +795,16 @@ export default function AuctionVipCheckout({ onNotify }) {
         </div>
 
       </div>
+
+      <ReceiptPreviewModal
+        isOpen={showReceiptPreview}
+        onClose={() => setShowReceiptPreview(false)}
+        proofUrl={proofUrl}
+        fileName={proofFileName}
+        fileSize={proofFileSize}
+        reference={depositReference}
+        title="VIP Deposit Receipt Preview"
+      />
     </main>
   );
 }

@@ -692,7 +692,9 @@ const updateCustomerBankDetails = async (req, res) => {
 // @access  Private
 const getCustomerCalendarActivities = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('name email dateOfBirth');
+    const user = await User.findById(req.user._id).select(
+      'name email dateOfBirth bidderApprovalStatus bidderApprovedAt bidderNumber biddingLimit bidderLevel'
+    );
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     const Order = require('../models/Order');
@@ -700,8 +702,9 @@ const getCustomerCalendarActivities = async (req, res) => {
     const Bid = require('../models/Bid');
     const AuctionLot = require('../models/AuctionLot');
     const PlatformSettings = require('../models/PlatformSettings');
+    const BidderDeposit = require('../models/BidderDeposit');
 
-    const [orders, bookings, bids, wonLots, settings] = await Promise.all([
+    const [orders, bookings, bids, wonLots, deposits, settings] = await Promise.all([
       Order.find({ user: user._id })
         .populate('shipments')
         .sort({ createdAt: -1 }),
@@ -713,6 +716,8 @@ const getCustomerCalendarActivities = async (req, res) => {
         .sort({ createdAt: -1 }),
       AuctionLot.find({ winner: user._id })
         .sort({ endDate: -1 }),
+      BidderDeposit.find({ bidder: user._id })
+        .sort({ createdAt: -1 }),
       PlatformSettings.findOne()
     ]);
 
@@ -844,21 +849,77 @@ const getCustomerCalendarActivities = async (req, res) => {
     // 4. Won Lots (priority)
     const wonLotIds = new Set(wonLots.map(l => l._id.toString()));
     wonLots.forEach((lot) => {
+      const associatedOrder = orders.find(o => 
+        (o.orderItems || []).some(item => item.product === lot._id.toString()) ||
+        o.transactionId === lot.gsReference
+      );
+
+      const isPaid = lot.paymentStatus === 'Paid' || associatedOrder?.isPaid;
+      const isAwaitingApproval = lot.paymentStatus === 'Awaiting_Approval' || associatedOrder?.paymentStatus === 'Awaiting_Approval';
+      
+      // Calculate vault handover / delivery date if paid
+      let targetDate = lot.endDate || lot.updatedAt || new Date();
+      if (isPaid && associatedOrder?.paidAt) {
+        const estDelivery = new Date(associatedOrder.paidAt);
+        estDelivery.setDate(estDelivery.getDate() + 3); // 3 business days for vault security clearance
+        targetDate = estDelivery;
+      }
+
+      const badgeText = isPaid 
+        ? 'Vault Handover' 
+        : isAwaitingApproval 
+        ? 'Proof In Audit' 
+        : 'Payment Required';
+
+      const statusKey = isPaid ? 'settled' : isAwaitingApproval ? 'in_audit' : 'pending_payment';
+
+      const totalAmount = lot.totalPaidByBuyer || associatedOrder?.totalPrice || lot.winningBid || 0;
+
       activities.push({
         id: `won-${lot._id}`,
         type: 'auction_win',
         category: 'auctions',
-        date: lot.endDate || lot.updatedAt || new Date(),
-        title: `🏆 Won Lot #${lot.lotNumber}: ${lot.title}`,
-        subtitle: `Winning Bid: R${Number(lot.winningBid || lot.currentBid || 0).toLocaleString()}`,
-        badge: 'Auction Won',
-        status: 'won',
+        date: targetDate,
+        title: `Won Lot #${lot.lotNumber || lot.gsReference || lot._id.toString().slice(-6)}: ${lot.title}`,
+        subtitle: isPaid 
+          ? `Settled Total R${Number(totalAmount).toLocaleString()} • Handover Scheduled`
+          : isAwaitingApproval
+          ? `Proof of payment in audit • R${Number(totalAmount).toLocaleString()}`
+          : `Gavel Hammer: R${Number(lot.winningBid || 0).toLocaleString()} • Action Required`,
+        badge: badgeText,
+        status: statusKey,
         details: {
           lotTitle: lot.title,
           lotNumber: lot.lotNumber,
           lotId: lot._id,
+          gsReference: lot.gsReference || associatedOrder?.transactionId || 'GS-26-AUC-VAULT',
+          orderId: associatedOrder?.orderId,
+          invoiceNumber: associatedOrder?.invoiceNumber,
           winningBid: lot.winningBid || lot.currentBid,
-          status: lot.status,
+          buyerPremiumAmount: lot.buyerPremiumAmount || 0,
+          barChargeAmount: lot.barChargeAmount || 0,
+          vatAmount: lot.vatAmount || 0,
+          vatPct: lot.vatPct || 15,
+          shippingCost: lot.shippingCost || associatedOrder?.shippingCost || 0,
+          totalPaidByBuyer: totalAmount,
+          paymentStatus: lot.paymentStatus,
+          isSettled: isPaid,
+          custodyLocation: lot.custodyLocation || 'Grand Store High-Security Vault, Cape Town',
+          distillery: lot.distillery,
+          expression: lot.expression,
+          vintage: lot.vintage,
+          bottlingYear: lot.bottlingYear,
+          ageStatement: lot.ageStatement,
+          bottleNumber: lot.bottleNumber,
+          caskNumber: lot.caskNumber,
+          abv: lot.abv,
+          bottleSizeMl: lot.bottleSizeMl,
+          boxCondition: lot.boxCondition,
+          sealCondition: lot.sealCondition,
+          provenance: lot.provenanceHistory || lot.provenance,
+          shippingAddress: associatedOrder?.shippingAddress,
+          deliveryStatus: associatedOrder?.shipments?.[0]?.status || (isPaid ? 'Vault Inspection & Logistics Prep' : 'Pending Payment'),
+          trackingNumber: associatedOrder?.shipments?.[0]?.mainTrackingNumber,
           link: `/auction/${lot._id}`
         }
       });
@@ -899,7 +960,80 @@ const getCustomerCalendarActivities = async (req, res) => {
       });
     });
 
-    // 6. Chronological Sort: newest/upcoming first
+    // 6. VIP Bidding Deposits & Proof of Payment Status
+    const vipLimit = settings?.auctionPremiumBiddingLimit || 250000;
+    (deposits || []).forEach((dep) => {
+      const isPaid = dep.paymentStatus === 'paid';
+      const isPending = dep.paymentStatus === 'pending';
+      const isRefunded = dep.paymentStatus === 'refunded';
+
+      let targetDate = dep.verifiedAt || dep.updatedAt || dep.createdAt;
+      let badge = 'Deposit In Audit';
+      let title = `EFT VIP Deposit: In Audit (${dep.paymentReference || 'DEP'})`;
+      let subtitle = `R${Number(dep.amount || 0).toLocaleString()} Proof Uploaded • Awaiting Administrator Audit`;
+      let statusKey = 'in_audit';
+      let typeKey = 'auction_deposit_pending';
+
+      if (isPaid) {
+        badge = 'VIP Active • Escrow Secured';
+        title = `👑 VIP Bidding Privileges Active (R${vipLimit.toLocaleString()})`;
+        subtitle = `EFT Deposit R${Number(dep.amount || 0).toLocaleString()} Verified & Approved by Admin`;
+        statusKey = 'active';
+        typeKey = 'auction_deposit_verified';
+      } else if (isRefunded) {
+        badge = 'Deposit Refunded';
+        title = `💸 VIP Deposit Refunded`;
+        subtitle = `R${Number(dep.amount || 0).toLocaleString()} returned to ${dep.bankAccountDetails?.bankName || 'bank account'}`;
+        statusKey = 'refunded';
+        typeKey = 'auction_deposit_refunded';
+      }
+
+      activities.push({
+        id: `dep-${dep._id}`,
+        type: typeKey,
+        category: 'auctions',
+        date: targetDate,
+        title,
+        subtitle,
+        badge,
+        status: statusKey,
+        details: {
+          depositId: dep._id,
+          amount: dep.amount,
+          paymentMethod: dep.paymentMethod,
+          paymentReference: dep.paymentReference,
+          proofOfPayment: dep.proofOfPayment,
+          bankAccountDetails: dep.bankAccountDetails,
+          biddingLimit: isPaid ? vipLimit : undefined,
+          verifiedAt: dep.verifiedAt,
+          refundedAt: dep.refundedAt,
+          link: isPaid ? '/customer/auctions' : '/auction/vip-checkout'
+        }
+      });
+    });
+
+    // 7. 18+ Bidder KYC Approval Milestone
+    if (user.bidderApprovalStatus === 'approved') {
+      const kycDate = user.bidderApprovedAt || (deposits && deposits[0]?.verifiedAt) || user.createdAt;
+      activities.push({
+        id: `kyc-approved-${user._id}`,
+        type: 'bidder_kyc_approved',
+        category: 'auctions',
+        date: kycDate,
+        title: `✅ 18+ Bidder Verification Approved`,
+        subtitle: `Bidder #${user.bidderNumber || 'N/A'} • Approved Limit R${Number(user.biddingLimit || 25000).toLocaleString()}`,
+        badge: 'KYC Verified',
+        status: 'verified',
+        details: {
+          bidderNumber: user.bidderNumber,
+          biddingLimit: user.biddingLimit,
+          bidderLevel: user.bidderLevel,
+          link: '/customer/auctions'
+        }
+      });
+    }
+
+    // 8. Chronological Sort: newest/upcoming first
     activities.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     res.json({

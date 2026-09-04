@@ -13,6 +13,9 @@ import {
   CheckCircle2,
   ChevronRight,
   Search,
+  Clock,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import Price from "../../components/ui/Price";
 
@@ -22,6 +25,7 @@ export default function CustomerOrdersPage() {
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -30,22 +34,22 @@ export default function CustomerOrdersPage() {
     }
   }, [user, navigate]);
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      if (user) {
-        try {
-          const { data } = await api.get(
-            `/orders/myorders`,
-          );
-          setOrders(data);
-        } catch (error) {
-          console.error("Failed to fetch orders", error);
-        } finally {
-          setLoading(false);
-        }
+  const fetchOrders = async (isManual = false) => {
+    if (user) {
+      if (isManual) setRefreshing(true);
+      try {
+        const { data } = await api.get(`/orders/myorders`);
+        setOrders(data);
+      } catch (error) {
+        console.error("Failed to fetch orders", error);
+      } finally {
+        setLoading(false);
+        if (isManual) setRefreshing(false);
       }
-    };
+    }
+  };
 
+  useEffect(() => {
     fetchOrders();
   }, [user]);
 
@@ -87,18 +91,28 @@ export default function CustomerOrdersPage() {
           </p>
         </div>
 
-        <div className="relative w-full md:w-64">
-          <input
-            type="text"
-            placeholder="Search orders..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-white/[0.02] border border-white/10 rounded-full py-3 px-5 pl-10 text-sm text-[var(--color-ivory)] placeholder:text-[var(--color-ivory-muted)]/50 focus:outline-none focus:border-[var(--color-gold)]/50 transition-colors backdrop-blur-md"
-          />
-          <Search
-            size={16}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-ivory-muted)]"
-          />
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <button
+            onClick={() => fetchOrders(true)}
+            disabled={refreshing}
+            className="p-3 bg-white/[0.04] border border-white/10 hover:border-[var(--color-gold)]/30 rounded-full text-[var(--color-ivory-muted)] hover:text-white transition-all shrink-0 flex items-center justify-center disabled:opacity-50"
+            title="Refresh Orders"
+          >
+            <RefreshCw size={16} className={refreshing ? "animate-spin text-[var(--color-gold)]" : ""} />
+          </button>
+          <div className="relative w-full md:w-64">
+            <input
+              type="text"
+              placeholder="Search orders..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-white/[0.02] border border-white/10 rounded-full py-3 px-5 pl-10 text-sm text-[var(--color-ivory)] placeholder:text-[var(--color-ivory-muted)]/50 focus:outline-none focus:border-[var(--color-gold)]/50 transition-colors backdrop-blur-md"
+            />
+            <Search
+              size={16}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-ivory-muted)]"
+            />
+          </div>
         </div>
       </div>
 
@@ -115,18 +129,22 @@ export default function CustomerOrdersPage() {
               className="text-[var(--color-ivory-muted)] opacity-30"
             />
           </div>
-          <p className="text-[var(--color-ivory-muted)] mb-8 text-lg font-light">
-            Your order history is empty.
+          <h2 className="text-xl font-serif text-[var(--color-ivory)] mb-2">
+            No Orders Found
+          </h2>
+          <p className="text-[var(--color-ivory-muted)] text-sm max-w-sm mb-6 font-light">
+            You haven't placed any orders yet. Discover our exclusive
+            marketplace collections.
           </p>
           <button
             onClick={() => navigate("/shop")}
-            className="px-8 py-3 rounded-full border border-[var(--color-gold)]/50 text-gold-gradient hover:bg-gold-gradient hover:text-black transition-all uppercase tracking-widest text-xs font-bold shadow-[0_0_20px_rgba(212,175,55,0.1)] hover:shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+            className="px-8 py-3 rounded-full bg-gold-gradient text-black font-semibold text-xs tracking-widest uppercase hover:opacity-95 transition-opacity"
           >
-            Explore the Collection
+            Explore Market
           </button>
         </div>
       ) : (
-        <div className="space-y-4 md:space-y-6">
+        <div className="flex flex-col gap-6">
           {filteredOrders.map((order) => (
             <div
               key={order._id}
@@ -157,42 +175,68 @@ export default function CustomerOrdersPage() {
                     <div className="text-xs sm:text-sm text-[var(--color-ivory-muted)] mb-0 sm:mb-1">
                       Order Total
                     </div>
-                    <div className="text-right">
+                    <div className="text-right flex flex-col items-end gap-1">
                       <div className="text-2xl font-serif text-[var(--color-ivory)]">
                         <Price amount={order.totalPrice} />
                       </div>
-                      <div
-                        className={`text-[10px] sm:text-xs mt-1 font-bold tracking-widest uppercase ${
-                        order.paymentStatus === "Pending" ||
-                        order.paymentStatus === "Awaiting_Approval"
-                          ? "text-blue-400"
-                          : order.paymentStatus === "Failed" ||
-                              order.paymentStatus === "Rejected"
-                            ? "text-red-500"
-                            : "text-gold-gradient"
-                        }`}
-                      >
-                        {order.paymentStatus
-                          ? order.paymentStatus.replace("_", " ")
-                          : "Processing"}
+                      <div>
+                        {order.isPaid || order.paymentStatus === "Paid" ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
+                            <CheckCircle2 size={13} className="text-emerald-400" />
+                            Paid & Verified
+                          </span>
+                        ) : order.paymentStatus === "Awaiting_Approval" ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase bg-amber-500/10 text-amber-400 border border-amber-500/25">
+                            <Clock size={13} className="text-amber-400" />
+                            Awaiting Verification
+                          </span>
+                        ) : order.paymentStatus === "Failed" || order.paymentStatus === "Rejected" ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase bg-rose-500/10 text-rose-400 border border-rose-500/25">
+                            <AlertCircle size={13} className="text-rose-400" />
+                            Payment Failed
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase bg-blue-500/10 text-blue-400 border border-blue-500/25">
+                            <Clock size={13} className="text-blue-400" />
+                            Payment Pending
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
                   <button
                     onClick={() => navigate(`/customer/order/${order._id}`)}
-                    className="w-full sm:w-auto min-h-11 px-5 sm:px-6 py-3 rounded-xl sm:rounded-full bg-[var(--color-gold)]/10 text-gold-gradient border border-[var(--color-gold)]/20 hover:bg-gold-gradient hover:text-black transition-colors text-[10px] sm:text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2"
+                    className={`w-full sm:w-auto min-h-11 px-5 sm:px-6 py-3 rounded-xl sm:rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+                      order.isPaid || order.paymentStatus === "Paid"
+                        ? "bg-[var(--color-gold)]/10 text-gold-gradient border border-[var(--color-gold)]/30 hover:bg-gold-gradient hover:text-black shadow-[0_0_15px_rgba(212,175,55,0.1)]"
+                        : order.paymentStatus === "Awaiting_Approval"
+                          ? "bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25"
+                          : order.paymentStatus === "Failed" || order.paymentStatus === "Rejected"
+                            ? "bg-rose-500/15 text-rose-300 border border-rose-500/30 hover:bg-rose-500/25"
+                            : "bg-gold-gradient text-black hover:opacity-90 shadow-[0_0_20px_rgba(212,175,55,0.25)]"
+                    }`}
                   >
-                    {order.paymentMethod === "Bank Transfer" &&
-                    order.paymentStatus === "Pending"
-                      ? "Complete Payment"
-                      : order.paymentMethod === "Bank Transfer" &&
-                          order.paymentStatus === "Awaiting_Approval"
-                        ? "View Status"
-                        : order.paymentMethod === "Bank Transfer" &&
-                            (order.paymentStatus === "Failed" ||
-                              order.paymentStatus === "Rejected")
-                          ? "Resubmit Proof"
-                          : "View Receipt"}
+                    {order.isPaid || order.paymentStatus === "Paid" ? (
+                      <>
+                        <CheckCircle2 size={14} />
+                        View Receipt
+                      </>
+                    ) : order.paymentStatus === "Awaiting_Approval" ? (
+                      <>
+                        <Clock size={14} />
+                        View Status
+                      </>
+                    ) : order.paymentStatus === "Failed" || order.paymentStatus === "Rejected" ? (
+                      <>
+                        <AlertCircle size={14} />
+                        Resubmit Proof
+                      </>
+                    ) : (
+                      <>
+                        Complete Payment
+                        <ChevronRight size={14} />
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

@@ -38,6 +38,21 @@ exports.uploadProofOfPayment = async (req, res) => {
     order.proofUrl = proofUrl; // Store the proofUrl in the Order read model for admin viewing
     await order.save();
 
+    // Sync status to associated auction lot if applicable
+    try {
+      const AuctionLot = require('../models/AuctionLot');
+      for (const item of (order.orderItems || [])) {
+        if (item.product) {
+          await AuctionLot.findByIdAndUpdate(item.product, {
+            paymentStatus: 'Awaiting_Approval',
+            proofUrl: proofUrl
+          });
+        }
+      }
+    } catch (lotErr) {
+      console.warn('Error syncing proofUrl to AuctionLot:', lotErr.message);
+    }
+
     res.json({ message: 'Proof of payment uploaded successfully. Awaiting admin approval.', order });
   } catch (error) {
     console.error('Error uploading proof of payment:', error);
@@ -67,7 +82,7 @@ exports.approvePayment = async (req, res) => {
     res.json({ message: 'Payment approved and order processed successfully' });
   } catch (error) {
     console.error('Error approving payment:', error);
-    res.status(500).json({ message: 'Server Error' });
+    res.status(500).json({ message: error.message || 'Server Error approving payment', error: error.message });
   }
 };
 

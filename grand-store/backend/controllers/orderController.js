@@ -345,79 +345,99 @@ const processOrderPayment = async (orderId) => {
   const shopCodeDoc = await SystemCode.findOne({ code: 'SHP' });
   const moduleCode = shopCodeDoc ? shopCodeDoc.code : 'SHP';
   const year = new Date().getFullYear().toString().slice(-2);
+  const isAuctionOrder = (order.orderItems || []).some(i => i.category === 'Auction');
 
   // 1. Customer Payment Transaction
-  const customerPaymentTxn = new Transaction({
-    gsReference: order.transactionId,
-    type: 'payment',
-    module: 'shop',
-    amount: order.totalPrice,
-    netAmount: parseFloat((order.totalPrice - order.gatewayFeeAmount).toFixed(2)),
-    customer: order.user,
-    order: order._id,
-    status: 'cleared',
-    description: 'Customer order payment'
-  });
-  await customerPaymentTxn.save();
+  let customerPaymentTxn = await Transaction.findOne({ gsReference: order.transactionId });
+  if (!customerPaymentTxn) {
+    customerPaymentTxn = new Transaction({
+      gsReference: order.transactionId,
+      type: 'payment',
+      module: isAuctionOrder ? 'auction' : 'shop',
+      amount: order.totalPrice,
+      netAmount: parseFloat((order.totalPrice - (order.gatewayFeeAmount || 0)).toFixed(2)),
+      customer: order.user,
+      order: order._id,
+      status: 'cleared',
+      description: isAuctionOrder ? `Auction Payment - Order ${order.orderId || ''}` : 'Customer order payment'
+    });
+    await customerPaymentTxn.save();
+  } else {
+    customerPaymentTxn.status = 'cleared';
+    customerPaymentTxn.amount = order.totalPrice;
+    customerPaymentTxn.netAmount = parseFloat((order.totalPrice - (order.gatewayFeeAmount || 0)).toFixed(2));
+    if (order.user) customerPaymentTxn.customer = order.user;
+    if (order._id) customerPaymentTxn.order = order._id;
+    await customerPaymentTxn.save();
+  }
 
   // 2. Grand Store Commission Transaction
   if (order.commissionAmount > 0) {
-    const gsCommSeqNum = await getNextSequence('shopOrder');
-    const commissionTxn = new Transaction({
-      gsReference: `GS-${year}-${moduleCode}-COM-${gsCommSeqNum.toString().padStart(6, '0')}`,
-      type: 'commission',
-      module: 'shop',
-      amount: order.commissionAmount,
-      netAmount: order.commissionAmount,
-      order: order._id,
-      status: 'cleared',
-      description: 'Marketplace commission from order'
-    });
-    await commissionTxn.save();
+    let commissionTxn = await Transaction.findOne({ order: order._id, type: 'commission' });
+    if (!commissionTxn) {
+      const gsCommSeqNum = await getNextSequence('shopOrder');
+      commissionTxn = new Transaction({
+        gsReference: `GS-${year}-${moduleCode}-COM-${gsCommSeqNum.toString().padStart(6, '0')}`,
+        type: 'commission',
+        module: isAuctionOrder ? 'auction' : 'shop',
+        amount: order.commissionAmount,
+        netAmount: order.commissionAmount,
+        order: order._id,
+        status: 'cleared',
+        description: 'Marketplace commission from order'
+      });
+      await commissionTxn.save();
+    }
   }
 
   // 2.5 VAT Transaction
   if (order.vatAmount > 0) {
-    const gsVatSeqNum = await getNextSequence('shopOrder');
-    const vatTxn = new Transaction({
-      gsReference: `GS-${year}-${moduleCode}-VAT-${gsVatSeqNum.toString().padStart(6, '0')}`,
-      type: 'vat',
-      module: 'shop',
-      amount: order.vatAmount,
-      netAmount: order.vatAmount,
-      order: order._id,
-      status: 'cleared',
-      description: 'VAT collected from order'
-    });
-    await vatTxn.save();
+    let vatTxn = await Transaction.findOne({ order: order._id, type: 'vat' });
+    if (!vatTxn) {
+      const gsVatSeqNum = await getNextSequence('shopOrder');
+      vatTxn = new Transaction({
+        gsReference: `GS-${year}-${moduleCode}-VAT-${gsVatSeqNum.toString().padStart(6, '0')}`,
+        type: 'vat',
+        module: isAuctionOrder ? 'auction' : 'shop',
+        amount: order.vatAmount,
+        netAmount: order.vatAmount,
+        order: order._id,
+        status: 'cleared',
+        description: 'VAT collected from order'
+      });
+      await vatTxn.save();
+    }
   }
 
   // 3. Vendor Payable Transactions & Wallet Updates
-  for (const payable of order.vendorPayables) {
+  for (const payable of (order.vendorPayables || [])) {
     if (!payable.vendorId) continue; // Skip admin-owned items
 
-    const vendorSeqNum = await getNextSequence('shopOrder');
-    const payableTxn = new Transaction({
-      gsReference: `GS-${year}-${moduleCode}-PAYABLE-${vendorSeqNum.toString().padStart(6, '0')}`,
-      type: 'payout',
-      module: 'shop',
-      amount: payable.netPayable,
-      netAmount: payable.netPayable,
-      vendor: payable.vendorId,
-      order: order._id,
-      status: 'pending', // Pending until payout is cleared
-      description: 'Vendor payable from order'
-    });
-    await payableTxn.save();
+    let payableTxn = await Transaction.findOne({ order: order._id, type: 'payout', vendor: payable.vendorId });
+    if (!payableTxn) {
+      const vendorSeqNum = await getNextSequence('shopOrder');
+      payableTxn = new Transaction({
+        gsReference: `GS-${year}-${moduleCode}-PAYABLE-${vendorSeqNum.toString().padStart(6, '0')}`,
+        type: 'payout',
+        module: isAuctionOrder ? 'auction' : 'shop',
+        amount: payable.netPayable,
+        netAmount: payable.netPayable,
+        vendor: payable.vendorId,
+        order: order._id,
+        status: 'pending', // Pending until payout is cleared
+        description: 'Vendor payable from order'
+      });
+      await payableTxn.save();
 
-    // Update Vendor Wallet
-    let wallet = await Wallet.findOne({ vendorId: payable.vendorId });
-    if (!wallet) {
-      wallet = new Wallet({ vendorId: payable.vendorId });
+      // Update Vendor Wallet
+      let wallet = await Wallet.findOne({ vendorId: payable.vendorId });
+      if (!wallet) {
+        wallet = new Wallet({ vendorId: payable.vendorId });
+      }
+      wallet.pendingBalance += payable.netPayable;
+      wallet.totalEarned += payable.netPayable; // Total earned tracks gross earnings
+      await wallet.save();
     }
-    wallet.pendingBalance += payable.netPayable;
-    wallet.totalEarned += payable.netPayable; // Total earned tracks gross earnings
-    await wallet.save();
   }
 
   // 4. Update AuctionLot if this order contains an auction lot
@@ -437,6 +457,23 @@ const processOrderPayment = async (orderId) => {
     console.error('Error syncing auction lot status in processOrderPayment:', auctionSyncErr);
   }
 
+  // 5. Update CPA Section 45 compliant Auction Trust Ledger
+  try {
+    const AuctionLedger = require('../models/AuctionLedger');
+    for (const item of order.orderItems) {
+      if (item.product) {
+        const ledger = await AuctionLedger.findOne({ lot: item.product });
+        if (ledger) {
+          ledger.settlementStatus = 'HELD_IN_ESCROW';
+          ledger.settlementClearedAt = new Date();
+          await ledger.save();
+        }
+      }
+    }
+  } catch (ledgerErr) {
+    console.warn('AuctionLedger sync warning in processOrderPayment:', ledgerErr.message);
+  }
+
   return true;
 };
 
@@ -445,7 +482,39 @@ const processOrderPayment = async (orderId) => {
 // @access  Private
 const getMyOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
+    const rawOrders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
+    
+    // Deduplicate any race-condition auction orders for the same lot
+    const seenAuctionLots = new Map();
+    const orders = [];
+
+    for (const order of rawOrders) {
+      const auctionItem = order.orderItems?.find(item => item.product && (
+        item.category === 'Auction' || 
+        item.name?.toLowerCase().includes('auction lot') ||
+        order.transactionId?.includes('-AUC-')
+      ));
+      
+      if (auctionItem && auctionItem.product) {
+        const lotId = auctionItem.product.toString();
+        if (seenAuctionLots.has(lotId)) {
+          const existingIdx = seenAuctionLots.get(lotId);
+          const existingOrder = orders[existingIdx];
+          // If this order is paid and existing wasn't, prioritize the paid order
+          if ((order.isPaid || order.paymentStatus === 'Paid') && !(existingOrder.isPaid || existingOrder.paymentStatus === 'Paid')) {
+            orders[existingIdx] = order;
+          }
+          // Discard the duplicate ghost order
+          continue;
+        } else {
+          seenAuctionLots.set(lotId, orders.length);
+          orders.push(order);
+        }
+      } else {
+        orders.push(order);
+      }
+    }
+
     res.json(orders);
   } catch (error) {
     console.error('Get My Orders Error:', error);

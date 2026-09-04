@@ -111,7 +111,9 @@ exports.generateAuctionPayment = async (req, res) => {
     
     if (!lot) return res.status(404).json({ message: 'Lot not found' });
     if (lot.paymentStatus === 'Paid') return res.status(400).json({ message: 'Lot already paid' });
-    if (lot.winner._id.toString() !== req.user._id.toString()) {
+    
+    const winnerId = lot.winner ? (lot.winner._id ? lot.winner._id.toString() : lot.winner.toString()) : null;
+    if (!winnerId || winnerId !== req.user._id.toString()) {
        return res.status(403).json({ message: 'Only the winner can pay for this lot' });
     }
 
@@ -119,17 +121,22 @@ exports.generateAuctionPayment = async (req, res) => {
     const frontendUrl = getFrontendUrl(req);
     const backendUrl = getBackendUrl(req);
     
+    const fullName = (lot.winner && lot.winner.name) || req.user.name || 'Grand Customer';
+    const email = (lot.winner && lot.winner.email) || req.user.email || '';
+    const nameParts = fullName.trim().split(/\s+/);
+    const totalAmount = Number(lot.totalPaidByBuyer || lot.winningBid || 0).toFixed(2);
+
     const data = {
       merchant_id: config.merchant_id,
       merchant_key: config.merchant_key,
       return_url: `${frontendUrl}/auction/${lot._id}?payment=success`,
       cancel_url: `${frontendUrl}/auction/${lot._id}?payment=cancel`,
       notify_url: `${backendUrl}/api/payfast/itn`,
-      name_first: lot.winner.name.split(' ')[0],
-      name_last: lot.winner.name.split(' ').slice(1).join(' ') || 'Winner',
-      email_address: lot.winner.email,
+      name_first: nameParts[0] || 'Customer',
+      name_last: nameParts.slice(1).join(' ') || 'Winner',
+      email_address: email,
       m_payment_id: `AUC-${lot._id}`,
-      amount: lot.totalPaidByBuyer.toFixed(2),
+      amount: totalAmount,
       item_name: `Auction Lot ${lot.lotNumber || lot._id.toString().slice(-6)}`
     };
 

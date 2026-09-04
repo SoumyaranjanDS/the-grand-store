@@ -160,6 +160,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/vendor", vendorRoutes);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/auction", auctionRoutes);
+app.use("/api/auctions", auctionRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/checkout", paymentLimiter, checkoutRoutes);
@@ -185,6 +186,17 @@ app.use('/api/notifications', require("./routes/notificationRoutes"));
 // Health check endpoint
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "OK", message: "API is running" });
+});
+
+// Global error handling middleware (handles JSON parse errors, uncaught route errors)
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({ message: 'Malformed JSON payload provided' });
+  }
+  console.error('Unhandled server error:', err);
+  res.status(err.status || 500).json({
+    message: err.message || 'Internal Server Error'
+  });
 });
 
 const PORT = process.env.PORT || 5000;

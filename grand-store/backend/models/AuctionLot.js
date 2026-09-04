@@ -135,9 +135,11 @@ const auctionLotSchema = new mongoose.Schema({
 
   paymentStatus: {
     type: String,
-    enum: ['Pending', 'Paid', 'Refunded', 'Failed', 'Disputed'],
+    enum: ['Pending', 'Awaiting_Approval', 'Paid', 'Refunded', 'Failed', 'Disputed'],
     default: 'Pending'
   },
+  proofUrl: { type: String },
+  isPaid: { type: Boolean, default: false },
 
 }, { timestamps: true });
 
