@@ -394,11 +394,12 @@ export default function ProductCard({
                     justifyContent: 'center', 
                     gap: '6px', 
                     padding: '10px 4px', 
-                    backgroundColor: 'rgba(255,255,255,0.05)', 
-                    color: '#fff', 
-                    border: '1px solid rgba(255,255,255,0.1)', 
-                    borderRadius: '2px', 
+                    backgroundColor: '#0a2e1d', 
+                    color: '#4ade80', 
+                    border: '1px solid #16a34a', 
+                    borderRadius: '4px', 
                     fontSize: '10px', 
+                    fontWeight: '600',
                     textTransform: 'uppercase', 
                     letterSpacing: '0.1em', 
                     cursor: 'pointer',
@@ -406,12 +407,14 @@ export default function ProductCard({
                     boxSizing: 'border-box'
                   }}
                   onMouseOver={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
+                    e.currentTarget.style.backgroundColor = '#14462d';
+                    e.currentTarget.style.borderColor = '#22c55e';
+                    e.currentTarget.style.color = '#86efac';
                   }}
                   onMouseOut={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)';
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                    e.currentTarget.style.backgroundColor = '#0a2e1d';
+                    e.currentTarget.style.borderColor = '#16a34a';
+                    e.currentTarget.style.color = '#4ade80';
                   }}
                 >
                   <ShoppingBag size={14} style={{ display: 'block' }} /> 
