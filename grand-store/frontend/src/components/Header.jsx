@@ -25,6 +25,7 @@ import { useGeoLocation } from "../context/LocationContext";
 import { useCurrency } from "../context/CurrencyContext";
 import LocaleSelector, { LocaleIcon } from "./LocaleSelector";
 import NotificationBell from "./NotificationBell";
+import api from "../api";
 
 const currencyFlagCountries = {
   AED: 'AE', AUD: 'AU', BWP: 'BW', BRL: 'BR', CAD: 'CA', CHF: 'CH', CNY: 'CN',
@@ -121,6 +122,29 @@ export default function Header({
         )
         .slice(0, 5)
     : [];
+
+  const [hasLiveAuction, setHasLiveAuction] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const checkLiveAuction = async () => {
+      try {
+        const res = await api.get('/auction/live-status');
+        if (isMounted && res.data) {
+          setHasLiveAuction(Boolean(res.data.hasLiveAuction));
+        }
+      } catch (err) {
+        // Silently catch polling failure
+      }
+    };
+
+    checkLiveAuction();
+    const timer = setInterval(checkLiveAuction, 30000);
+    return () => {
+      isMounted = false;
+      clearInterval(timer);
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -561,16 +585,27 @@ export default function Header({
               Offers
             </Link>
             <Link
-              className={
-                location.pathname.startsWith("/auction") ? "active" : ""
-              }
+              className={`${
+                location.pathname.startsWith("/auction") ? "active " : ""
+              }inline-flex items-center gap-1.5`}
               to="/auction"
               onMouseEnter={() => {
                 cancelClose();
                 setMegaOpen(false);
               }}
             >
-              Auction
+              <span>Auction</span>
+              {hasLiveAuction && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-500/15 border border-red-500/30">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+                  </span>
+                  <span className="text-[9px] font-black uppercase tracking-wider text-red-400 leading-none">
+                    LIVE
+                  </span>
+                </span>
+              )}
             </Link>
 
             {/* Accessories trigger */}
@@ -1131,8 +1166,19 @@ export default function Header({
                       <Link to="/offers" onClick={closeMenus}>
                         Offers
                       </Link>
-                      <Link to="/auction" onClick={closeMenus}>
-                        Auction
+                      <Link to="/auction" onClick={closeMenus} className="flex items-center justify-between">
+                        <span>Auction</span>
+                        {hasLiveAuction && (
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-500/15 border border-red-500/30">
+                            <span className="relative flex h-1.5 w-1.5">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+                            </span>
+                            <span className="text-[10px] font-black uppercase tracking-wider text-red-400">
+                              LIVE
+                            </span>
+                          </span>
+                        )}
                       </Link>
                       <a role="button" className="flex items-center justify-between w-full text-left text-[#f0cf76] cursor-pointer" onClick={() => pushNav('accessories')}>
                         <span>Accessories</span><ChevronRight size={16} className="text-[#666]"/>

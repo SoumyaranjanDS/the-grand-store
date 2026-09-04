@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
   Landmark, ShieldCheck, CheckCircle2, AlertCircle, Loader2, 
   Copy, Edit2, Save, X, Info, Crown, Sparkles, ArrowRight, Lock
@@ -8,11 +9,13 @@ import { useAuth } from '../../context/AuthContext';
 import BidderVerificationModal from '../../components/modals/BidderVerificationModal';
 
 export default function CustomerBankDetails() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [message, setMessage] = useState(null);
+  const [settings, setSettings] = useState(null);
   
   // Bank Account State
   const [bankDetails, setBankDetails] = useState({
@@ -29,10 +32,15 @@ export default function CustomerBankDetails() {
 
   const fetchBankingData = async () => {
     try {
-      const [bankRes, bidderRes] = await Promise.allSettled([
+      const [bankRes, bidderRes, settingsRes] = await Promise.allSettled([
         api.get('/auth/banking'),
-        api.get('/auction/bidder/status')
+        api.get('/auction/bidder/status'),
+        api.get('/settings/public')
       ]);
+
+      if (settingsRes.status === 'fulfilled' && settingsRes.value.data) {
+        setSettings(settingsRes.value.data);
+      }
 
       if (bankRes.status === 'fulfilled' && bankRes.value.data?.bankAccountDetails) {
         const b = bankRes.value.data.bankAccountDetails;
@@ -345,28 +353,40 @@ export default function CustomerBankDetails() {
           </span>
         </div>
 
-        <p className="text-xs text-white/60 leading-relaxed font-light">
-          {bidderProfile?.bidderDepositStatus === 'paid' ? (
-            <>
-              Your refundable security deposit of <strong>R{(bidderProfile.bidderDepositAmount || 5000).toLocaleString()}</strong> is currently held in Grand Store's protected escrow account. This unlocks VIP reserve bidding up to <strong>R{(bidderProfile.biddingLimit || 250000).toLocaleString()}+</strong>. Whenever you request a refund or auctions conclude, funds will be returned to your bank account above.
-            </>
-          ) : (
-            <>
-              Standard bidders have a default bidding limit of R25,000. By placing an R5,000 security deposit (100% refundable back to your bank account above), you unlock VIP bidding privileges up to R250,000+.
-            </>
-          )}
-        </p>
+        {(() => {
+          const depositAmount = settings?.auctionPremiumDepositAmount !== undefined 
+            ? settings.auctionPremiumDepositAmount 
+            : 5000;
+          const standardLimit = settings?.auctionStandardBiddingLimit || 25000;
+          const premiumLimit = settings?.auctionPremiumBiddingLimit || 250000;
 
-        {bidderProfile?.bidderLevel !== 'level_3_enhanced' && bidderProfile?.bidderLevel !== 'level_4_vip' && (
-          <div className="pt-2">
-            <button
-              onClick={() => setVipModalOpen(true)}
-              className="py-2.5 px-5 bg-gold-gradient text-black font-bold uppercase tracking-wider text-xs rounded-xl hover:brightness-110 transition-all inline-flex items-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(212,175,55,0.25)]"
-            >
-              <Crown size={14} /> Upgrade to VIP Bidding (R5,000 Deposit) <ArrowRight size={14} />
-            </button>
-          </div>
-        )}
+          return (
+            <>
+              <p className="text-xs text-white/60 leading-relaxed font-light">
+                {bidderProfile?.bidderDepositStatus === 'paid' ? (
+                  <>
+                    Your refundable security deposit of <strong>R{(bidderProfile.bidderDepositAmount || depositAmount).toLocaleString()}</strong> is currently held in Grand Store's protected escrow account. This unlocks VIP reserve bidding up to <strong>R{(bidderProfile.biddingLimit || premiumLimit).toLocaleString()}+</strong>. Whenever you request a refund or auctions conclude, funds will be returned to your bank account above.
+                  </>
+                ) : (
+                  <>
+                    Standard bidders have a default bidding limit of R{standardLimit.toLocaleString()}. By placing an R{depositAmount.toLocaleString()} security deposit (100% refundable back to your bank account above), you unlock VIP bidding privileges up to R{premiumLimit.toLocaleString()}+.
+                  </>
+                )}
+              </p>
+
+              {bidderProfile?.bidderLevel !== 'level_3_enhanced' && bidderProfile?.bidderLevel !== 'level_4_vip' && (
+                <div className="pt-2">
+                  <button
+                    onClick={() => navigate('/auction/vip-checkout')}
+                    className="py-2.5 px-5 bg-gold-gradient text-black font-bold uppercase tracking-wider text-xs rounded-xl hover:brightness-110 transition-all inline-flex items-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(212,175,55,0.25)]"
+                  >
+                    <Crown size={14} /> Upgrade to VIP Bidding (R{depositAmount.toLocaleString()} Deposit) <ArrowRight size={14} />
+                  </button>
+                </div>
+              )}
+            </>
+          );
+        })()}
       </section>
 
       {/* VIP Upgrade Modal */}

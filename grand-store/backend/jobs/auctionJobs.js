@@ -26,13 +26,36 @@ const startAuctionCronJobs = () => {
         }
       }
 
-      // 2. Start only upcoming auctions that still have a valid future end time.
-      const startedLots = await AuctionLot.updateMany(
-        { status: 'upcoming', startDate: { $lte: now }, endDate: { $gt: now } },
-        { $set: { status: 'live' } }
-      );
-      if (startedLots.modifiedCount > 0) {
-        console.log(`Started ${startedLots.modifiedCount} upcoming auctions.`);
+      // 2. Start only upcoming auctions that still have a valid future end time and notify all users
+      const upcomingToLive = await AuctionLot.find({
+        status: 'upcoming',
+        startDate: { $lte: now },
+        endDate: { $gt: now }
+      });
+
+      if (upcomingToLive.length > 0) {
+        const User = require('../models/User');
+        const Notification = require('../models/Notification');
+        const users = await User.find({ isEmailVerified: true }).select('_id');
+
+        for (const lot of upcomingToLive) {
+          lot.status = 'live';
+          await lot.save();
+          console.log(`Started upcoming auction: Lot ${lot.lotNumber || ''} (${lot.title})`);
+
+          if (users.length > 0) {
+            const notifs = users.map(u => ({
+              recipient: u._id,
+              recipientType: 'customer',
+              title: `🔥 Auction Now Live: ${lot.title}`,
+              message: `The bidding floor for Lot ${lot.lotNumber ? `#${lot.lotNumber}` : ''} ("${lot.title}") is officially open! Place your opening offer now.`,
+              type: 'auction',
+              link: `/auction/${lot._id}`,
+              metadata: { lotId: lot._id }
+            }));
+            await Notification.insertMany(notifs).catch(e => console.error('Failed to dispatch lot live notifications:', e));
+          }
+        }
       }
     } catch (error) {
       console.error('Error running auction cron job:', error.message);

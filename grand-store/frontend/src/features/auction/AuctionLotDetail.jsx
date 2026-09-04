@@ -2,11 +2,31 @@ import Price from '../../components/ui/Price';
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../../api';
-import { ChevronLeft, ShieldCheck, Clock, History, AlertCircle, ArrowRight, Play, Video, Film, Image as ImageIcon, Crown, ChevronDown, Check } from 'lucide-react';
+import { 
+  ChevronLeft, ShieldCheck, Clock, History, AlertCircle, ArrowRight, 
+  Play, Video, Film, Image as ImageIcon, Crown, ChevronDown, Check, 
+  Award, Trophy, Sparkles, Gem, Shield, CheckCircle2, Gavel 
+} from 'lucide-react';
 import AuctionCountdown from './AuctionCountdown';
 import BidConfirmationModal from '../../components/modals/BidConfirmationModal';
 import BidderVerificationModal from '../../components/modals/BidderVerificationModal';
+import GoldenCelebrationShower from './GoldenCelebrationShower';
+import MagicalBidEffect from './MagicalBidEffect';
 import { useCurrency } from '../../context/CurrencyContext';
+
+const formatRelativeTime = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffSec = Math.floor((now - date) / 1000);
+  if (diffSec < 45) return 'Just now';
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHours = Math.floor(diffMin / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays}d ago`;
+};
 
 const getEmbedVideoUrl = (url) => {
   if (!url) return null;
@@ -35,6 +55,8 @@ export default function AuctionLotDetail({ onNotify }) {
   const [submitting, setSubmitting] = useState(false);
   const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
   const [confirmedZarAmount, setConfirmedZarAmount] = useState(0);
+  const [showMagicalBid, setShowMagicalBid] = useState(false);
+  const [lastBidAmount, setLastBidAmount] = useState(0);
 
   const { currency, rates, changeCurrency, availableCurrencies } = useCurrency();
 
@@ -194,6 +216,8 @@ export default function AuctionLotDetail({ onNotify }) {
       });
       
       onNotify(res.data.message || 'Bid placed successfully!');
+      setLastBidAmount(confirmedZarAmount);
+      setShowMagicalBid(true);
       await fetchLot(); // Instant UI update of both price and bids array
       setModalOpen(false);
       setBidAmount('');
@@ -471,7 +495,7 @@ export default function AuctionLotDetail({ onNotify }) {
                             {bidderProfile.bidderLevel !== 'level_3_enhanced' && bidderProfile.bidderLevel !== 'level_4_vip' && (
                               <button
                                 type="button"
-                                onClick={() => setVerificationModalOpen(true)}
+                                onClick={() => navigate('/auction/vip-checkout')}
                                 className="px-2 py-0.5 bg-gold-gradient text-black font-bold uppercase tracking-wider text-[10px] rounded hover:brightness-110 flex items-center gap-1 cursor-pointer transition-all shadow-[0_0_10px_rgba(212,175,55,0.25)]"
                               >
                                 <Crown size={11} /> Upgrade to VIP
@@ -602,33 +626,101 @@ export default function AuctionLotDetail({ onNotify }) {
                ) : (
                   <div className="flex flex-col gap-6">
                     {lot.status === 'sold' && isWinner ? (
-                      <div className="border border-[var(--color-gold)] p-8 bg-[var(--color-gold)]/5">
-                        <div className="flex items-center gap-3 mb-6">
-                           <span className="text-2xl">🎉</span>
-                           <h3 className="text-xl font-serif text-[var(--color-gold)]">CONGRATULATIONS</h3>
-                        </div>
-                        <p className="text-lg text-white mb-6">YOU WON LOT {lot.lotNumber || lot._id.slice(-6).toUpperCase()}</p>
-                        
-                        <div className="space-y-3 font-mono text-sm text-[var(--color-ivory-muted)] border-t border-b border-white/10 py-6 mb-6">
-                          <div className="flex justify-between"><span>Winning Bid:</span> <span><Price amount={lot.winningBid} /></span></div>
-                          <div className="flex justify-between"><span>Buyer Premium:</span> <span><Price amount={lot.buyerPremiumAmount} /></span></div>
-                          <div className="flex justify-between"><span>BAR Charge:</span> <span><Price amount={lot.barChargeAmount} /></span></div>
-                          <div className="flex justify-between"><span>VAT ({lot.vatPct}%):</span> <span><Price amount={lot.vatAmount} /></span></div>
-                          <div className="flex justify-between"><span>Shipping:</span> <span>{lot.shippingCost ? <Price amount={lot.shippingCost} /> : 'TBD at Checkout'}</span></div>
+                      <div className="relative overflow-hidden rounded-2xl border border-[var(--color-gold)]/60 bg-gradient-to-b from-[#181308] via-[#0d0d0d] to-[#080808] p-6 sm:p-8 shadow-[0_0_50px_rgba(212,175,55,0.22)]">
+                        {/* Regal Background Ambient Aura */}
+                        <div className="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-[var(--color-gold)]/10 blur-3xl pointer-events-none" />
+                        <div className="absolute -left-12 -bottom-12 w-48 h-48 rounded-full bg-[var(--color-gold)]/10 blur-3xl pointer-events-none" />
+
+                        {/* Certificate Header Banner */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-[var(--color-gold)]/20">
+                          <div className="flex items-center gap-4">
+                            <div className="relative w-13 h-13 rounded-2xl bg-gradient-to-br from-[#f9e295] via-[#d4af37] to-[#8a6d1c] p-0.5 shadow-[0_0_25px_rgba(212,175,55,0.45)] shrink-0">
+                              <div className="w-full h-full rounded-2xl bg-black flex items-center justify-center">
+                                <Award className="text-[#f9e295] animate-pulse" size={26} />
+                              </div>
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-[10px] font-mono tracking-widest uppercase text-[#f9e295] bg-[#d4af37]/15 px-2 py-0.5 rounded border border-[#d4af37]/30">
+                                  Official Imperial Award
+                                </span>
+                                <span className="text-[10px] font-mono tracking-wider text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 flex items-center gap-1">
+                                  <Shield size={10} /> Verified Winner
+                                </span>
+                              </div>
+                              <h3 className="text-xl sm:text-2xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-[#fff4cc] via-[#f5d77f] to-[#d4af37] font-bold mt-1">
+                                Certificate of Acquisition
+                              </h3>
+                            </div>
+                          </div>
+                          
+                          <div className="text-left sm:text-right shrink-0">
+                            <span className="text-[10px] uppercase font-mono tracking-widest text-[var(--color-ivory-muted)] block">
+                              Registry Ref
+                            </span>
+                            <span className="font-mono text-xs text-[#f9e295] font-bold">
+                              LOT #{lot.lotNumber || lot._id.slice(-6).toUpperCase()}
+                            </span>
+                          </div>
                         </div>
 
-                        <div className="flex justify-between items-center text-[var(--color-ivory)] mb-8">
-                           <span className="text-sm uppercase tracking-widest font-bold">Total Payable</span>
-                           <span className="text-2xl font-serif"><Price amount={lot.totalPaidByBuyer} /></span>
+                        {/* Distinguished Patron Greeting */}
+                        <div className="py-4">
+                          <p className="text-xs sm:text-sm font-light text-[#e7ddcb] leading-relaxed">
+                            Distinguished Patron, the auction gavel has officially fallen in your favor. Ownership of this singular piece has been awarded to your registered vault account.
+                          </p>
                         </div>
 
+                        {/* Christie's / Sotheby's style Official Settlement Ledger */}
+                        <div className="rounded-xl bg-black/60 border border-white/10 p-5 space-y-2.5 font-mono text-xs text-[var(--color-ivory-muted)] mb-6">
+                          <div className="flex justify-between items-center text-white/80 pb-2 border-b border-white/5">
+                            <span className="uppercase tracking-wider text-[11px] text-[#f9e295] font-sans font-bold">Settlement Statement</span>
+                            <span className="text-[10px] text-white/40">ZAR CURRENCY VAULT</span>
+                          </div>
+                          <div className="flex justify-between items-center pt-1">
+                            <span className="text-[var(--color-ivory)]">Winning Hammer Bid</span>
+                            <span className="text-white font-bold"><Price amount={lot.winningBid} /></span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span>Buyer's Premium</span>
+                            <span><Price amount={lot.buyerPremiumAmount} /></span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span>B.A.R. Vault Surcharge</span>
+                            <span><Price amount={lot.barChargeAmount} /></span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span>VAT ({lot.vatPct}%)</span>
+                            <span><Price amount={lot.vatAmount} /></span>
+                          </div>
+                          <div className="flex justify-between items-center pb-1">
+                            <span>White-Glove Courier Logistics</span>
+                            <span className="text-[#f9e295]">{lot.shippingCost ? <Price amount={lot.shippingCost} /> : 'Calculated at Checkout'}</span>
+                          </div>
+                          <div className="pt-3 border-t border-[var(--color-gold)]/20 flex justify-between items-baseline text-[var(--color-ivory)]">
+                            <div className="flex flex-col">
+                              <span className="text-[11px] uppercase tracking-widest font-bold text-[#f9e295]">Net Acquisition Sum</span>
+                              <span className="text-[10px] text-white/40 font-sans">Full taxes & premium included</span>
+                            </div>
+                            <span className="text-2xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#ffffff] via-[#f5d77f] to-[#d4af37]">
+                              <Price amount={lot.totalPaidByBuyer} />
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Action CTA */}
                         {lot.paymentStatus === 'Paid' ? (
-                          <div className="w-full bg-green-500/20 text-green-400 font-bold uppercase tracking-widest text-xs py-5 text-center border border-green-500/50">
-                            Paid Successfully
+                          <div className="w-full bg-emerald-500/15 text-emerald-400 font-bold uppercase tracking-widest text-xs py-4 px-6 rounded-xl text-center border border-emerald-500/40 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                            <CheckCircle2 size={18} /> Acquisition Settled • Logistics In Preparation
                           </div>
                         ) : (
-                          <Link to={`/auction/checkout/${lot._id}`} className="block w-full bg-gold-gradient text-black font-bold uppercase tracking-widest text-xs py-5 text-center hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all">
-                            Complete Checkout Now
+                          <Link 
+                            to={`/auction/checkout/${lot._id}`} 
+                            className="group relative flex items-center justify-center gap-3 w-full bg-gradient-to-r from-[#ffd700] via-[#f5d77f] to-[#d4af37] text-black font-black uppercase tracking-widest text-xs py-4 px-6 rounded-xl hover:shadow-[0_0_35px_rgba(212,175,55,0.6)] hover:scale-[1.01] transition-all cursor-pointer"
+                          >
+                            <Sparkles size={16} className="text-black/80" />
+                            <span>Claim Lot & Complete Settlement</span>
+                            <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform text-black/80" />
                           </Link>
                         )}
                       </div>
@@ -740,7 +832,7 @@ export default function AuctionLotDetail({ onNotify }) {
                  </p>
                </div>
                <div className="col-span-1 sm:col-span-2 bg-[#050505] p-6 flex items-center gap-4 border-t border-white/[0.05]">
-                 <ShieldCheck className="text-[var(--color-gold)]" size={24} />
+               <ShieldCheck className="text-[var(--color-gold)]" size={24} />
                  <div>
                    <p className="text-[10px] uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1 font-bold">Offered By</p>
                    <p className="text-sm font-medium text-[var(--color-gold)]">{vendorName}</p>
@@ -748,31 +840,110 @@ export default function AuctionLotDetail({ onNotify }) {
                </div>
             </div>
 
-            {/* Bid History */}
-            <div>
-               <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/[0.05]">
-                 <h3 className="font-serif text-2xl text-[var(--color-ivory)]">Bid History</h3>
-                 <History className="text-[var(--color-ivory-muted)]" size={20} />
+            {/* Verified Bid Ledger */}
+            <div className="mt-12 pt-8 border-t border-white/[0.08]">
+               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-white/[0.08]">
+                 <div>
+                   <div className="flex items-center gap-2.5">
+                     <h3 className="font-serif text-2xl text-[var(--color-ivory)]">Verified Bid Ledger</h3>
+                     {bids.length > 0 && (
+                       <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-mono uppercase tracking-widest font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                         Live
+                       </span>
+                     )}
+                   </div>
+                   <p className="text-xs text-[var(--color-ivory-muted)] font-light mt-0.5">
+                     Real-time cryptographic record of all certified auction bids
+                   </p>
+                 </div>
+                 <div className="flex items-center gap-2 text-xs font-mono text-[var(--color-ivory-muted)]">
+                   <History size={16} className="text-[var(--color-gold)]" />
+                   <span>{bids.length} {bids.length === 1 ? 'Recorded Bid' : 'Recorded Bids'}</span>
+                 </div>
                </div>
                
                <div>
                  {bids.length > 0 ? (
-                    <div className="flex flex-col gap-2">
-                      {bids.map((bid, i) => (
-                        <div key={bid._id} className="flex items-center justify-between py-4 border-b border-white/[0.02]">
-                          <div className="flex items-center gap-4">
-                            <span className="text-[10px] text-[var(--color-ivory-muted)] font-mono w-6">#{bids.length - i}</span>
-                            <span className="text-sm font-light text-[var(--color-ivory)]">
-                              {bid.bidderNumber || bid.bidder || 'Verified Bidder'}
-                            </span>
+                    <div className="flex flex-col gap-2.5">
+                      {bids.map((bid, i) => {
+                        const isLeading = i === 0;
+                        const isUser = bid.isUserBid || (user && bid.user && (user._id === (typeof bid.user === 'object' ? bid.user._id : bid.user)));
+                        
+                        return (
+                          <div 
+                            key={bid._id || i} 
+                            className={`relative overflow-hidden rounded-xl transition-all duration-300 ${
+                              isLeading 
+                                ? 'bg-gradient-to-r from-[#d4af37]/20 via-[#d4af37]/5 to-black/60 border border-[var(--color-gold)]/60 shadow-[0_0_20px_rgba(212,175,55,0.18)] p-4 sm:p-5' 
+                                : isUser
+                                ? 'bg-emerald-500/5 border border-emerald-500/30 p-3.5 sm:p-4'
+                                : 'bg-black/30 hover:bg-white/[0.02] border border-white/[0.05] p-3.5 sm:p-4'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-3">
+                              {/* Left: Rank & Bidder */}
+                              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                                <div className="flex items-center justify-center shrink-0">
+                                  {isLeading ? (
+                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#f9e295] to-[#b8860b] p-0.5 shadow-[0_0_10px_rgba(212,175,55,0.4)] flex items-center justify-center">
+                                      <div className="w-full h-full bg-black/90 rounded-[6px] flex items-center justify-center">
+                                        <Crown size={15} className="text-[#f9e295]" />
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <span className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[10px] text-[var(--color-ivory-muted)] font-mono">
+                                      #{i + 1}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className={`text-sm font-medium tracking-wide truncate ${isLeading ? 'text-white font-semibold' : 'text-[var(--color-ivory)]'}`}>
+                                      {bid.bidderNumber || bid.bidder || 'Verified Collector'}
+                                    </span>
+                                    {isLeading && (
+                                      <span className="px-2 py-0.5 rounded-full text-[9px] font-mono uppercase tracking-wider font-bold bg-[#d4af37]/20 text-[#f9e295] border border-[#d4af37]/40 flex items-center gap-1">
+                                        <Sparkles size={9} /> High Bidder
+                                      </span>
+                                    )}
+                                    {isUser && (
+                                      <span className="px-2 py-0.5 rounded-full text-[9px] font-mono uppercase tracking-wider font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+                                        Your Bid
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="text-[11px] font-mono text-[var(--color-ivory-muted)] block mt-0.5">
+                                    {formatRelativeTime(bid.createdAt || bid.time)}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Right: Price */}
+                              <div className="text-right shrink-0">
+                                <div className={`font-mono text-base sm:text-lg font-bold ${isLeading ? 'text-transparent bg-clip-text bg-gradient-to-r from-[#fff4cc] via-[#f5d77f] to-[#d4af37]' : 'text-[var(--color-ivory)]'}`}>
+                                  <Price amount={bid.amount} />
+                                </div>
+                                {isLeading && (
+                                  <span className="text-[9px] font-mono tracking-widest uppercase text-[#f9e295]/80 block">
+                                    Leading Position
+                                  </span>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                          <span className="font-mono text-sm text-[var(--color-ivory)]"><Price amount={bid.amount} /></span>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                  ) : (
-                    <div className="py-8 text-sm font-light text-[var(--color-ivory-muted)]">
-                      No bids have been recorded. Be the first to acquire this lot.
+                    <div className="py-12 px-6 rounded-2xl border border-white/[0.06] bg-black/40 text-center flex flex-col items-center justify-center">
+                      <div className="w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center mb-3">
+                        <Gavel size={24} className="text-[var(--color-gold)] opacity-70" />
+                      </div>
+                      <h4 className="font-serif text-lg text-white mb-1">No Bids Recorded Yet</h4>
+                      <p className="text-xs font-light text-[var(--color-ivory-muted)] max-w-sm">
+                        Be the discerning collector to place the inaugural opening bid on this singular lot.
+                      </p>
                     </div>
                  )}
                </div>
@@ -781,6 +952,20 @@ export default function AuctionLotDetail({ onNotify }) {
           </div>
         </div>
       </div>
+
+      {/* Golden Celebration Shower for Auction Winner */}
+      {lot.status === 'sold' && isWinner && (
+        <GoldenCelebrationShower duration={8000} />
+      )}
+
+      {/* Magical Bid Effect with Audio Synthesizer */}
+      {showMagicalBid && (
+        <MagicalBidEffect
+          amount={lastBidAmount || confirmedZarAmount}
+          lotTitle={lot.title}
+          onFinished={() => setShowMagicalBid(false)}
+        />
+      )}
 
       <BidConfirmationModal 
         isOpen={modalOpen} 

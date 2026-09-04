@@ -2,8 +2,9 @@ const crypto = require('crypto');
 const Order = require('../models/Order');
 const AuctionLot = require('../models/AuctionLot');
 const Booking = require('../models/Booking');
+const BidderDeposit = require('../models/BidderDeposit');
 const { processOrderPayment } = require('./orderController');
-const { processAuctionPayment } = require('./auctionController');
+const { processAuctionPayment, processBidderDepositPayment } = require('./auctionController');
 const { processEventPayment } = require('./eventControllerV2');
 const { processVendorPayment } = require('./vendorController');
 
@@ -230,6 +231,48 @@ exports.generateVendorPayment = async (req, res) => {
   }
 };
 
+// @desc    Generate PayFast payload for a VIP Bidding Refundable Deposit
+// @route   POST /api/payfast/generate-deposit
+// @access  Private
+exports.generateDepositPayment = async (req, res) => {
+  try {
+    const { depositId } = req.body;
+    const deposit = await BidderDeposit.findById(depositId).populate('bidder', 'name email');
+
+    if (!deposit) return res.status(404).json({ message: 'Deposit record not found' });
+    if (deposit.paymentStatus === 'paid') return res.status(400).json({ message: 'Deposit already paid' });
+    if (deposit.bidder._id.toString() !== req.user._id.toString()) {
+       return res.status(403).json({ message: 'Only the account holder can pay for this deposit' });
+    }
+
+    const config = getPayfastConfig();
+    const frontendUrl = getFrontendUrl(req);
+    const backendUrl = getBackendUrl(req);
+
+    const data = {
+      merchant_id: config.merchant_id,
+      merchant_key: config.merchant_key,
+      return_url: `${frontendUrl}/auction/vip-checkout?payment=success&ref=${deposit._id}`,
+      cancel_url: `${frontendUrl}/auction/vip-checkout?payment=cancel&ref=${deposit._id}`,
+      notify_url: `${backendUrl}/api/payfast/itn`,
+      name_first: deposit.bidder.name.split(' ')[0],
+      name_last: deposit.bidder.name.split(' ').slice(1).join(' ') || 'Patron',
+      email_address: deposit.bidder.email,
+      m_payment_id: `DEP-${deposit._id}`,
+      amount: deposit.amount.toFixed(2),
+      item_name: 'VIP Auction Bidding Refundable Guarantee Deposit'
+    };
+
+    const signature = generateSignature(data, config.passphrase);
+    data.signature = signature;
+
+    res.json({ url: config.url, data });
+  } catch (error) {
+    console.error('Error generating PayFast deposit payment:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 // @desc    Handle PayFast ITN Webhook
 // @route   POST /api/payfast/itn
 // @access  Public
@@ -298,6 +341,10 @@ exports.itnWebhook = async (req, res) => {
           const vendorId = reference.replace('VND-', '');
           await processVendorPayment(vendorId);
           console.log(`Successfully processed vendor payment for ${vendorId}`);
+       } else if (reference.startsWith('DEP-')) {
+          const depositId = reference.replace('DEP-', '');
+          await processBidderDepositPayment(depositId, payload.pf_payment_id);
+          console.log(`Successfully processed VIP bidder deposit payment for ${depositId}`);
        }
     }
 

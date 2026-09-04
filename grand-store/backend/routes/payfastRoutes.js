@@ -5,6 +5,7 @@ const { protect } = require('../middleware/authMiddleware');
 
 router.post('/generate-shop', protect, payfastController.generateShopPayment);
 router.post('/generate-auction', protect, payfastController.generateAuctionPayment);
+router.post('/generate-deposit', protect, payfastController.generateDepositPayment);
 router.post('/generate-event', protect, payfastController.generateEventPayment);
 router.post('/generate-vendor', protect, payfastController.generateVendorPayment);
 // PayFast posts ITNs as application/x-www-form-urlencoded form data, not JSON.

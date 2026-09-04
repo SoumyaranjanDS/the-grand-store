@@ -62,6 +62,20 @@ exports.getAuctionLots = async (req, res) => {
   }
 };
 
+// PUBLIC: Check if any auctions are currently live
+exports.getLiveAuctionStatus = async (req, res) => {
+  try {
+    const liveCount = await AuctionLot.countDocuments({
+      status: { $in: ['live', 'extended'] },
+      startDate: { $lte: new Date() },
+      endDate: { $gt: new Date() }
+    });
+    res.json({ hasLiveAuction: liveCount > 0, liveCount });
+  } catch (error) {
+    res.status(500).json({ hasLiveAuction: false, error: error.message });
+  }
+};
+
 // PUBLIC: Get a specific lot (with optional auth for admin/vendor visibility)
 exports.getLotDetails = async (req, res) => {
   try {
@@ -85,7 +99,7 @@ exports.getLotDetails = async (req, res) => {
     // Fetch top bids
     const bids = await Bid.find({ lot: lot._id, isMaxBid: false })
       .sort({ amount: -1 })
-      .limit(10)
+      .limit(15)
       .populate('user', 'name email');
 
     // Return sanitized bid info
@@ -102,7 +116,8 @@ exports.getLotDetails = async (req, res) => {
         time: b.createdAt,
         bidder: canSeeDetails 
           ? (b.user ? `${b.user.name} (${b.user.email})` : 'Deleted User') 
-          : (b.user ? `Bidder #${b.user._id.toString().substring(18)}` : 'Deleted User')
+          : (b.user ? `Bidder #${b.user._id.toString().substring(18)}` : 'Deleted User'),
+        isUserBid: currentUser && b.user ? (b.user._id.toString() === currentUser._id.toString()) : false
       };
     });
 
@@ -199,6 +214,7 @@ exports.placeBid = async (req, res) => {
       return res.status(400).json({ message: `Minimum bid must be at least R${nextMinimum.toLocaleString()}`, nextMinimum });
     }
 
+    const previousHighBidder = lot.highBidder;
     const bidderHandle = req.user.bidderNumber || `Bidder GS-${String(req.user._id).slice(-4).toUpperCase()}`;
 
     // Max / Proxy Bid Logic
@@ -367,6 +383,34 @@ exports.placeBid = async (req, res) => {
     }
 
     await lot.save();
+
+    // In-App Notifications: Outbid alert & Leading bid confirmation
+    try {
+      const { createInAppNotification } = require('./notificationController');
+      if (previousHighBidder && previousHighBidder.toString() !== winningUserId.toString()) {
+        createInAppNotification({
+          recipient: previousHighBidder,
+          recipientType: 'customer',
+          title: `⚠️ Outbid Alert: Lot ${lot.lotNumber || ''}`,
+          message: `You have been outbid on "${lot.title}". The leading bid is now R${lot.currentBid.toLocaleString('en-ZA')}. Retake the lead before time expires!`,
+          type: 'auction',
+          link: `/auction/${lot._id}`,
+          metadata: { lotId: lot._id, currentBid: lot.currentBid }
+        }).catch(err => console.error('Outbid notification failed:', err));
+      }
+
+      createInAppNotification({
+        recipient: winningUserId,
+        recipientType: 'customer',
+        title: `👑 Leading Bid Confirmed: Lot ${lot.lotNumber || ''}`,
+        message: `Your bid of R${lot.currentBid.toLocaleString('en-ZA')} on "${lot.title}" is currently holding the leading position!`,
+        type: 'auction',
+        link: `/auction/${lot._id}`,
+        metadata: { lotId: lot._id, currentBid: lot.currentBid }
+      }).catch(err => console.error('Bid confirmation notification failed:', err));
+    } catch (e) {
+      console.error('Error creating bid notifications:', e);
+    }
 
     await logAuctionEvent({
       lotId: lot._id,
@@ -719,6 +763,21 @@ const closeAuctionInternal = async (lotId) => {
 
   await lot.save();
 
+  try {
+    const { createInAppNotification } = require('./notificationController');
+    createInAppNotification({
+      recipient: winningBidDoc.user._id,
+      recipientType: 'customer',
+      title: `🏆 You Won Lot ${lot.lotNumber || ''}: ${lot.title}`,
+      message: `Congratulations! You won "${lot.title}" with a hammer bid of R${winningBid.toLocaleString('en-ZA')}. Proceed to checkout to settle and secure vault delivery.`,
+      type: 'auction',
+      link: `/auction/checkout/${lot._id}`,
+      metadata: { lotId: lot._id, orderId }
+    }).catch(err => console.error('Winner notification failed:', err));
+  } catch (e) {
+    console.error('Failed to create winner notification:', e);
+  }
+
   // Create Order
   const order = new Order({
     user: winningBidDoc.user._id,
@@ -992,6 +1051,45 @@ exports.processAuctionPayment = async (lotId) => {
   }
 
   await lot.save();
+  return true;
+};
+
+// Process Bidder VIP Refundable Deposit Payment (from PayFast ITN or Admin approval)
+exports.processBidderDepositPayment = async (depositId, gatewayTransactionId) => {
+  const BidderDeposit = require('../models/BidderDeposit');
+  const deposit = await BidderDeposit.findById(depositId);
+  if (!deposit) throw new Error('Deposit record not found');
+  if (deposit.paymentStatus === 'paid') return true;
+
+  deposit.paymentStatus = 'paid';
+  if (gatewayTransactionId) {
+    deposit.paymentReference = gatewayTransactionId;
+  }
+  await deposit.save();
+
+  const settings = await PlatformSettings.findOne();
+  const vipLimit = settings?.auctionPremiumBiddingLimit || 250000;
+
+  const user = await User.findById(deposit.bidder);
+  if (user) {
+    user.bidderDepositStatus = 'paid';
+    user.bidderDepositAmount = deposit.amount;
+    user.bidderLevel = 'level_4_vip';
+    user.biddingLimit = Math.max(user.biddingLimit || 0, vipLimit);
+    await user.save();
+
+    try {
+      await Notification.create({
+        user: user._id,
+        type: 'auction',
+        title: '👑 VIP Bidding Privileges Activated!',
+        message: `Your refundable deposit of R${deposit.amount.toLocaleString()} is confirmed. Your VIP bidding limit of R${vipLimit.toLocaleString()} is now active.`,
+        link: '/customer/auctions'
+      });
+    } catch (nErr) {
+      console.error('Notification error on deposit confirmation:', nErr);
+    }
+  }
   return true;
 };
 

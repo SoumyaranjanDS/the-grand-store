@@ -50,6 +50,7 @@ import ShopPage from './features/shop/ShopPage'
 import AuctionPage from './features/auction/AuctionPage'
 import AuctionLotDetail from './features/auction/AuctionLotDetail'
 import AuctionCheckout from './features/auction/AuctionCheckout'
+import AuctionVipCheckout from './features/auction/AuctionVipCheckout'
 import AdminAuctionPanel from './features/admin/AdminAuctionPanel'
 import AdminEventsPanel from './features/admin/AdminEventsPanel'
 import TastingPage from './features/tasting/TastingPage'
@@ -813,6 +814,14 @@ function App() {
         <Route
           path="/auction/checkout/:id"
           element={<AuctionCheckout onNotify={showToast} />}
+        />
+        <Route
+          path="/auction/vip-checkout"
+          element={<AuctionVipCheckout onNotify={showToast} />}
+        />
+        <Route
+          path="/customer/vip-checkout"
+          element={<AuctionVipCheckout onNotify={showToast} />}
         />
         <Route
           path="/estate/:slug"

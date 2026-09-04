@@ -8,6 +8,7 @@ const { protect } = require('../middleware/authMiddleware');
 
 // 1. Static Public
 router.get('/', auctionController.getAuctionLots);
+router.get('/live-status', auctionController.getLiveAuctionStatus);
 
 // 2. Bidder Qualification, Verification & Deposits (Phase 4 & Section 19)
 router.post('/bidder/verify', protect, auctionController.registerBidder);
