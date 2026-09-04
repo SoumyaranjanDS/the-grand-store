@@ -11,7 +11,7 @@ export default function AdminLayout() {
 
   // Allow admin, accountant, and product_manager users
   if (!user || !['admin', 'super_admin', 'accountant', 'product_manager'].includes(user.role)) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/admin/login" replace />;
   }
 
   const isAdmin = user.role === 'admin' || user.role === 'super_admin';
@@ -198,7 +198,7 @@ export default function AdminLayout() {
             )}
 
             <div className="mt-6 pt-6 border-t border-white/[0.05] flex flex-col gap-2">
-              <button onClick={() => { logout(); navigate('/login'); }} className="flex items-center gap-4 px-4 py-3 rounded-xl w-full text-red-400 hover:bg-red-500/10 transition-all text-left text-xs uppercase tracking-widest">
+              <button onClick={() => { logout(); navigate('/admin/login'); }} className="flex items-center gap-4 px-4 py-3 rounded-xl w-full text-red-400 hover:bg-red-500/10 transition-all text-left text-xs uppercase tracking-widest">
                 <LogOut size={16} /> Sign Out
               </button>
             </div>

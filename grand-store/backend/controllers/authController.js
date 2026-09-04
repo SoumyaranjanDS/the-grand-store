@@ -146,8 +146,16 @@ const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && user.password && (await bcrypt.compare(password, user.password))) {
-      const isStaffUser = ['admin', 'super_admin', 'product_manager', 'accountant', 'auction_host'].includes(user.role);
-      if (!user.isEmailVerified && !isStaffUser) {
+      // Disallow administrative accounts on this standard endpoint
+      const adminRoles = ['admin', 'super_admin', 'accountant', 'product_manager'];
+      if (adminRoles.includes(user.role)) {
+        return res.status(403).json({
+          message: 'Administrative accounts cannot sign in here. Please use the dedicated Admin Gateway at /admin/login.'
+        });
+      }
+
+      const isExemptVerification = ['auction_host', 'event_host'].includes(user.role);
+      if (!user.isEmailVerified && !isExemptVerification) {
         return res.status(401).json({ message: 'Please verify your email address before logging in. Check your inbox.' });
       }
       sendTokenResponse(user, 200, res);
@@ -159,6 +167,40 @@ const loginUser = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// @desc    Auth admin / staff user & get token
+// @route   POST /api/auth/admin-login or POST /api/admin/login
+// @access  Public (Administrative Access Only)
+const adminLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Please provide both email and password' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail });
+
+    if (!user || !user.password || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ message: 'Invalid administrative credentials' });
+    }
+
+    // Strict role check: allow only administrative and authorized staff roles
+    const allowedAdminRoles = ['admin', 'super_admin', 'accountant', 'product_manager'];
+    if (!allowedAdminRoles.includes(user.role)) {
+      return res.status(403).json({
+        message: 'Access denied: Administrator privileges required. Customers and vendors must sign in through the main login portal.'
+      });
+    }
+
+    sendTokenResponse(user, 200, res);
+  } catch (error) {
+    console.error('Admin login error:', error);
+    res.status(500).json({ message: 'Server error during administrative authentication' });
+  }
+};
+
 
 // @desc    Verify user email
 // @route   POST /api/auth/verify-email
@@ -415,6 +457,14 @@ const googleAuth = async (req, res) => {
     let user = await User.findOne({ email });
 
     if (user) {
+      // Disallow administrative accounts from logging in via public Google login
+      const adminRoles = ['admin', 'super_admin', 'accountant', 'product_manager'];
+      if (adminRoles.includes(user.role)) {
+        return res.status(403).json({
+          message: 'Administrative accounts cannot sign in via public Google login. Please use the dedicated Admin Gateway at /admin/login.'
+        });
+      }
+
       // If user exists without googleId, link it
       if (!user.googleId) {
         user.googleId = googleId;
@@ -879,6 +929,7 @@ const testBirthdayEmail = async (req, res) => {
 module.exports = {
   registerUser,
   loginUser,
+  adminLogin,
   logoutUser,
   getUserProfile,
   updateUserProfile,

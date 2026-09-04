@@ -97,6 +97,7 @@ import VendorInventory from './features/vendor/VendorInventory'
 import VendorWallet from './features/vendor/VendorWallet'
 import VendorOrders from './features/vendor/VendorOrders'
 import VendorShippingProfile from './features/vendor/VendorShippingProfile'
+import AdminLoginPage from './features/admin/AdminLoginPage'
 import AdminLayout from './features/admin/AdminLayout'
 import AdminDashboard from './features/admin/AdminDashboard'
 import AdminUsers from './features/admin/AdminUsers'
@@ -750,6 +751,8 @@ function App() {
           <Route path="auction-submit" element={<AuctionSubmission onNotify={showToast} />} />
           <Route path="profile" element={<VendorProfile />} />
         </Route>
+
+        <Route path="/admin/login" element={<AdminLoginPage />} />
 
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="dashboard" element={<AdminDashboard />} />

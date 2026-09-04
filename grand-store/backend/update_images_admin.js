@@ -2,7 +2,7 @@ const axios = require('axios');
 
 async function updateImages() {
   try {
-    const loginRes = await axios.post('http://localhost:5000/api/auth/login', {
+    const loginRes = await axios.post('http://localhost:5000/api/auth/admin-login', {
       email: 'crmisa1000@gmail.com',
       password: 'password123'
     });

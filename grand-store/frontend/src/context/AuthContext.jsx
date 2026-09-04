@@ -35,6 +35,19 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const adminLogin = async (email, password) => {
+    try {
+      const res = await api.post(`/auth/admin-login`, { email, password });
+      const data = res.data;
+
+      localStorage.setItem("userInfo", JSON.stringify(data));
+      setUser(data);
+      return data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Administrative login failed");
+    }
+  };
+
   const register = async (name, email, password, referralCode) => {
     try {
       const res = await api.post(`/auth/register`, { name, email, password, referralCode });
@@ -82,7 +95,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, googleLogin, logout, updateUser, refreshUser }}>
+    <AuthContext.Provider value={{ user, login, adminLogin, register, googleLogin, logout, updateUser, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { 
-  registerUser, loginUser, logoutUser, getUserProfile, updateUserProfile, 
+  registerUser, loginUser, adminLogin, logoutUser, getUserProfile, updateUserProfile, 
   deleteUserProfile, googleAuth, getReferralSummary, verifyEmail, 
   forgotPassword, resetPassword, getCustomerBankDetails, updateCustomerBankDetails,
   getCustomerCalendarActivities, testBirthdayEmail
@@ -10,6 +10,7 @@ const { protect } = require('../middleware/authMiddleware');
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
+router.post('/admin-login', adminLogin);
 router.post('/verify-email', verifyEmail);
 router.post('/forgotpassword', forgotPassword);
 router.put('/resetpassword/:token', resetPassword);

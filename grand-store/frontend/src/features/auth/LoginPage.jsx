@@ -87,7 +87,17 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="bg-[#0a0a0a] border-t border-white/10 p-6 md:p-8 rounded-none md:rounded-xl">
           {error && (
             <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
-              {error}
+              <div>{error}</div>
+              {error.includes('/admin/login') && (
+                <div className="mt-2">
+                  <Link
+                    to="/admin/login"
+                    className="inline-flex items-center gap-1 text-xs text-[#d8b76d] hover:underline font-bold uppercase tracking-widest"
+                  >
+                    Open Admin Gateway &rarr;
+                  </Link>
+                </div>
+              )}
             </div>
           )}
 
@@ -187,11 +197,17 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <div className="mt-8 text-center pt-6">
+          <div className="mt-8 text-center pt-6 space-y-3">
             <p className="text-sm text-[var(--color-ivory-muted)]">
               Not a member yet?{' '}
               <Link to={`/register${searchParams.get('redirect') ? `?redirect=${searchParams.get('redirect')}` : ''}`} className="font-bold text-[#d8b76d] hover:text-white transition-colors inline-flex items-center gap-1">
                 Create an Account <ArrowRight size={14} />
+              </Link>
+            </p>
+            <p className="text-xs text-white/30 pt-2 border-t border-white/[0.06]">
+              Store Administrator or Staff?{' '}
+              <Link to="/admin/login" className="text-[#d8b76d]/80 hover:text-[#d8b76d] underline transition-colors">
+                Access Admin Gateway &rarr;
               </Link>
             </p>
           </div>
