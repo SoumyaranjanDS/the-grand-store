@@ -1,0 +1,128 @@
+name: Grand Store CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # =======================================================
+  # 1. CONTINUOUS INTEGRATION: Backend Checks & Tests
+  # =======================================================
+  ci-backend:
+    name: Backend CI (Tests & Lint)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: grand-store/backend
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: grand-store/backend/package-lock.json
+
+      - name: Install Backend Dependencies
+        run: npm ci
+
+      - name: Run Backend Tests
+        run: npm test
+        env:
+          NODE_ENV: test
+          JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-test-jwt-secret-key-12345' }}
+          PAYFAST_PASSPHRASE: ${{ secrets.PAYFAST_PASSPHRASE || 'testpassphrase' }}
+
+  # =======================================================
+  # 2. CONTINUOUS INTEGRATION: Frontend Production Build
+  # =======================================================
+  ci-frontend:
+    name: Frontend CI (Vite Build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: grand-store/frontend
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: grand-store/frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        run: npm ci
+
+      - name: Verify Production Build
+        run: npm run build
+
+  # =======================================================
+  # 3. CONTINUOUS DEPLOYMENT: Deploy to Production VPS
+  # =======================================================
+  deploy-to-vps:
+    name: Deploy to Production Server (191.215.37.241)
+    needs: [ci-backend, ci-frontend]
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Execute Remote SSH Deployment
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          host: ${{ secrets.SERVER_HOST || '191.215.37.241' }}
+          username: ${{ secrets.SERVER_USER || 'root' }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          envs: GITHUB_TOKEN
+          script_stop: true
+          script: |
+            echo "============================================================"
+            echo "🚀 Starting Grand Store Automated Deployment"
+            echo "Date: $(date)"
+            echo "============================================================"
+
+            # Navigate to project repository root on VPS
+            cd /var/www/grandstore-all
+
+            echo "📥 Pulling latest commits from origin/main..."
+            # Authenticate fetch using the GitHub Actions token
+            git pull https://x-access-token:${GITHUB_TOKEN}@github.com/SoumyaranjanDS/the-grand-store.git main
+
+            echo "📦 Installing Backend Dependencies & Reloading PM2..."
+            cd /var/www/grandstore-all/grand-store/backend
+            npm ci --omit=dev
+            pm2 reload grandstore-backend || pm2 restart grandstore-backend
+
+            echo "🎨 Building Frontend..."
+            cd /var/www/grandstore-all/grand-store/frontend
+            npm ci
+            npm run build
+
+            echo "🌐 Testing & Reloading Nginx..."
+            nginx -t
+            systemctl reload nginx
+
+            echo "============================================================"
+            echo "✅ Deployment Finished Successfully!"
+            echo "Grand Store: https://grandstoreglobal.com"
+            echo "API Endpoint: https://api.grandstoreglobal.com"
+            echo "============================================================"
