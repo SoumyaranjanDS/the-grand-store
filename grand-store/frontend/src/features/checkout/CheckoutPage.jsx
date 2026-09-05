@@ -9,6 +9,7 @@ import PostalCodeInput from '../../components/PostalCodeInput';
 import PaymentForm from './PaymentForm';
 import SecurePaymentBadges from '../../components/checkout/SecurePaymentBadges';
 import Price from '../../components/ui/Price';
+import StoreBankDetailsCard from '../../components/StoreBankDetailsCard';
 import api from '../../api';
 
 export default function CheckoutPage({ cartItems, updateCartQuantity, removeFromCart, onClearCart, clearVendorCart, onNotify }) {
@@ -1138,6 +1139,19 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
                       </div>
                     </label>
                   </div>
+
+                  {paymentMethod === 'bank_transfer' && (
+                    <div className="mt-4 animate-fadeIn">
+                      <StoreBankDetailsCard
+                        compact={true}
+                        reference="ORDER-ID-ON-SUBMIT"
+                        referenceLabel="Payment Reference"
+                        title="Official Bank Settlement Account"
+                        subtitle="EFT details will be designated with your unique order reference upon submission"
+                        onNotify={onNotify}
+                      />
+                    </div>
+                  )}
                 </section>
                 
                 <button 
@@ -1168,22 +1182,12 @@ export default function CheckoutPage({ cartItems, updateCartQuantity, removeFrom
                     Please transfer exactly <strong className="text-white"><Price amount={quote?.aggregatedTotals.totalToPay || 0} /></strong> to our bank account.
                   </p>
 
-                  <div className="bg-black/50 border border-white/5 p-6 rounded-xl text-left max-w-sm mx-auto mb-6">
-                    <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">Bank Name</p>
-                    <p className="text-sm text-white mb-3">{quote?.bankDetails?.bankName || 'Standard Bank'}</p>
-                    
-                    <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">Account Name</p>
-                    <p className="text-sm text-white mb-3">{quote?.bankDetails?.accountName || 'The Grand Store PTY LTD'}</p>
-                    
-                    <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">Account Number</p>
-                    <p className="text-sm text-white font-mono mb-3">{quote?.bankDetails?.accountNumber || '0123456789'}</p>
-                    
-                    <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">Branch Code</p>
-                    <p className="text-sm text-white font-mono mb-3">{quote?.bankDetails?.branchCode || '051001'}</p>
-                    
-                    <p className="text-xs text-[var(--color-gold)] uppercase tracking-widest mb-1">Reference</p>
-                    <p className="text-lg text-white font-mono font-bold">{createdOrderId?.slice(-6).toUpperCase()}</p>
-                  </div>
+                  <StoreBankDetailsCard
+                    reference={createdOrderId?.slice(-6).toUpperCase()}
+                    referenceLabel="Order Reference"
+                    className="max-w-xl mx-auto mb-6"
+                    onNotify={onNotify}
+                  />
 
                   <form onSubmit={handleUploadProof} className="max-w-sm mx-auto text-left">
                     <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-2">Proof of Payment URL (Image/PDF)</label>

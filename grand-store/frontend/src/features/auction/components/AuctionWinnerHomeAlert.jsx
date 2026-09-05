@@ -25,10 +25,18 @@ export default function AuctionWinnerHomeAlert() {
         }).catch(() => null);
 
         if (dashRes && dashRes.data && Array.isArray(dashRes.data.wonLots) && dashRes.data.wonLots.length > 0) {
-          // Find the first won lot that is pending payment or newly won
-          const pendingLot = dashRes.data.wonLots.find(
-            (lot) => lot.paymentStatus !== 'Paid' && lot.status === 'sold'
-          ) || dashRes.data.wonLots[0];
+          // Find the first won lot that is genuinely pending initial payment action
+          const pendingLot = dashRes.data.wonLots.find((lot) => {
+            if (lot.status !== 'sold') return false;
+            // Exclude already paid lots
+            if (lot.isPaid || lot.paymentStatus === 'Paid') return false;
+            // Exclude lots where bank transfer / EFT proof is submitted & awaiting approval
+            if (lot.paymentStatus === 'Awaiting_Approval' || lot.proofUrl) return false;
+            // Check if dismissed in localStorage
+            if (localStorage.getItem(`dismissed_auction_win_${lot._id}`)) return false;
+            // Only show for strictly pending unsubmitted lots
+            return lot.paymentStatus === 'Pending';
+          });
 
           if (pendingLot && isMounted) {
             setWinningLot(pendingLot);
@@ -47,11 +55,19 @@ export default function AuctionWinnerHomeAlert() {
           );
           if (winNotif && isMounted) {
             const lotId = winNotif.metadata?.lotId || winNotif.link?.split('/').pop();
-            if (lotId) {
-              // Fetch minimal lot details if needed
+            if (lotId && !localStorage.getItem(`dismissed_auction_win_${lotId}`)) {
+              // Fetch minimal lot details to confirm it's still unpaid and pending
               const lotRes = await api.get(`/auction/${lotId}`).catch(() => null);
-              if (lotRes && lotRes.data && lotRes.data.lot && isMounted) {
-                setWinningLot(lotRes.data.lot);
+              const lot = lotRes?.data?.lot;
+              if (
+                lot &&
+                isMounted &&
+                lot.status === 'sold' &&
+                lot.paymentStatus === 'Pending' &&
+                !lot.isPaid &&
+                !lot.proofUrl
+              ) {
+                setWinningLot(lot);
               }
             }
           }
@@ -75,8 +91,26 @@ export default function AuctionWinnerHomeAlert() {
   const lotNumber = winningLot.lotNumber || winningLot._id?.slice(-6)?.toUpperCase() || 'GS-LOT';
   const lotImage = winningLot.images && winningLot.images.length > 0 ? winningLot.images[0] : null;
 
+  const handleDismiss = () => {
+    setIsDismissed(true);
+    if (winningLot?._id) {
+      try {
+        localStorage.setItem(`dismissed_auction_win_${winningLot._id}`, 'true');
+      } catch (e) {
+        // ignore
+      }
+    }
+  };
+
   const handleGoToLot = () => {
-    navigate(`/auction/${winningLot._id}?celebrate=true`);
+    if (winningLot?._id) {
+      try {
+        localStorage.setItem(`dismissed_auction_win_${winningLot._id}`, 'true');
+      } catch (e) {
+        // ignore
+      }
+      navigate(`/auction/${winningLot._id}?celebrate=true`);
+    }
   };
 
   return (
@@ -137,7 +171,7 @@ export default function AuctionWinnerHomeAlert() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsDismissed(true)}
+                  onClick={handleDismiss}
                   className="w-7 h-7 rounded-full flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-colors"
                   title="Close"
                 >

@@ -57,7 +57,7 @@ export default function ReferralsTab() {
           Refer & Earn <Gift className="text-[var(--color-gold)]" size={28} />
         </h1>
         <p className="text-[var(--color-ivory-muted)] text-md font-light">
-          Share your referral link with friends. They get a welcome discount, and you get rewarded when they make their first purchase!
+          Share your referral link with friends. When they make their first purchase, you receive <strong className="text-[var(--color-gold)]">R{summary?.program?.rewardAmount || 50}</strong> store credit directly to your account!
         </p>
       </section>
 
@@ -88,7 +88,7 @@ export default function ReferralsTab() {
           <div className="flex items-center gap-3 relative z-10 mb-8">
             <span className="text-xs text-[var(--color-ivory-muted)] uppercase tracking-widest mr-2">Share:</span>
             <a 
-              href={`https://wa.me/?text=${encodeURIComponent('Check out The Grand Store! Sign up using my referral link to get a welcome discount: ' + referralLink)}`} 
+              href={`https://wa.me/?text=${encodeURIComponent('Discover exceptional fine wines, spirits, and rare cellar vintages at The Grand Store! Join using my referral link: ' + referralLink)}`} 
               target="_blank" rel="noopener noreferrer" 
               className="w-10 h-10 rounded-full bg-black/60 border border-white/10 flex items-center justify-center text-white/70 hover:bg-[var(--color-gold)] hover:text-black hover:border-[var(--color-gold)] transition-all"
               title="Share on WhatsApp"
@@ -96,7 +96,7 @@ export default function ReferralsTab() {
               <MessageCircle size={18} />
             </a>
             <a 
-              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent('Check out The Grand Store! Sign up using my referral link to get a welcome discount: ')}&url=${encodeURIComponent(referralLink)}`} 
+              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent('Discover exceptional fine wines & spirits at The Grand Store! Join using my link: ')}&url=${encodeURIComponent(referralLink)}`} 
               target="_blank" rel="noopener noreferrer" 
               className="w-10 h-10 rounded-full bg-black/60 border border-white/10 flex items-center justify-center text-white/70 hover:bg-[var(--color-gold)] hover:text-black hover:border-[var(--color-gold)] transition-all font-bold font-serif"
               title="Share on X (Twitter)"
@@ -112,7 +112,7 @@ export default function ReferralsTab() {
               f
             </a>
             <a 
-              href={`mailto:?subject=${encodeURIComponent('Invitation to The Grand Store')}&body=${encodeURIComponent('Hi,\n\nI thought you might like The Grand Store. Sign up using my referral link to get a welcome discount!\n\n' + referralLink)}`} 
+              href={`mailto:?subject=${encodeURIComponent('Exclusive Invitation to The Grand Store')}&body=${encodeURIComponent('Hi,\n\nI invite you to explore South Africa’s premier destination for luxury wines and rare spirits. Sign up using my referral link:\n\n' + referralLink)}`} 
               className="w-10 h-10 rounded-full bg-black/60 border border-white/10 flex items-center justify-center text-white/70 hover:bg-[var(--color-gold)] hover:text-black hover:border-[var(--color-gold)] transition-all"
               title="Share via Email"
             >
@@ -125,13 +125,19 @@ export default function ReferralsTab() {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 relative z-10">
             <div className="bg-black/60 border border-[var(--color-gold)]/20 p-4 sm:p-6 rounded-xl text-center col-span-1 order-2 sm:order-1">
               <Users className="text-[var(--color-gold)] mx-auto mb-2 sm:mb-3" size={20} />
-              <p className="text-[10px] sm:text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Friends</p>
+              <p className="text-[10px] sm:text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Friends Invited</p>
               <p className="text-2xl sm:text-3xl font-serif text-white">{summary?.totalSignups ?? 0}</p>
             </div>
             <div className="bg-black/60 border border-[var(--color-gold)]/20 p-4 sm:p-6 rounded-xl text-center col-span-1 order-3 sm:order-2">
               <Check className="text-green-400 mx-auto mb-2 sm:mb-3" size={20} />
-              <p className="text-[10px] sm:text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Success</p>
-              <p className="text-2xl sm:text-3xl font-serif text-white">{summary?.successfulReferrals ?? user.totalReferrals ?? 0}</p>
+              <p className="text-[10px] sm:text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Rewarded Friends</p>
+              <p className="text-2xl sm:text-3xl font-serif text-white">
+                {summary?.successfulReferrals ?? user.totalReferrals ?? 0}
+                {summary?.program?.maxRewardedUsers ? (
+                  <span className="text-sm font-sans text-white/40 ml-1">/ {summary.program.maxRewardedUsers}</span>
+                ) : null}
+              </p>
+              <span className="text-[10px] text-emerald-400 font-mono block mt-0.5">1st Purchase Verified</span>
             </div>
             <div className="bg-gradient-to-b from-[var(--color-gold)]/10 to-black/60 border border-[var(--color-gold)]/40 p-5 sm:p-6 rounded-xl text-center col-span-2 sm:col-span-1 order-1 sm:order-3 flex flex-col justify-center">
               <Gift className="text-[var(--color-gold)] mx-auto mb-2 sm:mb-3" size={24} />
@@ -139,30 +145,43 @@ export default function ReferralsTab() {
               <p className="text-3xl sm:text-4xl font-serif text-[#dfbd72]">
                 <Price amount={summary?.rewardBalance ?? user.rewardBalance ?? 0} />
               </p>
-              <p className="text-[10px] text-white/40 mt-1">Available for your next purchase</p>
+              <p className="text-[10px] text-white/40 mt-1">Ready to apply at checkout</p>
             </div>
           </div>
         </div>
       </section>
 
       {summary?.program && (
-        <section className="bg-[#111] border border-white/10 rounded-xl p-6">
-          <h2 className="text-xl text-[var(--color-ivory)] font-serif mb-4">Current Program</h2>
+        <section className="bg-[#111] border border-white/10 rounded-xl p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-white/10 pb-3">
+            <h2 className="text-xl text-[var(--color-ivory)] font-serif">Referral Program Rules</h2>
+            <span className="text-xs uppercase font-mono tracking-widest text-[var(--color-gold)] bg-[var(--color-gold)]/10 px-2.5 py-1 rounded-full border border-[var(--color-gold)]/20">
+              Active Policy
+            </span>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <div className="bg-black/40 rounded-lg p-4">
-              <p className="text-white/50 text-xs uppercase tracking-widest mb-2">Your reward</p>
-              <p className="text-white">
+            <div className="bg-black/40 rounded-lg p-4 border border-white/5">
+              <p className="text-white/50 text-xs uppercase tracking-widest mb-1.5 font-semibold">Your Referral Reward</p>
+              <p className="text-white font-medium">
                 {summary.program.rewardType === 'percentage'
                   ? `${summary.program.rewardAmount}% of the friend's first paid order`
-                  : <><Price amount={summary.program.rewardAmount} /> after their first paid order</>}
+                  : <><Price amount={summary.program.rewardAmount} /> store credit when friend completes 1st order</>}
+              </p>
+              <p className="text-xs text-white/40 mt-1">
+                Credited directly to your wallet balance once your friend's payment is confirmed.
               </p>
             </div>
-            <div className="bg-black/40 rounded-lg p-4">
-              <p className="text-white/50 text-xs uppercase tracking-widest mb-2">Friend's welcome benefit</p>
-              <p className="text-white">
-                {summary.program.welcomeDiscountType === 'percentage'
-                  ? `${summary.program.welcomeDiscount}% off their first qualifying order`
-                  : <><Price amount={summary.program.welcomeDiscount} /> off their first qualifying order</>}
+            <div className="bg-black/40 rounded-lg p-4 border border-white/5">
+              <p className="text-white/50 text-xs uppercase tracking-widest mb-1.5 font-semibold">Reward Cap Per Referrer</p>
+              <p className="text-white font-medium">
+                {summary.program.maxRewardedUsers > 0 
+                  ? `Up to ${summary.program.maxRewardedUsers} friends (Max R${summary.program.maxRewardedUsers * (summary.program.rewardAmount || 50)} rewards)`
+                  : 'Unlimited friends (No reward cap)'}
+              </p>
+              <p className="text-xs text-white/40 mt-1">
+                {summary.program.maxRewardedUsers > 0 
+                  ? `You can earn R${summary.program.rewardAmount || 50} for each of your first ${summary.program.maxRewardedUsers} qualifying friends.`
+                  : 'Earn for every friend who makes their first purchase.'}
               </p>
             </div>
           </div>
@@ -181,7 +200,7 @@ export default function ReferralsTab() {
                 </div>
                 <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest ${referral.status === 'successful' ? 'text-green-400' : 'text-amber-300'}`}>
                   {referral.status === 'successful' ? <Check size={14} /> : <Clock3 size={14} />}
-                  {referral.status}
+                  {referral.status === 'successful' ? '1st Order Paid' : 'Pending 1st Order'}
                 </span>
               </div>
             ))}
@@ -194,20 +213,20 @@ export default function ReferralsTab() {
           How it Works
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-3">
+          <div className="space-y-3 bg-white/[0.02] p-5 rounded-2xl border border-white/5">
             <div className="w-10 h-10 rounded-full bg-[var(--color-gold)]/10 text-[var(--color-gold)] flex items-center justify-center text-xl font-serif">1</div>
-            <h3 className="text-white font-serif">Share Link</h3>
-            <p className="text-sm text-[var(--color-ivory-muted)]">Send your unique referral link to friends and family.</p>
+            <h3 className="text-white font-serif text-base">Share Your Link</h3>
+            <p className="text-xs text-[var(--color-ivory-muted)] leading-relaxed">Send your unique referral link to friends and fellow fine wine lovers.</p>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-3 bg-white/[0.02] p-5 rounded-2xl border border-white/5">
             <div className="w-10 h-10 rounded-full bg-[var(--color-gold)]/10 text-[var(--color-gold)] flex items-center justify-center text-xl font-serif">2</div>
-            <h3 className="text-white font-serif">They Sign Up</h3>
-            <p className="text-sm text-[var(--color-ivory-muted)]">Your friends get a welcome discount automatically applied at checkout.</p>
+            <h3 className="text-white font-serif text-base">Friend's First Order</h3>
+            <p className="text-xs text-[var(--color-ivory-muted)] leading-relaxed">Your friend signs up and completes their first paid purchase on The Grand Store.</p>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-3 bg-white/[0.02] p-5 rounded-2xl border border-white/5">
             <div className="w-10 h-10 rounded-full bg-[var(--color-gold)]/10 text-[var(--color-gold)] flex items-center justify-center text-xl font-serif">3</div>
-            <h3 className="text-white font-serif">You Get Rewarded</h3>
-            <p className="text-sm text-[var(--color-ivory-muted)]">Once their first order is paid, your reward balance is credited instantly!</p>
+            <h3 className="text-white font-serif text-base">You Get R50 Credit</h3>
+            <p className="text-xs text-[var(--color-ivory-muted)] leading-relaxed">Your reward balance is credited with R50 immediately upon order payment verification!</p>
           </div>
         </div>
       </section>

@@ -65,7 +65,8 @@ const addOrderItems = async (req, res) => {
     const previousOrders = await Order.countDocuments({ user: req.user._id });
 
     let appliedWelcomeDiscount = 0;
-    if (previousOrders === 0 && user && user.referredBy) {
+    // Refer & earn rewards the referrer who shared the link unless welcome discount is explicitly enabled
+    if (settings && settings.referralWelcomeDiscountEnabled && (settings.referralWelcomeDiscount || 0) > 0 && previousOrders === 0 && user && user.referredBy) {
         if (settings.referralWelcomeDiscountType === 'percentage') {
             appliedWelcomeDiscount = parseFloat(((subTotal * (settings.referralWelcomeDiscount || 5)) / 100).toFixed(2));
         } else {
@@ -284,23 +285,34 @@ const processOrderPayment = async (orderId) => {
       const PlatformSettings = require('../models/PlatformSettings');
       const settings = await PlatformSettings.findOne();
       
-      let reward = 0;
-      if (settings) {
-        if (settings.referralRewardType === 'percentage') {
-          reward = parseFloat(((order.subTotal * (settings.referralRewardAmount || 5)) / 100).toFixed(2));
-        } else {
-          reward = settings.referralRewardAmount || 50;
-        }
-      } else {
-        reward = 50;
-      }
-  
       const referringUser = await User.findById(user.referredBy);
       if (referringUser) {
-        referringUser.rewardBalance = (Number(referringUser.rewardBalance) || 0) + reward;
-        referringUser.totalReferrals = (Number(referringUser.totalReferrals) || 0) + 1;
-        await referringUser.save();
-        console.log(`Credited R${reward} to referrer ${referringUser.email}`);
+        // Admin configurable cap on how many people a referrer can earn R50 from (0 = unlimited)
+        const maxRewarded = settings?.referralMaxRewardedUsers !== undefined 
+          ? Number(settings.referralMaxRewardedUsers) 
+          : 5;
+        
+        const currentRewardedCount = Number(referringUser.totalReferrals) || 0;
+
+        if (maxRewarded === 0 || currentRewardedCount < maxRewarded) {
+          let reward = 50;
+          if (settings) {
+            if (settings.referralRewardType === 'percentage') {
+              reward = parseFloat(((order.subTotal * (settings.referralRewardAmount || 5)) / 100).toFixed(2));
+            } else {
+              reward = Number(settings.referralRewardAmount) !== undefined ? Number(settings.referralRewardAmount) : 50;
+            }
+          } else {
+            reward = 50;
+          }
+      
+          referringUser.rewardBalance = (Number(referringUser.rewardBalance) || 0) + reward;
+          referringUser.totalReferrals = currentRewardedCount + 1;
+          await referringUser.save();
+          console.log(`Credited R${reward} to referrer ${referringUser.email} (Referral ${referringUser.totalReferrals}/${maxRewarded === 0 ? 'Unlimited' : maxRewarded})`);
+        } else {
+          console.log(`Referrer ${referringUser.email} reached max reward cap of ${maxRewarded} people. No reward credited.`);
+        }
       }
     }
   } catch (err) {

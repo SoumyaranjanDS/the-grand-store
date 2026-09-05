@@ -154,7 +154,7 @@ export default function AdminLayout() {
                   <Building2 size={16} /> Host Applications
                 </button>
                 <button onClick={() => handleNavigate('/admin/trade-enquiries')} className={navItemClass('/admin/trade-enquiries')}>
-                  <Building2 size={16} /> Trade Enquiries
+                  <MessageSquare size={16} /> Enquiries & Messages
                 </button>
                 <button onClick={() => handleNavigate('/admin/cigar-enquiries')} className={navItemClass('/admin/cigar-enquiries')}>
                   <Flame size={16} /> Cigar Enquiries

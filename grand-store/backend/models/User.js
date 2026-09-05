@@ -127,15 +127,24 @@ const userSchema = new mongoose.Schema({
   dateOfBirth: {
     type: Date // Required 18+ age verification
   },
+  legalFullName: {
+    type: String
+  },
   idType: {
-    type: String,
-    enum: ['National ID', 'Passport', 'Driver License']
+    type: String // Configurable by admin (National ID, Passport, Driver License, Foreign Passport, etc.)
   },
   idNumber: {
     type: String
   },
   idDocumentUrl: {
     type: String
+  },
+  proofOfResidenceUrl: {
+    type: String
+  },
+  customKycValues: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
   },
   rulesAcceptedVersion: {
     type: String, // e.g., 'v1.0'

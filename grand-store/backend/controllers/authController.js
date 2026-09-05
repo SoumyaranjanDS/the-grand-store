@@ -585,7 +585,7 @@ const getReferralSummary = async (req, res) => {
 
     let settings = await PlatformSettings.findOne();
     if (!settings) settings = await PlatformSettings.create({});
-    const ownPaidOrders = await Order.countDocuments({ user: user._id, isPaid: true });
+    const isWelcomeEligible = Boolean(user.referredBy) && ownPaidOrders === 0 && Boolean(settings.referralWelcomeDiscountEnabled) && (settings.referralWelcomeDiscount > 0);
 
     res.json({
       referralCode: user.referralCode,
@@ -593,12 +593,14 @@ const getReferralSummary = async (req, res) => {
       totalSignups: referredUsers.length,
       successfulReferrals,
       pendingReferrals: Math.max(0, referredUsers.length - successfulReferrals),
-      welcomeDiscountEligible: Boolean(user.referredBy) && ownPaidOrders === 0,
+      welcomeDiscountEligible: isWelcomeEligible,
       program: {
-        rewardAmount: settings.referralRewardAmount,
-        rewardType: settings.referralRewardType,
-        welcomeDiscount: settings.referralWelcomeDiscount,
-        welcomeDiscountType: settings.referralWelcomeDiscountType
+        rewardAmount: settings.referralRewardAmount !== undefined ? settings.referralRewardAmount : 50,
+        rewardType: settings.referralRewardType || 'fixed',
+        maxRewardedUsers: settings.referralMaxRewardedUsers !== undefined ? settings.referralMaxRewardedUsers : 5,
+        welcomeDiscount: settings.referralWelcomeDiscount || 0,
+        welcomeDiscountType: settings.referralWelcomeDiscountType || 'fixed',
+        welcomeDiscountEnabled: Boolean(settings.referralWelcomeDiscountEnabled)
       },
       referrals: referredUsers.slice(0, 20).map((referredUser) => ({
         id: referredUser._id,

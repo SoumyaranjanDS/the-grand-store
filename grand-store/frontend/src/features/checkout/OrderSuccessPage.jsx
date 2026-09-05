@@ -4,6 +4,7 @@ import { CheckCircle2, ChevronLeft, Download, Loader2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useCurrency } from "../../context/CurrencyContext";
 import Price from "../../components/ui/Price";
+import StoreBankDetailsCard from "../../components/StoreBankDetailsCard";
 import api from "../../api";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -335,38 +336,11 @@ export default function OrderSuccessPage({ onClearCart }) {
                   to our bank account.
                 </p>
 
-                <div className="bg-black/50 border border-white/5 p-6 rounded-xl text-left max-w-sm mx-auto mb-6">
-                  <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">
-                    Bank Name
-                  </p>
-                  <p className="text-sm text-white mb-3">Standard Bank</p>
-
-                  <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">
-                    Account Name
-                  </p>
-                  <p className="text-sm text-white mb-3">
-                    The Grand Store PTY LTD
-                  </p>
-
-                  <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">
-                    Account Number
-                  </p>
-                  <p className="text-sm text-white font-mono mb-3">
-                    0123456789
-                  </p>
-
-                  <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">
-                    Branch Code
-                  </p>
-                  <p className="text-sm text-white font-mono mb-3">051001</p>
-
-                  <p className="text-xs text-[var(--color-gold)] uppercase tracking-widest mb-1">
-                    Reference
-                  </p>
-                  <p className="text-lg text-white font-mono font-bold">
-                    {(order.invoiceNumber || order._id).slice(-6).toUpperCase()}
-                  </p>
-                </div>
+                <StoreBankDetailsCard
+                  reference={(order.invoiceNumber || order._id).slice(-6).toUpperCase()}
+                  referenceLabel="Order Reference"
+                  className="max-w-xl mx-auto mb-6"
+                />
 
                 <form
                   onSubmit={async (e) => {

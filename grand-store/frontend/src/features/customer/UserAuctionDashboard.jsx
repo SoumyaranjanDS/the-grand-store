@@ -93,12 +93,27 @@ export default function UserAuctionDashboard() {
                         </span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className={`px-2 py-1 rounded text-[10px] uppercase tracking-widest font-bold ${lot.paymentStatus === 'Paid' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
-                          {lot.paymentStatus === 'Paid' ? 'Payment Completed' : 'Awaiting Payment'}
+                        <span className={`px-2 py-1 rounded text-[10px] uppercase tracking-widest font-bold ${
+                          lot.paymentStatus === 'Paid' || lot.isPaid 
+                            ? 'bg-green-500/20 text-green-400' 
+                            : (lot.paymentStatus === 'Awaiting_Approval' || lot.proofUrl)
+                              ? 'bg-amber-500/20 text-amber-300'
+                              : 'bg-yellow-500/20 text-yellow-400'
+                        }`}>
+                          {lot.paymentStatus === 'Paid' || lot.isPaid 
+                            ? 'Payment Completed' 
+                            : (lot.paymentStatus === 'Awaiting_Approval' || lot.proofUrl)
+                              ? 'Awaiting Verification' 
+                              : 'Awaiting Payment'}
                         </span>
-                        {lot.paymentStatus === 'Pending' && (
+                        {(lot.paymentStatus === 'Pending' && !lot.proofUrl && !lot.isPaid) && (
                           <Link to={`/auction/checkout/${lot._id}`} className="px-4 py-2 bg-green-500 hover:bg-green-600 text-black rounded text-[10px] font-bold uppercase tracking-widest transition-colors shadow-[0_0_15px_rgba(34,197,94,0.4)]">
                             Pay Now
+                          </Link>
+                        )}
+                        {(lot.paymentStatus === 'Awaiting_Approval' || (lot.proofUrl && !lot.isPaid && lot.paymentStatus !== 'Paid')) && (
+                          <Link to={`/auction/checkout/${lot._id}`} className="px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded text-[10px] font-bold uppercase tracking-widest transition-colors">
+                            View Status
                           </Link>
                         )}
                         <Link to={`/auction/${lot._id}`} className="px-4 py-2 border border-green-500/50 hover:bg-green-500/10 text-green-400 rounded text-[10px] font-bold uppercase tracking-widest transition-colors">

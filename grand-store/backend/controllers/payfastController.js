@@ -368,8 +368,66 @@ exports.itnWebhook = async (req, res) => {
 // @access  Private
 exports.confirmOrderPayment = async (req, res) => {
   try {
-    const { orderId } = req.body;
+    const { orderId, bookingId, auctionId, depositId } = req.body;
     const mongoose = require('mongoose');
+
+    // 1. Event / Cellar Tasting Booking Confirmation
+    if (bookingId) {
+      const Booking = require('../models/Booking');
+      let booking = null;
+      if (mongoose.Types.ObjectId.isValid(bookingId)) {
+        booking = await Booking.findById(bookingId);
+      }
+      if (!booking) {
+        booking = await Booking.findOne({ $or: [{ ticketId: bookingId }, { gsReference: bookingId }] });
+      }
+      if (!booking) {
+        return res.status(404).json({ message: 'Booking not found' });
+      }
+      await processEventPayment(booking._id, {
+        gatewayTransactionId: req.body.pfPaymentId || `PF-APP-${Date.now()}`
+      });
+      const updatedBooking = await Booking.findById(booking._id).populate('event');
+      return res.json({ success: true, booking: updatedBooking });
+    }
+
+    // 2. Auction Winning Lot Confirmation
+    if (auctionId) {
+      const AuctionLot = require('../models/AuctionLot');
+      let lot = null;
+      if (mongoose.Types.ObjectId.isValid(auctionId)) {
+        lot = await AuctionLot.findById(auctionId);
+      }
+      if (!lot) {
+        lot = await AuctionLot.findOne({ lotNumber: auctionId });
+      }
+      if (!lot) {
+        return res.status(404).json({ message: 'Auction lot not found' });
+      }
+      await processAuctionPayment(lot._id);
+      const updatedLot = await AuctionLot.findById(lot._id);
+      return res.json({ success: true, lot: updatedLot });
+    }
+
+    // 3. VIP Bidding Escrow Deposit Confirmation
+    if (depositId) {
+      const BidderDeposit = require('../models/BidderDeposit');
+      let deposit = null;
+      if (mongoose.Types.ObjectId.isValid(depositId)) {
+        deposit = await BidderDeposit.findById(depositId);
+      }
+      if (!deposit) {
+        deposit = await BidderDeposit.findOne({ reference: depositId });
+      }
+      if (!deposit) {
+        return res.status(404).json({ message: 'Deposit record not found' });
+      }
+      await processBidderDepositPayment(deposit._id, req.body.pfPaymentId || `PF-DEP-${Date.now()}`);
+      const updatedDeposit = await BidderDeposit.findById(deposit._id);
+      return res.json({ success: true, deposit: updatedDeposit });
+    }
+
+    // 4. Shop Order Confirmation
     let order = null;
     if (orderId) {
       if (mongoose.Types.ObjectId.isValid(orderId)) {
@@ -389,10 +447,10 @@ exports.confirmOrderPayment = async (req, res) => {
     }
 
     const updated = await Order.findById(order._id);
-    res.json(updated);
+    return res.json(updated);
   } catch (error) {
     console.error('Error confirming PayFast order:', error);
-    res.status(500).json({ message: 'Error confirming PayFast order', error: error.message });
+    return res.status(500).json({ message: 'Error confirming PayFast order', error: error.message });
   }
 };
 

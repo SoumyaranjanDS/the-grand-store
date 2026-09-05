@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Smartphone, QrCode, Mail, User, MessageSquare, Send, CheckCircle2, Phone } from 'lucide-react';
+import api from '../../../api';
 
 export default function AppPromoSection() {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
@@ -13,33 +14,27 @@ export default function AppPromoSection() {
     setErrorMessage('');
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/trade-enquiries`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fullname: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          message: formData.message,
-          source: 'app_promo'
-        }),
+      const res = await api.post('/trade-enquiries', {
+        fullname: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        message: formData.message,
+        source: 'app_promo'
       });
 
-      const data = await response.json();
-      if (response.ok && data.success) {
+      if (res.data && res.data.success) {
         setSubmitted(true);
         setFormData({ name: '', email: '', phone: '', message: '' });
         setTimeout(() => {
           setSubmitted(false);
-        }, 5000);
+        }, 6000);
       } else {
-        setErrorMessage(data.message || 'Failed to send message. Please try again.');
+        setErrorMessage(res.data?.message || 'Failed to send message. Please try again.');
       }
     } catch (err) {
       console.error('Submission error:', err);
-      setErrorMessage('Network error. Please try again.');
+      const msg = err.response?.data?.message || 'Network error. Please try again.';
+      setErrorMessage(msg);
     } finally {
       setLoading(false);
     }
@@ -174,6 +169,13 @@ export default function AppPromoSection() {
             {errorMessage && (
               <div className="mt-6 text-center text-rose-400 text-sm font-sans bg-rose-500/10 border border-rose-500/20 py-2 px-4 rounded-xl">
                 {errorMessage}
+              </div>
+            )}
+
+            {submitted && (
+              <div className="mt-6 text-center text-emerald-300 text-sm font-sans bg-emerald-500/10 border border-emerald-500/30 py-3 px-6 rounded-2xl flex items-center justify-center gap-2 animate-fade-in">
+                <CheckCircle2 size={18} className="text-emerald-400 shrink-0" />
+                <span>Thank you! Your message has been received by our admin desk. We will get in touch shortly.</span>
               </div>
             )}
 

@@ -25,6 +25,7 @@ export default function AdminAuctionPanel({ onNotify }) {
   const [allLots, setAllLots] = useState([]);
   const [fraudAlerts, setFraudAlerts] = useState([]);
   const [ledgerEntries, setLedgerEntries] = useState([]);
+  const [settings, setSettings] = useState(null);
   const [bidders, setBidders] = useState([]);
   const [deposits, setDeposits] = useState([]);
   const [bidderFilter, setBidderFilter] = useState('pending'); // 'pending' | 'approved' | 'rejected' | 'all'
@@ -39,6 +40,7 @@ export default function AdminAuctionPanel({ onNotify }) {
   const [authForms, setAuthForms] = useState({});
 
   useEffect(() => {
+    api.get('/settings/public').then(res => setSettings(res.data)).catch(() => {});
     fetchLots();
     fetchBidders();
     if (activeTab === 'bidders') { fetchBidders(); fetchDeposits(); }
@@ -897,6 +899,7 @@ export default function AdminAuctionPanel({ onNotify }) {
               {bidders
                 .filter(b => bidderFilter === 'all' || (bidderFilter === 'pending' ? b.bidderApprovalStatus === 'pending_approval' : b.bidderApprovalStatus === bidderFilter))
                 .map(bidder => {
+                  const minAge = settings?.bidderKycMinAge || 18;
                   const birthDate = bidder.dateOfBirth ? new Date(bidder.dateOfBirth) : null;
                   let age = null;
                   if (birthDate && !Number.isNaN(birthDate.getTime())) {
@@ -906,13 +909,24 @@ export default function AdminAuctionPanel({ onNotify }) {
                     if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
                   }
 
+                  const hasCustomKyc = bidder.customKycValues && typeof bidder.customKycValues === 'object' && Object.keys(bidder.customKycValues).length > 0;
+
                   return (
                     <div key={bidder._id} className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-all flex flex-col lg:flex-row justify-between gap-6">
                       {/* Bidder Details */}
                       <div className="space-y-4 flex-1">
                         <div className="flex flex-wrap items-center gap-3">
-                          <h4 className="text-lg font-serif text-[var(--color-ivory)]">{bidder.name}</h4>
-                          <span className="text-xs text-white/40">{bidder.email}</span>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-lg font-serif text-[var(--color-ivory)]">{bidder.name}</h4>
+                              {bidder.legalFullName && bidder.legalFullName !== bidder.name && (
+                                <span className="text-xs text-[var(--color-gold)] font-medium">
+                                  (Legal: {bidder.legalFullName})
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-xs text-white/40">{bidder.email}</span>
+                          </div>
                           
                           {/* Status Badge */}
                           {bidder.bidderApprovalStatus === 'approved' && (
@@ -940,14 +954,14 @@ export default function AdminAuctionPanel({ onNotify }) {
                         {/* Identification Details Grid */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-black/30 p-4 rounded-xl text-xs border border-white/5">
                           <div>
-                            <span className="text-white/40 block text-[10px] uppercase tracking-wider">Age (18+)</span>
-                            <span className={`font-medium ${age && age >= 18 ? 'text-emerald-400' : 'text-red-400'}`}>
-                              {age !== null ? `${age} Years Old (Legal)` : 'Not Verified'}
+                            <span className="text-white/40 block text-[10px] uppercase tracking-wider">Age ({minAge}+)</span>
+                            <span className={`font-medium ${age && age >= minAge ? 'text-emerald-400' : 'text-red-400'}`}>
+                              {age !== null ? `${age} Yrs (${age >= minAge ? `Legal ${minAge}+` : `Under ${minAge}`})` : 'Not Verified'}
                             </span>
                           </div>
                           <div>
                             <span className="text-white/40 block text-[10px] uppercase tracking-wider">ID Document</span>
-                            <span className="text-white/90 font-medium">
+                            <span className="text-white/90 font-medium truncate block">
                               {bidder.idType || 'National ID'}: {bidder.idNumber || 'N/A'}
                             </span>
                           </div>
@@ -965,18 +979,52 @@ export default function AdminAuctionPanel({ onNotify }) {
                           </div>
                         </div>
 
-                        {/* ID Document Proof Link if present */}
-                        {bidder.idDocumentUrl && (
-                          <div className="flex items-center gap-2 text-xs">
-                            <span className="text-white/40">Uploaded Proof:</span>
+                        {/* Uploaded Documents Badges & Links */}
+                        <div className="flex flex-wrap gap-2.5 text-xs pt-1">
+                          {bidder.idDocumentUrl ? (
                             <a 
                               href={bidder.idDocumentUrl} 
                               target="_blank" 
                               rel="noreferrer"
-                              className="text-blue-400 hover:text-blue-300 underline flex items-center gap-1"
+                              className="px-3 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-300 font-medium flex items-center gap-1.5 transition-colors"
                             >
-                              <ExternalLink size={12} /> View Document
+                              <FileText size={13} className="text-blue-400" />
+                              <span>View Passport / ID Document</span>
+                              <ExternalLink size={11} />
                             </a>
+                          ) : (
+                            <span className="px-2.5 py-1 rounded-lg bg-white/5 text-white/40 border border-white/5 flex items-center gap-1.5 text-[11px]">
+                              No ID Document Uploaded
+                            </span>
+                          )}
+
+                          {bidder.proofOfResidenceUrl && (
+                            <a 
+                              href={bidder.proofOfResidenceUrl} 
+                              target="_blank" 
+                              rel="noreferrer"
+                              className="px-3 py-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 font-medium flex items-center gap-1.5 transition-colors"
+                            >
+                              <FileText size={13} className="text-purple-400" />
+                              <span>Proof of Residence</span>
+                              <ExternalLink size={11} />
+                            </a>
+                          )}
+                        </div>
+
+                        {/* Custom Dynamic KYC Fields configured by admin */}
+                        {hasCustomKyc && (
+                          <div className="p-3 bg-white/[0.02] border border-white/5 rounded-xl space-y-1.5 text-xs">
+                            <span className="text-[10px] uppercase font-bold text-white/40 tracking-wider block">
+                              Additional Admin KYC Fields:
+                            </span>
+                            <div className="flex flex-wrap gap-2">
+                              {Object.entries(bidder.customKycValues).map(([key, val]) => (
+                                <span key={key} className="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-white/80 text-[11px] font-mono">
+                                  <strong className="text-[var(--color-gold)] font-sans">{key}:</strong> {String(val)}
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         )}
 

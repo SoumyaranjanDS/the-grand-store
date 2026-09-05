@@ -14,6 +14,7 @@ import {
 import api from '../../api';
 import Price from '../../components/ui/Price';
 import PaymentForm from '../checkout/PaymentForm';
+import StoreBankDetailsCard from '../../components/StoreBankDetailsCard';
 
 const PAID_STATUSES = ['Paid', 'Completed'];
 
@@ -33,6 +34,7 @@ export default function EventSuccessPage() {
   const [proofUrl, setProofUrl] = useState('');
   const [feedback, setFeedback] = useState('');
   const [bankDetails, setBankDetails] = useState(null);
+  const [bankDetailsList, setBankDetailsList] = useState(null);
   const [paymentData, setPaymentData] = useState(null);
   const [payfastUrl, setPayfastUrl] = useState(null);
 
@@ -80,7 +82,10 @@ export default function EventSuccessPage() {
   useEffect(() => {
     if (booking?.paymentMethod !== 'Bank Transfer') return;
     api.get('/settings/public')
-      .then((response) => setBankDetails(response.data.bankDetails || {}))
+      .then((response) => {
+        setBankDetails(response.data.bankDetails || {});
+        setBankDetailsList(response.data.bankDetailsList || null);
+      })
       .catch((error) => console.error('Failed to load bank details:', error));
   }, [booking?.paymentMethod]);
 
@@ -312,16 +317,15 @@ export default function EventSuccessPage() {
                 </div>
               </div>
 
-              <div className="mb-6 grid grid-cols-1 gap-3 rounded-xl border border-white/5 bg-black/40 p-4 sm:grid-cols-2 md:p-6">
-                <BankDetail label="Bank Name" value={bankDetails?.bankName || 'Standard Bank'} />
-                <BankDetail label="Account Name" value={bankDetails?.accountName || 'The Grand Store PTY LTD'} />
-                <BankDetail label="Account Number" value={bankDetails?.accountNumber || '0123456789'} mono />
-                <BankDetail label="Branch Code" value={bankDetails?.branchCode || '051001'} mono />
-                <div className="border-t border-white/5 pt-3 sm:col-span-2">
-                  <p className="mb-1 text-[10px] uppercase tracking-widest text-[#c9a35b]">Payment Reference</p>
-                  <p className="break-all font-mono text-base font-bold text-white">{booking.gsReference}</p>
-                </div>
-              </div>
+              <StoreBankDetailsCard
+                reference={booking.gsReference}
+                referenceLabel="Payment Reference"
+                title="Event Escrow Banking Details"
+                subtitle="Official EFT settlement account for event ticket admissions"
+                bankDetailsList={bankDetailsList}
+                bankDetails={bankDetails}
+                className="mb-6"
+              />
 
               {awaitingProof ? (
                 <form onSubmit={uploadProof} className="space-y-3">

@@ -118,6 +118,9 @@ export default function AuctionWinnerCelebrationModal({
   const lotNumber = lot.lotNumber || lot._id?.slice(-6)?.toUpperCase() || 'GS-LOT';
   const lotImage = lot.images && lot.images.length > 0 ? lot.images[0] : null;
 
+  const isPaid = Boolean(lot.isPaid || lot.paymentStatus === 'Paid');
+  const isAwaiting = Boolean(lot.paymentStatus === 'Awaiting_Approval' || lot.proofUrl);
+
   const handleProceedToCheckout = () => {
     onClose?.();
     navigate(`/auction/checkout/${lot._id}`);
@@ -225,7 +228,13 @@ export default function AuctionWinnerCelebrationModal({
               className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-[#ffd700] via-[#f5d77f] to-[#d4af37] text-black font-black uppercase tracking-widest text-xs shadow-[0_0_35px_rgba(212,175,55,0.5)] hover:shadow-[0_0_45px_rgba(212,175,55,0.8)] hover:scale-[1.02] transition-all flex items-center justify-center gap-3 cursor-pointer"
             >
               <Sparkles size={16} className="text-black/80" />
-              <span>Complete Checkout & Secure Delivery</span>
+              <span>
+                {isPaid
+                  ? 'View Settlement & Delivery Status'
+                  : isAwaiting
+                    ? 'View EFT Verification Status'
+                    : 'Complete Checkout & Secure Delivery'}
+              </span>
               <ArrowRight size={16} className="text-black/80" />
             </button>
 

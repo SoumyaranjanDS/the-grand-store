@@ -9,6 +9,7 @@ import api from '../../api';
 import Price from '../../components/ui/Price';
 import PaymentForm from '../checkout/PaymentForm';
 import ReceiptPreviewModal from './components/ReceiptPreviewModal';
+import StoreBankDetailsCard from '../../components/StoreBankDetailsCard';
 
 export default function AuctionVipCheckout({ onNotify }) {
   const navigate = useNavigate();
@@ -108,12 +109,7 @@ export default function AuctionVipCheckout({ onNotify }) {
   const standardLimit = settings?.auctionStandardBiddingLimit || 25000;
   const premiumLimit = settings?.auctionPremiumBiddingLimit || 250000;
 
-  const escrowBank = settings?.bankDetails || {
-    bankName: 'Standard Bank',
-    accountName: 'The Grand Store PTY LTD (Escrow)',
-    accountNumber: '0123456789',
-    branchCode: '051001'
-  };
+
 
   const dynamicRef = profile?.bidderNumber 
     ? `DEP-VIP-${profile.bidderNumber}` 
@@ -548,57 +544,16 @@ export default function AuctionVipCheckout({ onNotify }) {
                 {/* EFT Bank Instructions */}
                 {paymentMethod === 'eft' && (
                   <div className="space-y-4 pt-3 border-t border-white/10">
-                    <div className="p-4 rounded-xl bg-black/60 border border-[var(--color-gold)]/30 space-y-3">
-                      <div className="flex items-center justify-between text-xs border-b border-white/10 pb-2">
-                        <span className="uppercase tracking-wider text-[var(--color-gold)] font-bold flex items-center gap-1.5">
-                          <Landmark size={14} /> {escrowBank.accountName}
-                        </span>
-                        <span className="font-mono text-white/60 text-[11px]">{escrowBank.bankName}</span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                        <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/5">
-                          <span className="text-white/40 block text-[10px] uppercase mb-0.5">Account Number</span>
-                          <div className="flex items-center justify-between">
-                            <span className="font-mono text-sm font-bold text-white">{escrowBank.accountNumber}</span>
-                            <button 
-                              type="button" 
-                              onClick={() => {
-                                navigator.clipboard.writeText(escrowBank.accountNumber);
-                                if (onNotify) onNotify('Account number copied');
-                              }}
-                              className="text-white/40 hover:text-[var(--color-gold)] p-1"
-                              title="Copy"
-                            >
-                              <Copy size={13} />
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/5">
-                          <span className="text-white/40 block text-[10px] uppercase mb-0.5">Branch Code</span>
-                          <span className="font-mono text-sm font-bold text-white">{escrowBank.branchCode}</span>
-                        </div>
-
-                        <div className="p-2.5 rounded-lg bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30">
-                          <span className="text-[var(--color-gold)]/80 block text-[10px] uppercase mb-0.5 font-semibold">Payment Reference</span>
-                          <div className="flex items-center justify-between">
-                            <span className="font-mono text-xs font-bold text-[var(--color-gold)]">{dynamicRef}</span>
-                            <button 
-                              type="button" 
-                              onClick={() => {
-                                navigator.clipboard.writeText(dynamicRef);
-                                if (onNotify) onNotify('Reference copied');
-                              }}
-                              className="text-[var(--color-gold)] hover:text-white p-1"
-                              title="Copy Reference"
-                            >
-                              <Copy size={13} />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <StoreBankDetailsCard
+                      reference={dynamicRef}
+                      referenceLabel="Payment Reference"
+                      title="Grand Store VIP Escrow Account"
+                      subtitle="Official institutional South African EFT settlement account"
+                      bankDetailsList={settings?.bankDetailsList}
+                      bankDetails={settings?.bankDetails}
+                      compact={true}
+                      onNotify={onNotify}
+                    />
 
                     {/* Proof Upload Dropzone */}
                     <div>

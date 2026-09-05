@@ -144,10 +144,27 @@ exports.getLotDetails = async (req, res) => {
           lotObj.proofUrl = order.proofUrl || lotObj.proofUrl;
         }
 
-        if (order.shippingAddress && currentUser) {
-          const isWinner = lotObj.winner && lotObj.winner.toString() === currentUser._id.toString();
-          const isAdmin = currentUser.role === 'admin';
-          const isVendor = lotObj.vendor && lotObj.vendor._id.toString() === currentUser._id.toString();
+        lotObj.order = {
+          _id: order._id,
+          orderId: order.orderId,
+          transactionId: order.transactionId,
+          invoiceNumber: order.invoiceNumber,
+          paymentMethod: order.paymentMethod,
+          paymentStatus: order.paymentStatus,
+          isPaid: order.isPaid,
+          proofUrl: order.proofUrl,
+          totalPrice: order.totalPrice,
+          shippingAddress: order.shippingAddress
+        };
+
+        if (order.shippingCost && !lotObj.shippingCost) {
+          lotObj.shippingCost = order.shippingCost;
+        }
+
+        if (order.shippingAddress) {
+          const isWinner = currentUser && lotObj.winner && lotObj.winner.toString() === currentUser._id.toString();
+          const isAdmin = currentUser && currentUser.role === 'admin';
+          const isVendor = currentUser && lotObj.vendor && lotObj.vendor._id.toString() === currentUser._id.toString();
 
           if (isWinner || isAdmin || isVendor) {
             lotObj.shippingAddress = order.shippingAddress;
@@ -1214,10 +1231,16 @@ exports.getAllLots = async (req, res) => {
 exports.registerBidder = async (req, res) => {
   try {
     const { 
+      fullName,
+      legalFullName,
+      legalName,
       dateOfBirth, 
+      dob,
       idType, 
       idNumber, 
       idDocumentUrl, 
+      proofOfResidenceUrl,
+      customKycValues,
       acceptRulesVersion,
       tier = 'normal', // 'normal' | 'premium'
       bankAccountDetails,
@@ -1228,11 +1251,16 @@ exports.registerBidder = async (req, res) => {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    if (!dateOfBirth) {
-      return res.status(400).json({ message: 'Date of birth is required for legal 18+ age verification.' });
+    // Dynamic Platform Settings for Age & Requirements
+    const settings = await PlatformSettings.findOne();
+    const minAge = settings?.bidderKycMinAge || 18;
+
+    const effectiveDob = dateOfBirth || dob;
+    if (!effectiveDob) {
+      return res.status(400).json({ message: `Date of birth is required for legal ${minAge}+ age verification.` });
     }
 
-    const birthDate = new Date(dateOfBirth);
+    const birthDate = new Date(effectiveDob);
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const m = today.getMonth() - birthDate.getMonth();
@@ -1240,18 +1268,25 @@ exports.registerBidder = async (req, res) => {
       age--;
     }
 
-    if (age < 18) {
-      return res.status(403).json({ message: 'You must be at least 18 years of age to participate in alcohol auctions.' });
+    if (age < minAge) {
+      return res.status(403).json({ message: `You must be at least ${minAge} years of age to participate in alcohol auctions.` });
     }
 
-    if (!acceptRulesVersion) {
-      return res.status(400).json({ message: 'You must read and accept the Rules of Auction.' });
+    if (settings?.bidderKycRequireDocumentUpload && !idDocumentUrl) {
+      return res.status(400).json({ message: 'Identification document upload (Passport or ID) is required for legal qualification.' });
     }
 
+    const effectiveRulesVersion = acceptRulesVersion || 'v1.0';
+
+    user.legalFullName = legalFullName || fullName || legalName || user.name;
     user.dateOfBirth = birthDate;
     user.idType = idType || 'National ID';
     user.idNumber = idNumber || '';
     if (idDocumentUrl) user.idDocumentUrl = idDocumentUrl;
+    if (proofOfResidenceUrl) user.proofOfResidenceUrl = proofOfResidenceUrl;
+    if (customKycValues) {
+      user.customKycValues = typeof customKycValues === 'string' ? JSON.parse(customKycValues) : customKycValues;
+    }
     user.rulesAcceptedVersion = acceptRulesVersion || 'v1.0';
     user.rulesAcceptedAt = new Date();
 
@@ -1266,8 +1301,6 @@ exports.registerBidder = async (req, res) => {
       user.bidderNumber = `GS-B${Math.floor(1000 + Math.random() * 9000)}`;
     }
 
-    // Dynamic Platform Settings for Deposit
-    const settings = await PlatformSettings.findOne();
     const dynamicDepositFee = settings?.auctionPremiumDepositAmount !== undefined ? settings.auctionPremiumDepositAmount : 5000;
 
     let createdDeposit = null;
@@ -1355,17 +1388,26 @@ exports.registerBidder = async (req, res) => {
 
     res.json({
       message: tier === 'premium'
-        ? `Your 18+ verification and Premium VIP Bidding request (R${dynamicDepositFee.toLocaleString()} refundable deposit) have been submitted for administrator review.`
-        : 'Your 18+ bidder verification has been submitted for standard administrator approval.',
+        ? `Your ${minAge}+ verification and Premium VIP Bidding request (R${dynamicDepositFee.toLocaleString()} refundable deposit) have been submitted for administrator review.`
+        : `Your ${minAge}+ bidder verification has been submitted for standard administrator approval.`,
       status: 'pending_approval',
       tier,
       deposit: createdDeposit,
+      depositReference: createdDeposit?.paymentReference || null,
+      escrowBank: settings?.bankDetails,
+      bankDetailsList: settings?.bankDetailsList,
       bidder: {
         bidderApprovalStatus: user.bidderApprovalStatus,
         bidderLevel: user.bidderLevel,
         biddingLimit: user.biddingLimit,
         bidderNumber: user.bidderNumber,
-        bidderReliabilityScore: user.bidderReliabilityScore
+        bidderReliabilityScore: user.bidderReliabilityScore,
+        legalFullName: user.legalFullName,
+        idType: user.idType,
+        idNumber: user.idNumber,
+        idDocumentUrl: user.idDocumentUrl,
+        proofOfResidenceUrl: user.proofOfResidenceUrl,
+        customKycValues: user.customKycValues
       }
     });
 
@@ -1378,7 +1420,7 @@ exports.registerBidder = async (req, res) => {
 exports.getBidderStatus = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select(
-      'bidderApprovalStatus bidderRejectionReason bidderLevel biddingLimit bidderNumber bidderReliabilityScore isBiddingSuspended biddingSuspensionReason rulesAcceptedVersion idType idNumber dateOfBirth idDocumentUrl bidderDepositStatus bidderDepositAmount bankAccountDetails'
+      'bidderApprovalStatus bidderRejectionReason bidderLevel biddingLimit bidderNumber bidderReliabilityScore isBiddingSuspended biddingSuspensionReason rulesAcceptedVersion idType idNumber dateOfBirth idDocumentUrl proofOfResidenceUrl legalFullName customKycValues bidderDepositStatus bidderDepositAmount bankAccountDetails'
     );
     if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -1392,6 +1434,9 @@ exports.getBidderStatus = async (req, res) => {
         bankAccountDetails = deposit.bankAccountDetails;
       }
     }
+
+    // Also get active platform settings for escrow bank
+    const settings = await PlatformSettings.findOne();
 
     res.json({
       bidderApprovalStatus: user.bidderApprovalStatus || 'unregistered',
@@ -1410,7 +1455,12 @@ exports.getBidderStatus = async (req, res) => {
       idNumber: user.idNumber,
       dateOfBirth: user.dateOfBirth,
       idDocumentUrl: user.idDocumentUrl,
-      bankAccountDetails: bankAccountDetails || null
+      proofOfResidenceUrl: user.proofOfResidenceUrl,
+      legalFullName: user.legalFullName || null,
+      customKycValues: user.customKycValues || {},
+      bankAccountDetails: bankAccountDetails || null,
+      escrowBank: settings?.bankDetails || null,
+      bankDetailsList: settings?.bankDetailsList || []
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -1434,7 +1484,7 @@ exports.getAdminBidders = async (req, res) => {
         { auctionRegistered: true }
       ]
     })
-    .select('name email phone role bidderApprovalStatus bidderRejectionReason bidderApprovedAt bidderApprovedBy bidderLevel biddingLimit bidderNumber bidderReliabilityScore isBiddingSuspended biddingSuspensionReason dateOfBirth idType idNumber idDocumentUrl rulesAcceptedVersion rulesAcceptedAt bidderDepositStatus bidderDepositAmount createdAt')
+    .select('name email phone role bidderApprovalStatus bidderRejectionReason bidderApprovedAt bidderApprovedBy bidderLevel biddingLimit bidderNumber bidderReliabilityScore isBiddingSuspended biddingSuspensionReason dateOfBirth idType idNumber idDocumentUrl proofOfResidenceUrl legalFullName customKycValues rulesAcceptedVersion rulesAcceptedAt bidderDepositStatus bidderDepositAmount createdAt')
     .sort({ createdAt: -1 });
 
     res.json(bidders);
@@ -1700,7 +1750,9 @@ exports.createBidderDeposit = async (req, res) => {
     res.status(201).json({
       message: `Refundable bidding deposit of R${deposit.amount.toLocaleString()} initiated successfully. Awaiting verification.`,
       deposit,
-      depositReference: depositRef
+      depositReference: depositRef,
+      escrowBank: settings?.bankDetails || null,
+      bankDetailsList: settings?.bankDetailsList || []
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

@@ -68,9 +68,9 @@ export default function AdminTradeEnquiries() {
             <Building2 size={20} />
             <span className="text-xs uppercase tracking-widest font-semibold">Trade Portal</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-serif text-[var(--color-ivory)]">Partner Enquiries</h1>
+          <h1 className="text-4xl md:text-5xl font-serif text-[var(--color-ivory)]">Customer & Trade Enquiries</h1>
           <p className="text-[var(--color-ivory-muted)] max-w-2xl text-lg leading-relaxed">
-            Review and manage trade partnership applications.
+            Review and manage messages submitted via the homepage, contact form, and trade partnership portal.
           </p>
         </div>
       </div>
@@ -96,7 +96,7 @@ export default function AdminTradeEnquiries() {
         {enquiries.length === 0 ? (
           <div className="text-center py-12 border border-white/5 rounded-2xl bg-white/[0.02]">
             <Building2 size={48} className="mx-auto text-white/20 mb-4" />
-            <p className="text-white/50 text-lg">No trade enquiries found</p>
+            <p className="text-white/50 text-lg">No enquiries found</p>
           </div>
         ) : (
           enquiries.map((enquiry) => (
@@ -106,10 +106,16 @@ export default function AdminTradeEnquiries() {
                 {/* Details */}
                 <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
                   <div>
-                    <h3 className="text-xl font-serif text-[var(--color-ivory)] mb-1 flex items-center gap-2">
+                    <h3 className="text-xl font-serif text-[var(--color-ivory)] mb-1 flex items-center gap-2 flex-wrap">
                       {enquiry.fullname}
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-widest ${enquiry.source === 'contact' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'}`}>
-                        {enquiry.source || 'enquiry'}
+                      <span className={`text-[10px] px-2.5 py-0.5 rounded-full uppercase tracking-widest font-mono font-medium ${
+                        enquiry.source === 'app_promo'
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                          : enquiry.source === 'contact'
+                            ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                            : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                      }`}>
+                        {enquiry.source === 'app_promo' ? 'Homepage Form' : enquiry.source === 'contact' ? 'Contact Form' : 'Trade Enquiry'}
                       </span>
                     </h3>
                     {enquiry.companyname && (

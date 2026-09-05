@@ -1,8 +1,10 @@
 const TradeEnquiry = require('../models/TradeEnquiry');
+const User = require('../models/User');
+const Notification = require('../models/Notification');
 
 // @desc    Create a new trade enquiry
 // @route   POST /api/trade-enquiries
-// @access  Public
+// @access  Public (No login required)
 const createEnquiry = async (req, res) => {
   try {
     const { fullname, email, phone, companyname, website, message, source } = req.body;
@@ -10,6 +12,10 @@ const createEnquiry = async (req, res) => {
     // Honeypot check
     if (website) {
       return res.status(200).json({ success: true, message: 'Enquiry received' });
+    }
+
+    if (!fullname || !email) {
+      return res.status(400).json({ success: false, message: 'Please provide both your name and email address.' });
     }
 
     const enquiry = await TradeEnquiry.create({
@@ -21,8 +27,29 @@ const createEnquiry = async (req, res) => {
       source: source || 'enquiry'
     });
 
+    // Notify all admin users
+    try {
+      const admins = await User.find({ role: 'admin' }).select('_id');
+      if (admins.length > 0) {
+        const sourceLabel = source === 'app_promo' ? 'Homepage Form' : source === 'contact' ? 'Contact Form' : 'Trade Enquiry';
+        const notifs = admins.map(adminUser => ({
+          recipient: adminUser._id,
+          recipientType: 'admin',
+          title: `New Message (${sourceLabel})`,
+          message: `${fullname} (${email}) sent a message: "${message ? (message.length > 80 ? message.slice(0, 80) + '...' : message) : 'No message provided'}"`,
+          type: 'system',
+          link: '/admin/trade-enquiries',
+          metadata: { enquiryId: enquiry._id, email, phone, source }
+        }));
+        await Notification.insertMany(notifs);
+      }
+    } catch (notifErr) {
+      console.warn('Failed to dispatch admin notification for enquiry:', notifErr.message);
+    }
+
     res.status(201).json({
       success: true,
+      message: 'Your message has been sent directly to the Grand Store admin team.',
       data: enquiry
     });
   } catch (error) {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { Settings, Save, RefreshCw, Percent, Truck, ShieldCheck, ShoppingBag, Users, Gift, Send, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Settings, Save, RefreshCw, Percent, Truck, ShieldCheck, ShoppingBag, Users, Gift, Send, AlertCircle, CheckCircle2, Landmark, Plus, Trash2, RotateCcw, UserCheck, UploadCloud, FileText } from "lucide-react";
 import api from '../../api';
 import Price from '../../components/ui/Price';
 
@@ -18,7 +18,33 @@ export default function AdminSettings() {
     const fetchSettings = async () => {
       try {
         const res = await api.get(`/settings/public`);
-        setSettings(res.data);
+        const data = res.data || {};
+        if (!data.bankDetailsList || data.bankDetailsList.length === 0) {
+          const bd = data.bankDetails || {};
+          data.bankDetailsList = [
+            { id: 'bank_name', key: 'Bank Name', value: bd.bankName || 'Standard Bank' },
+            { id: 'account_name', key: 'Account Holder', value: bd.accountName || 'The Grand Store PTY LTD' },
+            { id: 'account_number', key: 'Account Number', value: bd.accountNumber || '0123456789' },
+            { id: 'branch_code', key: 'Branch Code', value: bd.branchCode || '051001' },
+            { id: 'account_type', key: 'Account Type', value: bd.accountType || 'Business Cheque' },
+            { id: 'swift_code', key: 'SWIFT / BIC Code', value: bd.swiftCode || 'SBZAJJ' },
+            { id: 'reference_note', key: 'Reference Instructions', value: bd.referenceNote || 'Use Order ID or Bidder Number as deposit reference' }
+          ];
+        }
+        if (!data.bidderKycIdTypes || data.bidderKycIdTypes.length === 0) {
+          data.bidderKycIdTypes = ['National ID', 'Passport', 'Driver License'];
+        }
+        if (!data.bidderKycFields || data.bidderKycFields.length === 0) {
+          data.bidderKycFields = [
+            { id: 'fullName', key: 'fullName', label: 'Full Legal Name', type: 'text', placeholder: 'As printed on your official identification document', required: true, helpText: 'Official legal identity', enabled: true },
+            { id: 'dateOfBirth', key: 'dateOfBirth', label: 'Date of Birth', type: 'date', placeholder: '', required: true, helpText: 'Must be 18+ for legal liquor & auction qualification', enabled: true },
+            { id: 'idType', key: 'idType', label: 'Identification Document Type', type: 'select', options: ['National ID', 'Passport', 'Driver License'], placeholder: '', required: true, helpText: 'Select your ID type', enabled: true },
+            { id: 'idNumber', key: 'idNumber', label: 'ID / Passport / Document Number', type: 'text', placeholder: 'e.g. 9204155029087 or A12345678', required: true, helpText: 'Official unique document number', enabled: true },
+            { id: 'idDocumentUrl', key: 'idDocumentUrl', label: 'Passport or ID Document Upload', type: 'file', placeholder: '', required: true, helpText: 'Upload a clear photo or PDF scan of your passport or ID document (Max 10MB)', enabled: true },
+            { id: 'proofOfResidenceUrl', key: 'proofOfResidenceUrl', label: 'Proof of Residence Document (Optional)', type: 'file', placeholder: '', required: false, helpText: 'Utility bill or bank statement less than 3 months old', enabled: true }
+          ];
+        }
+        setSettings(data);
       } catch (e) {
         console.error(e);
       } finally {
@@ -36,14 +62,122 @@ export default function AdminSettings() {
     setSettings(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleBankChange = (field, value) => {
-    setSettings(prev => ({
-      ...prev,
-      bankDetails: {
-        ...(prev.bankDetails || {}),
-        [field]: value
+  const handleBankKeyChange = (id, field, val) => {
+    setSettings(prev => {
+      const list = [...(prev.bankDetailsList || [])];
+      const index = list.findIndex(item => item.id === id);
+      if (index !== -1) {
+        list[index] = { ...list[index], [field]: val };
       }
-    }));
+      return { ...prev, bankDetailsList: list };
+    });
+  };
+
+  const handleAddBankKey = () => {
+    setSettings(prev => {
+      const list = [...(prev.bankDetailsList || [])];
+      list.push({
+        id: `custom_key_${Date.now()}`,
+        key: '',
+        value: ''
+      });
+      return { ...prev, bankDetailsList: list };
+    });
+  };
+
+  const handleDeleteBankKey = (id) => {
+    setSettings(prev => {
+      const list = (prev.bankDetailsList || []).filter(item => item.id !== id);
+      return { ...prev, bankDetailsList: list };
+    });
+  };
+
+  const handleResetBankKeys = () => {
+    const defaultList = [
+      { id: 'bank_name', key: 'Bank Name', value: 'Standard Bank' },
+      { id: 'account_name', key: 'Account Holder', value: 'The Grand Store PTY LTD' },
+      { id: 'account_number', key: 'Account Number', value: '0123456789' },
+      { id: 'branch_code', key: 'Branch Code', value: '051001' },
+      { id: 'account_type', key: 'Account Type', value: 'Business Cheque' },
+      { id: 'swift_code', key: 'SWIFT / BIC Code', value: 'SBZAJJ' },
+      { id: 'reference_note', key: 'Reference Instructions', value: 'Use Order ID or Bidder Number as deposit reference' }
+    ];
+    setSettings(prev => ({ ...prev, bankDetailsList: defaultList }));
+  };
+
+  const handleKycFieldChange = (id, field, val) => {
+    setSettings(prev => {
+      const list = [...(prev.bidderKycFields || [])];
+      const index = list.findIndex(item => item.id === id);
+      if (index !== -1) {
+        list[index] = { ...list[index], [field]: val };
+      }
+      return { ...prev, bidderKycFields: list };
+    });
+  };
+
+  const handleAddKycField = () => {
+    setSettings(prev => {
+      const list = [...(prev.bidderKycFields || [])];
+      list.push({
+        id: `kyc_f_${Date.now()}`,
+        key: `custom_${Date.now().toString().slice(-4)}`,
+        label: 'New Qualification Field',
+        type: 'text',
+        options: [],
+        placeholder: '',
+        required: true,
+        helpText: '',
+        enabled: true
+      });
+      return { ...prev, bidderKycFields: list };
+    });
+  };
+
+  const handleDeleteKycField = (id) => {
+    setSettings(prev => {
+      const list = (prev.bidderKycFields || []).filter(item => item.id !== id);
+      return { ...prev, bidderKycFields: list };
+    });
+  };
+
+  const handleResetKycFields = () => {
+    const defaultList = [
+      { id: 'fullName', key: 'fullName', label: 'Full Legal Name', type: 'text', placeholder: 'As printed on your official identification document', required: true, helpText: 'Official legal identity', enabled: true },
+      { id: 'dateOfBirth', key: 'dateOfBirth', label: 'Date of Birth', type: 'date', placeholder: '', required: true, helpText: 'Must be 18+ for legal liquor & auction qualification', enabled: true },
+      { id: 'idType', key: 'idType', label: 'Identification Document Type', type: 'select', options: settings?.bidderKycIdTypes || ['National ID', 'Passport', 'Driver License'], placeholder: '', required: true, helpText: 'Select your ID type', enabled: true },
+      { id: 'idNumber', key: 'idNumber', label: 'ID / Passport / Document Number', type: 'text', placeholder: 'e.g. 9204155029087 or A12345678', required: true, helpText: 'Official unique document number', enabled: true },
+      { id: 'idDocumentUrl', key: 'idDocumentUrl', label: 'Passport or ID Document Upload', type: 'file', placeholder: '', required: true, helpText: 'Upload a clear photo or PDF scan of your passport or ID document (Max 10MB)', enabled: true },
+      { id: 'proofOfResidenceUrl', key: 'proofOfResidenceUrl', label: 'Proof of Residence Document (Optional)', type: 'file', placeholder: '', required: false, helpText: 'Utility bill or bank statement less than 3 months old', enabled: true }
+    ];
+    setSettings(prev => ({ ...prev, bidderKycFields: defaultList }));
+  };
+
+  const handleAddIdType = () => {
+    const promptVal = window.prompt('Enter new document type name (e.g. Foreign Passport, Asylum Document):');
+    if (!promptVal || !promptVal.trim()) return;
+    setSettings(prev => {
+      const types = [...(prev.bidderKycIdTypes || [])];
+      if (!types.includes(promptVal.trim())) {
+        types.push(promptVal.trim());
+      }
+      return { ...prev, bidderKycIdTypes: types };
+    });
+  };
+
+  const handleDeleteIdType = (val) => {
+    setSettings(prev => {
+      const types = (prev.bidderKycIdTypes || []).filter(t => t !== val);
+      return { ...prev, bidderKycIdTypes: types };
+    });
+  };
+
+  const handleIdTypeChange = (index, val) => {
+    setSettings(prev => {
+      const types = [...(prev.bidderKycIdTypes || [])];
+      types[index] = val;
+      return { ...prev, bidderKycIdTypes: types };
+    });
   };
 
   const handleSave = async () => {
@@ -201,21 +335,40 @@ export default function AdminSettings() {
             </div>
           </div>
 
+          {/* REFER & EARN PROGRAM CONFIGURATION */}
           <div className="bg-[#111] border border-white/10 rounded-xl p-6">
-            <h2 className="text-white font-serif text-xl mb-6 border-b border-white/10 pb-4">Refer & Earn System</h2>
+            <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+              <div>
+                <h2 className="text-white font-serif text-xl flex items-center gap-2">
+                  <Users className="text-[var(--color-gold)]" size={20} /> Refer & Earn Program
+                </h2>
+                <p className="text-[11px] text-white/40 mt-1">
+                  Rewards the person who shares the link with cash credit once their friend completes their first purchase.
+                </p>
+              </div>
+              <span className="text-xs uppercase tracking-widest text-[#c9a35b] font-mono bg-[#c9a35b]/10 px-2.5 py-1 rounded-full border border-[#c9a35b]/20">
+                1st Order Trigger
+              </span>
+            </div>
+
             <div className="space-y-6">
               
+              {/* Field 1: Referrer Reward Credit Amount */}
               <div className="flex items-center justify-between gap-4">
                 <div className="flex-1">
-                  <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Referral Reward</label>
-                  <p className="text-[10px] text-white/30 italic">Amount credited to the referrer when a friend completes their first order</p>
+                  <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1 font-semibold">
+                    Referrer Reward Credit
+                  </label>
+                  <p className="text-[10px] text-white/40">
+                    Amount credited to the referrer's wallet after their friend makes their first paid purchase
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
-                    step="0.1"
+                    step="1"
                     min="0"
-                    value={settings.referralRewardAmount || 0}
+                    value={settings.referralRewardAmount !== undefined ? settings.referralRewardAmount : 50}
                     onChange={e => handleChange('referralRewardAmount', e.target.value)}
                     className="w-24 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono text-right focus:outline-none focus:border-[var(--color-gold)]/50 transition-colors [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
                   />
@@ -238,37 +391,99 @@ export default function AdminSettings() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between gap-4">
+              {/* Field 2: Max Rewarded People Per Referrer (Cap) */}
+              <div className="flex items-center justify-between gap-4 pt-4 border-t border-white/5">
                 <div className="flex-1">
-                  <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Welcome Discount</label>
-                  <p className="text-[10px] text-white/30 italic">Amount discounted from the friend's first order</p>
+                  <div className="flex items-center gap-2">
+                    <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1 font-semibold">
+                      Max Rewarded Friends Per Referrer
+                    </label>
+                    <span className="text-[10px] uppercase font-mono text-[var(--color-gold)] bg-[var(--color-gold)]/10 px-2 py-0.5 rounded border border-[var(--color-gold)]/20">
+                      Reward Cap
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-white/40">
+                    How many people a referrer can earn R{settings.referralRewardAmount || 50} from (e.g. 5 people = max R{(settings.referralRewardAmount || 50) * (settings.referralMaxRewardedUsers || 5)} rewards). Enter <strong className="text-white">0</strong> for unlimited friends.
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
-                    step="0.1"
+                    step="1"
                     min="0"
-                    value={settings.referralWelcomeDiscount || 0}
-                    onChange={e => handleChange('referralWelcomeDiscount', e.target.value)}
+                    placeholder="5"
+                    value={settings.referralMaxRewardedUsers !== undefined ? settings.referralMaxRewardedUsers : 5}
+                    onChange={e => handleChange('referralMaxRewardedUsers', e.target.value)}
                     className="w-24 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono text-right focus:outline-none focus:border-[var(--color-gold)]/50 transition-colors [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
                   />
-                  <div className="flex bg-black/50 border border-white/10 rounded-lg p-1">
-                    <button
-                      type="button"
-                      onClick={() => handleTypeChange('referralWelcomeDiscountType', 'fixed')}
-                      className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${settings.referralWelcomeDiscountType !== 'percentage' ? 'bg-[var(--color-gold)] text-black' : 'text-white/40 hover:text-white'}`}
-                    >
-                      ZAR
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleTypeChange('referralWelcomeDiscountType', 'percentage')}
-                      className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${settings.referralWelcomeDiscountType === 'percentage' ? 'bg-[var(--color-gold)] text-black' : 'text-white/40 hover:text-white'}`}
-                    >
-                      %
-                    </button>
-                  </div>
+                  <span className="text-xs text-white/40 font-mono w-14">
+                    {(settings.referralMaxRewardedUsers === 0 || settings.referralMaxRewardedUsers === '0') ? 'Unlimited' : 'People'}
+                  </span>
                 </div>
+              </div>
+
+              {/* Field 3: Optional Welcome Discount for the Friend */}
+              <div className="pt-4 border-t border-white/5 space-y-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">
+                      Give Welcome Discount To Friend
+                    </label>
+                    <p className="text-[10px] text-white/30 italic">
+                      Default is disabled (refer & earn rewards the referrer only). Enable if you also want the friend to receive a discount on their 1st purchase.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSettings(prev => ({ ...prev, referralWelcomeDiscountEnabled: !prev.referralWelcomeDiscountEnabled }))}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      settings.referralWelcomeDiscountEnabled ? 'bg-[#c9a35b]' : 'bg-white/10'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-black shadow transition duration-200 ease-in-out ${
+                        settings.referralWelcomeDiscountEnabled ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {settings.referralWelcomeDiscountEnabled && (
+                  <div className="flex items-center justify-between gap-4 pl-4 border-l-2 border-[var(--color-gold)]/40">
+                    <div className="flex-1">
+                      <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">
+                        Friend's Welcome Discount Amount
+                      </label>
+                      <p className="text-[10px] text-white/30">Deducted from friend's first order total</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={settings.referralWelcomeDiscount || 0}
+                        onChange={e => handleChange('referralWelcomeDiscount', e.target.value)}
+                        className="w-24 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono text-right focus:outline-none focus:border-[var(--color-gold)]/50 transition-colors [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                      />
+                      <div className="flex bg-black/50 border border-white/10 rounded-lg p-1">
+                        <button
+                          type="button"
+                          onClick={() => handleTypeChange('referralWelcomeDiscountType', 'fixed')}
+                          className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${settings.referralWelcomeDiscountType !== 'percentage' ? 'bg-[var(--color-gold)] text-black' : 'text-white/40 hover:text-white'}`}
+                        >
+                          ZAR
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleTypeChange('referralWelcomeDiscountType', 'percentage')}
+                          className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${settings.referralWelcomeDiscountType === 'percentage' ? 'bg-[var(--color-gold)] text-black' : 'text-white/40 hover:text-white'}`}
+                        >
+                          %
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
             </div>
@@ -409,25 +624,363 @@ export default function AdminSettings() {
             </div>
           </div>
 
+          {/* 18+ BIDDER LEGAL QUALIFICATION & KYC REQUIREMENTS */}
           <div className="bg-[#111] border border-white/10 rounded-xl p-6">
-            <h2 className="text-white font-serif text-xl mb-6 border-b border-white/10 pb-4">Manual Bank Transfer Details</h2>
-            <p className="text-[10px] text-white/30 italic mb-4">These details will be displayed to customers when they select "Bank Transfer" at checkout.</p>
-            <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-white/10 pb-4 mb-5 gap-3">
               <div>
-                <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Bank Name</label>
-                <input type="text" value={settings.bankDetails?.bankName || ''} onChange={e => handleBankChange('bankName', e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--color-gold)]/50 transition-colors" />
+                <h2 className="text-white font-serif text-xl flex items-center gap-2">
+                  <UserCheck className="text-[var(--color-gold)]" size={22} /> 18+ Bidder Legal Qualification & KYC Requirements
+                </h2>
+                <p className="text-[11px] text-white/40 mt-1">
+                  Configure the mandatory identity & qualification fields (Passport, ID, DOB, Name, Document Uploads) required for patrons to bid.
+                </p>
               </div>
-              <div>
-                <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Account Name</label>
-                <input type="text" value={settings.bankDetails?.accountName || ''} onChange={e => handleBankChange('accountName', e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--color-gold)]/50 transition-colors" />
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={handleResetKycFields}
+                  className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                  title="Reset to standard 18+ KYC template"
+                >
+                  <RotateCcw size={13} /> Reset Template
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddKycField}
+                  className="px-3 py-1.5 bg-[var(--color-gold)]/15 hover:bg-[var(--color-gold)]/25 border border-[var(--color-gold)]/40 text-[var(--color-gold)] rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                >
+                  <Plus size={14} /> Add Field
+                </button>
               </div>
-              <div>
-                <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Account Number</label>
-                <input type="text" value={settings.bankDetails?.accountNumber || ''} onChange={e => handleBankChange('accountNumber', e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--color-gold)]/50 transition-colors" />
+            </div>
+
+            <div className="space-y-6">
+              {/* Core Age & Upload Controls */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-black/40 border border-white/5">
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1 font-semibold">
+                    Minimum Qualification Age
+                  </label>
+                  <p className="text-[10px] text-white/40 mb-2">
+                    Legal minimum age calculated from patron's date of birth (Strict CPA compliance)
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="18"
+                      max="100"
+                      value={settings.bidderKycMinAge || 18}
+                      onChange={(e) => setSettings(prev => ({ ...prev, bidderKycMinAge: parseInt(e.target.value, 10) || 18 }))}
+                      className="w-24 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono text-center focus:border-[var(--color-gold)] outline-none"
+                    />
+                    <span className="text-xs text-[var(--color-gold)] font-bold">Years (18+)</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1 font-semibold">
+                    Mandatory Document Upload
+                  </label>
+                  <p className="text-[10px] text-white/40 mb-2">
+                    Enforce high-resolution photo or PDF upload of official ID or Passport
+                  </p>
+                  <div className="flex items-center gap-3 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setSettings(prev => ({ ...prev, bidderKycRequireDocumentUpload: !prev.bidderKycRequireDocumentUpload }))}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        settings.bidderKycRequireDocumentUpload !== false ? 'bg-[#c9a35b]' : 'bg-white/10'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-5 w-5 transform rounded-full bg-black shadow transition duration-200 ease-in-out ${
+                          settings.bidderKycRequireDocumentUpload !== false ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs text-white/70">
+                      {settings.bidderKycRequireDocumentUpload !== false ? 'Strict Upload Required' : 'Upload Optional'}
+                    </span>
+                  </div>
+                </div>
               </div>
+
+              {/* Document Types Selector Editor */}
+              <div className="p-4 rounded-xl bg-black/40 border border-white/5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] font-semibold">
+                      Allowed Identification Document Types
+                    </label>
+                    <p className="text-[10px] text-white/40">
+                      Options available in the document type dropdown/selector (e.g. Passport, National ID, Driver License)
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddIdType}
+                    className="px-2.5 py-1 text-[11px] bg-white/5 hover:bg-white/10 border border-white/10 text-[var(--color-gold)] rounded-lg font-semibold flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus size={12} /> Add Document Type
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {(settings.bidderKycIdTypes || []).map((t, idx) => (
+                    <div key={idx} className="flex items-center gap-1.5 bg-black/70 border border-white/10 px-3 py-1.5 rounded-lg text-xs">
+                      <input
+                        type="text"
+                        value={t}
+                        onChange={(e) => handleIdTypeChange(idx, e.target.value)}
+                        className="bg-transparent text-white font-medium outline-none text-xs w-28 sm:w-36"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteIdType(t)}
+                        className="text-white/30 hover:text-rose-400 p-0.5 cursor-pointer"
+                        title="Remove option"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Configurable Qualification Fields List */}
+              <div className="space-y-3">
+                <label className="block text-xs uppercase tracking-widest text-[var(--color-gold)] font-bold">
+                  Configured Qualification Fields (Keys, Labels & Requirements)
+                </label>
+
+                {(settings.bidderKycFields || []).map((field, index) => (
+                  <div 
+                    key={field.id || index}
+                    className="p-4 bg-black/50 border border-white/10 hover:border-[var(--color-gold)]/30 rounded-xl space-y-3 transition-all"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono text-white/40 bg-white/5 px-2 py-0.5 rounded">
+                          #{index + 1}
+                        </span>
+                        <input
+                          type="text"
+                          value={field.label || ''}
+                          placeholder="Field Label (e.g. Full Legal Name)"
+                          onChange={(e) => handleKycFieldChange(field.id, 'label', e.target.value)}
+                          className="bg-transparent text-white text-sm font-semibold outline-none focus:border-b border-[var(--color-gold)] px-1 py-0.5"
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <label className="flex items-center gap-1.5 text-xs text-white/60 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(field.required)}
+                            onChange={(e) => handleKycFieldChange(field.id, 'required', e.target.checked)}
+                            className="rounded accent-[var(--color-gold)]"
+                          />
+                          <span className={field.required ? 'text-[var(--color-gold)] font-semibold' : ''}>Required</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteKycField(field.id)}
+                          className="text-rose-400/60 hover:text-rose-400 p-1 rounded hover:bg-rose-500/10 cursor-pointer"
+                          title="Delete Field"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                      <div>
+                        <label className="block text-[10px] uppercase font-mono text-white/40 mb-1">Key Identifier</label>
+                        <input
+                          type="text"
+                          value={field.key || ''}
+                          placeholder="fieldKey"
+                          onChange={(e) => handleKycFieldChange(field.id, 'key', e.target.value)}
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs font-mono text-[var(--color-gold)] outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] uppercase font-mono text-white/40 mb-1">Field Type</label>
+                        <select
+                          value={field.type || 'text'}
+                          onChange={(e) => handleKycFieldChange(field.id, 'type', e.target.value)}
+                          className="w-full bg-[#161616] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none cursor-pointer"
+                        >
+                          <option value="text">Text Input</option>
+                          <option value="date">Date Picker (e.g. DOB)</option>
+                          <option value="select">Dropdown / Option Selection</option>
+                          <option value="file">Document Upload (Photo/PDF)</option>
+                          <option value="number">Number</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] uppercase font-mono text-white/40 mb-1">Placeholder / Instructions</label>
+                        <input
+                          type="text"
+                          value={field.placeholder || field.helpText || ''}
+                          placeholder="Placeholder / instructions for customer"
+                          onChange={(e) => handleKycFieldChange(field.id, 'placeholder', e.target.value)}
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white/80 outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={handleAddKycField}
+                  className="w-full py-2.5 border border-dashed border-[var(--color-gold)]/40 hover:border-[var(--color-gold)] bg-[var(--color-gold)]/5 hover:bg-[var(--color-gold)]/10 text-[var(--color-gold)] rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer mt-2"
+                >
+                  <Plus size={15} /> Add Another Qualification Requirement Field
+                </button>
+              </div>
+
+              {/* Customer Live Preview */}
+              <div className="p-4 rounded-xl bg-black/70 border border-[var(--color-gold)]/30 space-y-3">
+                <div className="flex items-center justify-between text-[11px] text-[var(--color-gold)] font-medium">
+                  <span className="flex items-center gap-1.5">
+                    <ShieldCheck size={14} /> Customer Modal Preview (18+ Qualification Form)
+                  </span>
+                  <span className="text-[10px] text-white/40 font-mono">Real-Time Sync</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-white/80 pt-2 border-t border-white/10">
+                  {(settings.bidderKycFields || []).filter(f => f.enabled !== false).map((f, idx) => (
+                    <div key={f.id || idx} className="bg-white/[0.02] p-2.5 rounded-lg border border-white/5">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-white/60 font-semibold">{f.label || f.key}:</span>
+                        {f.required && <span className="text-[10px] text-[var(--color-gold)] font-bold">*Required</span>}
+                      </div>
+                      <span className="text-[11px] font-mono text-white/40 block">
+                        [{f.type?.toUpperCase()}] {f.placeholder || f.helpText || 'Customer input'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-[#111] border border-white/10 rounded-xl p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-white/10 pb-4 mb-5 gap-3">
               <div>
-                <label className="block text-xs uppercase tracking-widest text-[var(--color-ivory-muted)] mb-1">Branch Code</label>
-                <input type="text" value={settings.bankDetails?.branchCode || ''} onChange={e => handleBankChange('branchCode', e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--color-gold)]/50 transition-colors" />
+                <h2 className="text-white font-serif text-xl flex items-center gap-2">
+                  <Landmark className="text-[var(--color-gold)]" size={20} /> Official EFT & Bank Details (Editable Keys)
+                </h2>
+                <p className="text-[11px] text-white/40 mt-1">
+                  Add, rename, update, or delete any banking key and its value. These keys appear live on Customer Banking (/customer/banking) and Checkout.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={handleResetBankKeys}
+                  className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                  title="Reset to standard EFT bank keys template"
+                >
+                  <RotateCcw size={13} /> Reset Template
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddBankKey}
+                  className="px-3 py-1.5 bg-[var(--color-gold)]/15 hover:bg-[var(--color-gold)]/25 border border-[var(--color-gold)]/40 text-[var(--color-gold)] rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                >
+                  <Plus size={14} /> Add Key
+                </button>
+              </div>
+            </div>
+
+            {/* Dynamic Keys List */}
+            <div className="space-y-3">
+              {(settings.bankDetailsList || []).map((item, index) => (
+                <div 
+                  key={item.id || index}
+                  className="group flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 bg-black/40 border border-white/10 hover:border-[var(--color-gold)]/30 rounded-xl p-3 transition-all"
+                >
+                  <span className="text-[11px] font-mono text-white/30 w-6 text-center shrink-0 hidden sm:block">
+                    #{index + 1}
+                  </span>
+
+                  {/* Editable Key Name */}
+                  <div className="w-full sm:w-2/5">
+                    <label className="block text-[10px] uppercase font-mono tracking-widest text-[var(--color-gold)]/80 mb-1 sm:hidden">
+                      Key Name / Label
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Key Name (e.g. Bank Name)"
+                      value={item.key || ''}
+                      onChange={(e) => handleBankKeyChange(item.id, 'key', e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs font-semibold text-[var(--color-gold)] placeholder:text-white/20 outline-none focus:border-[var(--color-gold)] transition-colors"
+                    />
+                  </div>
+
+                  <span className="hidden sm:inline text-white/30 font-mono text-sm">:</span>
+
+                  {/* Editable Key Value */}
+                  <div className="w-full sm:flex-1">
+                    <label className="block text-[10px] uppercase font-mono tracking-widest text-white/40 mb-1 sm:hidden">
+                      Value
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Value (e.g. Standard Bank)"
+                      value={item.value || ''}
+                      onChange={(e) => handleBankKeyChange(item.id, 'value', e.target.value)}
+                      className="w-full bg-black/60 border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono placeholder:text-white/20 outline-none focus:border-[var(--color-gold)] transition-colors"
+                    />
+                  </div>
+
+                  {/* Delete Button */}
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteBankKey(item.id)}
+                    className="p-2 text-rose-400/60 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors shrink-0 cursor-pointer self-end sm:self-center"
+                    title={`Delete "${item.key || 'key'}"`}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+
+              {(!settings.bankDetailsList || settings.bankDetailsList.length === 0) && (
+                <div className="text-center py-8 border border-dashed border-white/15 rounded-xl text-white/40 text-xs">
+                  No bank detail keys configured. Click <strong className="text-[var(--color-gold)] cursor-pointer" onClick={handleAddBankKey}>+ Add Key</strong> or <strong className="text-[var(--color-gold)] cursor-pointer" onClick={handleResetBankKeys}>Reset Template</strong> to add keys.
+                </div>
+              )}
+
+              {/* Add Key Button at bottom of list */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={handleAddBankKey}
+                  className="w-full py-2.5 border border-dashed border-[var(--color-gold)]/40 hover:border-[var(--color-gold)] bg-[var(--color-gold)]/5 hover:bg-[var(--color-gold)]/10 text-[var(--color-gold)] rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer"
+                >
+                  <Plus size={15} /> Add Another Bank Detail Key
+                </button>
+              </div>
+
+              {/* Live Preview Card */}
+              <div className="mt-5 p-4 rounded-xl bg-black/70 border border-[var(--color-gold)]/30 space-y-3">
+                <div className="flex items-center justify-between text-[11px] text-[var(--color-gold)] font-medium">
+                  <span className="flex items-center gap-1.5"><ShieldCheck size={14} /> Live Customer-Facing Preview ({settings.bankDetailsList?.length || 0} Keys Active)</span>
+                  <span className="text-[10px] text-white/40 font-mono">Real-Time Sync</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-white/80 pt-2 border-t border-white/10 font-sans">
+                  {(settings.bankDetailsList || []).filter(item => item.key).map((item, idx) => (
+                    <div key={item.id || idx} className="bg-white/[0.02] p-2.5 rounded-lg border border-white/5">
+                      <span className="text-white/40 block text-[10px] uppercase font-mono tracking-wider">{item.key}:</span>
+                      <strong className="text-white font-medium break-all font-mono text-xs">{item.value || '—'}</strong>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -561,41 +1114,70 @@ export default function AdminSettings() {
             {(() => {
               const orderTotal = 1000;
               let welcomeDiscount = 0;
-              if (settings.referralWelcomeDiscountType === 'percentage') {
-                welcomeDiscount = (orderTotal * (settings.referralWelcomeDiscount || 0)) / 100;
-              } else {
-                welcomeDiscount = settings.referralWelcomeDiscount || 0;
+              if (settings.referralWelcomeDiscountEnabled) {
+                if (settings.referralWelcomeDiscountType === 'percentage') {
+                  welcomeDiscount = (orderTotal * (settings.referralWelcomeDiscount || 0)) / 100;
+                } else {
+                  welcomeDiscount = settings.referralWelcomeDiscount || 0;
+                }
               }
               const friendPays = Math.max(0, orderTotal - welcomeDiscount);
               
               let referrerGets = 0;
               if (settings.referralRewardType === 'percentage') {
-                referrerGets = (orderTotal * (settings.referralRewardAmount || 0)) / 100;
+                referrerGets = (orderTotal * (settings.referralRewardAmount || 50)) / 100;
               } else {
-                referrerGets = settings.referralRewardAmount || 0;
+                referrerGets = settings.referralRewardAmount !== undefined ? settings.referralRewardAmount : 50;
               }
+
+              const maxUsers = settings.referralMaxRewardedUsers !== undefined ? Number(settings.referralMaxRewardedUsers) : 5;
+              const maxPotentialEarnings = maxUsers > 0 ? (maxUsers * referrerGets) : null;
               
               return (
                 <div className="space-y-4 text-sm font-mono relative z-10">
-                  <div className="text-[10px] text-white/50 uppercase tracking-widest border-b border-white/10 pb-2 mb-2">Scenario 1: Friend's First Purchase</div>
+                  <div className="text-[10px] text-white/50 uppercase tracking-widest border-b border-white/10 pb-2 mb-2">
+                    Scenario 1: Friend's First Purchase
+                  </div>
                   <div className="flex justify-between text-gray-400">
                     <span>Friend's Order Total:</span><span className="text-white"><Price amount={orderTotal.toFixed(2)} /></span>
                   </div>
-                  <div className="flex justify-between text-gray-400">
-                    <span>Welcome Discount Applied:</span><span className="text-yellow-500/80">- <Price amount={welcomeDiscount.toFixed(2)} /></span>
-                  </div>
+                  {settings.referralWelcomeDiscountEnabled && welcomeDiscount > 0 && (
+                    <div className="flex justify-between text-gray-400">
+                      <span>Welcome Discount Applied:</span><span className="text-yellow-500/80">- <Price amount={welcomeDiscount.toFixed(2)} /></span>
+                    </div>
+                  )}
                   <div className="flex justify-between font-bold text-white border-t border-white/10 pt-3">
                     <span>FRIEND PAYS:</span><span><Price amount={friendPays.toFixed(2)} /></span>
                   </div>
                   
                   <div className="border-t border-white/10 my-4"></div>
                   
-                  <div className="text-[10px] text-white/50 uppercase tracking-widest border-b border-white/10 pb-2 mb-2">Scenario 2: Referrer's Reward</div>
-                  <div className="flex justify-between text-gray-400">
-                    <span>Referrer's Wallet Balance Increases By:</span><span className="text-green-400 font-bold">+ <Price amount={referrerGets.toFixed(2)} /></span>
+                  <div className="text-[10px] text-white/50 uppercase tracking-widest border-b border-white/10 pb-2 mb-2">
+                    Scenario 2: Referrer's Reward (Per Friend's 1st Order)
                   </div>
+                  <div className="flex justify-between text-gray-400">
+                    <span>Referrer's Wallet Balance Increases By:</span>
+                    <span className="text-green-400 font-bold">+ <Price amount={referrerGets.toFixed(2)} /></span>
+                  </div>
+
+                  <div className="border-t border-white/10 my-4"></div>
+
+                  <div className="text-[10px] text-white/50 uppercase tracking-widest border-b border-white/10 pb-2 mb-2">
+                    Scenario 3: Configured Cap & Earning Limit
+                  </div>
+                  <div className="flex justify-between text-gray-400">
+                    <span>Rewarded Friends Allowed:</span>
+                    <span className="text-white font-bold">{maxUsers === 0 ? 'Unlimited' : `${maxUsers} Friends`}</span>
+                  </div>
+                  {maxPotentialEarnings !== null && (
+                    <div className="flex justify-between text-gray-400">
+                      <span>Max Total Referrer Earnings:</span>
+                      <span className="text-[var(--color-gold)] font-bold"><Price amount={maxPotentialEarnings.toFixed(2)} /></span>
+                    </div>
+                  )}
+                  
                   <p className="text-xs text-white/40 mt-2 font-sans italic">
-                    * The referrer can apply this <Price amount={referrerGets.toFixed(2)} /> balance as a discount at checkout on their next order.
+                    * The referrer can apply their accumulated <Price amount={referrerGets.toFixed(2)} /> rewards as a direct discount at checkout on their next order.
                   </p>
                 </div>
               );

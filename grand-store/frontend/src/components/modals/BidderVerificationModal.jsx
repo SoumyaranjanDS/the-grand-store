@@ -2,24 +2,31 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   ShieldCheck, AlertCircle, CheckCircle2, X, Crown, Sparkles, 
-  Landmark, CreditCard, UploadCloud, Copy, Loader2, ArrowRight, Info, ExternalLink
+  Landmark, CreditCard, UploadCloud, Loader2, ArrowRight, Info, 
+  ExternalLink, FileText, Calendar, User, FileCheck, Link2
 } from 'lucide-react';
 import api from '../../api';
+import StoreBankDetailsCard from '../StoreBankDetailsCard';
+import { useAuth } from '../../context/AuthContext';
 
 export default function BidderVerificationModal({ isOpen, onClose, onSuccess, onNotify, bidderProfile }) {
+  const { user } = useAuth();
   const isAlreadyVerified = Boolean(bidderProfile?.isVerified);
-
-  const [dateOfBirth, setDateOfBirth] = useState('');
-  const [idType, setIdType] = useState('National ID');
-  const [idNumber, setIdNumber] = useState('');
-  const [acceptRules, setAcceptRules] = useState(false);
-  
-  // Tier selection: 'normal' vs 'premium'
-  const [tier, setTier] = useState(isAlreadyVerified ? 'premium' : 'normal');
 
   // Dynamic Settings from Admin
   const [settings, setSettings] = useState(null);
   const [loadingSettings, setLoadingSettings] = useState(true);
+
+  // Dynamic KYC Form Values (keys configured by Admin)
+  const [formValues, setFormValues] = useState({});
+  const [acceptRules, setAcceptRules] = useState(false);
+
+  // File Upload States
+  const [uploadingField, setUploadingField] = useState({}); // { [key]: boolean }
+  const [showUrlInput, setShowUrlInput] = useState({}); // { [key]: boolean }
+
+  // Tier selection: 'normal' vs 'premium'
+  const [tier, setTier] = useState(isAlreadyVerified ? 'premium' : 'normal');
 
   // Refund Bank Details (for Premium Tier)
   const [bankDetails, setBankDetails] = useState({
@@ -32,7 +39,8 @@ export default function BidderVerificationModal({ isOpen, onClose, onSuccess, on
   // Deposit Payment Method & Proof
   const [depositPaymentMethod, setDepositPaymentMethod] = useState('payfast');
   const [depositProofUrl, setDepositProofUrl] = useState('');
-  const [uploadingProof, setUploadingProof] = useState(false);
+  const [uploadingDepositProof, setUploadingDepositProof] = useState(false);
+  const [showDepositUrlInput, setShowDepositUrlInput] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -44,42 +52,17 @@ export default function BidderVerificationModal({ isOpen, onClose, onSuccess, on
       setAcceptRules(true);
     }
 
-    // Auto-fill KYC details if present on bidderProfile
-    if (bidderProfile) {
-      if (bidderProfile.dateOfBirth) {
-        try {
-          const dob = new Date(bidderProfile.dateOfBirth).toISOString().split('T')[0];
-          setDateOfBirth(dob);
-        } catch (e) {}
-      }
-      if (bidderProfile.idType) {
-        setIdType(bidderProfile.idType);
-      }
-      if (bidderProfile.idNumber) {
-        setIdNumber(bidderProfile.idNumber);
-      }
-      if (bidderProfile.bankAccountDetails) {
-        setBankDetails(prev => ({
-          bankName: bidderProfile.bankAccountDetails.bankName || prev.bankName || '',
-          accountHolder: bidderProfile.bankAccountDetails.accountHolder || prev.accountHolder || '',
-          accountNumber: bidderProfile.bankAccountDetails.accountNumber || prev.accountNumber || '',
-          branchCode: bidderProfile.bankAccountDetails.branchCode || prev.branchCode || ''
-        }));
-      }
-    }
-
     const fetchSettings = async () => {
       try {
         const res = await api.get('/settings/public');
         setSettings(res.data);
       } catch (err) {
-        console.error('Failed to load settings:', err);
+        console.error('Failed to load settings in verification modal:', err);
       } finally {
         setLoadingSettings(false);
       }
     };
 
-    // Auto-fetch saved customer bank details if not already loaded
     const fetchSavedBankDetails = async () => {
       try {
         const res = await api.get('/auth/banking');
@@ -87,20 +70,63 @@ export default function BidderVerificationModal({ isOpen, onClose, onSuccess, on
           const b = res.data.bankAccountDetails;
           setBankDetails(prev => ({
             bankName: prev.bankName || b.bankName || '',
-            accountHolder: prev.accountHolder || b.accountHolder || '',
+            accountHolder: prev.accountHolder || b.accountHolder || user?.name || '',
             accountNumber: prev.accountNumber || b.accountNumber || '',
             branchCode: prev.branchCode || b.branchCode || ''
           }));
+        } else if (user?.name) {
+          setBankDetails(prev => ({
+            ...prev,
+            accountHolder: prev.accountHolder || user.name
+          }));
         }
       } catch (err) {
-        // Silently ignore if not logged in or error
+        // Silently ignore if unauthenticated
       }
     };
 
     fetchSettings();
     fetchSavedBankDetails();
-  }, [isOpen, isAlreadyVerified, bidderProfile]);
+  }, [isOpen, isAlreadyVerified, user]);
 
+  // Sync initial form values from bidderProfile, user, and settings
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let dobVal = '';
+    if (bidderProfile?.dateOfBirth) {
+      try {
+        dobVal = new Date(bidderProfile.dateOfBirth).toISOString().split('T')[0];
+      } catch (e) {}
+    }
+
+    const initialValues = {
+      fullName: bidderProfile?.legalFullName || user?.name || '',
+      legalFullName: bidderProfile?.legalFullName || user?.name || '',
+      dateOfBirth: dobVal,
+      idType: bidderProfile?.idType || settings?.bidderKycIdTypes?.[0] || 'National ID',
+      idNumber: bidderProfile?.idNumber || '',
+      idDocumentUrl: bidderProfile?.idDocumentUrl || '',
+      proofOfResidenceUrl: bidderProfile?.proofOfResidenceUrl || '',
+      ...(bidderProfile?.customKycValues || {})
+    };
+
+    setFormValues(prev => ({
+      ...initialValues,
+      ...prev
+    }));
+
+    if (bidderProfile?.bankAccountDetails) {
+      setBankDetails(prev => ({
+        bankName: bidderProfile.bankAccountDetails.bankName || prev.bankName || '',
+        accountHolder: bidderProfile.bankAccountDetails.accountHolder || prev.accountHolder || '',
+        accountNumber: bidderProfile.bankAccountDetails.accountNumber || prev.accountNumber || '',
+        branchCode: bidderProfile.bankAccountDetails.branchCode || prev.branchCode || ''
+      }));
+    }
+  }, [isOpen, bidderProfile, user, settings]);
+
+  // Lock body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
       const prevOverflow = document.body.style.overflow;
@@ -113,21 +139,98 @@ export default function BidderVerificationModal({ isOpen, onClose, onSuccess, on
 
   if (!isOpen) return null;
 
+  const minAge = settings?.bidderKycMinAge !== undefined ? settings.bidderKycMinAge : 18;
   const dynamicDepositAmount = settings?.auctionPremiumDepositAmount !== undefined 
     ? settings.auctionPremiumDepositAmount 
     : 5000;
   const standardLimit = settings?.auctionStandardBiddingLimit || 25000;
   const premiumLimit = settings?.auctionPremiumBiddingLimit || 250000;
 
-  const handleBankChange = (field, value) => {
-    setBankDetails(prev => ({ ...prev, [field]: value }));
+  // Active KYC fields configured by admin
+  const activeFields = (settings?.bidderKycFields && settings.bidderKycFields.length > 0)
+    ? settings.bidderKycFields.filter(f => f.enabled !== false)
+    : [
+        { id: 'fullName', key: 'fullName', label: 'Full Legal Name', type: 'text', placeholder: 'As printed on your official identification document', required: true, helpText: 'Official legal identity', enabled: true },
+        { id: 'dateOfBirth', key: 'dateOfBirth', label: 'Date of Birth', type: 'date', placeholder: '', required: true, helpText: `Must be at least ${minAge}+ for legal liquor & auction qualification`, enabled: true },
+        { id: 'idType', key: 'idType', label: 'Identification Document Type', type: 'select', options: settings?.bidderKycIdTypes || ['National ID', 'Passport', 'Driver License'], placeholder: '', required: true, helpText: 'Select your ID type', enabled: true },
+        { id: 'idNumber', key: 'idNumber', label: 'ID / Passport / Document Number', type: 'text', placeholder: 'e.g. 9204155029087 or A12345678', required: true, helpText: 'Official unique document number', enabled: true },
+        { id: 'idDocumentUrl', key: 'idDocumentUrl', label: 'Passport or ID Document Upload', type: 'file', placeholder: '', required: settings?.bidderKycRequireDocumentUpload !== false, helpText: 'Upload a clear photo or PDF scan of your passport or ID document (Max 10MB)', enabled: true },
+        { id: 'proofOfResidenceUrl', key: 'proofOfResidenceUrl', label: 'Proof of Residence Document (Optional)', type: 'file', placeholder: '', required: false, helpText: 'Utility bill or bank statement less than 3 months old', enabled: true }
+      ];
+
+  // Dynamic age calculation from dateOfBirth
+  const currentDob = formValues.dateOfBirth || formValues.dob || '';
+  let calculatedAge = null;
+  if (currentDob) {
+    const bDate = new Date(currentDob);
+    if (!Number.isNaN(bDate.getTime())) {
+      const today = new Date();
+      calculatedAge = today.getFullYear() - bDate.getFullYear();
+      const m = today.getMonth() - bDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < bDate.getDate())) {
+        calculatedAge--;
+      }
+    }
+  }
+
+  const handleFieldValueChange = (key, val) => {
+    setFormValues(prev => ({
+      ...prev,
+      [key]: val,
+      ...(key === 'fullName' ? { legalFullName: val } : {}),
+      ...(key === 'legalFullName' ? { fullName: val } : {})
+    }));
   };
 
-  const handleFileUpload = async (e) => {
+  // Generic file upload to Cloudinary (/vendor/upload-public)
+  const handleFileUpload = async (fieldKey, file) => {
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      const msg = 'File exceeds 10MB size limit. Please choose a smaller photo or PDF.';
+      setError(msg);
+      if (onNotify) onNotify(msg);
+      return;
+    }
+
+    setUploadingField(prev => ({ ...prev, [fieldKey]: true }));
+    setError('');
+
+    try {
+      const data = new FormData();
+      data.append('file', file);
+      const res = await api.post('/vendor/upload-public', data, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      if (res.data?.url) {
+        handleFieldValueChange(fieldKey, res.data.url);
+        if (onNotify) onNotify('Document uploaded successfully to secure storage!');
+      } else {
+        throw new Error('No URL returned from server');
+      }
+    } catch (err) {
+      console.error('File upload error:', err);
+      const msg = err.response?.data?.message || 'Failed to upload document. Please try again or paste URL.';
+      setError(msg);
+      if (onNotify) onNotify(msg);
+    } finally {
+      setUploadingField(prev => ({ ...prev, [fieldKey]: false }));
+    }
+  };
+
+  // EFT Deposit Proof Upload
+  const handleDepositProofUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setUploadingProof(true);
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Proof file exceeds 10MB limit.');
+      return;
+    }
+
+    setUploadingDepositProof(true);
+    setError('');
     try {
       const data = new FormData();
       data.append('file', file);
@@ -135,12 +238,12 @@ export default function BidderVerificationModal({ isOpen, onClose, onSuccess, on
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setDepositProofUrl(res.data.url);
-      if (onNotify) onNotify('Deposit proof of payment uploaded successfully');
+      if (onNotify) onNotify('EFT deposit receipt uploaded successfully');
     } catch (err) {
-      console.error('File upload error:', err);
-      if (onNotify) onNotify(err.response?.data?.message || 'Failed to upload proof document');
+      console.error('Deposit proof upload error:', err);
+      setError(err.response?.data?.message || 'Failed to upload deposit receipt');
     } finally {
-      setUploadingProof(false);
+      setUploadingDepositProof(false);
     }
   };
 
@@ -148,7 +251,7 @@ export default function BidderVerificationModal({ isOpen, onClose, onSuccess, on
     e.preventDefault();
     setError('');
 
-    // If already verified, handle the deposit upgrade directly
+    // 1. If already verified, handle deposit upgrade flow
     if (isAlreadyVerified) {
       if (!bankDetails.bankName || !bankDetails.accountHolder || !bankDetails.accountNumber) {
         setError('Please provide your bank name, account holder, and account number for refundable deposit processing.');
@@ -181,30 +284,36 @@ export default function BidderVerificationModal({ isOpen, onClose, onSuccess, on
       return;
     }
 
-    // New verification flow
-    if (!dateOfBirth) {
-      setError('Date of birth is required.');
+    // 2. Validate all required dynamic fields configured by Admin
+    for (const field of activeFields) {
+      if (field.required) {
+        const val = formValues[field.key];
+        if (val === undefined || val === null || (typeof val === 'string' && !val.trim())) {
+          setError(`Please provide "${field.label}" to complete qualification.`);
+          return;
+        }
+      }
+    }
+
+    // 3. Validate Minimum Age
+    if (calculatedAge !== null && calculatedAge < minAge) {
+      setError(`Under South African liquor and auction law, you must be at least ${minAge} years of age to bid.`);
       return;
     }
 
-    const birthDate = new Date(dateOfBirth);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-
-    if (age < 18) {
-      setError('You must be at least 18 years of age to bid on alcohol auctions.');
+    // 4. Validate mandatory document upload if flag enabled
+    if (settings?.bidderKycRequireDocumentUpload && !formValues.idDocumentUrl) {
+      setError('A copy of your Passport or Identity Document is required by compliance.');
       return;
     }
 
+    // 5. Rules acceptance
     if (!acceptRules) {
-      setError('You must read and accept the Rules of Auction.');
+      setError('You must read and accept the Rules of Auction to qualify.');
       return;
     }
 
+    // 6. If VIP Tier selected, validate refund bank details & EFT proof
     if (tier === 'premium') {
       if (!bankDetails.bankName || !bankDetails.accountHolder || !bankDetails.accountNumber) {
         setError('Please provide your bank name, account holder, and account number for refundable deposit processing.');
@@ -216,21 +325,36 @@ export default function BidderVerificationModal({ isOpen, onClose, onSuccess, on
       }
     }
 
+    // 7. Compile Core vs Custom fields for backend
+    const coreKeys = ['fullName', 'legalFullName', 'dateOfBirth', 'dob', 'idType', 'idNumber', 'idDocumentUrl', 'proofOfResidenceUrl'];
+    const customKycValues = {};
+    Object.keys(formValues).forEach(k => {
+      if (!coreKeys.includes(k)) {
+        customKycValues[k] = formValues[k];
+      }
+    });
+
+    const payload = {
+      legalFullName: formValues.legalFullName || formValues.fullName || user?.name || '',
+      dateOfBirth: currentDob,
+      idType: formValues.idType || 'National ID',
+      idNumber: formValues.idNumber || '',
+      idDocumentUrl: formValues.idDocumentUrl || '',
+      proofOfResidenceUrl: formValues.proofOfResidenceUrl || '',
+      customKycValues,
+      acceptRulesVersion: 'v1.0',
+      tier,
+      bankAccountDetails: tier === 'premium' ? bankDetails : undefined,
+      depositPaymentMethod: tier === 'premium' ? depositPaymentMethod : undefined,
+      depositProofUrl: tier === 'premium' ? depositProofUrl : undefined
+    };
+
     setSubmitting(true);
     try {
-      const res = await api.post('/auction/bidder/verify', {
-        dateOfBirth,
-        idType,
-        idNumber,
-        acceptRulesVersion: 'v1.0',
-        tier,
-        bankAccountDetails: tier === 'premium' ? bankDetails : undefined,
-        depositPaymentMethod: tier === 'premium' ? depositPaymentMethod : undefined,
-        depositProofUrl: tier === 'premium' ? depositProofUrl : undefined
-      });
+      const res = await api.post('/auction/bidder/verify', payload);
 
       if (onNotify) onNotify(res.data.message || 'Verification submitted for administrator approval.');
-      if (onSuccess) onSuccess(res.data.bidder);
+      if (onSuccess) onSuccess(res.data.bidder || res.data);
       onClose();
     } catch (err) {
       console.error('Verification error:', err);
@@ -240,8 +364,225 @@ export default function BidderVerificationModal({ isOpen, onClose, onSuccess, on
     }
   };
 
+  // Renders each dynamic field based on admin configuration
+  const renderFieldInput = (field) => {
+    const value = formValues[field.key] || '';
+    const isUploading = uploadingField[field.key] || false;
+    const isUrlMode = showUrlInput[field.key] || false;
+
+    // Field Type 1: File / Document Upload (System for Passports, IDs, Utility Bills, Proofs)
+    if (field.type === 'file') {
+      return (
+        <div key={field.id || field.key} className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="block text-xs uppercase tracking-widest text-white/80 font-bold">
+              {field.label} {field.required && <span className="text-[var(--color-gold)]">*</span>}
+            </label>
+            <button
+              type="button"
+              onClick={() => setShowUrlInput(prev => ({ ...prev, [field.key]: !prev[field.key] }))}
+              className="text-[11px] text-[var(--color-gold)]/80 hover:text-[var(--color-gold)] flex items-center gap-1 cursor-pointer transition-colors"
+            >
+              <Link2 size={12} /> {isUrlMode ? 'Switch to File Upload' : 'Or paste URL'}
+            </button>
+          </div>
+
+          {/* If document already attached */}
+          {value ? (
+            <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between gap-3 animate-fadeIn">
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                  <FileCheck size={20} />
+                </div>
+                <div className="truncate">
+                  <p className="text-xs font-bold text-emerald-300 truncate">Document Attached</p>
+                  <a
+                    href={value}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] text-emerald-400/80 hover:underline inline-flex items-center gap-1 truncate mt-0.5"
+                  >
+                    View Document <ExternalLink size={11} />
+                  </a>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleFieldValueChange(field.key, '')}
+                className="px-3 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-bold transition-colors cursor-pointer shrink-0"
+              >
+                Remove
+              </button>
+            </div>
+          ) : isUrlMode ? (
+            <div className="space-y-1">
+              <input
+                type="url"
+                placeholder="https://..."
+                value={value}
+                onChange={(e) => handleFieldValueChange(field.key, e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-xs outline-none focus:border-[var(--color-gold)] transition-colors font-mono"
+              />
+              <p className="text-[11px] text-white/40">Direct link to document scan or photo</p>
+            </div>
+          ) : (
+            <label className="flex flex-col sm:flex-row items-center justify-center gap-3 p-5 border-2 border-dashed border-white/20 hover:border-[var(--color-gold)] bg-black/40 rounded-2xl cursor-pointer transition-all group">
+              <input
+                type="file"
+                accept="image/*,application/pdf"
+                className="hidden"
+                disabled={isUploading}
+                onChange={(e) => handleFileUpload(field.key, e.target.files?.[0])}
+              />
+              <div className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[var(--color-gold)] group-hover:scale-105 transition-transform shrink-0">
+                {isUploading ? (
+                  <Loader2 size={20} className="animate-spin text-[var(--color-gold)]" />
+                ) : (
+                  <UploadCloud size={20} />
+                )}
+              </div>
+              <div className="text-center sm:text-left">
+                <p className="text-xs font-bold text-white group-hover:text-[var(--color-gold)] transition-colors">
+                  {isUploading ? 'Uploading to Secure Vault...' : 'Click or Drag to Upload Document (Photo / PDF)'}
+                </p>
+                <p className="text-[10px] text-white/40 mt-0.5">
+                  Accepted formats: JPG, PNG, WebP, PDF (Max 10MB)
+                </p>
+              </div>
+            </label>
+          )}
+
+          {field.helpText && (
+            <p className="text-[11px] text-white/40 mt-1">{field.helpText}</p>
+          )}
+        </div>
+      );
+    }
+
+    // Field Type 2: Select dropdown (e.g. Document Type)
+    if (field.type === 'select') {
+      const options = (field.options && field.options.length > 0)
+        ? field.options
+        : (settings?.bidderKycIdTypes || ['National ID', 'Passport', 'Driver License']);
+
+      return (
+        <div key={field.id || field.key} className="space-y-1.5">
+          <label className="block text-xs uppercase tracking-widest text-white/80 font-bold">
+            {field.label} {field.required && <span className="text-[var(--color-gold)]">*</span>}
+          </label>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {options.map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => handleFieldValueChange(field.key, opt)}
+                className={`py-2.5 px-3 text-center text-xs rounded-xl border transition-all cursor-pointer font-semibold truncate ${
+                  value === opt
+                    ? 'bg-[var(--color-gold)]/20 border-[var(--color-gold)] text-[var(--color-gold)] shadow-[0_0_12px_rgba(212,175,55,0.2)]'
+                    : 'bg-white/5 border-white/10 text-white/60 hover:text-white hover:border-white/20'
+                }`}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+          {field.helpText && (
+            <p className="text-[11px] text-white/40 mt-1">{field.helpText}</p>
+          )}
+        </div>
+      );
+    }
+
+    // Field Type 3: Date of Birth with Live Age Qualification Banner
+    if (field.type === 'date') {
+      return (
+        <div key={field.id || field.key} className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <label className="block text-xs uppercase tracking-widest text-white/80 font-bold flex items-center gap-1.5">
+              <Calendar size={13} className="text-[var(--color-gold)]" />
+              <span>{field.label}</span> {field.required && <span className="text-[var(--color-gold)]">*</span>}
+            </label>
+            {calculatedAge !== null && (
+              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${
+                calculatedAge >= minAge 
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                  : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+              }`}>
+                {calculatedAge >= minAge ? `✓ ${calculatedAge} Yrs (Legal ${minAge}+)` : `⚠ ${calculatedAge} Yrs (Under ${minAge})`}
+              </span>
+            )}
+          </div>
+          <input
+            type="date"
+            value={value}
+            required={field.required}
+            onChange={(e) => handleFieldValueChange(field.key, e.target.value)}
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-[var(--color-gold)] transition-colors"
+          />
+          {calculatedAge !== null && calculatedAge < minAge && (
+            <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-xs flex items-center gap-2">
+              <AlertCircle size={14} className="shrink-0" />
+              <span>Underage restriction: You must be at least {minAge} years old to participate.</span>
+            </div>
+          )}
+          {field.helpText && (
+            <p className="text-[11px] text-white/40 mt-1">{field.helpText}</p>
+          )}
+        </div>
+      );
+    }
+
+    // Field Type 4: Textarea
+    if (field.type === 'textarea') {
+      return (
+        <div key={field.id || field.key} className="space-y-1.5">
+          <label className="block text-xs uppercase tracking-widest text-white/80 font-bold">
+            {field.label} {field.required && <span className="text-[var(--color-gold)]">*</span>}
+          </label>
+          <textarea
+            rows={2}
+            value={value}
+            required={field.required}
+            placeholder={field.placeholder || ''}
+            onChange={(e) => handleFieldValueChange(field.key, e.target.value)}
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-xs outline-none focus:border-[var(--color-gold)] transition-colors placeholder:text-white/20"
+          />
+          {field.helpText && (
+            <p className="text-[11px] text-white/40 mt-1">{field.helpText}</p>
+          )}
+        </div>
+      );
+    }
+
+    // Default: Text input
+    return (
+      <div key={field.id || field.key} className="space-y-1.5">
+        <label className="block text-xs uppercase tracking-widest text-white/80 font-bold">
+          {field.label} {field.required && <span className="text-[var(--color-gold)]">*</span>}
+        </label>
+        <input
+          type="text"
+          value={value}
+          required={field.required}
+          placeholder={field.placeholder || ''}
+          onChange={(e) => handleFieldValueChange(field.key, e.target.value)}
+          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-[var(--color-gold)] transition-colors placeholder:text-white/20"
+        />
+        {field.helpText && (
+          <p className="text-[11px] text-white/40 mt-1">{field.helpText}</p>
+        )}
+      </div>
+    );
+  };
+
+  const dynamicDepositRef = bidderProfile?.bidderNumber 
+    ? `DEP-${bidderProfile.bidderNumber}` 
+    : user?._id 
+    ? `DEP-${user._id.slice(-6).toUpperCase()}` 
+    : 'DEP-VIP';
+
   return createPortal(
-    <div className="fixed inset-0 z-[999999] flex items-start justify-center p-4 pt-20 sm:pt-28 pb-16 bg-black/90 backdrop-blur-md overflow-y-auto animate-fadeIn">
+    <div className="fixed inset-0 z-[999999] flex items-start justify-center p-4 pt-16 sm:pt-24 pb-16 bg-black/90 backdrop-blur-md overflow-y-auto animate-fadeIn">
       <div className="relative w-full max-w-3xl my-auto bg-[#0c0c0c] border border-[var(--color-gold)]/30 rounded-3xl p-6 sm:p-10 text-[var(--color-ivory)] shadow-[0_25px_70px_rgba(0,0,0,0.95)]">
         
         {/* Close Button */}
@@ -259,12 +600,12 @@ export default function BidderVerificationModal({ isOpen, onClose, onSuccess, on
           </div>
           <div>
             <h3 className="text-2xl sm:text-3xl font-serif text-[var(--color-gold)]">
-              {isAlreadyVerified ? 'Upgrade to Premium VIP Bidding' : 'Bidder Verification & Qualification'}
+              {isAlreadyVerified ? 'Upgrade to Premium VIP Bidding' : `${minAge}+ Bidder Legal Qualification & KYC`}
             </h3>
             <p className="text-xs sm:text-sm text-white/50 tracking-wider font-sans uppercase mt-0.5">
               {isAlreadyVerified 
                 ? `Unlock High-Value & Reserve Bidding (Up to R${premiumLimit.toLocaleString()})`
-                : 'South African CPA & 18+ Liquor Compliance'
+                : `South African CPA & ${minAge}+ Liquor Compliance Verification`
               }
             </p>
           </div>
@@ -291,64 +632,17 @@ export default function BidderVerificationModal({ isOpen, onClose, onSuccess, on
               </span>
             </div>
           ) : (
-            <div className="space-y-4">
-              <h4 className="text-xs uppercase tracking-widest text-white/50 font-bold flex items-center gap-1.5 border-b border-white/5 pb-2">
-                <span>1. Mandatory 18+ KYC Identity</span>
-              </h4>
-
-              <div>
-                <label className="block text-xs uppercase tracking-widest text-white/70 mb-1.5 font-bold">
-                  Date of Birth <span className="text-[var(--color-gold)]">*</span> (Must be 18+)
-                </label>
-                <input 
-                  type="date"
-                  required
-                  value={dateOfBirth}
-                  onChange={(e) => setDateOfBirth(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-[var(--color-gold)] transition-colors"
-                />
+            <div className="space-y-5">
+              <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                <h4 className="text-xs uppercase tracking-widest text-white/60 font-bold flex items-center gap-1.5">
+                  <ShieldCheck size={14} className="text-[var(--color-gold)]" />
+                  <span>1. Mandatory {minAge}+ Legal Qualification (Configured by Admin)</span>
+                </h4>
+                <span className="text-[11px] text-white/40">Government ID & Age Check</span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs uppercase tracking-widest text-white/70 mb-1.5 font-bold">
-                    ID Document Type
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { id: 'National ID', label: 'SA ID' },
-                      { id: 'Passport', label: 'Passport' },
-                      { id: 'Driver License', label: "License" }
-                    ].map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => setIdType(item.id)}
-                        className={`py-2.5 px-2 text-center text-xs rounded-xl border transition-all cursor-pointer font-semibold ${
-                          idType === item.id
-                            ? 'bg-[var(--color-gold)]/20 border-[var(--color-gold)] text-[var(--color-gold)] shadow-[0_0_12px_rgba(212,175,55,0.2)]'
-                            : 'bg-white/5 border-white/10 text-white/60 hover:text-white hover:border-white/20'
-                        }`}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs uppercase tracking-widest text-white/70 mb-1.5 font-bold">
-                    ID / Passport Number
-                  </label>
-                  <input 
-                    type="text"
-                    required
-                    placeholder="e.g. 9204155029087"
-                    value={idNumber}
-                    onChange={(e) => setIdNumber(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-[var(--color-gold)] transition-colors placeholder:text-white/20 font-mono"
-                  />
-                </div>
+              <div className="space-y-4">
+                {activeFields.map((field) => renderFieldInput(field))}
               </div>
             </div>
           )}
@@ -388,7 +682,7 @@ export default function BidderVerificationModal({ isOpen, onClose, onSuccess, on
                     </div>
                     <h5 className="text-base font-semibold text-white mb-1.5">Standard Bidding</h5>
                     <p className="text-xs text-white/60 leading-relaxed">
-                      Standard 18+ KYC verification. Access standard lots with bidding limit up to <strong>R{standardLimit.toLocaleString()}</strong>. No deposit required.
+                      Standard {minAge}+ KYC verification. Access standard lots with bidding limit up to <strong>R{standardLimit.toLocaleString()}</strong>. No deposit required.
                     </p>
                   </div>
                   <div className="pt-4 mt-4 border-t border-white/5 flex items-center justify-between text-xs text-white/40">
@@ -471,7 +765,7 @@ export default function BidderVerificationModal({ isOpen, onClose, onSuccess, on
                       required
                       placeholder="e.g. Standard Bank, FNB, ABSA, Capitec..."
                       value={bankDetails.bankName}
-                      onChange={(e) => handleBankChange('bankName', e.target.value)}
+                      onChange={(e) => setBankDetails(prev => ({ ...prev, bankName: e.target.value }))}
                       className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-[var(--color-gold)] transition-colors placeholder:text-white/25"
                     />
                   </div>
@@ -485,7 +779,7 @@ export default function BidderVerificationModal({ isOpen, onClose, onSuccess, on
                       required
                       placeholder="Full name as on bank account"
                       value={bankDetails.accountHolder}
-                      onChange={(e) => handleBankChange('accountHolder', e.target.value)}
+                      onChange={(e) => setBankDetails(prev => ({ ...prev, accountHolder: e.target.value }))}
                       className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-[var(--color-gold)] transition-colors placeholder:text-white/25"
                     />
                   </div>
@@ -499,7 +793,7 @@ export default function BidderVerificationModal({ isOpen, onClose, onSuccess, on
                       required
                       placeholder="e.g. 1012345678"
                       value={bankDetails.accountNumber}
-                      onChange={(e) => handleBankChange('accountNumber', e.target.value)}
+                      onChange={(e) => setBankDetails(prev => ({ ...prev, accountNumber: e.target.value }))}
                       className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-[var(--color-gold)] font-mono transition-colors placeholder:text-white/25"
                     />
                   </div>
@@ -512,7 +806,7 @@ export default function BidderVerificationModal({ isOpen, onClose, onSuccess, on
                       type="text"
                       placeholder="e.g. 051001"
                       value={bankDetails.branchCode}
-                      onChange={(e) => handleBankChange('branchCode', e.target.value)}
+                      onChange={(e) => setBankDetails(prev => ({ ...prev, branchCode: e.target.value }))}
                       className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-[var(--color-gold)] font-mono transition-colors placeholder:text-white/25"
                     />
                   </div>
@@ -563,7 +857,7 @@ export default function BidderVerificationModal({ isOpen, onClose, onSuccess, on
                     </div>
                     <div>
                       <p className="font-bold text-white">Manual Bank Transfer</p>
-                      <p className="text-xs text-white/50">Direct EFT with payment proof</p>
+                      <p className="text-xs text-white/50">Direct EFT Escrow with payment proof</p>
                     </div>
                   </label>
                 </div>
@@ -572,74 +866,34 @@ export default function BidderVerificationModal({ isOpen, onClose, onSuccess, on
                 {depositPaymentMethod === 'eft' && (
                   <div className="space-y-5 p-5 sm:p-6 bg-gradient-to-br from-[#131313] to-[#080808] rounded-2xl border border-[var(--color-gold)]/25 shadow-xl animate-fadeIn">
                     
-                    <div>
-                      <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-3">
-                        <span className="text-xs uppercase tracking-widest text-[var(--color-gold)] font-bold flex items-center gap-2">
-                          <Landmark size={16} /> Grand Store Escrow Bank Account
-                        </span>
-                        <span className="text-xs font-semibold text-white/80 bg-white/10 px-2.5 py-1 rounded-md">
-                          Standard Bank
-                        </span>
-                      </div>
-
-                      {/* 3 Prominent Copyable Data Tiles */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                        
-                        {/* Account Number */}
-                        <div className="p-4 rounded-xl bg-black/70 border border-white/10 flex flex-col justify-between">
-                          <span className="text-xs uppercase tracking-wider text-white/50 block mb-1">Account Number</span>
-                          <div className="flex items-center justify-between">
-                            <span className="font-mono text-base sm:text-lg font-bold text-white tracking-wider">0123456789</span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                navigator.clipboard.writeText('0123456789');
-                                if (onNotify) onNotify('Account number copied to clipboard');
-                              }}
-                              className="text-white/40 hover:text-[var(--color-gold)] transition-colors p-1.5 rounded hover:bg-white/5 cursor-pointer"
-                              title="Copy Account Number"
-                            >
-                              <Copy size={16} />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Branch Code */}
-                        <div className="p-4 rounded-xl bg-black/70 border border-white/10 flex flex-col justify-between">
-                          <span className="text-xs uppercase tracking-wider text-white/50 block mb-1">Branch Code</span>
-                          <span className="font-mono text-base sm:text-lg font-bold text-white tracking-wider">051001</span>
-                        </div>
-
-                        {/* Reference */}
-                        <div className="p-4 rounded-xl bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/40 flex flex-col justify-between">
-                          <span className="text-xs uppercase tracking-wider text-[var(--color-gold)]/80 block mb-1 font-semibold">Payment Reference</span>
-                          <div className="flex items-center justify-between">
-                            <span className="font-mono text-base sm:text-lg font-bold text-[var(--color-gold)] tracking-wider">DEP-VIP</span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                navigator.clipboard.writeText('DEP-VIP');
-                                if (onNotify) onNotify('Reference copied to clipboard');
-                              }}
-                              className="text-[var(--color-gold)] hover:text-white transition-colors p-1.5 rounded hover:bg-white/5 cursor-pointer"
-                              title="Copy Reference"
-                            >
-                              <Copy size={16} />
-                            </button>
-                          </div>
-                        </div>
-
-                      </div>
-                    </div>
+                    <StoreBankDetailsCard
+                      reference={dynamicDepositRef}
+                      referenceLabel="Deposit Reference"
+                      title="Grand Store Escrow Bank Account"
+                      subtitle="Official institutional South African EFT settlement account"
+                      bankDetailsList={settings?.bankDetailsList}
+                      bankDetails={settings?.escrowBank || settings?.bankDetails}
+                      compact={true}
+                      onNotify={onNotify}
+                    />
 
                     {/* Upload Receipt Dropzone */}
-                    <div className="pt-2">
-                      <label className="block text-xs uppercase tracking-wider text-white/70 mb-2 font-bold">
-                        Proof of Payment Screenshot or PDF <span className="text-[var(--color-gold)]">*</span>
-                      </label>
+                    <div className="pt-2 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-xs uppercase tracking-wider text-white/80 font-bold">
+                          Proof of Payment Screenshot or PDF <span className="text-[var(--color-gold)]">*</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setShowDepositUrlInput(prev => !prev)}
+                          className="text-[11px] text-[var(--color-gold)]/80 hover:text-[var(--color-gold)] flex items-center gap-1 cursor-pointer transition-colors"
+                        >
+                          <Link2 size={12} /> {showDepositUrlInput ? 'Switch to file upload' : 'Or paste URL'}
+                        </button>
+                      </div>
 
                       {depositProofUrl ? (
-                        <div className="flex items-center justify-between p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+                        <div className="flex items-center justify-between p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 animate-fadeIn">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
                               <CheckCircle2 size={20} />
@@ -664,17 +918,28 @@ export default function BidderVerificationModal({ isOpen, onClose, onSuccess, on
                             Remove
                           </button>
                         </div>
+                      ) : showDepositUrlInput ? (
+                        <div className="space-y-1">
+                          <input
+                            type="url"
+                            placeholder="https://..."
+                            value={depositProofUrl}
+                            onChange={(e) => setDepositProofUrl(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-xs outline-none focus:border-[var(--color-gold)] transition-colors font-mono"
+                          />
+                          <p className="text-[11px] text-white/40">Direct link to EFT payment confirmation</p>
+                        </div>
                       ) : (
                         <label className="flex flex-col sm:flex-row items-center justify-center gap-4 p-6 sm:p-8 border-2 border-dashed border-white/20 hover:border-[var(--color-gold)] bg-black/40 rounded-2xl cursor-pointer transition-all group">
                           <input
                             type="file"
                             accept="image/*,application/pdf"
                             className="hidden"
-                            onChange={handleFileUpload}
-                            disabled={uploadingProof}
+                            onChange={handleDepositProofUpload}
+                            disabled={uploadingDepositProof}
                           />
                           <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[var(--color-gold)] group-hover:scale-110 transition-transform shrink-0 shadow-lg">
-                            {uploadingProof ? (
+                            {uploadingDepositProof ? (
                               <Loader2 size={26} className="animate-spin text-[var(--color-gold)]" />
                             ) : (
                               <UploadCloud size={26} />
@@ -682,7 +947,7 @@ export default function BidderVerificationModal({ isOpen, onClose, onSuccess, on
                           </div>
                           <div className="text-center sm:text-left">
                             <p className="text-sm sm:text-base font-bold text-white group-hover:text-[var(--color-gold)] transition-colors">
-                              {uploadingProof ? 'Uploading Receipt to Cloudinary...' : 'Click to Upload Deposit Screenshot or PDF'}
+                              {uploadingDepositProof ? 'Uploading Receipt to Cloudinary...' : 'Click to Upload Deposit Screenshot or PDF'}
                             </p>
                             <p className="text-xs text-white/40 mt-1">
                               PNG, JPG, WebP or PDF receipt generated from your banking app
@@ -711,7 +976,7 @@ export default function BidderVerificationModal({ isOpen, onClose, onSuccess, on
                   className="mt-1 w-4 h-4 rounded accent-[var(--color-gold)] cursor-pointer"
                 />
                 <span className="text-xs sm:text-sm text-white/70 leading-relaxed font-light">
-                  I warrant that I am at least 18 years of age and agree to the <strong className="text-[var(--color-gold)]">Grand Store Rules of Auction v1.0</strong>. Bids placed are legally binding under South African CPA regulations.
+                  I warrant that I am at least {minAge} years of age and agree to the <strong className="text-[var(--color-gold)]">Grand Store Rules of Auction v1.0</strong>. Bids placed are legally binding under South African CPA regulations.
                 </span>
               </label>
             </div>
@@ -721,7 +986,7 @@ export default function BidderVerificationModal({ isOpen, onClose, onSuccess, on
           <div className="pt-3">
             <button
               type="submit"
-              disabled={submitting || uploadingProof}
+              disabled={submitting || uploadingDepositProof || Object.values(uploadingField).some(Boolean)}
               className="w-full bg-gold-gradient text-black py-4 rounded-2xl font-bold uppercase tracking-widest text-xs sm:text-sm hover:brightness-110 transition-all flex items-center justify-center gap-2.5 disabled:opacity-50 cursor-pointer shadow-[0_0_25px_rgba(212,175,55,0.35)]"
             >
               {submitting ? (
@@ -731,7 +996,7 @@ export default function BidderVerificationModal({ isOpen, onClose, onSuccess, on
               ) : tier === 'premium' ? (
                 <>Submit Premium VIP Application (R{dynamicDepositAmount.toLocaleString()} Deposit) <ArrowRight size={18} /></>
               ) : (
-                <>Submit Standard 18+ Verification (Free) <CheckCircle2 size={18} /></>
+                <>Submit Standard {minAge}+ Verification (Free) <CheckCircle2 size={18} /></>
               )}
             </button>
           </div>

@@ -142,7 +142,8 @@ export default function AuctionLotDetail({ onNotify }) {
   // Trigger celebration modal when visiting via notification or as unpaid winner
   useEffect(() => {
     if (!lot) return;
-    if (isWinner && (shouldCelebrate || (lot.status === 'sold' && lot.paymentStatus !== 'Paid'))) {
+    const isUnsettledAndUnsubmitted = lot.status === 'sold' && lot.paymentStatus === 'Pending' && !lot.isPaid && !lot.proofUrl;
+    if (isWinner && (shouldCelebrate || isUnsettledAndUnsubmitted)) {
       setShowCelebrationModal(true);
     }
   }, [lot, isWinner, shouldCelebrate]);
@@ -793,10 +794,19 @@ export default function AuctionLotDetail({ onNotify }) {
                         </div>
 
                         {/* Action CTA */}
-                        {lot.paymentStatus === 'Paid' ? (
+                        {lot.paymentStatus === 'Paid' || lot.isPaid ? (
                           <div className="w-full bg-emerald-500/15 text-emerald-400 font-bold uppercase tracking-widest text-xs py-4 px-6 rounded-xl text-center border border-emerald-500/40 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
                             <CheckCircle2 size={18} /> Acquisition Settled • Logistics In Preparation
                           </div>
+                        ) : (lot.paymentStatus === 'Awaiting_Approval' || Boolean(lot.proofUrl)) ? (
+                          <Link 
+                            to={`/auction/checkout/${lot._id}`} 
+                            className="group flex items-center justify-center gap-3 w-full bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 font-bold uppercase tracking-widest text-xs py-4 px-6 rounded-xl border border-amber-500/30 transition-all shadow-[0_0_15px_rgba(245,158,11,0.15)]"
+                          >
+                            <Clock size={16} className="text-amber-400" />
+                            <span>EFT Proof Submitted • Awaiting Admin Verification</span>
+                            <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform text-amber-400" />
+                          </Link>
                         ) : (
                           <Link 
                             to={`/auction/checkout/${lot._id}`} 

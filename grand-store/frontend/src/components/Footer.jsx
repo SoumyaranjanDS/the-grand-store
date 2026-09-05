@@ -90,7 +90,7 @@ export default function Footer() {
           <Link className="block w-fit m-[0_0_14px] lg:m-[0_0_17px] text-[#f2ede4] font-serif text-[16px] lg:text-[17px] leading-[1.15] transition-all duration-[150ms] hover:text-[#e1bd70] hover:translate-x-[3px]" to="/contact-us" target="_blank" rel="noopener noreferrer">Contact us</Link>
           <a className="block w-fit m-[0_0_14px] lg:m-[0_0_17px] text-[#f2ede4] font-serif text-[16px] lg:text-[17px] leading-[1.15] transition-all duration-[150ms] hover:text-[#e1bd70] hover:translate-x-[3px]" href="https://sacoronavirus.co.za/" target="_blank" rel="noopener noreferrer">Covid protocol</a>
           
-          <div className="flex items-center gap-[12px] mt-[10px] flex-wrap">
+          <div className="flex items-center gap-[12px] mt-[14px] flex-wrap">
             {socialLinks.map((social) => {
               const IconComponent = social.Icon
               return (
@@ -99,10 +99,11 @@ export default function Footer() {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="grid place-items-center w-[36px] h-[36px] rounded-full bg-[#1c1d1d] text-[#e1bd70] border border-[#e1bd70]/20 hover:bg-[#e1bd70] hover:text-[#11100d] transition-all duration-300"
+                  className="grid place-items-center w-[42px] h-[42px] rounded-full bg-[#1c1d1d] text-[#f5d77f] border border-[#d4af37]/40 shadow-[0_4px_12px_rgba(0,0,0,0.5)] hover:border-[#ffd700] hover:bg-gradient-to-tr hover:from-[#ffd700] hover:to-[#d4af37] hover:text-[#0b0c0c] hover:scale-110 hover:shadow-[0_0_18px_rgba(212,175,55,0.5)] active:scale-95 transition-all duration-200 cursor-pointer"
                   aria-label={`Visit The Grand Store on ${social.label}`}
+                  title={social.label}
                 >
-                  <IconComponent size={social.label === 'YouTube' ? 18 : 16} strokeWidth={1.5} />
+                  <IconComponent size={social.label === 'YouTube' ? 21 : 18} />
                 </a>
               )
             })}

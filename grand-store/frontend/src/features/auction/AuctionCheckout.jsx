@@ -9,6 +9,7 @@ import LocationInput from '../../components/LocationInput';
 import PaymentForm from '../checkout/PaymentForm';
 import Price from '../../components/ui/Price';
 import ReceiptPreviewModal from './components/ReceiptPreviewModal';
+import StoreBankDetailsCard from '../../components/StoreBankDetailsCard';
 
 export default function AuctionCheckout({ onNotify }) {
   const { id } = useParams();
@@ -61,7 +62,45 @@ export default function AuctionCheckout({ onNotify }) {
         const userInfo = JSON.parse(localStorage.getItem('userInfo'));
         const headers = userInfo?.token ? { Authorization: `Bearer ${userInfo.token}` } : {};
         const res = await api.get(`/auction/${id}`, { headers });
-        setLot(res.data.lot);
+        const fetchedLot = res.data?.lot;
+
+        if (fetchedLot) {
+          setLot(fetchedLot);
+
+          // 1. Pre-fill address if previously saved
+          if (fetchedLot.shippingAddress) {
+            setFormData(prev => ({
+              ...prev,
+              address: fetchedLot.shippingAddress.address || prev.address,
+              city: fetchedLot.shippingAddress.city || prev.city,
+              postalCode: fetchedLot.shippingAddress.postalCode || prev.postalCode,
+              country: fetchedLot.shippingAddress.country || prev.country,
+              phone: fetchedLot.shippingAddress.phone || fetchedLot.shippingAddress.phoneNumber || prev.phone
+            }));
+          }
+
+          // 2. Shipping cost
+          if (fetchedLot.shippingCost) {
+            setDynamicShipping(fetchedLot.shippingCost);
+          }
+
+          // 3. Order reference
+          if (fetchedLot.order) {
+            setCreatedOrder(fetchedLot.order);
+          }
+
+          // 4. Proof of payment URL
+          if (fetchedLot.proofUrl) {
+            setProofUrl(fetchedLot.proofUrl);
+          }
+
+          // 5. If EFT proof was already submitted or is awaiting approval
+          if (fetchedLot.paymentStatus === 'Awaiting_Approval' || Boolean(fetchedLot.proofUrl)) {
+            setBankTransferSubmitted(true);
+            setPaymentMethod('bank_transfer');
+            setCheckoutStep(2);
+          }
+        }
         setLoading(false);
       } catch (err) {
         console.error(err);
@@ -172,8 +211,10 @@ export default function AuctionCheckout({ onNotify }) {
   if (loading) return <div className="min-h-screen flex items-center justify-center text-white bg-[#050505]">Loading Secure Checkout...</div>;
   if (!lot) return <div className="min-h-screen flex items-center justify-center text-white bg-[#050505]">Lot not found</div>;
 
+  const isPaid = Boolean(lot.isPaid || lot.paymentStatus === 'Paid');
+  const isAwaitingApproval = !isPaid && Boolean(bankTransferSubmitted || lot.paymentStatus === 'Awaiting_Approval' || lot.proofUrl);
   const total = (lot.winningBid || 0) + (lot.buyerPremiumAmount || 0) + (lot.barChargeAmount || 0) + (lot.vatAmount || 0) + dynamicShipping;
-  const paymentReference = `AUC-${lot.lotNumber || lot._id.slice(-6).toUpperCase()}`;
+  const paymentReference = lot.order?.transactionId || lot.gsReference || `AUC-${lot.lotNumber || lot._id.slice(-6).toUpperCase()}`;
 
   return (
     <main className="min-h-screen bg-[#050505] text-[var(--color-ivory)] pt-0 pb-24">
@@ -184,18 +225,24 @@ export default function AuctionCheckout({ onNotify }) {
           <div className="flex items-center gap-2 text-xs text-[var(--color-ivory-muted)] uppercase tracking-widest mb-4">
             <Link to={`/auction/${id}`} className="hover:text-gold-gradient transition-colors">Lot {lot.lotNumber || lot._id.slice(-6).toUpperCase()}</Link>
             <ChevronRight size={12} />
-            <span className={checkoutStep === 1 ? "text-gold-gradient font-medium" : ""}>Delivery</span>
+            <span className={checkoutStep === 1 && !isPaid && !isAwaitingApproval ? "text-gold-gradient font-medium" : ""}>Delivery</span>
             <ChevronRight size={12} />
-            <span className={checkoutStep === 2 && !bankTransferSubmitted ? "text-gold-gradient font-medium" : ""}>Payment</span>
-            {bankTransferSubmitted && (
+            <span className={checkoutStep === 2 && !isPaid && !isAwaitingApproval ? "text-gold-gradient font-medium" : ""}>Payment</span>
+            {isAwaitingApproval && (
               <>
                 <ChevronRight size={12} />
                 <span className="text-gold-gradient font-medium">Verification</span>
               </>
             )}
+            {isPaid && (
+              <>
+                <ChevronRight size={12} />
+                <span className="text-emerald-400 font-medium">Settled</span>
+              </>
+            )}
           </div>
           <h1 className="text-4xl md:text-5xl font-serif">
-            {bankTransferSubmitted ? 'Order Awaiting Verification' : 'Auction Checkout'}
+            {isPaid ? 'Acquisition Settled & Paid' : isAwaitingApproval ? 'Order Awaiting Verification' : 'Auction Checkout'}
           </h1>
         </div>
 
@@ -204,8 +251,192 @@ export default function AuctionCheckout({ onNotify }) {
           {/* Left Column - Forms */}
           <div className="lg:col-span-7 flex flex-col gap-10">
             
-            {/* Step 1: Address */}
-            {checkoutStep === 1 ? (
+            {/* Case A: Settled & Paid */}
+            {isPaid ? (
+              <div className="bg-gradient-to-br from-[#0e1610] via-[#0a0f0b] to-[#050505] border border-emerald-500/40 rounded-3xl p-6 md:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.6),0_0_35px_rgba(16,185,129,0.15)]">
+                <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(16,185,129,0.25)]">
+                  <CheckCircle2 size={32} className="text-emerald-400" />
+                </div>
+
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-widest bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 mb-3">
+                  <ShieldCheck size={12} /> Acquisition Settled & Verified
+                </div>
+
+                <h3 className="text-2xl font-serif text-white mb-2">Acquisition Successfully Settled</h3>
+                <p className="text-sm text-[var(--color-ivory-muted)] font-light leading-relaxed mb-6">
+                  Payment for <strong className="text-white">{lot.title}</strong> has been completely verified and recorded in the Grand Store escrow ledger.
+                </p>
+
+                <div className="bg-black/50 border border-white/5 rounded-2xl p-5 mb-6 space-y-3 text-xs">
+                  <div className="flex justify-between items-center py-1 border-b border-white/5">
+                    <span className="text-white/40 uppercase tracking-wider text-[10px]">Reference / Transaction ID</span>
+                    <span className="font-mono text-[var(--color-gold)] font-bold">{paymentReference}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-white/5">
+                    <span className="text-white/40 uppercase tracking-wider text-[10px]">Total Settled</span>
+                    <span className="font-serif text-white font-bold text-sm"><Price amount={lot.totalPaidByBuyer || total} /></span>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-white/5">
+                    <span className="text-white/40 uppercase tracking-wider text-[10px]">Payment Status</span>
+                    <span className="inline-flex items-center gap-1 text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                      <CheckCircle2 size={11} /> Settled in Full
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-white/5">
+                    <span className="text-white/40 uppercase tracking-wider text-[10px]">Vault & Dispatch Status</span>
+                    <span className="inline-flex items-center gap-1 text-emerald-300 font-medium">
+                      <Sparkles size={11} className="text-[#e1bd70]" /> Bonded Release In Progress
+                    </span>
+                  </div>
+                  {(lot.shippingAddress || formData.address) && (
+                    <div className="pt-2 text-[11px] text-white/70">
+                      <span className="text-white/40 uppercase tracking-wider text-[10px] block mb-1">Destination Address</span>
+                      <p>
+                        {lot.shippingAddress?.address || formData.address}, {lot.shippingAddress?.city || formData.city}, {lot.shippingAddress?.country || formData.country}
+                      </p>
+                    </div>
+                  )}
+                  {proofUrl && (
+                    <div className="pt-2">
+                      <span className="text-white/40 uppercase tracking-wider text-[10px] block mb-1.5">Submitted Proof Receipt</span>
+                      <div className="flex items-center gap-3 bg-white/[0.02] p-2 rounded-xl border border-white/10">
+                        {/\.(jpeg|jpg|png|webp|gif)($|\?)/i.test(proofUrl) ? (
+                          <img src={proofUrl} alt="Receipt Preview" className="w-12 h-12 object-cover rounded border border-white/10" />
+                        ) : (
+                          <div className="w-12 h-12 rounded bg-white/5 flex items-center justify-center text-[var(--color-gold)]">
+                            <FileText size={20} />
+                          </div>
+                        )}
+                        <a
+                          href={proofUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 underline truncate"
+                        >
+                          <ExternalLink size={12} /> View Verification Document
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 mb-8 text-xs text-white/60 leading-relaxed space-y-2">
+                  <p className="font-semibold text-white flex items-center gap-1.5">
+                    <ShieldCheck size={14} className="text-[#e1bd70]" /> Next Steps:
+                  </p>
+                  <p>1. The vault master is preparing your numbered bottle in tamper-evident security packaging.</p>
+                  <p>2. Courier tracking details will be transmitted to your registered phone and email.</p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Link
+                    to="/customer/auctions"
+                    className="flex-1 py-3.5 px-6 rounded-xl bg-gold-gradient text-black font-bold uppercase tracking-widest text-xs text-center hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all"
+                  >
+                    View My Won Lots
+                  </Link>
+                  <Link
+                    to={`/auction/${id}`}
+                    className="py-3.5 px-6 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold uppercase tracking-widest text-xs text-center border border-white/10 transition-colors"
+                  >
+                    View Lot Dossier
+                  </Link>
+                  <Link
+                    to="/auction"
+                    className="py-3.5 px-6 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold uppercase tracking-widest text-xs text-center border border-white/10 transition-colors"
+                  >
+                    Explore Live Auctions
+                  </Link>
+                </div>
+              </div>
+            ) : isAwaitingApproval ? (
+              /* Case B: Bank Transfer Success / Awaiting Approval Screen */
+              <div className="bg-gradient-to-br from-[#111] to-[#0a0a0a] border border-[var(--color-gold)]/30 rounded-3xl p-6 md:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+                <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-6">
+                  <CheckCircle2 size={32} className="text-emerald-400" />
+                </div>
+
+                <h3 className="text-2xl font-serif text-white mb-2">Bank Transfer Proof Submitted</h3>
+                <p className="text-sm text-[var(--color-ivory-muted)] font-light leading-relaxed mb-6">
+                  Your proof of payment for <strong className="text-white">{lot.title}</strong> has been received and routed directly to the Grand Store administrative and finance desk for verification.
+                </p>
+
+                <div className="bg-black/50 border border-white/5 rounded-2xl p-5 mb-6 space-y-3 text-xs">
+                  <div className="flex justify-between items-center py-1 border-b border-white/5">
+                    <span className="text-white/40 uppercase tracking-wider text-[10px]">Reference Number</span>
+                    <span className="font-mono text-[var(--color-gold)] font-bold">{paymentReference}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-white/5">
+                    <span className="text-white/40 uppercase tracking-wider text-[10px]">Total Transferred</span>
+                    <span className="font-serif text-white font-bold text-sm"><Price amount={total} /></span>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-white/5">
+                    <span className="text-white/40 uppercase tracking-wider text-[10px]">Review Status</span>
+                    <span className="inline-flex items-center gap-1 text-amber-400 font-semibold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                      <Clock size={11} /> Awaiting Admin Approval
+                    </span>
+                  </div>
+                  {proofUrl && (
+                    <div className="pt-2">
+                      <span className="text-white/40 uppercase tracking-wider text-[10px] block mb-1.5">Submitted Proof Receipt</span>
+                      <div className="flex items-center gap-3 bg-white/[0.02] p-2 rounded-xl border border-white/10">
+                        {/\.(jpeg|jpg|png|webp|gif)($|\?)/i.test(proofUrl) ? (
+                          <img src={proofUrl} alt="Receipt Preview" className="w-12 h-12 object-cover rounded border border-white/10" />
+                        ) : (
+                          <div className="w-12 h-12 rounded bg-white/5 flex items-center justify-center text-[var(--color-gold)]">
+                            <FileText size={20} />
+                          </div>
+                        )}
+                        <a
+                          href={proofUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 underline truncate"
+                        >
+                          <ExternalLink size={12} /> View Uploaded Document
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBankTransferSubmitted(false);
+                        setCheckoutStep(2);
+                        setPaymentMethod('bank_transfer');
+                      }}
+                      className="text-[11px] text-[var(--color-gold)] hover:underline flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <UploadCloud size={13} /> Need to replace or update your uploaded receipt? Click here
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 mb-8 text-xs text-white/60 leading-relaxed space-y-2">
+                  <p className="font-semibold text-white flex items-center gap-1.5">
+                    <ShieldCheck size={14} className="text-[#e1bd70]" /> What Happens Next:
+                  </p>
+                  <p>1. Our compliance team verifies your bank deposit against the auction escrow account.</p>
+                  <p>2. Once verified, the lot status immediately transitions to <strong>Paid</strong> and bonded vault dispatch begins.</p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Link
+                    to="/customer/auctions"
+                    className="flex-1 py-3.5 px-6 rounded-xl bg-gold-gradient text-black font-bold uppercase tracking-widest text-xs text-center hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all"
+                  >
+                    View My Auctions
+                  </Link>
+                  <Link
+                    to="/auction"
+                    className="py-3.5 px-6 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold uppercase tracking-widest text-xs text-center border border-white/10 transition-colors"
+                  >
+                    Explore Live Auctions
+                  </Link>
+                </div>
+              </div>
+            ) : checkoutStep === 1 ? (
               <form onSubmit={handleContinueToPayment}>
                 <section className="border-t border-white/10 pt-0 mb-8">
                   <h2 className="text-xl font-serif mb-6 flex items-center gap-3">
@@ -466,46 +697,13 @@ export default function AuctionCheckout({ onNotify }) {
                   {/* Bank Transfer Details & Proof Upload Section */}
                   {paymentMethod === 'bank_transfer' ? (
                     <div className="space-y-5 animate-fadeIn">
-                      {/* Bank Details Card */}
-                      <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-5 md:p-6 relative">
-                        <h4 className="text-sm font-serif text-[var(--color-gold)] mb-3 flex items-center gap-2">
-                          <Landmark size={16} /> Grand Store Escrow Banking Details
-                        </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
-                          <div className="bg-black/40 p-3 rounded-xl border border-white/5">
-                            <span className="text-white/40 block text-[9px] uppercase tracking-wider mb-0.5">Bank Name</span>
-                            <span className="text-white font-medium">Standard Bank</span>
-                          </div>
-                          <div className="bg-black/40 p-3 rounded-xl border border-white/5">
-                            <span className="text-white/40 block text-[9px] uppercase tracking-wider mb-0.5">Account Name</span>
-                            <span className="text-white font-medium">The Grand Store PTY LTD</span>
-                          </div>
-                          <div className="bg-black/40 p-3 rounded-xl border border-white/5">
-                            <span className="text-white/40 block text-[9px] uppercase tracking-wider mb-0.5">Account Number</span>
-                            <span className="text-white font-mono font-bold">0123456789</span>
-                          </div>
-                          <div className="bg-black/40 p-3 rounded-xl border border-white/5">
-                            <span className="text-white/40 block text-[9px] uppercase tracking-wider mb-0.5">Branch Code</span>
-                            <span className="text-white font-mono font-bold">051001</span>
-                          </div>
-                          <div className="bg-black/40 p-3 rounded-xl border border-white/5 sm:col-span-2 flex items-center justify-between">
-                            <div>
-                              <span className="text-[var(--color-gold)] block text-[9px] uppercase tracking-wider mb-0.5 font-bold">Required Reference</span>
-                              <span className="text-white font-mono font-bold text-sm tracking-wide">{paymentReference}</span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                navigator.clipboard.writeText(paymentReference);
-                                if (onNotify) onNotify('Reference copied to clipboard');
-                              }}
-                              className="text-[10px] text-white/70 hover:text-white flex items-center gap-1 bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/10 hover:border-white/30 transition-colors cursor-pointer"
-                            >
-                              <Copy size={12} /> Copy Reference
-                            </button>
-                          </div>
-                        </div>
-                      </div>
+                      <StoreBankDetailsCard
+                        reference={paymentReference}
+                        referenceLabel="Required Reference"
+                        title="Grand Store Escrow Banking Details"
+                        subtitle="EFT settlement account for auction winning lot"
+                        onNotify={onNotify}
+                      />
 
                       {/* Screenshot / Proof Upload Card */}
                       <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-5 md:p-6">
@@ -689,22 +887,26 @@ export default function AuctionCheckout({ onNotify }) {
                   <span>VAT ({lot.vatPct}%)</span>
                   <span><Price amount={lot.vatAmount} /></span>
                 </div>
-                {checkoutStep === 2 ? (
+                {(checkoutStep === 2 || isPaid || isAwaitingApproval) ? (
                   <div className="flex justify-between pb-4 border-b border-white/10 text-white">
                     <span>Shipping</span>
-                    <span><Price amount={dynamicShipping} /></span>
+                    <span><Price amount={dynamicShipping || lot.shippingCost || 0} /></span>
                   </div>
                 ) : (
                    <div className="pb-4 border-b border-white/10"></div>
                 )}
                 
                 <div className="flex justify-between text-lg font-serif mt-2">
-                  <span>Total To Pay</span>
-                  <span className="text-gold-gradient font-bold">
-                    {checkoutStep === 2 ? <Price amount={total} /> : <Price amount={total - dynamicShipping} />}
+                  <span>{isPaid ? 'Total Settled' : isAwaitingApproval ? 'Total Transferred' : 'Total To Pay'}</span>
+                  <span className={isPaid ? "text-emerald-400 font-bold" : "text-gold-gradient font-bold"}>
+                    {isPaid 
+                      ? <Price amount={lot.totalPaidByBuyer || total} /> 
+                      : (checkoutStep === 2 || isAwaitingApproval) 
+                        ? <Price amount={total} /> 
+                        : <Price amount={total - dynamicShipping} />}
                   </span>
                 </div>
-                {checkoutStep === 1 && (
+                {checkoutStep === 1 && !isPaid && !isAwaitingApproval && (
                   <p className="text-[10px] text-white/30 italic mt-4">
                     Shipping costs will be calculated in the next step based on your delivery address.
                   </p>

@@ -54,6 +54,7 @@ export default function BidderKycCard({ onNotify }) {
   const isUnregistered = !profile || profile.bidderApprovalStatus === 'unregistered';
   const isVip = profile?.bidderLevel === 'level_3_enhanced' || profile?.bidderLevel === 'level_4_vip';
 
+  const minAge = settings?.bidderKycMinAge || 18;
   const depositAmount = settings?.auctionPremiumDepositAmount !== undefined 
     ? settings.auctionPremiumDepositAmount 
     : 5000;
@@ -82,7 +83,7 @@ export default function BidderKycCard({ onNotify }) {
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-serif text-white font-medium">
-                18+ Auction Qualification & KYC
+                {minAge}+ Auction Qualification & KYC
               </h3>
               {isVip && (
                 <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-[var(--color-gold)]/20 text-[var(--color-gold)] border border-[var(--color-gold)]/30 flex items-center gap-1">
@@ -91,7 +92,7 @@ export default function BidderKycCard({ onNotify }) {
               )}
             </div>
             <p className="text-xs text-[var(--color-ivory-muted)] font-light">
-              South African CPA & 18+ Liquor Compliance Verification
+              South African CPA & {minAge}+ Liquor Compliance Verification
             </p>
           </div>
         </div>
@@ -115,7 +116,7 @@ export default function BidderKycCard({ onNotify }) {
           )}
           {isUnregistered && (
             <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white/5 text-white/50 border border-white/10">
-              Not Verified (18+)
+              Not Verified ({minAge}+)
             </span>
           )}
         </div>
@@ -125,7 +126,7 @@ export default function BidderKycCard({ onNotify }) {
       {isUnregistered && (
         <div className="space-y-4">
           <p className="text-xs text-white/70 leading-relaxed font-light">
-            Per South African Auction & Liquor laws, you must complete a fast 18+ age verification to bid in auctions. 
+            Per South African Auction & Liquor laws, you must complete a fast {minAge}+ age verification to bid in auctions. 
             Choose between <strong>Standard Bidding (Free, R{standardLimit.toLocaleString()} limit)</strong> or <strong>Premium VIP Bidding (R{depositAmount.toLocaleString()} refundable guarantee deposit, R{premiumLimit.toLocaleString()}+ limit)</strong>.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 pt-1">
@@ -134,7 +135,7 @@ export default function BidderKycCard({ onNotify }) {
               onClick={() => setModalOpen(true)}
               className="py-2.5 px-5 bg-gold-gradient text-black font-bold uppercase tracking-wider text-xs rounded-xl hover:brightness-110 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(212,175,55,0.25)]"
             >
-              Verify 18+ & Unlock Bidding <ArrowRight size={14} />
+              Verify {minAge}+ & Unlock Bidding <ArrowRight size={14} />
             </button>
             <button
               type="button"
