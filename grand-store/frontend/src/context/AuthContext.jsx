@@ -57,9 +57,36 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const googleLogin = async (token, role = 'customer', referralCode) => {
+  const googleLogin = async (tokenOrCredential, role = 'customer', referralCode) => {
     try {
-      const res = await api.post(`/auth/google`, { token, role, referralCode });
+      let token = tokenOrCredential;
+      let email = undefined;
+      let name = undefined;
+      let uid = undefined;
+      let photoURL = undefined;
+
+      if (tokenOrCredential && typeof tokenOrCredential === 'object') {
+        if (tokenOrCredential.user) {
+          // Firebase UserCredential
+          token = await tokenOrCredential.user.getIdToken();
+          email = tokenOrCredential.user.email;
+          name = tokenOrCredential.user.displayName;
+          uid = tokenOrCredential.user.uid;
+          photoURL = tokenOrCredential.user.photoURL;
+        } else if (tokenOrCredential.credential || tokenOrCredential.access_token) {
+          token = tokenOrCredential.credential || tokenOrCredential.access_token;
+        }
+      }
+
+      const res = await api.post(`/auth/google`, { 
+        token, 
+        email, 
+        name, 
+        uid, 
+        photoURL, 
+        role, 
+        referralCode 
+      });
       const data = res.data;
 
       localStorage.setItem("userInfo", JSON.stringify(data));

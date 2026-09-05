@@ -4,7 +4,7 @@ import api from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useGeoLocation } from '../../context/LocationContext';
 import { AlertCircle, CheckCircle2, ChevronRight, ChevronLeft, UploadCloud, Building2, User, FileText, BadgeCheck, FileSpreadsheet, Landmark, Package, Truck, FileSignature, Globe, Image as ImageIcon, Trash2, ExternalLink, Eye, EyeOff, RefreshCw, Loader2 } from 'lucide-react';
-import { useGoogleLogin } from '@react-oauth/google';
+import { auth, googleProvider, signInWithPopup } from '../../firebase';
 import LocationInput from '../../components/LocationInput';
 
 const InputField = ({ label, value, onChange, placeholder, type = 'text' }) => (
@@ -437,20 +437,21 @@ export default function OnboardingWizard() {
     }
   };
 
-  const loginWithGoogle = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      setLoading(true);
-      try {
-        const userData = await googleLogin(tokenResponse.credential || tokenResponse.access_token, 'vendor_pending');
-        setAccountInfo({ name: userData.name, email: userData.email, password: '' });
-      } catch (err) {
-        alert('Google Login Failed: ' + err.message);
-      } finally {
-        setLoading(false);
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    try {
+      const userCredential = await signInWithPopup(auth, googleProvider);
+      const userData = await googleLogin(userCredential, 'vendor_pending');
+      setAccountInfo({ name: userData.name, email: userData.email, password: '' });
+    } catch (err) {
+      console.error('Firebase Google sign-in error:', err);
+      if (err.code !== 'auth/popup-closed-by-user') {
+        alert('Google Login Failed: ' + (err.message || 'Error authenticating with Google'));
       }
-    },
-    onError: () => alert('Google Login Failed'),
-  });
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   if (loading) return <div className="vendor-theme min-h-screen bg-[#0a0907] flex items-center justify-center text-[#e1bd70]">Loading...</div>;
@@ -544,7 +545,7 @@ export default function OnboardingWizard() {
 
                     <button
                       type="button"
-                      onClick={() => loginWithGoogle()}
+                      onClick={handleGoogleLogin}
                       className="w-full flex justify-center items-center py-4 px-4 text-[10px] uppercase tracking-widest font-bold text-white bg-white/5 hover:bg-white/10 border border-white/10 focus:outline-none transition-colors rounded-xl gap-2 mb-6"
                     >
                       <svg className="w-4 h-4" viewBox="0 0 24 24">

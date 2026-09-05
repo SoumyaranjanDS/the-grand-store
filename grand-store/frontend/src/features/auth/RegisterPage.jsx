@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ArrowRight, Lock, Mail, User, Eye, EyeOff, ArrowLeft } from 'lucide-react';
-import { useGoogleLogin } from '@react-oauth/google';
+import { auth, googleProvider, signInWithPopup } from '../../firebase';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -32,25 +32,28 @@ export default function RegisterPage() {
     }
   };
 
-  const loginWithGoogle = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const userData = await googleLogin(tokenResponse.credential || tokenResponse.access_token, 'customer', referralCode);
-        let defaultRoute = '/customer/profile';
-        if (userData.role === 'admin') defaultRoute = '/admin/auctions';
-        if (userData.role === 'vendor_active') defaultRoute = '/vendor/dashboard';
-        
-        navigate(defaultRoute);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const userCredential = await signInWithPopup(auth, googleProvider);
+      const userData = await googleLogin(userCredential, 'customer', referralCode);
+      let defaultRoute = '/customer/profile';
+      if (userData.role === 'admin') defaultRoute = '/admin/auctions';
+      if (userData.role === 'vendor_active') defaultRoute = '/vendor/dashboard';
+      
+      navigate(defaultRoute);
+    } catch (err) {
+      console.error('Firebase Google sign-up error:', err);
+      if (err.code === 'auth/popup-closed-by-user') {
+        setError('Google sign-in popup was closed before completing.');
+      } else {
+        setError(err.message || 'Google Sign Up Failed');
       }
-    },
-    onError: () => setError('Google Sign Up Failed'),
-  });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#050505] flex items-center justify-center px-4 py-12 md:py-20 relative">
@@ -198,7 +201,7 @@ export default function RegisterPage() {
             <button
               type="button"
               disabled={isLoading}
-              onClick={() => loginWithGoogle()}
+              onClick={handleGoogleLogin}
               className="w-full flex justify-center items-center py-4 px-4 text-[10px] uppercase tracking-widest font-bold text-white bg-white/5 hover:bg-white/10 border border-white/10 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-xl gap-2"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">

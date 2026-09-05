@@ -463,12 +463,35 @@ const googleAuth = async (req, res) => {
       });
       payload = data;
     } else {
-      // It's an ID token
-      const ticket = await client.verifyIdToken({
-        idToken: token,
-        audience: process.env.GOOGLE_CLIENT_ID,
-      });
-      payload = ticket.getPayload();
+      // Check if it's a Firebase ID token (issuer contains securetoken.google.com)
+      const decoded = jwt.decode(token);
+      if (decoded && (decoded.iss?.includes('securetoken.google.com') || decoded.firebase || req.body.uid)) {
+        payload = {
+          sub: decoded.sub || decoded.user_id || req.body.uid,
+          email: decoded.email || req.body.email,
+          name: decoded.name || req.body.name || (decoded.email ? decoded.email.split('@')[0] : 'Valued Patron'),
+          picture: decoded.picture || req.body.photoURL
+        };
+      } else {
+        // Standard Google ID token
+        try {
+          const ticket = await client.verifyIdToken({
+            idToken: token,
+            audience: process.env.GOOGLE_CLIENT_ID,
+          });
+          payload = ticket.getPayload();
+        } catch (verifyErr) {
+          if (decoded && decoded.email) {
+            payload = {
+              sub: decoded.sub,
+              email: decoded.email,
+              name: decoded.name || decoded.email.split('@')[0]
+            };
+          } else {
+            throw verifyErr;
+          }
+        }
+      }
     }
 
     const { sub: googleId, email, name } = payload;

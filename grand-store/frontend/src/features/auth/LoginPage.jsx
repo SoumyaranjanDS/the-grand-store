@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ArrowRight, Lock, Mail, Eye, EyeOff, ArrowLeft } from 'lucide-react';
-import { useGoogleLogin } from '@react-oauth/google';
+import { auth, googleProvider, signInWithPopup } from '../../firebase';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -52,43 +52,46 @@ export default function LoginPage() {
     }
   };
 
-  const loginWithGoogle = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const userData = await googleLogin(tokenResponse.credential || tokenResponse.access_token, 'customer');
-        let defaultRoute = '/customer/profile';
-        const role = userData.role;
-        const isVendor = ['vendor', 'vendor_active', 'vendor_pending', 'vendor_approved_unpaid', 'vendor_rejected', 'vendor_suspended'].includes(role);
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const userCredential = await signInWithPopup(auth, googleProvider);
+      const userData = await googleLogin(userCredential, 'customer');
+      let defaultRoute = '/customer/profile';
+      const role = userData.role;
+      const isVendor = ['vendor', 'vendor_active', 'vendor_pending', 'vendor_approved_unpaid', 'vendor_rejected', 'vendor_suspended'].includes(role);
 
-        if (['admin', 'super_admin', 'accountant'].includes(role)) defaultRoute = '/admin/dashboard';
-        else if (role === 'product_manager') defaultRoute = '/admin/products';
-        else if (role === 'event_host') defaultRoute = '/event-manager/dashboard';
-        else if (role === 'auction_host') defaultRoute = '/auction-manager/dashboard';
-        else if (['vendor_pending', 'vendor_active', 'vendor'].includes(role)) defaultRoute = '/vendor/dashboard';
-        else if (role === 'vendor_approved_unpaid') defaultRoute = '/vendor/payment';
-        
-        const redirectParam = searchParams.get('redirect');
-        let targetRoute = defaultRoute;
-        if (redirectParam) {
-          if (isVendor) {
-            if (redirectParam.startsWith('/vendor') || redirectParam.startsWith('/auction') || redirectParam === '/') {
-              targetRoute = redirectParam;
-            }
-          } else {
+      if (['admin', 'super_admin', 'accountant'].includes(role)) defaultRoute = '/admin/dashboard';
+      else if (role === 'product_manager') defaultRoute = '/admin/products';
+      else if (role === 'event_host') defaultRoute = '/event-manager/dashboard';
+      else if (role === 'auction_host') defaultRoute = '/auction-manager/dashboard';
+      else if (['vendor_pending', 'vendor_active', 'vendor'].includes(role)) defaultRoute = '/vendor/dashboard';
+      else if (role === 'vendor_approved_unpaid') defaultRoute = '/vendor/payment';
+      
+      const redirectParam = searchParams.get('redirect');
+      let targetRoute = defaultRoute;
+      if (redirectParam) {
+        if (isVendor) {
+          if (redirectParam.startsWith('/vendor') || redirectParam.startsWith('/auction') || redirectParam === '/') {
             targetRoute = redirectParam;
           }
+        } else {
+          targetRoute = redirectParam;
         }
-        navigate(targetRoute);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
       }
-    },
-    onError: () => setError('Google Login Failed'),
-  });
+      navigate(targetRoute);
+    } catch (err) {
+      console.error('Firebase Google sign-in error:', err);
+      if (err.code === 'auth/popup-closed-by-user') {
+        setError('Sign-in popup was closed before completing.');
+      } else {
+        setError(err.message || 'Google Login Failed');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#050505] flex items-center justify-center px-4 py-12 md:py-20 relative">
@@ -197,7 +200,7 @@ export default function LoginPage() {
             <button
               type="button"
               disabled={isLoading}
-              onClick={() => loginWithGoogle()}
+              onClick={handleGoogleLogin}
               className="w-full flex justify-center items-center py-3 px-4 text-[13px] font-medium text-white bg-black hover:bg-[#1a1a1a] border border-white/20 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-md gap-3 shadow-[0_1px_2px_rgba(0,0,0,0.2)]"
             >
               <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24">
